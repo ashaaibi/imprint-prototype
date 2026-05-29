@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPRINT® — Designer dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    .designer-layout {
+      max-width: var(--imp-max-w);
+      margin: 0 auto;
+      padding: 32px 32px 80px;
+    }
+    .designer-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .designer-greeting {
+      font-family: var(--imp-font);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--imp-fg);
+      margin-bottom: 4px;
+    }
+    .designer-greeting .name { color: var(--imp-gold); }
+    .designer-meta { font-size: 13px; color: var(--imp-fg-3); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 22px 24px;
+      box-shadow: var(--imp-shadow-xs);
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .stat-card:hover { border-color: var(--imp-border-hover); box-shadow: var(--imp-shadow-sm); }
+    .sc-lbl {
+      font-size: 12px;
+      color: var(--imp-fg-3);
+      font-weight: 500;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .sc-val {
+      font-family: var(--imp-font);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--imp-fg);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .sc-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: var(--imp-r-pill);
+    }
+    .sc-trend.up { background: var(--imp-success-bg); color: var(--imp-success); }
+    .sc-trend.down { background: var(--imp-error-bg); color: var(--imp-error); }
+    .sc-trend svg { width: 10px; height: 10px; }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .panel {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 24px;
+      box-shadow: var(--imp-shadow-xs);
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .panel-title {
+      font-family: var(--imp-font);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--imp-fg);
+    }
+
+    .feed-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--imp-border);
+    }
+    .feed-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .feed-item:first-child { padding-top: 0; }
+    .feed-flag { font-size: 22px; }
+    .feed-content { flex: 1; min-width: 0; }
+    .feed-id {
+      font-family: var(--imp-font-mono);
+      font-size: 12px;
+      color: var(--imp-fg-3);
+      font-weight: 500;
+    }
+    .feed-meta {
+      font-size: 13px;
+      color: var(--imp-fg);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    .feed-amount {
+      font-family: var(--imp-font);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--imp-fg);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 900px) {
+      .designer-layout { padding: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .page-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="designer-layout">
+  <div class="designer-head">
+    <div>
+      <div class="designer-greeting">
+        <span data-i18n="des.welcome">Welcome back</span>, <span class="name">Noura</span>
+      </div>
+      <div class="designer-meta" id="designer-meta-line">5 templates live · Member since Aug 2025</div>
+    </div>
+    <a href="builder.html" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span data-i18n="des.new">Create new template</span>
+    </a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="sc-lbl" data-i18n="des.stat.templates">Templates live</div>
+      <div class="sc-val">5</div>
+      <span class="sc-trend up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        +2 <span data-en="this month" data-ar="هذا الشهر">this month</span>
+      </span>
+    </div>
+    <div class="stat-card">
+      <div class="sc-lbl" data-i18n="des.stat.orders">Orders this month</div>
+      <div class="sc-val">342</div>
+      <span class="sc-trend up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        +18%
+      </span>
+    </div>
+    <div class="stat-card">
+      <div class="sc-lbl" data-i18n="des.stat.earnings">Earnings (MTD)</div>
+      <div class="sc-val" id="earnings-val">AED 8,940</div>
+      <span class="sc-trend up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        +AED 1,210
+      </span>
+    </div>
+    <div class="stat-card">
+      <div class="sc-lbl" data-i18n="des.stat.conv">Avg conversion</div>
+      <div class="sc-val">68%</div>
+      <span class="sc-trend up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        +4 pts
+      </span>
+    </div>
+  </div>
+
+  <div class="page-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title" data-i18n="des.templates">My templates</div>
+      </div>
+      <table class="imp-table">
+        <thead>
+          <tr>
+            <th data-i18n="des.tbl.name">Name</th>
+            <th data-i18n="des.tbl.orders">Orders</th>
+            <th data-i18n="des.tbl.earnings">Earnings</th>
+            <th data-i18n="des.tbl.conv">Conv.</th>
+            <th data-i18n="des.tbl.status">Status</th>
+          </tr>
+        </thead>
+        <tbody id="templates-body">
+          <tr>
+            <td><strong>Minimal Latte</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Aug 12</span></td>
+            <td>128</td>
+            <td class="imp-mono">AED 3,840</td>
+            <td>72%</td>
+            <td><span class="badge badge-green">Live</span></td>
+          </tr>
+          <tr>
+            <td><strong>Desert Bloom</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Sep 04</span></td>
+            <td>96</td>
+            <td class="imp-mono">AED 2,880</td>
+            <td>64%</td>
+            <td><span class="badge badge-green">Live</span></td>
+          </tr>
+          <tr>
+            <td><strong>Aurum Mono</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Sep 22</span></td>
+            <td>71</td>
+            <td class="imp-mono">AED 2,130</td>
+            <td>69%</td>
+            <td><span class="badge badge-green">Live</span></td>
+          </tr>
+          <tr>
+            <td><strong>Velvet Black</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Oct 08</span></td>
+            <td>34</td>
+            <td class="imp-mono">AED 1,020</td>
+            <td>58%</td>
+            <td><span class="badge badge-green">Live</span></td>
+          </tr>
+          <tr>
+            <td><strong>Olive Garden</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · submitted Nov 02</span></td>
+            <td>13</td>
+            <td class="imp-mono">AED 390</td>
+            <td>—</td>
+            <td><span class="badge badge-amber">In review</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title" data-i18n="des.recent">Recent orders</div>
+      </div>
+      <div id="recent-orders"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
+  <span class="site-footer-links">
+    <a href="#" data-i18n="common.terms">Terms</a>
+    <a href="#" data-i18n="common.privacy">Privacy</a>
+  </span>
+</footer>
+
+<script src="../shared.js"></script>
+<script>
+  var RECENT_ORDERS = [
+    { id: 'IMP-2851', flag: '🇦🇪', initials: 'A.M.', tpl: 'Minimal Latte', qty: 1000, valueAed: 3171 },
+    { id: 'IMP-2848', flag: '🇸🇦', initials: 'H.S.', tpl: 'Desert Bloom',  qty: 500,  valueAed: 1786 },
+    { id: 'IMP-2845', flag: '🇶🇦', initials: 'F.A.', tpl: 'Aurum Mono',   qty: 2000, valueAed: 5610 },
+    { id: 'IMP-2841', flag: '🇰🇼', initials: 'N.B.', tpl: 'Minimal Latte', qty: 200,  valueAed: 1290 },
+    { id: 'IMP-2837', flag: '🇧🇭', initials: 'R.K.', tpl: 'Velvet Black',  qty: 1000, valueAed: 3450 },
+  ];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSiteHeader({
+      activePage: 'designer',
+      role: t('des.role') + ' · Noura',
+      showCart: false
+    });
+    renderRecentOrders();
+    document.addEventListener('imprint:langchange', renderRecentOrders);
+    document.addEventListener('imprint:countrychange', renderRecentOrders);
+    /* Convert earnings stat */
+    var earn = document.getElementById('earnings-val');
+    if (earn) earn.textContent = formatPrice(8940);
+    /* Convert template earnings */
+    document.querySelectorAll('#templates-body td.imp-mono').forEach(function(td) {
+      var match = td.textContent.match(/[\d,]+/);
+      if (match) {
+        var n = parseFloat(match[0].replace(/,/g, ''));
+        td.textContent = formatPrice(n);
+      }
+    });
+  });
+
+  function renderRecentOrders() {
+    var lang = getLang();
+    var html = RECENT_ORDERS.map(function(o) {
+      return '<div class="feed-item">' +
+        '<span class="feed-flag">' + o.flag + '</span>' +
+        '<div class="feed-content">' +
+          '<div class="feed-id">' + o.id + ' · ' + o.initials + '</div>' +
+          '<div class="feed-meta">' + o.tpl + ' · ' + o.qty.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US') + ' ' + t('cfg.units') + '</div>' +
+        '</div>' +
+        '<div class="feed-amount">' + formatPrice(o.valueAed) + '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('recent-orders').innerHTML = html;
+  }
+</script>
+</body>
+</html>

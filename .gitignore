@@ -1,0 +1,12 @@
+# OS / editor junk
+.DS_Store
+*.log
+
+# Local tooling / agent state (not part of the site)
+.claude/
+
+# Internal planning docs — keep these OUT of the public Pages site
+*.pdf
+Imprint_PRD_v1.1.md
+Imprint_Phase1_PRD_v1.0.pdf
+Imprint_Prototype_Spec_v1.0.pdf

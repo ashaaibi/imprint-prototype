@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPRINT® — Customizable products</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .page-hero {
+      padding: 80px 32px 48px;
+      text-align: center;
+      background: var(--imp-bg);
+      max-width: var(--imp-max-w);
+      margin: 0 auto;
+    }
+    .page-hero-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--imp-gold);
+      margin-bottom: 16px;
+    }
+    .page-hero-title {
+      font-family: var(--imp-font);
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--imp-fg);
+      margin-bottom: 16px;
+      line-height: 1.05;
+    }
+    .page-hero-sub {
+      font-size: 16px;
+      color: var(--imp-fg-2);
+      line-height: 1.6;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    .products-section {
+      max-width: var(--imp-max-w);
+      margin: 0 auto;
+      padding: 48px 32px 96px;
+    }
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .filter-title {
+      font-family: var(--imp-font);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--imp-fg);
+      letter-spacing: -0.01em;
+    }
+    .filter-note {
+      font-size: 13px;
+      color: var(--imp-fg-3);
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .product-card {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 28px 24px;
+      position: relative;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--imp-shadow-xs);
+      transition: box-shadow 0.18s var(--imp-ease), border-color 0.18s var(--imp-ease), transform 0.18s var(--imp-ease);
+      cursor: pointer;
+    }
+    .product-card:not(.disabled):hover {
+      border-color: var(--imp-border-hover);
+      box-shadow: var(--imp-shadow-md);
+      transform: translateY(-2px);
+    }
+    .product-card.disabled { cursor: default; opacity: 0.7; }
+    .product-card.featured {
+      background: var(--imp-fg);
+      color: var(--imp-surface);
+      border-color: var(--imp-fg);
+    }
+    html[data-theme="dark"] .product-card.featured {
+      background: var(--imp-gold-soft);
+      color: var(--imp-fg);
+      border-color: var(--imp-gold);
+    }
+    .product-card.featured:hover { background: #1a1a1a; }
+    html[data-theme="dark"] .product-card.featured:hover { background: rgba(214,186,126,0.18); }
+
+    .product-icon {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 20px;
+      color: var(--imp-fg);
+    }
+    .product-card.featured .product-icon { color: var(--imp-gold); }
+    .product-card.disabled .product-icon { color: var(--imp-fg-muted); }
+
+    .product-name {
+      font-family: var(--imp-font);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+      color: var(--imp-fg);
+    }
+    .product-card.featured .product-name { color: var(--imp-surface); }
+    html[data-theme="dark"] .product-card.featured .product-name { color: var(--imp-fg); }
+    .product-card.disabled .product-name { color: var(--imp-fg-2); }
+
+    .product-desc {
+      font-size: 13px;
+      color: var(--imp-fg-2);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+    .product-card.featured .product-desc { color: rgba(255,255,255,0.7); }
+    html[data-theme="dark"] .product-card.featured .product-desc { color: var(--imp-fg-2); }
+    .product-card.disabled .product-desc { color: var(--imp-fg-3); }
+
+    .product-price {
+      font-size: 12px;
+      color: var(--imp-fg-3);
+      margin-bottom: 4px;
+    }
+    .product-card.featured .product-price { color: rgba(255,255,255,0.6); }
+    html[data-theme="dark"] .product-card.featured .product-price { color: var(--imp-fg-2); }
+    .product-price strong {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--imp-fg);
+    }
+    .product-card.featured .product-price strong { color: var(--imp-gold); }
+    .product-card.disabled .product-price strong { color: var(--imp-fg-2); }
+
+    .product-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 16px;
+      color: var(--imp-gold);
+    }
+    .product-cta svg { width: 14px; height: 14px; }
+
+    .coming-soon-badge {
+      position: absolute;
+      top: 16px;
+      inset-inline-end: 16px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--imp-surface-2);
+      color: var(--imp-fg-3);
+      padding: 4px 10px;
+      border-radius: var(--imp-r-pill);
+    }
+
+    @media (max-width: 900px) {
+      .page-hero { padding: 48px 20px 24px; }
+      .products-section { padding: 32px 20px 64px; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .filter-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+    @media (max-width: 480px) {
+      .products-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="page-hero">
+  <div class="page-hero-eyebrow" data-i18n="home.eyebrow">Custom packaging · made simple</div>
+  <h1 class="page-hero-title" data-i18n="products.title">Customizable products</h1>
+  <p class="page-hero-sub" data-i18n="products.sub">Premium branded packaging, configured and priced in real time. Ships anywhere in the GCC.</p>
+</div>
+
+<div class="products-section">
+  <div class="filter-bar">
+    <div class="filter-title" data-i18n="products.section.all">All products</div>
+    <div class="filter-note" data-i18n="products.section.note">1 product available · 7 coming soon</div>
+  </div>
+  <div class="products-grid">
+
+    <!-- PAPER BAG (featured) -->
+    <a href="configurator.html" class="product-card featured">
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 20h36l-3 36H17L14 20z"/>
+        <path d="M22 20c0-5 4-10 10-10s10 5 10 10"/>
+        <path d="M26 12c0-3 2-6 6-6s6 3 6 6" stroke-opacity="0.4"/>
+      </svg>
+      <div class="product-name" data-i18n="product.paperbag">Paper bag</div>
+      <div class="product-desc" data-i18n="product.paperbag.desc">Luxury branded paper bags with custom finishes, embossing, and full-colour printing. 5 sizes from XS to XL.</div>
+      <div class="product-price">
+        <span data-i18n="products.from">From</span> <strong data-price="2.70">AED 2.70</strong><span data-i18n="products.unit"> / unit</span>
+      </div>
+      <div class="product-cta">
+        <span data-i18n="products.configure">Configure now</span>
+        <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </a>
+
+    <!-- GIFT BOX -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="12" y="28" width="40" height="28" rx="2"/>
+        <rect x="10" y="20" width="44" height="10" rx="2"/>
+        <path d="M32 20v36"/>
+        <path d="M24 20c0-6 4-10 8-10s8 4 8 10" stroke-opacity="0.6"/>
+      </svg>
+      <div class="product-name" data-i18n="product.giftbox">Gift box</div>
+      <div class="product-desc" data-i18n="product.giftbox.desc">Rigid lid-and-base gift boxes with custom printing, ribbon, and tissue paper insert.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="5.20">AED 5.20</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+    <!-- MAILER BOX -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22h40v28a2 2 0 01-2 2H14a2 2 0 01-2-2V22z"/>
+        <path d="M12 22l20 14 20-14"/>
+        <path d="M12 16a2 2 0 012-2h36a2 2 0 012 2v6H12v-6z"/>
+      </svg>
+      <div class="product-name" data-i18n="product.mailerbox">Mailer box</div>
+      <div class="product-desc" data-i18n="product.mailerbox.desc">Self-locking e-commerce mailer boxes. Full external and internal printing.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="3.80">AED 3.80</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+    <!-- SHIPPING BOX -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20l20-8 20 8v24l-20 8-20-8V20z"/>
+        <path d="M12 20l20 8 20-8M32 28v24M22 16l20 8"/>
+      </svg>
+      <div class="product-name" data-i18n="product.shipping">Shipping box</div>
+      <div class="product-desc" data-i18n="product.shipping.desc">Corrugated shipping boxes with custom branding. Optimised for DHL and Aramex.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="2.10">AED 2.10</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+    <!-- TISSUE BOX -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="10" y="18" width="44" height="28" rx="2"/>
+        <ellipse cx="32" cy="18" rx="10" ry="4"/>
+        <path d="M28 18c0-2 2-6 4-6s4 4 4 6" stroke-opacity="0.4"/>
+      </svg>
+      <div class="product-name" data-i18n="product.tissue">Tissue box</div>
+      <div class="product-desc" data-i18n="product.tissue.desc">Branded tissue paper boxes for retail, hospitality, and gifting.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="1.90">AED 1.90</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+    <!-- TUBE / CYLINDER -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="32" cy="14" rx="16" ry="5"/>
+        <path d="M16 14v36M48 14v36"/>
+        <ellipse cx="32" cy="50" rx="16" ry="5"/>
+      </svg>
+      <div class="product-name" data-i18n="product.tube">Tube / cylinder</div>
+      <div class="product-desc" data-i18n="product.tube.desc">Round tube packaging for posters, cosmetics, spirits, and luxury items.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="4.50">AED 4.50</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+    <!-- POUCH / SACHET -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 16c0-4 3-8 12-8s12 4 12 8v36a2 2 0 01-2 2H22a2 2 0 01-2-2V16z"/>
+        <path d="M20 28h24"/>
+        <path d="M26 12v8M38 12v8" stroke-opacity="0.4"/>
+      </svg>
+      <div class="product-name" data-i18n="product.pouch">Pouch / sachet</div>
+      <div class="product-desc" data-i18n="product.pouch.desc">Stand-up pouches and flat sachets for food, coffee, tea, cosmetics, and supplements.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="1.20">AED 1.20</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+    <!-- SHOPPING BAG -->
+    <div class="product-card disabled">
+      <div class="coming-soon-badge" data-i18n="products.comingsoon">Coming soon</div>
+      <svg class="product-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 22h36l-4 30H18L14 22z"/>
+        <path d="M23 22c0-5 4-9 9-9s9 4 9 9"/>
+        <path d="M27 18c0-3 2-5 5-5s5 2 5 5" stroke-opacity="0.4"/>
+      </svg>
+      <div class="product-name" data-i18n="product.shoppingbag">Shopping bag</div>
+      <div class="product-desc" data-i18n="product.shoppingbag.desc">Non-woven, cotton, or jute shopping bags with full-colour custom printing.</div>
+      <div class="product-price"><span data-i18n="products.from">From</span> <strong data-price="3.20">AED 3.20</strong><span data-i18n="products.unit"> / unit</span></div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
+  <span class="site-footer-links">
+    <a href="#" data-i18n="common.terms">Terms</a>
+    <a href="#" data-i18n="common.privacy">Privacy</a>
+    <a href="#" data-i18n="common.contact">Contact</a>
+  </span>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initSiteHeader({
+      activePage: 'products',
+      breadcrumb: '<a href="index.html">Home</a><span class="sep">/</span><strong data-i18n="products.title">Customizable products</strong>',
+      showCart: true
+    });
+    refreshPrices();
+    document.addEventListener('imprint:langchange', refreshPrices);
+  });
+  function refreshPrices() {
+    document.querySelectorAll('[data-price]').forEach(function(el) {
+      var aed = parseFloat(el.getAttribute('data-price'));
+      el.textContent = formatPrice(aed);
+    });
+  }
+</script>
+</body>
+</html>

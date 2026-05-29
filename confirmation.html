@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPRINT® — Order confirmed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .conf-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 60px 32px 80px;
+      text-align: center;
+    }
+    .check-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--imp-success-bg);
+      color: var(--imp-success);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: imp-popInBig 0.6s var(--imp-pop);
+    }
+    .check-icon svg { width: 30px; height: 30px; }
+    .conf-title {
+      font-family: var(--imp-font);
+      font-size: clamp(32px, 5vw, 44px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--imp-fg);
+      margin-bottom: 12px;
+    }
+    .conf-sub {
+      font-size: 16px;
+      color: var(--imp-fg-2);
+      max-width: 480px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .order-id-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-pill);
+      padding: 10px 20px;
+      font-family: var(--imp-font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--imp-fg);
+      margin-bottom: 40px;
+      letter-spacing: 0.02em;
+    }
+    .order-id-pill .lbl { color: var(--imp-fg-3); font-weight: 500; font-family: var(--imp-font); letter-spacing: 0; }
+
+    .conf-summary {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 28px;
+      text-align: left;
+      box-shadow: var(--imp-shadow-xs);
+      margin-bottom: 32px;
+    }
+    html[dir="rtl"] .conf-summary { text-align: right; }
+    .conf-summary-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--imp-border);
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .cs-product-name {
+      font-family: var(--imp-font);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--imp-fg);
+    }
+    .cs-product-spec {
+      font-size: 13px;
+      color: var(--imp-fg-3);
+      margin-top: 4px;
+    }
+    .cs-total-block { text-align: right; }
+    html[dir="rtl"] .cs-total-block { text-align: left; }
+    .cs-total-lbl { font-size: 12px; color: var(--imp-fg-3); margin-bottom: 4px; }
+    .cs-total-val {
+      font-family: var(--imp-font);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--imp-fg);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .cs-rows {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .cs-row-lbl { font-size: 11px; font-weight: 500; color: var(--imp-fg-3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .cs-row-val { font-size: 14px; font-weight: 500; color: var(--imp-fg); }
+    .cs-row-val .flag { font-size: 16px; margin-right: 6px; }
+
+    /* ─── TIMELINE ─────────────────────── */
+    .timeline {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 32px 32px 24px;
+      text-align: left;
+      box-shadow: var(--imp-shadow-xs);
+      margin-bottom: 32px;
+    }
+    html[dir="rtl"] .timeline { text-align: right; }
+    .timeline-title {
+      font-family: var(--imp-font);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--imp-fg);
+      margin-bottom: 6px;
+    }
+    .timeline-sub {
+      font-size: 12px;
+      color: var(--imp-fg-3);
+      margin-bottom: 24px;
+    }
+    .timeline-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+    .tl-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 12px 0;
+      position: relative;
+    }
+    .tl-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      inset-inline-start: 13px;
+      top: 32px;
+      bottom: -8px;
+      width: 2px;
+      background: var(--imp-border);
+    }
+    .tl-item.done:not(:last-child)::after { background: var(--imp-success); }
+    .tl-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--imp-surface);
+      border: 1.5px solid var(--imp-border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--imp-fg-3);
+      font-size: 12px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .tl-item.done .tl-dot { background: var(--imp-success); border-color: var(--imp-success); color: #fff; }
+    .tl-item.active .tl-dot { border-color: var(--imp-fg); color: var(--imp-fg); box-shadow: 0 0 0 3px var(--imp-gold-soft); }
+    .tl-content { padding-top: 4px; flex: 1; }
+    .tl-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--imp-fg);
+    }
+    .tl-item.done .tl-label { color: var(--imp-fg-2); }
+    .tl-meta {
+      font-size: 12px;
+      color: var(--imp-fg-3);
+      margin-top: 2px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      .conf-wrap { padding: 40px 20px 60px; }
+      .cs-rows { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="conf-wrap">
+  <div class="check-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <h1 class="conf-title" data-i18n="conf.title">Order confirmed</h1>
+  <p class="conf-sub" data-i18n="conf.sub">We've received your order and shared it with your chosen factory.</p>
+
+  <div class="order-id-pill">
+    <span class="lbl" data-i18n="conf.orderid">Order ID</span>
+    <span id="order-id">IMP-2847</span>
+  </div>
+
+  <div class="conf-summary">
+    <div class="conf-summary-head">
+      <div>
+        <div class="cs-product-name" data-i18n="product.paperbag">Paper bag</div>
+        <div class="cs-product-spec" id="cs-spec">M · Classic · 1,000 units · Matte exterior</div>
+      </div>
+      <div class="cs-total-block">
+        <div class="cs-total-lbl" data-i18n="conf.total">Total paid</div>
+        <div class="cs-total-val" id="cs-total">AED 3,171</div>
+      </div>
+    </div>
+    <div class="cs-rows">
+      <div>
+        <div class="cs-row-lbl" data-i18n="conf.factory">Factory</div>
+        <div class="cs-row-val" id="cs-factory"><span class="flag">🇦🇪</span><span id="cs-factory-name">Artis Pack — Dubai, UAE</span></div>
+      </div>
+      <div>
+        <div class="cs-row-lbl" data-i18n="conf.delivery">Estimated delivery</div>
+        <div class="cs-row-val" id="cs-delivery">3–5 days</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="timeline-title" data-i18n="conf.timeline">Timeline</div>
+    <div class="timeline-sub" data-en="Updated automatically as your order progresses." data-ar="يتم التحديث تلقائياً مع تقدم طلبك.">Updated automatically as your order progresses.</div>
+    <ul class="timeline-list" id="timeline-list">
+      <li class="tl-item done" data-stage="0">
+        <div class="tl-dot"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="tl-content"><div class="tl-label" data-i18n="conf.t1">Order confirmed</div><div class="tl-meta" id="t1-meta">Just now</div></div>
+      </li>
+      <li class="tl-item active" data-stage="1">
+        <div class="tl-dot">2</div>
+        <div class="tl-content"><div class="tl-label" data-i18n="conf.t2">Production file sent</div><div class="tl-meta" data-en="In progress" data-ar="قيد الانتظار">In progress</div></div>
+      </li>
+      <li class="tl-item" data-stage="2">
+        <div class="tl-dot">3</div>
+        <div class="tl-content"><div class="tl-label" data-i18n="conf.t3">In production</div><div class="tl-meta" data-en="Pending" data-ar="قيد الانتظار">Pending</div></div>
+      </li>
+      <li class="tl-item" data-stage="3">
+        <div class="tl-dot">4</div>
+        <div class="tl-content"><div class="tl-label" data-i18n="conf.t4">Quality check</div><div class="tl-meta" data-en="Pending" data-ar="قيد الانتظار">Pending</div></div>
+      </li>
+      <li class="tl-item" data-stage="4">
+        <div class="tl-dot">5</div>
+        <div class="tl-content"><div class="tl-label" data-i18n="conf.t5">Shipped</div><div class="tl-meta" data-en="Pending" data-ar="قيد الانتظار">Pending</div></div>
+      </li>
+      <li class="tl-item" data-stage="5">
+        <div class="tl-dot">6</div>
+        <div class="tl-content"><div class="tl-label" data-i18n="conf.t6">Delivered</div><div class="tl-meta" data-en="Pending" data-ar="قيد الانتظار">Pending</div></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="cta-row">
+    <a href="#" class="btn btn-outline" onclick="event.preventDefault();imprintToast(t('conf.track'));">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span data-i18n="conf.track">Track order</span>
+    </a>
+    <a href="products.html" class="btn btn-primary">
+      <span data-i18n="conf.continue">Continue shopping</span>
+      <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
+  <span class="site-footer-links">
+    <a href="#" data-i18n="common.terms">Terms</a>
+    <a href="#" data-i18n="common.privacy">Privacy</a>
+    <a href="#" data-i18n="common.contact">Contact</a>
+  </span>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initSiteHeader({
+      activePage: 'confirmation',
+      breadcrumb: '<a href="index.html" data-en="Home" data-ar="الرئيسية">Home</a><span class="sep">/</span><strong data-i18n="conf.title">Order confirmed</strong>',
+      showCart: false
+    });
+    var order = getOrder();
+    if (!order) {
+      /* Generate demo order if none */
+      order = {
+        id: generateOrderId(),
+        product: 'Paper bag',
+        size: 'M · Classic',
+        qty: 1000,
+        finish: 'matte',
+        factory: { nameEn: 'Artis Pack', nameAr: 'أرتيس باك', flag: '🇦🇪', locationEn: 'Dubai, UAE', locationAr: 'دبي، الإمارات', lead: '3–5' },
+        totalAed: 3171,
+        country: getCountryCode(),
+        placedAt: new Date().toISOString()
+      };
+      setOrder(order);
+    }
+    paintOrder(order);
+    document.addEventListener('imprint:langchange', function() { paintOrder(order); });
+    document.addEventListener('imprint:countrychange', function() { paintOrder(order); });
+  });
+  function paintOrder(order) {
+    var lang = getLang();
+    document.getElementById('order-id').textContent = order.id;
+    document.getElementById('cs-spec').textContent = order.size + ' · ' + order.qty.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US') + ' ' + t('cfg.units') + ' · ' + t('cfg.' + (order.finish || 'matte'));
+    document.getElementById('cs-total').textContent = formatPrice(order.totalAed);
+    var fName = lang === 'ar' ? order.factory.nameAr : order.factory.nameEn;
+    var fLoc  = lang === 'ar' ? order.factory.locationAr : order.factory.locationEn;
+    document.getElementById('cs-factory').innerHTML = '<span class="flag">' + order.factory.flag + '</span>' + fName + ' — ' + fLoc;
+    document.getElementById('cs-delivery').textContent = order.factory.lead + ' ' + t('co.factory.days');
+  }
+</script>
+</body>
+</html>

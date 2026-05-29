@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPRINT® — Factory queue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    .factory-layout {
+      max-width: var(--imp-max-w);
+      margin: 0 auto;
+      padding: 32px 32px 80px;
+    }
+    .factory-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .factory-title {
+      font-family: var(--imp-font);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--imp-fg);
+    }
+    .factory-meta { font-size: 13px; color: var(--imp-fg-2); margin-top: 4px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 22px 24px;
+      box-shadow: var(--imp-shadow-xs);
+    }
+    .sc-lbl {
+      font-size: 12px;
+      color: var(--imp-fg-3);
+      margin-bottom: 8px;
+    }
+    .sc-val {
+      font-family: var(--imp-font);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--imp-fg);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .panel {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 24px;
+      box-shadow: var(--imp-shadow-xs);
+    }
+    .tab-bar-wrap { margin-bottom: 20px; }
+    .tab-bar { display: flex; gap: 4px; }
+    .tab-bar button {
+      font-family: var(--imp-font);
+      font-size: 13px;
+      font-weight: 500;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--imp-fg-2);
+      padding: 8px 14px;
+      border-radius: var(--imp-r-pill);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-bar button:hover { color: var(--imp-fg); }
+    .tab-bar button.active {
+      background: var(--imp-fg);
+      color: var(--imp-surface);
+    }
+    html[data-theme="dark"] .tab-bar button.active { color: #0A0A0A; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: var(--imp-r-pill);
+    }
+
+    @media (max-width: 900px) {
+      .factory-layout { padding: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .imp-table { font-size: 12px; }
+      .imp-table th, .imp-table td { padding: 10px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="factory-layout">
+  <div class="factory-head">
+    <div>
+      <h1 class="factory-title" data-i18n="fac.queue">Order queue</h1>
+      <div class="factory-meta" id="factory-meta-line">23 active orders · 6 awaiting production file</div>
+    </div>
+    <button class="btn btn-outline" onclick="refresh()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      <span data-en="Refresh" data-ar="تحديث">Refresh</span>
+    </button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="sc-lbl" data-en="Pending intake" data-ar="بانتظار الاستلام">Pending intake</div>
+      <div class="sc-val">3</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-lbl" data-en="In production" data-ar="قيد الإنتاج">In production</div>
+      <div class="sc-val">8</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-lbl" data-en="Quality check" data-ar="فحص الجودة">Quality check</div>
+      <div class="sc-val">4</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-lbl" data-en="Shipped (7d)" data-ar="تم الشحن (٧ أيام)">Shipped (7d)</div>
+      <div class="sc-val">12</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="tab-bar-wrap">
+      <div class="tab-bar" id="tab-bar">
+        <button class="active" data-tab="all" onclick="setTab('all', this)" data-i18n="fac.all">All orders</button>
+        <button data-tab="pending" onclick="setTab('pending', this)" data-i18n="fac.pending">Pending</button>
+        <button data-tab="production" onclick="setTab('production', this)" data-i18n="fac.production">In production</button>
+        <button data-tab="shipped" onclick="setTab('shipped', this)" data-i18n="fac.shipped">Shipped</button>
+      </div>
+    </div>
+    <table class="imp-table">
+      <thead>
+        <tr>
+          <th data-i18n="fac.tbl.order">Order #</th>
+          <th data-i18n="fac.tbl.customer">Customer</th>
+          <th data-i18n="fac.tbl.product">Product</th>
+          <th data-i18n="fac.tbl.qty">Qty</th>
+          <th data-i18n="fac.tbl.finish">Finish</th>
+          <th data-i18n="fac.tbl.received">Received</th>
+          <th data-i18n="fac.tbl.status">Status</th>
+          <th data-i18n="fac.tbl.action">Action</th>
+        </tr>
+      </thead>
+      <tbody id="orders-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
+  <span class="site-footer-links">
+    <a href="#" data-i18n="common.terms">Terms</a>
+    <a href="#" data-i18n="common.privacy">Privacy</a>
+  </span>
+</footer>
+
+<script src="../shared.js"></script>
+<script>
+  var ORDERS = [
+    { id: 'IMP-2851', flag: '🇦🇪', initials: 'A.M.', product: 'Paper bag', size: 'M',  qty: 1000, finish: 'matte',     received: '2 min ago',  receivedAr: 'قبل ٢ دقيقة',  status: 'pending',    stage: 0 },
+    { id: 'IMP-2849', flag: '🇸🇦', initials: 'H.S.', product: 'Paper bag', size: 'L',  qty: 500,  finish: 'gloss',     received: '1 hr ago',   receivedAr: 'قبل ساعة',     status: 'pending',    stage: 1 },
+    { id: 'IMP-2847', flag: '🇶🇦', initials: 'F.A.', product: 'Paper bag', size: 'M',  qty: 2000, finish: 'foil',      received: '4 hr ago',   receivedAr: 'قبل ٤ ساعات',  status: 'production', stage: 2 },
+    { id: 'IMP-2845', flag: '🇰🇼', initials: 'N.B.', product: 'Paper bag', size: 'S',  qty: 200,  finish: 'softtouch', received: 'Yesterday',  receivedAr: 'أمس',           status: 'production', stage: 2 },
+    { id: 'IMP-2842', flag: '🇧🇭', initials: 'R.K.', product: 'Paper bag', size: 'XL', qty: 1000, finish: 'kraft',     received: '2 days ago', receivedAr: 'قبل يومين',     status: 'qc',         stage: 3 },
+    { id: 'IMP-2838', flag: '🇴🇲', initials: 'K.A.', product: 'Paper bag', size: 'M',  qty: 500,  finish: 'matte',     received: '3 days ago', receivedAr: 'قبل ٣ أيام',    status: 'shipped',    stage: 4 },
+    { id: 'IMP-2834', flag: '🇦🇪', initials: 'S.M.', product: 'Paper bag', size: 'L',  qty: 1000, finish: 'gloss',     received: '5 days ago', receivedAr: 'قبل ٥ أيام',    status: 'shipped',    stage: 4 },
+  ];
+
+  var STATUS_MAP = {
+    pending:    { en: 'Pending', ar: 'بانتظار', cls: 'badge-amber' },
+    production: { en: 'In production', ar: 'قيد الإنتاج', cls: 'badge-soft' },
+    qc:         { en: 'Quality check', ar: 'فحص الجودة', cls: 'badge-soft' },
+    shipped:    { en: 'Shipped', ar: 'تم الشحن', cls: 'badge-green' },
+  };
+
+  var currentTab = 'all';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSiteHeader({
+      activePage: 'factory',
+      role: t('fac.role') + ': Artis Pack 🇦🇪',
+      showCart: false
+    });
+    render();
+    document.addEventListener('imprint:langchange', render);
+  });
+
+  function setTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('#tab-bar button').forEach(function(b) { b.classList.remove('active'); });
+    el.classList.add('active');
+    render();
+  }
+
+  function render() {
+    var lang = getLang();
+    var filtered = ORDERS.filter(function(o) {
+      if (currentTab === 'all') return true;
+      if (currentTab === 'pending')    return o.status === 'pending';
+      if (currentTab === 'production') return o.status === 'production' || o.status === 'qc';
+      if (currentTab === 'shipped')    return o.status === 'shipped';
+      return true;
+    });
+    var html = filtered.map(function(o) {
+      var st = STATUS_MAP[o.status];
+      return '<tr>' +
+        '<td><a href="order.html?id=' + o.id + '" class="imp-mono" style="color:var(--imp-fg);font-weight:500;">' + o.id + '</a></td>' +
+        '<td><span style="font-size:16px;margin-right:6px;">' + o.flag + '</span>' + o.initials + '</td>' +
+        '<td>' + o.product + ' · ' + o.size + '</td>' +
+        '<td>' + o.qty.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US') + '</td>' +
+        '<td style="text-transform:capitalize;">' + t('cfg.' + o.finish) + '</td>' +
+        '<td style="color:var(--imp-fg-3);">' + (lang === 'ar' ? o.receivedAr : o.received) + '</td>' +
+        '<td><span class="badge ' + st.cls + '">' + (lang === 'ar' ? st.ar : st.en) + '</span></td>' +
+        '<td><a href="order.html?id=' + o.id + '" class="btn btn-ghost btn-sm">' + t('fac.view') + '</a></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('orders-tbody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--imp-fg-3);padding:32px;">No orders in this view</td></tr>';
+  }
+
+  function refresh() {
+    imprintToast('Queue refreshed · 0 new orders');
+  }
+</script>
+</body>
+</html>
