@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPRINT® — Order detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    .order-layout {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 32px 80px;
+    }
+    .order-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .order-id {
+      font-family: var(--imp-font);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--imp-fg);
+    }
+    .order-meta {
+      font-size: 13px;
+      color: var(--imp-fg-3);
+      margin-top: 4px;
+    }
+    .order-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+    }
+    .panel {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 24px;
+      box-shadow: var(--imp-shadow-xs);
+      margin-bottom: 16px;
+    }
+    .panel-title {
+      font-family: var(--imp-font);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--imp-fg);
+      margin-bottom: 16px;
+    }
+    .specs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .spec-row .lbl {
+      font-size: 11px;
+      color: var(--imp-fg-3);
+      margin-bottom: 4px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .spec-row .val {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--imp-fg);
+    }
+    .artwork-preview {
+      background: var(--imp-surface-2);
+      border-radius: var(--imp-r-md);
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .artwork-preview svg { width: 120px; height: auto; color: var(--imp-fg); }
+
+    /* timeline */
+    .tl-list { display: flex; flex-direction: column; }
+    .tl-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      position: relative;
+    }
+    .tl-row:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      inset-inline-start: 13px;
+      top: 32px;
+      bottom: -8px;
+      width: 2px;
+      background: var(--imp-border);
+    }
+    .tl-row.done:not(:last-child)::after { background: var(--imp-success); }
+    .tl-row .dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--imp-surface);
+      border: 1.5px solid var(--imp-border);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--imp-fg-3);
+      font-size: 12px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .tl-row.done .dot { background: var(--imp-success); border-color: var(--imp-success); color: #fff; }
+    .tl-row.active .dot { border-color: var(--imp-fg); color: var(--imp-fg); box-shadow: 0 0 0 3px var(--imp-gold-soft); }
+    .tl-row .lbl-text { flex: 1; font-size: 13px; font-weight: 500; color: var(--imp-fg); }
+    .tl-row.done .lbl-text { color: var(--imp-fg-2); }
+    .tl-row .lbl-meta { font-size: 11px; color: var(--imp-fg-3); }
+
+    .action-block {
+      padding: 16px;
+      background: var(--imp-gold-soft);
+      border-radius: var(--imp-r-md);
+      margin-top: 16px;
+    }
+    .action-block .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--imp-fg-3);
+      margin-bottom: 6px;
+    }
+    .action-block .desc {
+      font-size: 13px;
+      color: var(--imp-fg);
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .order-layout { padding: 20px; }
+      .order-grid { grid-template-columns: 1fr; }
+      .specs-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="order-layout">
+  <div class="order-head">
+    <div>
+      <div class="order-id" id="order-id">IMP-2847</div>
+      <div class="order-meta" id="order-received-line">Received 4 hours ago · <span class="flag" id="cust-flag">🇶🇦</span> Customer F.A.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="badge badge-amber" id="status-badge">In production</span>
+      <a href="index.html" class="btn btn-outline btn-sm">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span data-en="Back to queue" data-ar="رجوع للقائمة">Back to queue</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="order-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title" data-i18n="fac.specs">Specifications</div>
+        <div class="specs-grid">
+          <div class="spec-row"><div class="lbl" data-en="Product" data-ar="المنتج">Product</div><div class="val">Paper bag</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Size" data-ar="المقاس">Size</div><div class="val">M · Classic (30 × 34 × 17 cm)</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Quantity" data-ar="الكمية">Quantity</div><div class="val">2,000 units</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Exterior finish" data-ar="التشطيب الخارجي">Exterior finish</div><div class="val">Foil stamp · gold</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Interior finish" data-ar="التشطيب الداخلي">Interior finish</div><div class="val">Matte · cream</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Handles" data-ar="المقابض">Handles</div><div class="val">Cotton · black</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Artwork type" data-ar="نوع التصميم">Artwork type</div><div class="val">Text · "ATELIER"</div></div>
+          <div class="spec-row"><div class="lbl" data-en="Emboss depth" data-ar="عمق البروز">Emboss depth</div><div class="val">0.4 mm</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title" data-i18n="fac.artwork">Artwork preview</div>
+        <div class="artwork-preview">
+          <svg viewBox="0 0 200 240" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M30 60h140l-10 170H40L30 60z" fill="var(--imp-gold-soft)"/>
+            <path d="M55 60c0-22 20-40 45-40s45 18 45 40"/>
+            <text x="100" y="148" text-anchor="middle" font-family="Inter" font-weight="700" font-size="22" fill="var(--imp-gold)" stroke="none">ATELIER</text>
+          </svg>
+        </div>
+        <button class="btn btn-outline btn-block" onclick="imprintToast('production-IMP-2847.pdf · 4.2 MB · Downloaded')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="fac.download">Download production file (PDF)</span>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title" data-en="Timeline" data-ar="الجدول الزمني">Timeline</div>
+        <div class="tl-list" id="tl-list"></div>
+        <div class="action-block" id="action-block">
+          <div class="label" data-en="Next action" data-ar="الإجراء التالي">Next action</div>
+          <div class="desc" id="action-desc" data-en="Mark this order as ready for quality check." data-ar="حدد هذا الطلب جاهزاً لفحص الجودة.">Mark this order as ready for quality check.</div>
+          <button class="btn btn-primary btn-block" onclick="advanceStage()">
+            <span id="action-btn-text" data-en="Mark as quality check" data-ar="تحديد لفحص الجودة">Mark as quality check</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div id="tracking-input-wrap" style="display:none;margin-top:16px;">
+          <div class="form-group">
+            <label class="form-label" data-en="Tracking number" data-ar="رقم التتبع">Tracking number</label>
+            <input class="form-input" type="text" id="tracking-input" placeholder="ARX-1234567890">
+          </div>
+          <button class="btn btn-primary btn-block" onclick="confirmShipped()">
+            <span data-en="Confirm shipment" data-ar="تأكيد الشحن">Confirm shipment</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
+</footer>
+
+<script src="../shared.js"></script>
+<script>
+  var STAGES = [
+    { key: 'confirmed', en: 'Order confirmed',      ar: 'تأكيد الطلب' },
+    { key: 'sent',      en: 'Production file sent', ar: 'إرسال ملف الإنتاج' },
+    { key: 'producing', en: 'In production',        ar: 'قيد الإنتاج' },
+    { key: 'qc',        en: 'Quality check',        ar: 'فحص الجودة' },
+    { key: 'shipped',   en: 'Shipped',              ar: 'تم الشحن' },
+    { key: 'delivered', en: 'Delivered',            ar: 'تم التسليم' },
+  ];
+
+  var STAGE_ACTIONS = [
+    { btn:  { en: 'Send production file', ar: 'إرسال ملف الإنتاج' }, desc: { en: 'Confirm artwork and send production file to the printing floor.', ar: 'تأكيد التصميم وإرسال ملف الإنتاج إلى أرض الطباعة.' } },
+    { btn:  { en: 'Begin production',     ar: 'بدء الإنتاج' },        desc: { en: 'Start production on this batch.',                                ar: 'ابدأ إنتاج هذه الدفعة.' } },
+    { btn:  { en: 'Mark as quality check',ar: 'تحديد لفحص الجودة' },  desc: { en: 'Production complete. Send to QC for inspection.',                ar: 'اكتمل الإنتاج. أرسل لفحص الجودة.' } },
+    { btn:  { en: 'Mark as shipped',      ar: 'تحديد كمشحون' },       desc: { en: 'QC passed. Ready to ship — enter tracking number below.',        ar: 'تم اجتياز فحص الجودة. جاهز للشحن.' } },
+    { btn:  { en: 'Mark as delivered',    ar: 'تحديد كمستلم' },       desc: { en: 'Confirm delivery with the customer.',                            ar: 'تأكيد التسليم مع العميل.' } },
+    { btn:  { en: 'Order complete',       ar: 'الطلب مكتمل' },        desc: { en: 'This order has been delivered. No further actions required.',    ar: 'تم تسليم هذا الطلب. لا توجد إجراءات أخرى.' } },
+  ];
+
+  var currentStage = 2; /* In production */
+  var orderId = new URLSearchParams(window.location.search).get('id') || 'IMP-2847';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSiteHeader({
+      activePage: 'factory',
+      role: t('fac.role') + ': Artis Pack 🇦🇪',
+      showCart: false
+    });
+    document.getElementById('order-id').textContent = orderId;
+    /* Restore stage from localStorage if any */
+    var saved = parseInt(localStorage.getItem('imprint_factory_stage_' + orderId), 10);
+    if (!isNaN(saved)) currentStage = saved;
+    renderTimeline();
+    document.addEventListener('imprint:langchange', renderTimeline);
+  });
+
+  function renderTimeline() {
+    var lang = getLang();
+    var list = document.getElementById('tl-list');
+    list.innerHTML = STAGES.map(function(s, i) {
+      var cls = '';
+      var dotContent;
+      if (i < currentStage) { cls = 'done'; dotContent = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; }
+      else if (i === currentStage) { cls = 'active'; dotContent = (i + 1); }
+      else { dotContent = (i + 1); }
+      var label = lang === 'ar' ? s.ar : s.en;
+      var meta = i < currentStage ? '' : (i === currentStage ? (lang === 'ar' ? 'الحالة الحالية' : 'Current') : (lang === 'ar' ? 'بانتظار' : 'Pending'));
+      return '<div class="tl-row ' + cls + '"><div class="dot">' + dotContent + '</div><div class="lbl-text">' + label + '</div><div class="lbl-meta">' + meta + '</div></div>';
+    }).join('');
+    /* update action block */
+    var action = STAGE_ACTIONS[currentStage] || STAGE_ACTIONS[STAGE_ACTIONS.length - 1];
+    document.getElementById('action-desc').textContent = lang === 'ar' ? action.desc.ar : action.desc.en;
+    document.getElementById('action-btn-text').textContent = lang === 'ar' ? action.btn.ar : action.btn.en;
+    /* tracking input shown when stage is 'shipped' next */
+    document.getElementById('tracking-input-wrap').style.display = currentStage === 3 ? 'block' : 'none';
+    /* status badge */
+    var badge = document.getElementById('status-badge');
+    var cls = currentStage <= 1 ? 'badge-amber' : (currentStage <= 3 ? 'badge-soft' : 'badge-green');
+    badge.className = 'badge ' + cls;
+    badge.textContent = lang === 'ar' ? STAGES[currentStage].ar : STAGES[currentStage].en;
+  }
+
+  function advanceStage() {
+    if (currentStage >= STAGES.length - 1) {
+      imprintToast(getLang() === 'ar' ? 'الطلب مكتمل' : 'Order already complete');
+      return;
+    }
+    if (currentStage === 3) {
+      /* If we're at QC moving to Shipped, require tracking input */
+      var inp = document.getElementById('tracking-input');
+      if (!inp.value.trim()) {
+        inp.focus();
+        imprintToast(getLang() === 'ar' ? 'أدخل رقم التتبع أولاً' : 'Enter tracking number first');
+        return;
+      }
+    }
+    currentStage++;
+    localStorage.setItem('imprint_factory_stage_' + orderId, currentStage);
+    renderTimeline();
+    imprintToast(getLang() === 'ar' ? 'تم تحديث الحالة' : 'Status updated');
+  }
+  function confirmShipped() {
+    advanceStage();
+  }
+</script>
+</body>
+</html>

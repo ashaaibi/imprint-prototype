@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMPRINT® — Template builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    .builder-layout {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 32px 100px;
+    }
+    .b-title-row {
+      margin-bottom: 24px;
+    }
+    .b-title {
+      font-family: var(--imp-font);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--imp-fg);
+    }
+    .b-sub { font-size: 14px; color: var(--imp-fg-2); margin-top: 4px; }
+
+    .b-stage { display: none; }
+    .b-stage.active { display: block; animation: imp-fadeIn 0.32s var(--imp-ease); }
+
+    .b-panel {
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 32px;
+      box-shadow: var(--imp-shadow-xs);
+      margin-bottom: 24px;
+    }
+    .b-panel-title {
+      font-family: var(--imp-font);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--imp-fg);
+      margin-bottom: 8px;
+    }
+    .b-panel-sub { font-size: 14px; color: var(--imp-fg-2); margin-bottom: 24px; }
+
+    .upload-zone {
+      border: 1.5px dashed var(--imp-border);
+      border-radius: var(--imp-r-lg);
+      padding: 60px 32px;
+      text-align: center;
+      background: var(--imp-surface-2);
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    .upload-zone:hover { border-color: var(--imp-fg); background: var(--imp-surface-3); }
+    .upload-zone.hasfile { border-style: solid; border-color: var(--imp-gold); background: var(--imp-gold-soft); }
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--imp-fg-3);
+      margin: 0 auto 16px;
+    }
+    .upload-zone.hasfile .upload-icon { color: var(--imp-gold); }
+    .upload-text {
+      font-size: 14px;
+      color: var(--imp-fg-2);
+      margin-bottom: 6px;
+    }
+    .upload-formats {
+      font-size: 12px;
+      color: var(--imp-fg-3);
+    }
+
+    .preview-zone {
+      background: var(--imp-surface-2);
+      border-radius: var(--imp-r-lg);
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .preview-zone svg.bag-preview {
+      width: 200px;
+      height: auto;
+      color: var(--imp-fg);
+    }
+    .marker {
+      position: absolute;
+      width: 24px; height: 24px;
+      background: var(--imp-fg);
+      color: var(--imp-surface);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--imp-shadow-sm);
+    }
+    .marker.text { background: var(--imp-fg); }
+    .marker.color { background: var(--imp-gold); color: var(--imp-fg); }
+
+    .marker-tools {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .marker-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .marker-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-md);
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .marker-row .m-num {
+      width: 22px; height: 22px;
+      background: var(--imp-fg);
+      color: var(--imp-surface);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .marker-row .m-name {
+      flex: 1;
+      font-weight: 500;
+      color: var(--imp-fg);
+    }
+    .marker-row .m-meta { color: var(--imp-fg-3); font-size: 12px; }
+    .marker-row button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--imp-fg-3);
+      padding: 4px;
+    }
+    .marker-row button:hover { color: var(--imp-error); }
+
+    .constraint-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      background: var(--imp-surface);
+      border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-md);
+      padding: 14px;
+      margin-bottom: 12px;
+      align-items: end;
+    }
+    .constraint-row .form-group { margin: 0; }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 700px) {
+      .builder-layout { padding: 20px; }
+      .constraint-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="builder-layout">
+  <div class="b-title-row">
+    <h1 class="b-title" data-i18n="des.builder.title">New template</h1>
+    <div class="b-sub" data-en="Upload your artwork and define what customers can edit." data-ar="ارفع تصميمك وحدد ما يمكن للعميل تعديله.">Upload your artwork and define what customers can edit.</div>
+  </div>
+
+  <div class="progress-steps" id="b-progress">
+    <div class="step active" data-stage="1">
+      <div class="step-num">1</div>
+      <span class="step-label" data-i18n="des.builder.s1">Upload artwork</span>
+    </div>
+    <div class="step" data-stage="2">
+      <div class="step-num">2</div>
+      <span class="step-label" data-i18n="des.builder.s2">Mark editable fields</span>
+    </div>
+    <div class="step" data-stage="3">
+      <div class="step-num">3</div>
+      <span class="step-label" data-i18n="des.builder.s3">Set constraints</span>
+    </div>
+    <div class="step" data-stage="4">
+      <div class="step-num">4</div>
+      <span class="step-label" data-i18n="des.builder.s4">Preview &amp; submit</span>
+    </div>
+  </div>
+
+  <!-- STAGE 1 -->
+  <section class="b-stage active" id="stage-1">
+    <div class="b-panel">
+      <div class="b-panel-title" data-i18n="des.builder.s1">Upload artwork</div>
+      <div class="b-panel-sub" data-en="SVG, AI, or PDF up to 25 MB. Vector files only — raster won't print sharp at scale." data-ar="SVG أو AI أو PDF حتى ٢٥ ميغا. ملفات متجهية فقط.">SVG, AI, or PDF up to 25 MB. Vector files only — raster won't print sharp at scale.</div>
+      <div class="upload-zone" id="upload-zone" onclick="simulateUpload()">
+        <svg class="upload-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M24 8v24M14 18l10-10 10 10M8 40h32"/>
+        </svg>
+        <div class="upload-text" id="upload-text" data-en="Drag &amp; drop your file here, or click to browse" data-ar="اسحب الملف هنا أو انقر للتصفح">Drag &amp; drop your file here, or click to browse</div>
+        <div class="upload-formats">SVG · AI · PDF · 25 MB max</div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <a href="index.html" class="btn btn-outline" data-en="Cancel" data-ar="إلغاء">Cancel</a>
+      <button class="btn btn-primary" onclick="goStage(2)">
+        <span data-i18n="co.continue">Continue</span>
+        <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- STAGE 2 -->
+  <section class="b-stage" id="stage-2">
+    <div class="b-panel">
+      <div class="b-panel-title" data-i18n="des.builder.s2">Mark editable fields</div>
+      <div class="b-panel-sub" data-en="Click on the artwork to place markers where customers can change text or colors." data-ar="انقر على التصميم لإضافة نقاط يمكن للعميل تعديلها.">Click on the artwork to place markers where customers can change text or colors.</div>
+
+      <div class="marker-tools">
+        <button class="btn btn-outline btn-sm" id="tool-text" onclick="setTool('text')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          <span data-en="Add text field" data-ar="إضافة حقل نص">Add text field</span>
+        </button>
+        <button class="btn btn-outline btn-sm" id="tool-color" onclick="setTool('color')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+          <span data-en="Add color zone" data-ar="إضافة منطقة لون">Add color zone</span>
+        </button>
+      </div>
+
+      <div class="preview-zone" id="preview-zone" onclick="placeMarker(event)">
+        <svg class="bag-preview" viewBox="0 0 200 240" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M30 60h140l-10 170H40L30 60z"/>
+          <path d="M55 60c0-22 20-40 45-40s45 18 45 40"/>
+          <path d="M65 50c0-15 12-28 35-28s35 13 35 28" stroke-opacity="0.4"/>
+        </svg>
+      </div>
+
+      <div class="marker-list" id="marker-list">
+        <div class="marker-row">
+          <span class="m-num">1</span>
+          <span class="m-name" data-en="Brand name" data-ar="اسم العلامة">Brand name</span>
+          <span class="m-meta" data-en="Text · 24 char max" data-ar="نص · ٢٤ حرف">Text · 24 char max</span>
+          <button title="Remove">✕</button>
+        </div>
+        <div class="marker-row">
+          <span class="m-num">2</span>
+          <span class="m-name" data-en="Tagline" data-ar="عبارة">Tagline</span>
+          <span class="m-meta" data-en="Text · 48 char max" data-ar="نص · ٤٨ حرف">Text · 48 char max</span>
+          <button title="Remove">✕</button>
+        </div>
+        <div class="marker-row">
+          <span class="m-num">3</span>
+          <span class="m-name" data-en="Primary color" data-ar="اللون الأساسي">Primary color</span>
+          <span class="m-meta" data-en="Color · brand palette" data-ar="لون · لوحة العلامة">Color · brand palette</span>
+          <button title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goStage(1)" data-i18n="co.back">Back</button>
+      <button class="btn btn-primary" onclick="goStage(3)">
+        <span data-i18n="co.continue">Continue</span>
+        <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- STAGE 3 -->
+  <section class="b-stage" id="stage-3">
+    <div class="b-panel">
+      <div class="b-panel-title" data-i18n="des.builder.s3">Set constraints</div>
+      <div class="b-panel-sub" data-en="Lock fonts, colors, and character limits so customers can't break your design." data-ar="ثبّت الخطوط والألوان وحدود النص.">Lock fonts, colors, and character limits so customers can't break your design.</div>
+
+      <div class="constraint-row">
+        <div>
+          <span class="m-num">1</span> <strong>Brand name</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-en="Font pair" data-ar="زوج الخطوط">Font pair</label>
+          <select class="form-select">
+            <option>Inter + Cairo</option>
+            <option>Playfair + Tajawal</option>
+            <option>Sora + Noto Sans Arabic</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-en="Char limit" data-ar="حد الحروف">Char limit</label>
+          <input class="form-input" type="number" value="24">
+        </div>
+      </div>
+
+      <div class="constraint-row">
+        <div>
+          <span class="m-num">2</span> <strong>Tagline</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-en="Font pair" data-ar="زوج الخطوط">Font pair</label>
+          <select class="form-select">
+            <option>Inter + Cairo</option>
+            <option>Playfair + Tajawal</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-en="Char limit" data-ar="حد الحروف">Char limit</label>
+          <input class="form-input" type="number" value="48">
+        </div>
+      </div>
+
+      <div class="constraint-row">
+        <div>
+          <span class="m-num" style="background:var(--imp-gold);color:var(--imp-fg);">3</span> <strong>Primary color</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-en="Palette" data-ar="اللوحة">Palette</label>
+          <select class="form-select">
+            <option>Brand palette (5 colors)</option>
+            <option>Neutrals only</option>
+            <option>Any color</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-en="Default" data-ar="افتراضي">Default</label>
+          <input class="form-input" type="text" value="#0A0A0A">
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goStage(2)" data-i18n="co.back">Back</button>
+      <button class="btn btn-primary" onclick="goStage(4)">
+        <span data-i18n="co.continue">Continue</span>
+        <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- STAGE 4 -->
+  <section class="b-stage" id="stage-4">
+    <div class="b-panel">
+      <div class="b-panel-title" data-i18n="des.builder.s4">Preview &amp; submit</div>
+      <div class="b-panel-sub" data-en="This is what customers will see. Submit for review when ready — approval usually takes under 24 hours." data-ar="هذا ما سيراه العميل. أرسل للمراجعة — الموافقة عادة خلال ٢٤ ساعة.">This is what customers will see. Submit for review when ready — approval usually takes under 24 hours.</div>
+      <div class="preview-zone">
+        <svg class="bag-preview" viewBox="0 0 200 240" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M30 60h140l-10 170H40L30 60z" fill="var(--imp-gold-soft)"/>
+          <path d="M55 60c0-22 20-40 45-40s45 18 45 40"/>
+          <text x="100" y="130" text-anchor="middle" font-family="Inter" font-weight="700" font-size="20" fill="var(--imp-fg)" stroke="none">ATELIER</text>
+          <text x="100" y="160" text-anchor="middle" font-family="Inter" font-weight="400" font-size="11" fill="var(--imp-fg-2)" stroke="none">Premium · Made in UAE</text>
+        </svg>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goStage(3)" data-i18n="co.back">Back</button>
+      <button class="btn btn-primary" onclick="submitTemplate()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span data-en="Submit for review" data-ar="إرسال للمراجعة">Submit for review</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
+  <span class="site-footer-links">
+    <a href="#" data-i18n="common.terms">Terms</a>
+    <a href="#" data-i18n="common.privacy">Privacy</a>
+  </span>
+</footer>
+
+<script src="../shared.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initSiteHeader({
+      activePage: 'designer',
+      role: t('des.role') + ' · Noura',
+      showCart: false
+    });
+  });
+
+  var currentStage = 1;
+  function goStage(n) {
+    currentStage = n;
+    document.querySelectorAll('.b-stage').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('stage-' + n).classList.add('active');
+    document.querySelectorAll('#b-progress .step').forEach(function(s, i) {
+      s.classList.remove('active', 'done');
+      if (i + 1 < n) s.classList.add('done');
+      if (i + 1 === n) s.classList.add('active');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function simulateUpload() {
+    var zone = document.getElementById('upload-zone');
+    zone.classList.add('hasfile');
+    document.getElementById('upload-text').textContent = '✓ atelier-logo.svg · 24 KB · Uploaded';
+  }
+
+  var currentTool = 'text';
+  function setTool(tool) {
+    currentTool = tool;
+  }
+  var markerCount = 3;
+  function placeMarker(e) {
+    if (!currentTool) return;
+    markerCount++;
+    var zone = document.getElementById('preview-zone');
+    var rect = zone.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    var m = document.createElement('div');
+    m.className = 'marker ' + currentTool;
+    m.textContent = markerCount;
+    m.style.left = (x - 12) + 'px';
+    m.style.top = (y - 12) + 'px';
+    zone.appendChild(m);
+  }
+
+  function submitTemplate() {
+    imprintToast(t('des.builder.s4') === 'Preview & submit' ? 'Template submitted. We\'ll review within 24 hours.' : 'تم الإرسال. سنراجع خلال ٢٤ ساعة.');
+    setTimeout(function() { window.location.href = 'index.html'; }, 2200);
+  }
+</script>
+</body>
+</html>
