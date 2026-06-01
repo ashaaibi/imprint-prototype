@@ -1960,10 +1960,10 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Idle resume delay</span>
-          <span class="slider-val" id="idle-delay-val">4.0s</span>
+          <span class="slider-val" id="idle-delay-val">6.0s</span>
         </div>
         <input type="range" class="test-slider" id="idle-delay-slider"
-               min="0" max="15" step="0.5" value="4"
+               min="0" max="15" step="0.5" value="6"
                oninput="onIdleDelaySlider(this.value)">
       </div>
 
@@ -7330,7 +7330,7 @@ let SPIN_SPEED    = 0.0010;
 /* ─── INTRO ANIMATION + IDLE AUTO-RESUME ─── */
 var intro = { active: false, start: 0, duration: 1000, fromTheta: 0 };
 var introDurationMs = 1000;       /* default 1.00s, controllable in testing */
-var idleDelaySec = 4;             /* resume auto-rotate after N seconds idle */
+var idleDelaySec = 6;             /* resume auto-rotate after N seconds idle */
 var idleResumeEnabled = true;
 var lastInteractT = 0;            /* timestamp (performance.now) of last user interaction */
 
