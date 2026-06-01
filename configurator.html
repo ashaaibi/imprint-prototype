@@ -5471,8 +5471,9 @@ function _fetchFontList(cb) {
   fetch('fonts/').then(function(r) { return r.ok ? r.text() : ''; }).then(function(html) {
     var files = [], re = /href="([^"?#:][^"]*?\.(?:ttf|otf|woff2?))"/gi, m;
     while ((m = re.exec(html))) { var f = decodeURIComponent(m[1].replace(/^\.?\//, '')); if (f.indexOf('/') < 0 && files.indexOf(f) < 0) files.push(f); }
-    cb(files);
-  }).catch(function() { cb([]); });
+    if (files.length) { cb(files); return; }
+    _fetchJsonList('fonts/index.json', function(mf) { cb((mf && mf.length) ? mf : []); });
+  }).catch(function() { _fetchJsonList('fonts/index.json', function(mf) { cb((mf && mf.length) ? mf : []); }); });
 }
 function renderFontLibrary() {
   var box = document.getElementById('add-source-library'); if (!box) return;
@@ -5507,13 +5508,24 @@ function chooseLibraryFont(key) {
 function _libFolder() { return (_addSrc && _addSrc.kind === 'pattern') ? 'patterns' : 'graphics'; }
 /* List image files in a library folder by parsing the dev-server's directory index,
    so artist-added files appear automatically. Falls back to ARTIST_PATTERNS for patterns/. */
+function _fetchJsonList(url, cb) {
+  fetch(url).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ cb(Array.isArray(j) ? j : null); }).catch(function(){ cb(null); });
+}
 function _fetchLibraryList(folder, cb) {
+  /* 1) directory listing — works on a dev server with autoindex (live auto-discovery) */
   fetch(folder + '/').then(function(r){ return r.ok ? r.text() : ''; }).then(function(html) {
     var files = [], re = /href="([^"?#:][^"]*?\.(?:svg|png|jpe?g|webp|gif))"/gi, m;
     while ((m = re.exec(html))) { var f = decodeURIComponent(m[1].replace(/^\.?\//, '')); if (f.indexOf('/') < 0 && files.indexOf(f) < 0) files.push(f); }
-    if (!files.length && folder === 'patterns') files = ARTIST_PATTERNS.slice();
-    cb(files);
-  }).catch(function(){ cb(folder === 'patterns' ? ARTIST_PATTERNS.slice() : []); });
+    if (files.length) { cb(files); return; }
+    /* 2) committed manifest — GitHub Pages serves no directory listing */
+    _fetchJsonList(folder + '/index.json', function(mf) {
+      cb((mf && mf.length) ? mf : (folder === 'patterns' ? ARTIST_PATTERNS.slice() : []));
+    });
+  }).catch(function() {
+    _fetchJsonList(folder + '/index.json', function(mf) {
+      cb((mf && mf.length) ? mf : (folder === 'patterns' ? ARTIST_PATTERNS.slice() : []));
+    });
+  });
 }
 function renderArtistLibrary() {
   var box = document.getElementById('add-source-library'); if (!box) return;
