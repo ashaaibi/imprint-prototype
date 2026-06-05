@@ -117,6 +117,7 @@
         });
         m.needsUpdate = true;
       }
+      _rlmApplyDefaultPaperFinish();
       _rlmInit.bag = true;
     } catch (e) { console.warn('[realism] initRealismBag', e); }
   };
@@ -729,6 +730,39 @@
       if (typeof bagTexture !== 'undefined' && bagTexture) bagTexture.needsUpdate = true;
     } catch (e) {}
   };
+
+  /* DEFAULT PAPER MATERIAL: load a committed albedo + normal and apply to ALL
+     finishes as an override. Gated on the albedo loading, so a missing diffuse
+     file is a safe no-op (finishes are left untouched, no regression). */
+  var _rlmDefaultPaperDone = false;
+  function _rlmApplyDefaultPaperFinish() {
+    if (_rlmDefaultPaperDone) return;
+    var DIFF = 'materials/paper-2-DIFFUSE.png', DIFF_ALT = 'materials/paper-2-DIFFUSE.jpg';
+    var NORM = 'materials/paper-2-NORM.png';
+    var alb = new Image(), nrm = new Image(), ready = 0, albOk = false, nrmOk = false;
+    function done() {
+      if (ready < 2 || !albOk) return;   /* require the albedo; otherwise leave finishes as-is */
+      _rlmDefaultPaperDone = true;
+      _rlmFinishKeys().forEach(function (key) {
+        var fm = _rlmFm(key);
+        fm.tile = 7.0;
+        fm.albedo.img = alb; fm.albedo.opacity = 0.45; fm.albedo.blend = 'multiply'; fm.albedo.invert = false; fm.albedo.name = 'paper-2-DIFFUSE';
+        if (nrmOk) { fm.normal.img = nrm; fm.normal.name = 'paper-2-NORM.png'; }
+        fm.normal.strength = 1.10; fm.normal.invert = false;
+        try { var pr = BAG_FINISH_PRESETS[key]; if (pr) { pr.roughness = 0.90; pr.metalness = 0.00; pr.transmission = 0.00; } } catch (e) {}
+      });
+      var act = _activeFinish();
+      try { if (act && typeof applyBagFinish === 'function') applyBagFinish('exterior', act, null, true); } catch (e) {}
+      try { applyFinishCustomMaps(act); } catch (e) {}
+      try { if (typeof drawBagTexture === 'function') drawBagTexture(); } catch (e) {}
+      try { _rlmRenderFinishMaps(); } catch (e) {}
+    }
+    alb.onload  = function () { albOk = true; ready++; done(); };
+    alb.onerror = function () { if (alb.src.indexOf(DIFF_ALT) === -1) { alb.src = DIFF_ALT; return; } ready++; done(); };
+    nrm.onload  = function () { nrmOk = true; ready++; done(); };
+    nrm.onerror = function () { ready++; done(); };
+    alb.src = DIFF; nrm.src = NORM;
+  }
 
   function _rlmFinishUploadImg(file, cb) {
     var rd = new FileReader();
