@@ -2425,30 +2425,30 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer brightness</span>
-          <span class="slider-val" id="layer-brightness-val">1.00</span>
+          <span class="slider-val" id="layer-brightness-val">0.60</span>
         </div>
         <input type="range" class="test-slider" id="layer-brightness-slider"
-               min="0" max="2" step="0.05" value="1.00"
+               min="0" max="2" step="0.05" value="0.60"
                oninput="onLayerBrightnessSlider(this.value)">
       </div>
 
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer saturation</span>
-          <span class="slider-val" id="layer-saturation-val">1.00</span>
+          <span class="slider-val" id="layer-saturation-val">1.45</span>
         </div>
         <input type="range" class="test-slider" id="layer-saturation-slider"
-               min="0" max="3" step="0.05" value="1.00"
+               min="0" max="3" step="0.05" value="1.45"
                oninput="onLayerSaturationSlider(this.value)">
       </div>
 
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer contrast</span>
-          <span class="slider-val" id="layer-contrast-val">1.00</span>
+          <span class="slider-val" id="layer-contrast-val">1.45</span>
         </div>
         <input type="range" class="test-slider" id="layer-contrast-slider"
-               min="0" max="3" step="0.05" value="1.00"
+               min="0" max="3" step="0.05" value="1.45"
                oninput="onLayerContrastSlider(this.value)">
       </div>
 
@@ -2604,7 +2604,7 @@
       <label class="test-check-row" style="margin-top:8px;"><input type="checkbox" id="rlm-grade-on" checked onchange="onGradeToggle(this.checked)"><span>Color grade</span></label>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 6px;line-height:1.4;">Final colour tweak — saturation, contrast, brightness — like a photo filter applied over the whole view.</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Saturation</span><span class="slider-val" id="rlm-grade-sat-val">1.06</span></div><input type="range" class="test-slider" min="0" max="2" step="0.01" value="1.06" oninput="onGradeSat(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="rlm-grade-con-val">1.03</span></div><input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1.03" oninput="onGradeContrast(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="rlm-grade-con-val">1.11</span></div><input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1.11" oninput="onGradeContrast(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Brightness</span><span class="slider-val" id="rlm-grade-bri-val">1.00</span></div><input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1.00" oninput="onGradeBright(this.value)"></div>
 
       <label class="test-check-row" style="margin-top:8px;"><input type="checkbox" id="rlm-fxaa-on" onchange="onFxaaToggle(this.checked)"><span>FXAA (anti-alias)</span></label>
@@ -3292,7 +3292,7 @@ var REALISM = {
   bloom:    { on:false, strength:0.12, radius:0.40, threshold:0.85 },
   dof:      { on:false, focus:3.30, aperture:1.20, maxblur:0.006 },
   vignette: { on:true,  amount:0.35 },
-  grade:    { on:true,  saturation:1.06, contrast:1.04, brightness:1.00 },
+  grade:    { on:true,  saturation:1.06, contrast:1.11, brightness:1.00 },
   fxaa:     { on:false },
 };
 
@@ -3848,9 +3848,9 @@ function getArtCorr() {
    to BAG_UV.exterior). The caller sets the clip region beforehand.
    mode 'color' → tinted logo / colored text (visible artwork)
    mode 'mask'  → logo alpha / white text (PBR + bump shape masks) */
-var LAYER_BRIGHTNESS = 1.0;   /* testing: brightness multiplier applied to artwork pixels only */
-var LAYER_SATURATION = 1.0;   /* testing: saturation boost for artwork pixels only (counters tone-map dulling) */
-var LAYER_CONTRAST   = 1.0;   /* testing: contrast boost for artwork pixels only */
+var LAYER_BRIGHTNESS = 0.6;   /* testing: brightness multiplier applied to artwork pixels only */
+var LAYER_SATURATION = 1.45;   /* testing: saturation boost for artwork pixels only (counters tone-map dulling) */
+var LAYER_CONTRAST   = 1.45;   /* testing: contrast boost for artwork pixels only */
 function _layerFilter(){
   var f = '';
   if (LAYER_BRIGHTNESS !== 1) f += ' brightness(' + LAYER_BRIGHTNESS + ')';
