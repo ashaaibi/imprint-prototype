@@ -749,10 +749,8 @@
         fm.albedo.img = alb; fm.albedo.opacity = 0.45; fm.albedo.blend = 'multiply'; fm.albedo.invert = false; fm.albedo.name = 'paper-2-DIFFUSE';
         if (nrmOk) { fm.normal.img = nrm; fm.normal.name = 'paper-2-NORM.png'; }
         fm.normal.strength = 1.10; fm.normal.invert = false;
-        try { var pr = BAG_FINISH_PRESETS[key]; if (pr) { pr.roughness = 0.90; pr.metalness = 0.00; pr.transmission = 0.00; } } catch (e) {}
       });
       var act = _activeFinish();
-      try { if (act && typeof applyBagFinish === 'function') applyBagFinish('exterior', act, null, true); } catch (e) {}
       try { applyFinishCustomMaps(act); } catch (e) {}
       try { if (typeof drawBagTexture === 'function') drawBagTexture(); } catch (e) {}
       try { _rlmRenderFinishMaps(); } catch (e) {}
