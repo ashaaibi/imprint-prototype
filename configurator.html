@@ -2191,10 +2191,10 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Object Y offset</span>
-          <span class="slider-val" id="y-offset-val">-0.10</span>
+          <span class="slider-val" id="y-offset-val">0.00</span>
         </div>
         <input type="range" class="test-slider" id="y-offset-slider"
-               min="-0.5" max="2.0" step="0.05" value="-0.10"
+               min="-0.5" max="2.0" step="0.05" value="0"
                oninput="onYOffsetSlider(this.value)">
       </div>
 
@@ -7565,7 +7565,7 @@ let zoomVelocity = 0;
 
 let MAX_ZOOM_OUT = 16.3;           /* maximum orbit radius (zoom out limit) */
 let MIN_ZOOM     = 1.2;            /* minimum orbit radius (zoom in limit) */
-let LIFT          = -0.10;          /* extra Y above ground from the Object Y offset slider */
+let LIFT          = 0.00;          /* extra Y above ground from the Object Y offset slider */
 let GROUND_OFFSET = 0;             /* shifts entire assembly (box + shadow) together */
 let DAMPING       = 0.95;
 let ZOOM_DAMPING  = 0.95;
