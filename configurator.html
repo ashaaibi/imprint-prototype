@@ -616,21 +616,20 @@
 
     /* ─── FINISH GRID ─────────────────────── */
     .finish-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
       margin-bottom: 4px;
     }
     .finish-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       background: var(--imp-surface);
       border: 1px solid var(--imp-border);
-      border-radius: var(--imp-r-lg);
-      padding: 12px;
+      border-radius: var(--imp-r-pill);
+      padding: 6px 13px 6px 7px;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
       transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
     }
     .finish-card:hover { border-color: var(--imp-border-hover); background: var(--imp-surface-2); }
@@ -732,22 +731,46 @@
       border-radius: var(--imp-r-md);
     }
     .finish-preview {
-      width: 100%;
-      height: 38px;
-      border-radius: var(--imp-r-md);
-      margin-bottom: 6px;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin: 0;
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
     }
     .finish-name {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--imp-fg);
       letter-spacing: -0.01em;
     }
-    .finish-sub {
-      font-size: 11px;
-      color: var(--imp-fg-3);
+    .finish-sub { display: none; }
+
+    /* ─── FLAT LAYER EDITOR ─── */
+    .lyr-ed { margin: 2px 0 4px; }
+    .lyr-ed-stage {
+      position: relative; width: 100%; height: 200px;
+      border: 1px solid var(--imp-border); border-radius: var(--imp-r-md);
+      background-color: var(--imp-surface-2);
+      background-image:
+        linear-gradient(to right, var(--imp-border) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--imp-border) 1px, transparent 1px);
+      background-size: 10% 10%, 10% 10%;
+      overflow: hidden; touch-action: none; user-select: none;
     }
+    .lyr-ed-item { position: absolute; transform-origin: center center; cursor: move; touch-action: none; }
+    .lyr-ed-item img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; outline: 1px dashed var(--imp-gold); outline-offset: 2px; }
+    .lyr-ed-txt { display: inline-block; line-height: 1.1; white-space: pre; padding: 2px 4px; outline: 1px dashed var(--imp-gold); outline-offset: 2px; pointer-events: none; }
+    .lyr-ed-ph { width: 64px; height: 46px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 9px; color: var(--imp-fg-3); border: 1px dashed var(--imp-border); border-radius: 4px; background: var(--imp-surface); pointer-events: none; }
+    .lyr-ed-h { position: absolute; width: 15px; height: 15px; border-radius: 50%; background: var(--imp-gold); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); z-index: 3; }
+    .lyr-ed-resize { right: -8px; bottom: -8px; cursor: nwse-resize; }
+    .lyr-ed-rotate { left: 50%; top: -30px; transform: translateX(-50%); cursor: grab; }
+    .lyr-ed-rotwire { position: absolute; left: 50%; top: -22px; width: 1px; height: 22px; background: var(--imp-gold); transform: translateX(-50%); z-index: 2; }
+    .lyr-ed-read { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 10px; color: var(--imp-fg-3); margin-top: 6px; }
+    .lyr-ed-read b { color: var(--imp-fg); font-weight: 600; }
+    .lyr-ed-reset { margin-left: auto; font-size: 10px; color: var(--imp-fg-3); background: none; border: 1px solid var(--imp-border); border-radius: 5px; cursor: pointer; padding: 3px 8px; }
+    .lyr-ed-reset:hover { color: var(--imp-fg); border-color: var(--imp-border-hover); }
+    .area-chip .area-ic { display: inline-block; flex: 0 0 auto; }
 
     /* ─── ADVANCED TOGGLE ─────────────────── */
     .advanced-toggle {
@@ -1558,11 +1581,11 @@
       </div>
       <div class="cstep-nav" id="cstep-nav">
         <div class="cstep-pills" id="cstep-pills">
-          <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
+          <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Start" data-ar="ابدأ">Start</span></button>
           <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
           <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
           <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
         </div>
       </div>
     </div>
@@ -1589,7 +1612,7 @@
     </div>
 
     <!-- Bag Artwork ─────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="1">
+    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="5">
       <label class="cl"><span data-en="Artwork" data-ar="التصميم">Artwork</span></label>
       <!-- Layers panel -->
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
@@ -1808,7 +1831,7 @@
     <!-- Quantity ───────────────────────── -->
 
     <!-- Bag Size ───────────────────────── -->
-    <div class="cs bag-section config-step" data-cstep="5">
+    <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
       <div class="bag-size-list">
         <button class="bag-sopt" onclick="onBagSize('XS',this)">
@@ -1840,7 +1863,7 @@
     </div>
 
     <!-- Bag Quantity ────────────────────── -->
-    <div class="cs bag-section config-step" data-cstep="5">
+    <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Quantity" data-ar="الكمية">Quantity</span></label>
       <div class="qty-grid" id="bag-qty-grid">
         <button class="qopt on" onclick="onQty(200, 5.90, 0, this)">
@@ -1870,7 +1893,7 @@
     </div>
 
     <!-- Pricing Summary ────────────────── -->
-    <div class="cs config-step" data-cstep="5">
+    <div class="cs config-step" data-cstep="1">
       <label class="cl" data-en="Summary" data-ar="الملخص">Summary</label>
 
       <!-- Base bag cost -->
@@ -2323,8 +2346,8 @@
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Working resolution for sticker artwork &amp; SVG rasterizing. Higher = sharper (esp. large stickers), but slower recolor. Re-applies to existing stickers live.</div>
 
       <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Neutral snap</span><span class="slider-val" id="neutral-snap-val">0%</span></div>
-        <input type="range" class="test-slider" id="neutral-snap" min="0" max="50" step="1" value="0" oninput="onNeutralSnapSlider(this.value)">
+        <div class="slider-top"><span class="slider-name">Neutral snap</span><span class="slider-val" id="neutral-snap-val">1%</span></div>
+        <input type="range" class="test-slider" id="neutral-snap" min="0" max="50" step="1" value="1" oninput="onNeutralSnapSlider(this.value)">
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Sticker colors below this saturation (near the color-wheel core) snap to pure white or black. 0% = off.</div>
 
@@ -4788,12 +4811,23 @@ function layerFontGridHTML(L) {
   });
   return h + '</div>';
 }
+function _areaIcon(key){
+  var p = {
+    front:    '<rect x="3" y="3" width="10" height="10" rx="1.5"/>',
+    back:     '<rect x="3" y="3" width="10" height="10" rx="1.5" stroke-dasharray="2.2 2"/>',
+    left:     '<rect x="3" y="3" width="10" height="10" rx="1.5"/><line x1="3.2" y1="3" x2="3.2" y2="13" stroke-width="2.6"/>',
+    right:    '<rect x="3" y="3" width="10" height="10" rx="1.5"/><line x1="12.8" y1="3" x2="12.8" y2="13" stroke-width="2.6"/>',
+    bottom:   '<rect x="3" y="3" width="10" height="10" rx="1.5"/><line x1="3" y1="12.8" x2="13" y2="12.8" stroke-width="2.6"/>',
+    interior: '<path d="M3 4.6 V13 H13 V4.6"/><path d="M3 4.6 L8 7.2 L13 4.6"/>'
+  };
+  return '<svg class="area-ic" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">' + (p[key] || p.front) + '</svg>';
+}
 function layerAreasHTML(L) {
   var h = '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:10px">Show on</div><div class="area-chips">';
   BAG_AREAS.forEach(function(a) {
     var on = layerShowsOn(L, a.key);
     h += '<button type="button" class="area-chip' + (on ? ' on' : '') + '" onclick="onLayerAreaToggle(' + L.id + ',\'' + a.key + '\',this)">' +
-      '<span class="area-check">' + (on ? '&#10003;' : '') + '</span>' + a.label + '</button>';
+      _areaIcon(a.key) + '<span class="area-lbl">' + a.label + '</span></button>';
   });
   return h + '</div>';
 }
@@ -4903,7 +4937,7 @@ function _satAdjust(rgb, satPct) {
 /* Near-core (low-chroma) colors get forced to pure white or black so off-white borders
    / off-black outlines render clean. Uses chroma (max−min), NOT HSL saturation — near
    white/black, HSL saturation spikes unreliably, so it misclassifies off-whites. */
-var neutralSnap = 0; /* chroma % below which a color is "too close to the wheel core" (0 = off) */
+var neutralSnap = 1; /* chroma % below which a color is "too close to the wheel core" (0 = off) */
 function _chroma(rgb) { return (Math.max(rgb[0], rgb[1], rgb[2]) - Math.min(rgb[0], rgb[1], rgb[2])) / 255; }
 function _isNeutralColor(rgb) { return _chroma(rgb) * 100 < neutralSnap; }
 function snapNeutral(rgb) {
@@ -5119,6 +5153,119 @@ function stickerColorSectionHTML(L) {
   return h;
 }
 
+/* ── Flat layer editor: drag / resize / rotate the artwork on a grid stage.
+   Replaces the Scale, Position U/V and Rotation sliders. Wired to
+   L.posU / L.posV / L.scale|L.fontSize / L.rotation + drawBagTexture(). ── */
+function _lyrSizePct(L){
+  if (L.kind === 'text') return Math.max(1, Math.min(100, ((L.fontSize - 20) / 480) * 100));
+  return Math.max(1, Math.min(100, L.scale || 1));
+}
+function _lyrSetSizePct(L, pct){
+  pct = Math.max(1, Math.min(100, pct));
+  if (L.kind === 'text') L.fontSize = Math.round(20 + (pct / 100) * 480);
+  else L.scale = Math.round(pct);
+}
+function _lyrEdItemStyle(L){
+  var sz = _lyrSizePct(L);
+  var s = 'left:' + L.posU + '%;top:' + L.posV + '%;transform:translate(-50%,-50%) rotate(' + L.rotation + 'deg);';
+  if (L.kind === 'text') s += 'font-size:' + (6 + sz * 0.42).toFixed(1) + 'px;';
+  else s += 'width:' + Math.max(6, sz) + '%;';
+  return s;
+}
+function _lyrEdInner(L){
+  if (L.kind === 'text') return '<span class="lyr-ed-txt" style="color:' + (L.color || '#111111') + '">' + escapeHTML(L.content || 'Text') + '</span>';
+  if (L.img && L.img.src) return '<img src="' + L.img.src + '" draggable="false" alt="">';
+  return '<div class="lyr-ed-ph">no image yet</div>';
+}
+function layerEditorHTML(L){
+  var id = L.id, sz = _lyrSizePct(L);
+  return '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:8px">Position &amp; size</div>' +
+    '<div class="lyr-ed" data-lid="' + id + '">' +
+      '<div class="lyr-ed-stage" id="lyr-' + id + '-stage">' +
+        '<div class="lyr-ed-item" id="lyr-' + id + '-item" style="' + _lyrEdItemStyle(L) + '">' +
+          '<div class="lyr-ed-rotwire"></div>' +
+          '<div class="lyr-ed-h lyr-ed-rotate" title="Drag to rotate"></div>' +
+          _lyrEdInner(L) +
+          '<div class="lyr-ed-h lyr-ed-resize" title="Drag to resize"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="lyr-ed-read">' +
+        '<span>&#8596; <b id="lyr-' + id + '-rdU">' + Math.round(L.posU) + '</b>%</span>' +
+        '<span>&#8597; <b id="lyr-' + id + '-rdV">' + Math.round(L.posV) + '</b>%</span>' +
+        '<span>&#10530; <b id="lyr-' + id + '-rdS">' + Math.round(sz) + '</b>%</span>' +
+        '<span>&#8635; <b id="lyr-' + id + '-rdR">' + Math.round(L.rotation) + '</b>&deg;</span>' +
+        '<button type="button" class="lyr-ed-reset" onclick="resetLayerTransform(' + id + ')">Reset</button>' +
+      '</div>' +
+    '</div>';
+}
+function updateLayerEditorItem(L){
+  var id = L.id, item = document.getElementById('lyr-' + id + '-item');
+  if (item) item.setAttribute('style', _lyrEdItemStyle(L));
+  var sz = _lyrSizePct(L);
+  var u = document.getElementById('lyr-' + id + '-rdU'); if (u) u.textContent = Math.round(L.posU);
+  var v = document.getElementById('lyr-' + id + '-rdV'); if (v) v.textContent = Math.round(L.posV);
+  var s = document.getElementById('lyr-' + id + '-rdS'); if (s) s.textContent = Math.round(sz);
+  var r = document.getElementById('lyr-' + id + '-rdR'); if (r) r.textContent = Math.round(L.rotation);
+}
+function resetLayerTransform(id){
+  var L = getLayer(id); if (!L) return;
+  L.posU = 50; L.posV = 50; L.rotation = 0;
+  if (L.kind === 'text') L.fontSize = 130; else L.scale = (L.tiled ? 12 : 18);
+  renderLayersList(); drawBagTexture();
+}
+var _lyrEdDrag = null;
+function _lyrEdDown(e){
+  var item = (e.target && e.target.closest) ? e.target.closest('.lyr-ed-item') : null;
+  if (!item) return;
+  var wrap = item.closest('.lyr-ed'); if (!wrap) return;
+  var id = parseInt(wrap.getAttribute('data-lid'), 10);
+  var L = getLayer(id); if (!L) return;
+  var stage = document.getElementById('lyr-' + id + '-stage'); if (!stage) return;
+  var mode = e.target.classList.contains('lyr-ed-rotate') ? 'rotate'
+           : e.target.classList.contains('lyr-ed-resize') ? 'resize' : 'move';
+  var r = stage.getBoundingClientRect(), off = { x: 0, y: 0 };
+  if (mode === 'move') {
+    off.x = e.clientX - (r.left + r.width * (L.posU / 100));
+    off.y = e.clientY - (r.top + r.height * (L.posV / 100));
+  }
+  _lyrEdDrag = { id: id, mode: mode, stage: stage, off: off, raf: 0 };
+  document.body.style.userSelect = 'none';
+  e.preventDefault(); e.stopPropagation();
+}
+function _lyrEdMoveHandler(e){
+  if (!_lyrEdDrag) return;
+  var L = getLayer(_lyrEdDrag.id); if (!L) { _lyrEdDrag = null; return; }
+  var r = _lyrEdDrag.stage.getBoundingClientRect();
+  if (_lyrEdDrag.mode === 'move') {
+    var px = e.clientX - _lyrEdDrag.off.x, py = e.clientY - _lyrEdDrag.off.y;
+    L.posU = Math.max(0, Math.min(100, ((px - r.left) / r.width) * 100));
+    L.posV = Math.max(0, Math.min(100, ((py - r.top) / r.height) * 100));
+  } else {
+    var cx = r.left + r.width * (L.posU / 100), cy = r.top + r.height * (L.posV / 100);
+    var dx = e.clientX - cx, dy = e.clientY - cy;
+    if (_lyrEdDrag.mode === 'resize') {
+      _lyrSetSizePct(L, (Math.sqrt(dx * dx + dy * dy) * 2 / r.width) * 100);
+    } else {
+      var deg = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+      while (deg > 180) deg -= 360;
+      while (deg < -180) deg += 360;
+      L.rotation = deg;
+    }
+  }
+  updateLayerEditorItem(L);
+  if (!_lyrEdDrag.raf) _lyrEdDrag.raf = requestAnimationFrame(function(){ if (_lyrEdDrag) _lyrEdDrag.raf = 0; drawBagTexture(); });
+  e.preventDefault();
+}
+function _lyrEdUp(){
+  if (!_lyrEdDrag) return;
+  if (_lyrEdDrag.raf) cancelAnimationFrame(_lyrEdDrag.raf);
+  _lyrEdDrag = null; document.body.style.userSelect = ''; drawBagTexture();
+}
+document.addEventListener('pointerdown', _lyrEdDown);
+document.addEventListener('pointermove', _lyrEdMoveHandler);
+document.addEventListener('pointerup', _lyrEdUp);
+document.addEventListener('pointercancel', _lyrEdUp);
+
 function buildLayerBodyHTML(L) {
   var id = L.id, h = '';
   if (L.kind === 'ai') {
@@ -5144,7 +5291,7 @@ function buildLayerBodyHTML(L) {
     } else {
       h += '<div onclick="pickLayerLogoFile(' + id + ')" style="border:1px dashed var(--imp-border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;margin:14px 0 12px;font-size:11px;color:var(--imp-fg-3);">Click to upload ' + kindLabel.toLowerCase() + '<br><span style="font-size:10px;opacity:0.7;">SVG, PNG, JPG, PDF — any size</span></div>';
     }
-    h += sliderRow(id, 'scale', L.tiled ? 'Scale (tile size · smaller = denser)' : 'Scale', 1, 100, 1, L.scale, '%');
+    /* size now lives in the flat editor (after Show on) */
     if (L.tiled) {
       h += sliderRow(id, 'gap', 'Gap', 0, 200, 1, (L.gap != null ? L.gap : 0), '%');
       h += '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:8px">Crop &amp; Fade (whole pattern)</div>';
@@ -5156,13 +5303,10 @@ function buildLayerBodyHTML(L) {
     }
   } else { /* text */
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="Text" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
-      layerFontRowHTML(L) +
-      sliderRow(id, 'fontSize', 'Font size', 20, 500, 2, L.fontSize, 'px');
+      layerFontRowHTML(L);
   }
   h += layerAreasHTML(L);
-  h += sliderRow(id, 'posU', 'Position U (horizontal)', 0, 100, 1, L.posU, '%');
-  h += sliderRow(id, 'posV', 'Position V (vertical)', 0, 100, 1, L.posV, '%');
-  h += sliderRow(id, 'rotation', 'Rotation', -180, 180, 1, L.rotation, '°');
+  h += layerEditorHTML(L);
   h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
 
   if (L.kind === 'sticker') {
@@ -6959,7 +7103,7 @@ function applyBagSizeScale(sx, sy, sz, normMult) {
   T.box.updateMatrixWorld(true);
   var bb = new THREE.Box3().setFromObject(T.box);
   var groundY = BLOB.groundY + GROUND_OFFSET;
-  T.box.position.y = groundY - bb.min.y + LIFT;
+  T.box.position.y += (groundY + LIFT) - bb.min.y; /* shift current bbox bottom onto the ground -> scales from center-bottom */
 
   // Update orbit target and shadow
   if (orbit.target) {
