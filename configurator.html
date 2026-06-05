@@ -771,6 +771,11 @@
     .lyr-ed-reset { margin-left: auto; font-size: 10px; color: var(--imp-fg-3); background: none; border: 1px solid var(--imp-border); border-radius: 5px; cursor: pointer; padding: 3px 8px; }
     .lyr-ed-reset:hover { color: var(--imp-fg); border-color: var(--imp-border-hover); }
     .area-chip .area-ic { display: inline-block; flex: 0 0 auto; }
+    .lyr-ed-guide-v, .lyr-ed-guide-h { position: absolute; background: var(--imp-gold); opacity: 0; pointer-events: none; z-index: 4; }
+    .lyr-ed-guide-v { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .lyr-ed-guide-h { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .lyr-ed-stage.snap-x .lyr-ed-guide-v { opacity: 0.95; }
+    .lyr-ed-stage.snap-y .lyr-ed-guide-h { opacity: 0.95; }
 
     /* ─── ADVANCED TOGGLE ─────────────────── */
     .advanced-toggle {
@@ -2186,11 +2191,21 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Object Y offset</span>
-          <span class="slider-val" id="y-offset-val">0.10</span>
+          <span class="slider-val" id="y-offset-val">-0.10</span>
         </div>
         <input type="range" class="test-slider" id="y-offset-slider"
-               min="-0.5" max="2.0" step="0.05" value="0.10"
+               min="-0.5" max="2.0" step="0.05" value="-0.10"
                oninput="onYOffsetSlider(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
+          <span class="slider-name">Editor preview size</span>
+          <span class="slider-val" id="editor-uisize-val">1.00&#215;</span>
+        </div>
+        <input type="range" class="test-slider" id="editor-uisize-slider"
+               min="0.3" max="4" step="0.05" value="1.00"
+               oninput="onEditorUiSizeSlider(this.value)">
       </div>
 
       <div class="slider-row">
@@ -5154,8 +5169,17 @@ function stickerColorSectionHTML(L) {
 }
 
 /* ── Flat layer editor: drag / resize / rotate the artwork on a grid stage.
-   Replaces the Scale, Position U/V and Rotation sliders. Wired to
-   L.posU / L.posV / L.scale|L.fontSize / L.rotation + drawBagTexture(). ── */
+   Replaces the Scale, Position U/V and Rotation sliders. The stage is the
+   bag wrap RECENTERED so the front-centre default sits at the editor middle,
+   with the vertical axis flipped to match the 3D bag. ── */
+var ED_U0 = 66, ED_V0 = 55;        /* posU/posV that map to the editor centre (front-centre) */
+var ED_SNAP = 2.5;                  /* magnetic-snap threshold, in posU/posV units */
+var EDITOR_UI_SCALE = 1.0;          /* testing: preview size in the editor (display only, not 3D) */
+function _edXpct(posU){ return 50 + (posU - ED_U0); }   /* posU -> editor left % */
+function _edYpct(posV){ return 50 - (posV - ED_V0); }   /* posV -> editor top % (V flipped) */
+function _posUfromXpct(x){ return ED_U0 + (x - 50); }
+function _posVfromYpct(y){ return ED_V0 - (y - 50); }   /* flipped */
+function _clamp01(v){ return Math.max(0, Math.min(100, v)); }
 function _lyrSizePct(L){
   if (L.kind === 'text') return Math.max(1, Math.min(100, ((L.fontSize - 20) / 480) * 100));
   return Math.max(1, Math.min(100, L.scale || 1));
@@ -5165,11 +5189,11 @@ function _lyrSetSizePct(L, pct){
   if (L.kind === 'text') L.fontSize = Math.round(20 + (pct / 100) * 480);
   else L.scale = Math.round(pct);
 }
+function _lyrDisplayPct(L){ return Math.max(3, _lyrSizePct(L) * EDITOR_UI_SCALE); }
 function _lyrEdItemStyle(L){
-  var sz = _lyrSizePct(L);
-  var s = 'left:' + L.posU + '%;top:' + L.posV + '%;transform:translate(-50%,-50%) rotate(' + L.rotation + 'deg);';
-  if (L.kind === 'text') s += 'font-size:' + (6 + sz * 0.42).toFixed(1) + 'px;';
-  else s += 'width:' + Math.max(6, sz) + '%;';
+  var s = 'left:' + _edXpct(L.posU) + '%;top:' + _edYpct(L.posV) + '%;transform:translate(-50%,-50%) rotate(' + L.rotation + 'deg);';
+  if (L.kind === 'text') s += 'font-size:' + (6 + _lyrSizePct(L) * 0.42 * EDITOR_UI_SCALE).toFixed(1) + 'px;';
+  else s += 'width:' + _lyrDisplayPct(L) + '%;';
   return s;
 }
 function _lyrEdInner(L){
@@ -5182,6 +5206,7 @@ function layerEditorHTML(L){
   return '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:8px">Position &amp; size</div>' +
     '<div class="lyr-ed" data-lid="' + id + '">' +
       '<div class="lyr-ed-stage" id="lyr-' + id + '-stage">' +
+        '<div class="lyr-ed-guide-v"></div><div class="lyr-ed-guide-h"></div>' +
         '<div class="lyr-ed-item" id="lyr-' + id + '-item" style="' + _lyrEdItemStyle(L) + '">' +
           '<div class="lyr-ed-rotwire"></div>' +
           '<div class="lyr-ed-h lyr-ed-rotate" title="Drag to rotate"></div>' +
@@ -5209,11 +5234,16 @@ function updateLayerEditorItem(L){
 }
 function resetLayerTransform(id){
   var L = getLayer(id); if (!L) return;
-  L.posU = 50; L.posV = 50; L.rotation = 0;
+  L.posU = ED_U0; L.posV = ED_V0; L.rotation = 0;
   if (L.kind === 'text') L.fontSize = 130; else L.scale = (L.tiled ? 12 : 18);
   renderLayersList(); drawBagTexture();
 }
 var _lyrEdDrag = null;
+function _lyrEdGuides(stage, sx, sy){
+  if (!stage) return;
+  stage.classList.toggle('snap-x', !!sx);
+  stage.classList.toggle('snap-y', !!sy);
+}
 function _lyrEdDown(e){
   var item = (e.target && e.target.closest) ? e.target.closest('.lyr-ed-item') : null;
   if (!item) return;
@@ -5223,12 +5253,13 @@ function _lyrEdDown(e){
   var stage = document.getElementById('lyr-' + id + '-stage'); if (!stage) return;
   var mode = e.target.classList.contains('lyr-ed-rotate') ? 'rotate'
            : e.target.classList.contains('lyr-ed-resize') ? 'resize' : 'move';
-  var r = stage.getBoundingClientRect(), off = { x: 0, y: 0 };
-  if (mode === 'move') {
-    off.x = e.clientX - (r.left + r.width * (L.posU / 100));
-    off.y = e.clientY - (r.top + r.height * (L.posV / 100));
-  }
-  _lyrEdDrag = { id: id, mode: mode, stage: stage, off: off, raf: 0 };
+  var r = stage.getBoundingClientRect();
+  var cx = r.left + r.width * (_edXpct(L.posU) / 100);
+  var cy = r.top + r.height * (_edYpct(L.posV) / 100);
+  var off = { x: 0, y: 0 };
+  if (mode === 'move') { off.x = e.clientX - cx; off.y = e.clientY - cy; }
+  var startDist = Math.max(1, Math.sqrt(Math.pow(e.clientX - cx, 2) + Math.pow(e.clientY - cy, 2)));
+  _lyrEdDrag = { id: id, mode: mode, stage: stage, off: off, raf: 0, startDist: startDist, startSize: _lyrSizePct(L) };
   document.body.style.userSelect = 'none';
   e.preventDefault(); e.stopPropagation();
 }
@@ -5238,13 +5269,19 @@ function _lyrEdMoveHandler(e){
   var r = _lyrEdDrag.stage.getBoundingClientRect();
   if (_lyrEdDrag.mode === 'move') {
     var px = e.clientX - _lyrEdDrag.off.x, py = e.clientY - _lyrEdDrag.off.y;
-    L.posU = Math.max(0, Math.min(100, ((px - r.left) / r.width) * 100));
-    L.posV = Math.max(0, Math.min(100, ((py - r.top) / r.height) * 100));
+    var posU = _posUfromXpct(((px - r.left) / r.width) * 100);
+    var posV = _posVfromYpct(((py - r.top) / r.height) * 100);
+    var snapX = Math.abs(posU - ED_U0) <= ED_SNAP, snapY = Math.abs(posV - ED_V0) <= ED_SNAP;
+    if (snapX) posU = ED_U0;
+    if (snapY) posV = ED_V0;
+    L.posU = _clamp01(posU); L.posV = _clamp01(posV);
+    _lyrEdGuides(_lyrEdDrag.stage, snapX, snapY);
   } else {
-    var cx = r.left + r.width * (L.posU / 100), cy = r.top + r.height * (L.posV / 100);
+    var cx = r.left + r.width * (_edXpct(L.posU) / 100), cy = r.top + r.height * (_edYpct(L.posV) / 100);
     var dx = e.clientX - cx, dy = e.clientY - cy;
     if (_lyrEdDrag.mode === 'resize') {
-      _lyrSetSizePct(L, (Math.sqrt(dx * dx + dy * dy) * 2 / r.width) * 100);
+      var ratio = Math.sqrt(dx * dx + dy * dy) / _lyrEdDrag.startDist;
+      _lyrSetSizePct(L, _lyrEdDrag.startSize * ratio);
     } else {
       var deg = Math.atan2(dy, dx) * 180 / Math.PI + 90;
       while (deg > 180) deg -= 360;
@@ -5259,6 +5296,7 @@ function _lyrEdMoveHandler(e){
 function _lyrEdUp(){
   if (!_lyrEdDrag) return;
   if (_lyrEdDrag.raf) cancelAnimationFrame(_lyrEdDrag.raf);
+  _lyrEdGuides(_lyrEdDrag.stage, false, false);
   _lyrEdDrag = null; document.body.style.userSelect = ''; drawBagTexture();
 }
 document.addEventListener('pointerdown', _lyrEdDown);
@@ -7462,7 +7500,7 @@ let zoomVelocity = 0;
 
 let MAX_ZOOM_OUT = 16.3;           /* maximum orbit radius (zoom out limit) */
 let MIN_ZOOM     = 1.2;            /* minimum orbit radius (zoom in limit) */
-let LIFT          = 0.10;          /* extra Y above ground from the Object Y offset slider */
+let LIFT          = -0.10;          /* extra Y above ground from the Object Y offset slider */
 let GROUND_OFFSET = 0;             /* shifts entire assembly (box + shadow) together */
 let DAMPING       = 0.95;
 let ZOOM_DAMPING  = 0.95;
@@ -7476,6 +7514,7 @@ var intro = { active: false, start: 0, duration: 1000, fromTheta: 0 };
 var introDurationMs = 1000;       /* default 1.00s, controllable in testing */
 var idleDelaySec = 6;             /* resume auto-rotate after N seconds idle */
 var idleResumeEnabled = true;
+var spinAllowed = true;            /* false on the Artwork step -> no auto-rotate */
 var lastInteractT = 0;            /* timestamp (performance.now) of last user interaction */
 
 /* Per-view camera angles (degrees), tunable in testing */
@@ -7746,7 +7785,7 @@ function animate(now) {
       /* Auto-rotation (ramped) */
       if (spinFactor > 0.0001) orbit.theta += SPIN_SPEED * spinFactor;
       /* Idle detection: once settled and idle long enough, ease the spin back IN */
-      if (idleResumeEnabled && now && spinTarget !== 1 &&
+      if (idleResumeEnabled && spinAllowed && now && spinTarget !== 1 &&
           velocity.theta === 0 && velocity.phi === 0 && Math.abs(zoomVelocity) < 0.0001 &&
           (now - lastInteractT) > idleDelaySec * 1000) {
         startSpinRamp(1, spinRampInMs, easeInCubic);
@@ -8154,6 +8193,12 @@ function onYOffsetSlider(v) {
   document.getElementById('y-offset-val').textContent = LIFT.toFixed(2);
   const s = T.box ? T.box.scale.x : SIZE_SCALE[S.size];
   updateBoxFromScale(s);
+}
+function onEditorUiSizeSlider(v) {
+  EDITOR_UI_SCALE = parseFloat(v);
+  var lbl = document.getElementById('editor-uisize-val');
+  if (lbl) lbl.textContent = EDITOR_UI_SCALE.toFixed(2) + '\u00D7';
+  if (typeof renderLayersList === 'function') renderLayersList();
 }
 function onSceneYOffsetSlider(v) {
   GROUND_OFFSET = parseFloat(v);
@@ -8774,6 +8819,17 @@ document.addEventListener('imprint:countrychange', function() {
   }
 })();
 
+var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
+function applyStepCamera(n){
+  /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Artwork */
+  var artwork = (n === 5);
+  spinAllowed = !artwork;
+  if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
+  if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
+  if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
+  else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
+}
+
 /* ─── STEPPED FLOW (Nike By You style) ─── */
 var CONFIG_STEP_COUNT = 5;
 var currentConfigStep = 1;
@@ -8801,6 +8857,7 @@ function goConfigStep(n) {
   /* Scroll controls panel to top so the new step starts at the top */
   var panel = document.querySelector('.controls-panel');
   if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
+  applyStepCamera(n);
 }
 function configStepNext() { goConfigStep(currentConfigStep + 1); }
 function configStepPrev() { goConfigStep(currentConfigStep - 1); }
