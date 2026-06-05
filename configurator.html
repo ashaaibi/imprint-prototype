@@ -5239,10 +5239,31 @@ function resetLayerTransform(id){
   renderLayersList(); drawBagTexture();
 }
 var _lyrEdDrag = null;
-function _lyrEdGuides(stage, sx, sy){
+var _edSnap = null;
+function _edSnapTargets(){
+  if (_edSnap) return _edSnap;
+  if (typeof BAG_UV === 'undefined' || typeof BAG_AREAS === 'undefined') return { us:[ED_U0], vs:[ED_V0] };
+  var ue = BAG_UV.exterior, us = [ED_U0], vs = [ED_V0];
+  BAG_AREAS.forEach(function(a){
+    us.push(((a.u0 + a.u1) / 2 * 2048 - ue.x) / ue.w * 100);
+    vs.push(((a.v0 + a.v1) / 2 * 2048 - ue.y) / ue.h * 100);
+  });
+  _edSnap = { us: us, vs: vs };
+  return _edSnap;
+}
+function _nearestSnap(val, list){
+  var best = null, bd = ED_SNAP;
+  for (var i = 0; i < list.length; i++){
+    var d = Math.abs(val - list[i]);
+    if (d <= bd) { bd = d; best = list[i]; }
+  }
+  return best;
+}
+function _lyrEdGuides(stage, ux, vy){
   if (!stage) return;
-  stage.classList.toggle('snap-x', !!sx);
-  stage.classList.toggle('snap-y', !!sy);
+  var gv = stage.querySelector('.lyr-ed-guide-v'), gh = stage.querySelector('.lyr-ed-guide-h');
+  if (gv) { if (ux !== null && ux !== undefined) { gv.style.left = _edXpct(ux) + '%'; gv.style.opacity = '0.95'; } else gv.style.opacity = '0'; }
+  if (gh) { if (vy !== null && vy !== undefined) { gh.style.top = _edYpct(vy) + '%'; gh.style.opacity = '0.95'; } else gh.style.opacity = '0'; }
 }
 function _lyrEdDown(e){
   var item = (e.target && e.target.closest) ? e.target.closest('.lyr-ed-item') : null;
@@ -5271,11 +5292,12 @@ function _lyrEdMoveHandler(e){
     var px = e.clientX - _lyrEdDrag.off.x, py = e.clientY - _lyrEdDrag.off.y;
     var posU = _posUfromXpct(((px - r.left) / r.width) * 100);
     var posV = _posVfromYpct(((py - r.top) / r.height) * 100);
-    var snapX = Math.abs(posU - ED_U0) <= ED_SNAP, snapY = Math.abs(posV - ED_V0) <= ED_SNAP;
-    if (snapX) posU = ED_U0;
-    if (snapY) posV = ED_V0;
+    var _t = _edSnapTargets();
+    var snapU = _nearestSnap(posU, _t.us), snapV = _nearestSnap(posV, _t.vs);
+    if (snapU !== null) posU = snapU;
+    if (snapV !== null) posV = snapV;
     L.posU = _clamp01(posU); L.posV = _clamp01(posV);
-    _lyrEdGuides(_lyrEdDrag.stage, snapX, snapY);
+    _lyrEdGuides(_lyrEdDrag.stage, snapU, snapV);
   } else {
     var cx = r.left + r.width * (_edXpct(L.posU) / 100), cy = r.top + r.height * (_edYpct(L.posV) / 100);
     var dx = e.clientX - cx, dy = e.clientY - cy;
@@ -5296,7 +5318,7 @@ function _lyrEdMoveHandler(e){
 function _lyrEdUp(){
   if (!_lyrEdDrag) return;
   if (_lyrEdDrag.raf) cancelAnimationFrame(_lyrEdDrag.raf);
-  _lyrEdGuides(_lyrEdDrag.stage, false, false);
+  _lyrEdGuides(_lyrEdDrag.stage, null, null);
   _lyrEdDrag = null; document.body.style.userSelect = ''; drawBagTexture();
 }
 document.addEventListener('pointerdown', _lyrEdDown);
