@@ -2424,6 +2424,16 @@
 
       <div class="slider-row">
         <div class="slider-top">
+          <span class="slider-name">Layer brightness</span>
+          <span class="slider-val" id="layer-brightness-val">1.00</span>
+        </div>
+        <input type="range" class="test-slider" id="layer-brightness-slider"
+               min="0" max="2" step="0.05" value="1.00"
+               oninput="onLayerBrightnessSlider(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
           <span class="slider-name">HDRI Y-rotate</span>
           <span class="slider-val" id="env-rotate-val">235°</span>
         </div>
@@ -3818,6 +3828,8 @@ function getArtCorr() {
    to BAG_UV.exterior). The caller sets the clip region beforehand.
    mode 'color' → tinted logo / colored text (visible artwork)
    mode 'mask'  → logo alpha / white text (PBR + bump shape masks) */
+var LAYER_BRIGHTNESS = 1.0;   /* testing: brightness multiplier applied to artwork pixels only */
+function _layerFilter(){ return (LAYER_BRIGHTNESS === 1) ? 'none' : 'brightness(' + LAYER_BRIGHTNESS + ')'; }
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
   var ue = BAG_UV.exterior;
@@ -3848,6 +3860,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       dctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
       dctx.rotate(L.rotation * Math.PI / 180);
       dctx.scale(corr.x, -corr.y);
+      if (mode !== 'mask') dctx.filter = _layerFilter();
       var reach = Math.max(ue.w, ue.h) * ms * 1.7;
       var nC = Math.min(80, Math.ceil(reach / cw) + 2);
       var nR = Math.min(80, Math.ceil(reach / ch) + 2);
@@ -3900,6 +3913,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
         offCtx.globalCompositeOperation = 'source-atop';
         offCtx.fillStyle = L.color; offCtx.fillRect(0, 0, off.width, off.height);
       }
+      ctx.filter = _layerFilter();
       ctx.drawImage(off, -off.width / 2, -off.height / 2);
     }
     ctx.restore();
@@ -3915,6 +3929,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
     ctx.translate(cx2, cy2);
     ctx.rotate(L.rotation * Math.PI / 180);
     ctx.scale(corr.x, -corr.y);
+    if (mode !== 'mask') ctx.filter = _layerFilter();
     var lines = L.content.split('\n');
     var lineH = L.fontSize * ms * 1.25;
     var totalH = lineH * (lines.length - 1);
@@ -8565,6 +8580,12 @@ function onSceneLightsSlider(v) {
   T.fillLight.intensity   = SCENE_LIGHTS_BASE.fill   * mul;
   T.rimLight.intensity    = SCENE_LIGHTS_BASE.rim    * mul;
   T.hemiLight.intensity   = SCENE_LIGHTS_BASE.hemi   * mul;
+}
+function onLayerBrightnessSlider(v) {
+  LAYER_BRIGHTNESS = parseFloat(v);
+  var lbl = document.getElementById('layer-brightness-val');
+  if (lbl) lbl.textContent = LAYER_BRIGHTNESS.toFixed(2);
+  if (typeof drawBagTexture === 'function') drawBagTexture();
 }
 
 function initHdriPresets() {
