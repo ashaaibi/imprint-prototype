@@ -4661,8 +4661,8 @@ function computeIslandRegion(geom) {
 function buildUVGuide() {
   bagUVGuideCanvas = null;
   var regions = [
-    { clip: bagExtClip,    rgb: '40,120,255' },
-    { clip: bagIntClip,    rgb: '0,170,100'  },
+    { clip: bagExtClip,    rgb: '40,120,255', body:true },
+    { clip: bagIntClip,    rgb: '0,170,100',  body:true },
     { clip: bagHandleClip, rgb: '235,150,0'  },
     { clip: bagRivetClip,  rgb: '210,40,150' }
   ].filter(function(r) { return r.clip && r.clip.path; });
@@ -4689,7 +4689,8 @@ function buildUVGuide() {
       g.strokeStyle = single || ('rgb(' + r.rgb + ')');
       g.lineWidth = A2D.outlineThickness;
       var strokePath;
-      if (!A2D.wireFull || !r.clip.outline) { strokePath = r.clip.outline || r.clip.path; }
+      /* full triangle mesh only on the exterior/interior body; handles + rivets stay outline */
+      if (!A2D.wireFull || !r.body || !r.clip.outline) { strokePath = r.clip.outline || r.clip.path; }
       else if ((A2D.triClean||0) <= 0 || !r.clip.edges) { strokePath = r.clip.path; }
       else { /* full mesh minus internal edges shorter than the cleaning threshold */
         strokePath = new Path2D();
@@ -5359,6 +5360,7 @@ function renderLayersList() {
     else if (L && L.kind === 'sticker') renderRecolorWheel(L);
   }
   attachLayerDnD();
+  if (typeof applyTranslations === 'function') applyTranslations();   /* translate dynamic layer UI */
 }
 function onLayerHeadClick(e, id) {
   var list = document.getElementById('layers-list');
@@ -5376,16 +5378,23 @@ function expandLayer(id) {
 
 /* ── Collapsible body (full controls per layer kind) ─────────────── */
 function layerCtrlKey(prop) { return prop === 'rotation' ? 'rot' : prop === 'fontSize' ? 'size' : prop; }
+/* Arabic labels for the dynamic layer/artwork panel (applyTranslations swaps them). */
+var _LBL_AR = { 'Opacity':'الشفافية','Gap':'الفجوة','Density':'الكثافة','Feather':'التنعيم','Size':'الحجم',
+  'Roughness':'الخشونة','Metalness':'المعدنية','Transmission':'النفاذية','Extrude':'البروز','Rotation':'التدوير',
+  'Graphic Color':'لون الرسمة','Text Color':'لون النص','Advanced':'خيارات متقدمة','Emboss / Deboss':'نقش / تنغيم',
+  'Recolor':'إعادة التلوين','Graphic Finish':'تشطيب الرسمة','Text Finish':'تشطيب النص','Pattern Finish':'تشطيب النمط',
+  'Colors':'الألوان','Hue':'التدرج','Saturation':'التشبع','Remove background…':'إزالة الخلفية…','Replace':'استبدال','Remove':'حذف' };
+function _arAttr(en){ var ar=_LBL_AR[en]; return ar ? (' data-en="'+en+'" data-ar="'+ar+'"') : ''; }
 function sliderRow(id, prop, label, min, max, step, value, suffix) {
   var key = layerCtrlKey(prop);
   var disp = (suffix ? (Math.round(value) + suffix) : value);
-  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name">' + label + '</span>' +
+  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr(label) + '>' + label + '</span>' +
     '<span class="ctrl-slider-val" id="lyr-' + id + '-' + key + '-val">' + disp + '</span></div>' +
     '<input type="range" class="test-slider" id="lyr-' + id + '-' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '" oninput="onLayerProp(' + id + ',\'' + prop + '\',this.value)"></div>';
 }
 function sliderRowPBR(id, prop, label, value) {
   var key = prop === 'roughness' ? 'rough' : prop === 'metalness' ? 'metal' : 'trans';
-  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name">' + label + '</span>' +
+  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr(label) + '>' + label + '</span>' +
     '<span class="ctrl-slider-val" id="lyr-' + id + '-' + key + '-val">' + value.toFixed(2) + '</span></div>' +
     '<input type="range" class="test-slider" id="lyr-' + id + '-' + key + '" min="0" max="1" step="0.01" value="' + value + '" oninput="onLayerPBR(' + id + ',\'' + prop + '\',this.value)"></div>';
 }
@@ -5984,22 +5993,24 @@ function buildLayerBodyHTML(L) {
   if (L.kind === 'sticker') {
     h += stickerColorSectionHTML(L);
   } else {
-    h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px">' + (L.kind === 'logo' ? 'Graphic Color' : 'Text Color') + '</div>' +
+    var _ccl = (L.kind === 'logo' ? 'Graphic Color' : 'Text Color');
+    h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px"' + _arAttr(_ccl) + '>' + _ccl + '</div>' +
       '<div class="hue-slider-wrap"><input type="range" class="hue-slider" id="lyr-' + id + '-hslider" min="0" max="360" value="' + (L.hue || 0) + '" oninput="onLayerHue(' + id + ',this.value)"></div>' +
       '<div class="mono-swatches" id="lyr-' + id + '-swatches"></div>' +
       '<div class="color-hex" id="lyr-' + id + '-chex"></div>';
     if (L.kind === 'logo') h += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
   }
 
-  h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px">' + kindLabel + ' Finish</div>' + layerFinishGridHTML(L) +
-    '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> Advanced</div>' +
+  var _fl = kindLabel + ' Finish';
+  h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
+    '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
     '<div class="advanced-body" id="lyr-' + id + '-adv">' +
       sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
       sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
       sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
     '</div>' +
-    '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px">Emboss / Deboss</div>' +
-    '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name">Extrude</span><span class="ctrl-slider-val" id="lyr-' + id + '-extrude-val">' + L.extrude.toFixed(2) + '</span></div>' +
+    '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
+    '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Extrude') + '>Extrude</span><span class="ctrl-slider-val" id="lyr-' + id + '-extrude-val">' + L.extrude.toFixed(2) + '</span></div>' +
     '<input type="range" class="test-slider" id="lyr-' + id + '-extrude" min="-3.0" max="3.0" step="0.01" value="' + L.extrude + '" oninput="onLayerExtrude(' + id + ',this.value)"></div>' +
     '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">Positive = emboss (raised) · Negative = deboss (indented)</div>';
   return h;
@@ -9556,7 +9567,7 @@ function applyStepCamera(n){
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
   if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 5) startCamTween(viewThetaRad('front'), 0.18);   /* Rivets → top-down view */
+  else if (n === 5) startCamTween(viewThetaRad('front'), 0.52);   /* Rivets → elevated 3/4 top view */
   else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
@@ -9809,7 +9820,7 @@ function _aMove(e){
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
   else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
-  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap; clockwise handle → clockwise art */ L.rotation=deg; _a2dApply(); }
+  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=-ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap; clockwise handle → clockwise art */ L.rotation=deg; _a2dApply(); }
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
@@ -9983,25 +9994,29 @@ function renderReviewSummary() {
   function swatch(c){ return '<span style="display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,0.15);background:' + (c||'#fff') + ';vertical-align:-2px;margin-right:6px;"></span>'; }
   function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
   function row(label, valHTML){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--imp-border);font-size:13px;"><span style="color:var(--imp-fg-3);">'+label+'</span><span style="color:var(--imp-fg);font-weight:600;text-align:right;">'+valHTML+'</span></div>'; }
+  var ar = (typeof getLang==='function' && getLang()==='ar');
+  var T = ar ? { Size:'الحجم', Quantity:'الكمية', units:'وحدة', Exterior:'الخارج', Interior:'الداخل', Handles:'المقابض', Rivets:'البرشام', Artwork:'التصميم', None:'لا يوجد', Pattern:'نمط', Graphic:'رسمة' }
+             : { Size:'Size', Quantity:'Quantity', units:'units', Exterior:'Exterior', Interior:'Interior', Handles:'Handles', Rivets:'Rivets', Artwork:'Artwork', None:'None', Pattern:'Pattern', Graphic:'Graphic' };
+  function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
   var model = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
   var layers = (BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='logo'||L.kind==='sticker'||L.kind==='text'); }) : [];
   var artHTML;
-  if (!layers.length) { artHTML = '<span style="color:var(--imp-fg-3);font-weight:400;">None</span>'; }
+  if (!layers.length) { artHTML = '<span style="color:var(--imp-fg-3);font-weight:400;">'+T.None+'</span>'; }
   else {
     artHTML = layers.map(function(L){
-      var kind = L.kind==='text' ? ('“'+(L.content||'').slice(0,16)+'”') : (L.tiled?'Pattern':'Graphic');
-      var surf = cap(L.surface||'exterior');
+      var kind = L.kind==='text' ? ('“'+(L.content||'').slice(0,16)+'”') : (L.tiled?T.Pattern:T.Graphic);
+      var surf = T[ (L.surface||'exterior').charAt(0).toUpperCase()+(L.surface||'exterior').slice(1) ] || cap(L.surface||'exterior');
       return kind + ' · ' + surf;
     }).join('<br>');
   }
   var h = '';
-  if (model) h += row('Size', model.label + ' <span style="color:var(--imp-fg-3);font-weight:400;">('+model.dims+')</span>');
-  h += row('Quantity', (S.qty||0).toLocaleString() + ' units');
-  h += row('Exterior', swatch(BAG.exterior.color) + cap(BAG.exterior.finish));
-  h += row('Interior', swatch(BAG.interior.color) + cap(BAG.interior.finish));
-  if (BAG.ribbon) h += row('Handles', swatch(BAG.ribbon.color) + cap(BAG.ribbon.finish||''));
-  if (BAG.rivet)  h += row('Rivets', swatch(BAG.rivet.color) + '');
-  h += row('Artwork', artHTML);
+  if (model) h += row(T.Size, model.label + ' <span style="color:var(--imp-fg-3);font-weight:400;">('+model.dims+')</span>');
+  h += row(T.Quantity, (S.qty||0).toLocaleString() + ' ' + T.units);
+  h += row(T.Exterior, swatch(BAG.exterior.color) + cap(BAG.exterior.finish));
+  h += row(T.Interior, swatch(BAG.interior.color) + cap(BAG.interior.finish));
+  if (BAG.ribbon) h += row(T.Handles, swatch(BAG.ribbon.color) + cap(BAG.ribbon.finish||''));
+  if (BAG.rivet)  h += row(T.Rivets, swatch(BAG.rivet.color) + '');
+  h += row(T.Artwork, artHTML);
   host.innerHTML = h;
 }
 function configStepPrev() { goConfigStep(currentConfigStep - 1); }
