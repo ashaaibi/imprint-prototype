@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cursor Gallery · IMPRINT</title>
+<style>
+  :root{
+    --bg:#fafaf8; --fg:#141414; --fg-2:#555; --fg-3:#888;
+    --surface:#fff; --border:#e7e4dd; --border-hover:#cfc9bd;
+    --accent:#00B3A4; --accent-soft:#e3f7f4; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0e0e0e; --fg:#f2f2f2; --fg-2:#bbb; --fg-3:#888;
+           --surface:#1a1a1a; --border:#2a2a2a; --border-hover:#3a3a3a; --accent-soft:#062a27; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--fg);line-height:1.5;padding:40px 24px 80px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:26px;letter-spacing:-0.02em;margin:0 0 6px}
+  .sub{color:var(--fg-2);font-size:14px;margin:0 0 4px}
+  .sub a{color:var(--accent)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--fg-3);margin:14px 0 28px}
+  .legend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+  .dot.used{background:var(--accent)}
+  .dot.avail{background:var(--border-hover)}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:var(--fg-3);
+     font-weight:600;margin:34px 0 12px;border-bottom:1px solid var(--border);padding-bottom:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+        padding:20px 14px;text-align:center;transition:border-color .15s,transform .1s,box-shadow .15s;
+        position:relative;user-select:none}
+  .tile:hover{border-color:var(--accent);transform:translateY(-2px);
+              box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+  .tile .name{font-family:var(--mono);font-size:13px;font-weight:600}
+  .tile .hint{font-size:10px;color:var(--fg-3);margin-top:4px;min-height:12px}
+  .tile.used{background:var(--accent-soft);border-color:var(--accent)}
+  .tile.used::after{content:"in use";position:absolute;top:7px;right:8px;
+        font-size:8px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;
+        color:var(--accent)}
+  .custom{margin-top:14px}
+  .custom .tile{cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9" fill="none" stroke="%2300B3A4" stroke-width="3"/><circle cx="14" cy="14" r="2" fill="%2300B3A4"/></svg>') 14 14, crosshair}
+  code{font-family:var(--mono);font-size:12px;background:var(--surface);
+       border:1px solid var(--border);border-radius:6px;padding:2px 6px}
+  .note{margin-top:34px;font-size:13px;color:var(--fg-2);background:var(--surface);
+        border:1px solid var(--border);border-left:3px solid var(--accent);
+        border-radius:8px;padding:14px 16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cursor Gallery</h1>
+  <p class="sub">Hover any tile to feel that cursor. Tiles marked <strong>in use</strong> are already wired into the configurator.</p>
+  <p class="sub">Canonical reference: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/cursor" target="_blank" rel="noopener">MDN — CSS <code>cursor</code></a></p>
+  <div class="legend">
+    <span><span class="dot used"></span>Used in configurator</span>
+    <span><span class="dot avail"></span>Available, not yet used</span>
+  </div>
+
+  <div id="sections"></div>
+
+  <h2>Custom image cursor</h2>
+  <div class="grid custom">
+    <div class="tile"><div class="name">url(…)</div><div class="hint">SVG target, hotspot 14 14</div></div>
+  </div>
+  <p class="note">
+    Custom cursors need a hotspot and a mandatory keyword fallback:<br>
+    <code>cursor: url('icon.svg') 4 4, pointer;</code><br>
+    Keep them ≤ 128×128 (32×32 is safest cross-browser), and always supply the fallback or the rule is ignored.
+  </p>
+</div>
+
+<script>
+  // value -> [category, short hint]. `used` flags what the configurator already uses.
+  var USED = {pointer:1,'not-allowed':1,grab:1,grabbing:1,move:1,crosshair:1,'nwse-resize':1};
+  var GROUPS = {
+    'General':       [['auto','browser decides'],['default','arrow'],['none','hidden']],
+    'Links & status':[['context-menu',''],['help',''],['pointer','clickable'],['progress','busy+usable'],['wait','busy']],
+    'Selection':     [['cell',''],['crosshair','pick / draw'],['text',''],['vertical-text','']],
+    'Drag & drop':   [['alias',''],['copy',''],['move','reposition'],['no-drop',''],['not-allowed','disabled'],['grab','grabbable'],['grabbing','dragging']],
+    'Resize':        [['n-resize',''],['e-resize',''],['s-resize',''],['w-resize',''],['ne-resize',''],['nw-resize',''],['se-resize',''],['sw-resize',''],['ew-resize',''],['ns-resize',''],['nesw-resize',''],['nwse-resize','corner']],
+    'Scroll & grid': [['all-scroll',''],['col-resize',''],['row-resize','']],
+    'Zoom':          [['zoom-in',''],['zoom-out','']]
+  };
+  var host = document.getElementById('sections');
+  Object.keys(GROUPS).forEach(function(cat){
+    var h = document.createElement('h2'); h.textContent = cat; host.appendChild(h);
+    var grid = document.createElement('div'); grid.className = 'grid';
+    GROUPS[cat].forEach(function(item){
+      var val = item[0], hint = item[1];
+      var t = document.createElement('div');
+      t.className = 'tile' + (USED[val] ? ' used' : '');
+      t.style.cursor = val;
+      t.innerHTML = '<div class="name">'+val+'</div><div class="hint">'+(hint||'')+'</div>';
+      grid.appendChild(t);
+    });
+    host.appendChild(grid);
+  });
+</script>
+</body>
+</html>
