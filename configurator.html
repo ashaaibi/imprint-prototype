@@ -268,7 +268,31 @@
       display: block;
       touch-action: none;
     }
+    /* In 2D mode, shrink the live 3D view into a fixed bottom-right preview box.
+       width/height use !important to beat the inline size THREE.setSize writes. */
+    .canvas-stage.mode-2d #three-canvas {
+      position: absolute !important;
+      right: 16px; bottom: 16px; left: auto; top: auto;
+      width: 244px !important; height: 184px !important;
+      z-index: 4;
+      border-radius: 12px;
+      border: 1px solid var(--imp-border);
+      box-shadow: var(--imp-shadow-md);
+      background: var(--imp-surface);
+      pointer-events: none;
+    }
+    html[dir="rtl"] .canvas-stage.mode-2d #three-canvas { right: auto; left: 16px; }
+    .mini3d-label {
+      position: absolute; right: 16px; bottom: 196px; z-index: 5;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--imp-fg-3); background: var(--imp-surface); border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-pill); padding: 3px 9px; box-shadow: var(--imp-shadow-xs);
+      pointer-events: none; display: none;
+    }
+    .canvas-stage.mode-2d .mini3d-label { display: block; }
+    html[dir="rtl"] .mini3d-label { right: auto; left: 16px; }
     .drag-hint {
+      display: none; /* removed: empty viewport pill */
       position: absolute;
       bottom: 16px;
       left: 50%;
@@ -1166,6 +1190,9 @@
       text-align: center;
     }
     .bag-sopt:hover { border-color: var(--imp-border-hover); background: var(--imp-surface-2); }
+    /* locked while a bag GLB is loading — show a not-allowed cursor, block clicks */
+    .bag-sopt.locked { opacity: 0.45; cursor: not-allowed; }
+    .canvas-stage.loading { cursor: progress; }
     .bag-sopt.on {
       border-color: var(--imp-fg);
       box-shadow: inset 0 0 0 1px var(--imp-fg);
@@ -1597,6 +1624,7 @@
         <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
         <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
+      <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
     </div>
     <div class="drag-hint" data-en="" data-ar=""></div>
   </section>
@@ -1625,6 +1653,7 @@
           <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
           <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Rivets" data-ar="البرشام">Rivets</span></button>
           <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(7)" data-cstep-pill="7"><span class="cstep-pill-num">7</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
     </div>
@@ -1933,7 +1962,15 @@
     </div>
 
     <!-- Pricing Summary ────────────────── -->
-    <div class="cs config-step" data-cstep="1">
+    <!-- Review step (7): full summary of choices; the price breakdown below is always shown -->
+    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="7">
+      <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
+      <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
+      <div id="review-summary"></div>
+    </div>
+
+    <!-- Price summary — ALWAYS visible (total stays present on every step) -->
+    <div class="cs" id="price-summary-block">
       <label class="cl" data-en="Summary" data-ar="الملخص">Summary</label>
 
       <!-- Base bag cost -->
@@ -2032,7 +2069,7 @@
 
       <div class="slider-row">
         <div class="slider-top">
-          <span class="slider-name">Hue anim speed</span>
+          <span class="slider-name">Pulse speed</span>
           <span class="slider-val" id="hue-anim-speed-val">0.050</span>
         </div>
         <input type="range" class="test-slider" id="hue-anim-speed"
@@ -2042,12 +2079,59 @@
 
       <div class="slider-row">
         <div class="slider-top">
-          <span class="slider-name">Hue anim saturation</span>
-          <span class="slider-val" id="hue-anim-sat-val">100</span>
+          <span class="slider-name">Pulse color</span>
+          <span class="slider-val" id="anim-color-val">#ff0000</span>
         </div>
-        <input type="range" class="test-slider" id="hue-anim-sat"
-               min="0" max="100" step="1" value="100"
-               oninput="onHueAnimSat(this.value)">
+        <input type="color" id="anim-color" value="#ff0000"
+               style="width:100%;height:28px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;"
+               oninput="onAnimColor(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
+          <span class="slider-name">Pulse opacity min</span>
+          <span class="slider-val" id="anim-opmin-val">0.00</span>
+        </div>
+        <input type="range" class="test-slider" id="anim-opmin"
+               min="0" max="1" step="0.01" value="0"
+               oninput="onAnimOpMin(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
+          <span class="slider-name">Pulse opacity max</span>
+          <span class="slider-val" id="anim-opmax-val">1.00</span>
+        </div>
+        <input type="range" class="test-slider" id="anim-opmax"
+               min="0" max="1" step="0.01" value="1"
+               oninput="onAnimOpMax(this.value)">
+      </div>
+
+      <!-- Custom sound effects -->
+      <div style="margin:14px 0 8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Custom sound effects</div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-name">Hover sound</span>
+          <span class="slider-val" id="sfx-hover-name" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">(none)</span></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
+          <input type="file" id="sfx-hover-file" accept="audio/*" onchange="rlmSfxUpload('hover',this)" style="flex:1;min-width:0;font-size:10px;color:var(--secondary);">
+          <button onclick="rlmSfxClear('hover')" style="font-size:10px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;">Clear</button>
+        </div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-name">Click sound</span>
+          <span class="slider-val" id="sfx-click-name" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">(synth default)</span></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
+          <input type="file" id="sfx-click-file" accept="audio/*" onchange="rlmSfxUpload('click',this)" style="flex:1;min-width:0;font-size:10px;color:var(--secondary);">
+          <button onclick="rlmSfxClear('click')" style="font-size:10px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;">Clear</button>
+        </div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-name">Add-to-cart sound</span>
+          <span class="slider-val" id="sfx-cart-name" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">(none)</span></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
+          <input type="file" id="sfx-cart-file" accept="audio/*" onchange="rlmSfxUpload('cart',this)" style="flex:1;min-width:0;font-size:10px;color:var(--secondary);">
+          <button onclick="rlmSfxClear('cart')" style="font-size:10px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;">Clear</button>
+        </div>
       </div>
 
       <div class="slider-row">
@@ -4502,6 +4586,7 @@ function buildUVGuide() {
 }
 
 function buildPaperBagMesh() {
+  if (typeof setBagLoading === 'function') setBagLoading(true);
   // Dispose old bag group
   if (T.box && T.box === bagGroup) {
     T.scene.remove(T.box);
@@ -4692,7 +4777,19 @@ function buildPaperBagMesh() {
 
 /* Hide loading overlay (min visible time for premium feel) then play intro spin */
 var _configLoadStart = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+/* Size/model loading lock — prevents starting a second GLB load while one is in
+   flight (which would race two meshes together and could crash). Locks the size
+   buttons with a not-allowed cursor until the load finishes. */
+var _bagLoading = false;
+function setBagLoading(on) {
+  _bagLoading = !!on;
+  document.querySelectorAll('.bag-sopt').forEach(function(b) { b.classList.toggle('locked', !!on); });
+  var stage = document.querySelector('.canvas-stage');
+  if (stage) stage.classList.toggle('loading', !!on);
+}
+
 function finishConfigLoading() {
+  setBagLoading(false);
   var MIN_VISIBLE = 650; /* ms — keep the loader up long enough to feel intentional */
   var elapsed = ((typeof performance !== 'undefined') ? performance.now() : Date.now()) - _configLoadStart;
   var wait = Math.max(0, MIN_VISIBLE - elapsed);
@@ -7608,10 +7705,13 @@ function applyBagSizeScale(sx, sy, sz, normMult) {
 
 function onBagSize(key, btn) {
   if (!BAG_MODELS[key]) return;
+  if (_bagLoading) return;            /* a model is still loading — ignore (buttons are locked) */
   if (currentBagModel === key) return;
   currentBagModel = key;
+  /* single-select: clear every other size, mark only this one */
   document.querySelectorAll('.bag-sopt').forEach(function(b) { b.classList.remove('on'); });
   if (btn) btn.classList.add('on');
+  setBagLoading(true);               /* lock other sizes immediately (before the async load) */
   /* show a switching overlay */
   var sov = document.getElementById('bag-switch-overlay');
   if (sov) sov.style.display = 'flex';
@@ -7851,6 +7951,7 @@ function addCart() {
   if (S.mode === 'logo' && (!S.hasLogo || (rightsEl && !rightsEl.checked))) {
     checkCart(); return;
   }
+  if (typeof playUISound === 'function') playUISound('cart');
 
   /* Compute current total for cart */
   var qty = S.qty, pu = S.pu;
@@ -8459,7 +8560,9 @@ function onIdleDelaySlider(v) {
   document.getElementById('idle-delay-val').textContent = idleDelaySec.toFixed(1) + 's';
 }
 function onHueAnimSpeed(v) { _hueAnimSpeed = parseFloat(v); var el=document.getElementById('hue-anim-speed-val'); if(el) el.textContent = _hueAnimSpeed.toFixed(3); }
-function onHueAnimSat(v)   { _hueAnimSat = parseInt(v);   var el=document.getElementById('hue-anim-sat-val');   if(el) el.textContent = _hueAnimSat; }
+function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
+function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
+function onAnimOpMax(v)    { _animOpMax = parseFloat(v); var el=document.getElementById('anim-opmax-val'); if(el) el.textContent = _animOpMax.toFixed(2); }
 function onSpinRampInSlider(v) {
   spinRampInMs = parseFloat(v) * 1000;
   document.getElementById('spin-rampin-val').textContent = parseFloat(v).toFixed(2) + 's';
@@ -9297,13 +9400,24 @@ function applyStepCamera(n){
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
-var CONFIG_STEP_COUNT = 6;
+var CONFIG_STEP_COUNT = 7;
 var currentConfigStep = 1;
 /* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
 var _uiSoundOn = true, _audioCtx = null;
+/* Custom uploaded SFX (testing panel). When set, they REPLACE the synthesized
+   sound for that event. 'hover' has no synth fallback (silent unless uploaded). */
+var _sfx = { hover:null, click:null, cart:null };
 function _audio(){ if(!_audioCtx){ try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ _audioCtx = null; } } return _audioCtx; }
+function _playSfxSample(key){
+  var s = _sfx[key]; if(!s) return false;
+  try { var a = s.cloneNode(); a.volume = s.volume; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function(){}); } catch(e){}
+  return true;
+}
 function playUISound(type){
   if(!_uiSoundOn) return;
+  var key = (type === 'hover') ? 'hover' : (type === 'cart') ? 'cart' : 'click';
+  if (_playSfxSample(key)) return;      /* custom sample overrides the synth */
+  if (type === 'hover' || type === 'cart') return;  /* no synth fallback for these */
   var ctx = _audio(); if(!ctx) return;
   if (ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
   var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
@@ -9315,9 +9429,31 @@ function playUISound(type){
   g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
   o.start(t); o.stop(t+0.18);
 }
+/* Testing-panel SFX upload: store an <audio> for the event. */
+function rlmSfxUpload(key, input){
+  var f = input.files && input.files[0]; if(!f) return;
+  try {
+    var a = new Audio(URL.createObjectURL(f)); a.volume = 0.6; a.preload = 'auto';
+    _sfx[key] = a;
+    var lbl = document.getElementById('sfx-' + key + '-name'); if (lbl) lbl.textContent = f.name;
+  } catch(e){}
+}
+function rlmSfxClear(key){ _sfx[key] = null; var lbl=document.getElementById('sfx-'+key+'-name'); if(lbl) lbl.textContent='(synth default)'; var inp=document.getElementById('sfx-'+key+'-file'); if(inp) inp.value=''; }
+var _hoverSfxEl = null;
+var _sfxHoverSel = 'button, .bag-sopt, .finish-card, .mono-swatch-wrap, .cstep-pill, .layer-icon-btn, .qopt, [data-sound]';
 document.addEventListener('click', function(e){
-  var el = (e.target && e.target.closest) ? e.target.closest('button, .bag-sopt, .finish-card, .mono-swatch-wrap, .cstep-pill, .layer-icon-btn, .qopt, [data-sound]') : null;
+  var el = (e.target && e.target.closest) ? e.target.closest(_sfxHoverSel) : null;
   if (el && !el.disabled) playUISound(el.matches('.mono-swatch-wrap, .finish-card, .qopt, .bag-sopt') ? 'pop' : 'click');
+}, true);
+document.addEventListener('pointerover', function(e){
+  if (!_uiSoundOn || !_sfx.hover) return;     /* hover sound only when a custom sample is set */
+  var el = (e.target && e.target.closest) ? e.target.closest(_sfxHoverSel) : null;
+  if (!el || el.disabled || el === _hoverSfxEl) return;
+  _hoverSfxEl = el; playUISound('hover');
+}, true);
+document.addEventListener('pointerout', function(e){
+  var el = (e.target && e.target.closest) ? e.target.closest(_sfxHoverSel) : null;
+  if (el && el === _hoverSfxEl) _hoverSfxEl = null;
 }, true);
 
 /* ─── PHASE C: hue guidance animation ──────────────────────────────────
@@ -9326,13 +9462,36 @@ document.addEventListener('click', function(e){
    the step. Purely visual; never writes to saved BAG state. */
 var STEP_PART = { 2:'exterior', 3:'interior', 4:'ribbon' };
 var _partTouched = {}, _suppressTouch = false;
-var _hueAnimSpeed = 0.05;   /* deg/ms for the hue cycle */
-var _hueAnimSat   = 100;    /* saturation % for hue cycle */
+/* Wayfinding pulse: when you land on a part's step, that part fades the highlight
+   colour (default red) in and out between an opacity min and max, to signal what
+   you're editing. Purely visual; restored when you pick a colour or leave the step. */
+var _hueAnimSpeed = 0.05;   /* pulse rate (cycle progresses _hueAnimSpeed·dt degrees) */
+var _animColor    = '#ff0000';
+var _animOpMin    = 0.0;
+var _animOpMax    = 1.0;
 var _hueAnim = { region:null, raf:0, t0:0, last:0 };
-function _paintRegionColor(region, hex){
-  if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
-  bagTexCtx.fillStyle = hex; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
-  if (bagTexture) bagTexture.needsUpdate = true;
+/* Blend two #hex colours → "#rrggbb" at t∈[0,1]. */
+function _lerpHexStr(a, b, t){
+  var A=_hexToRgb(a), B=_hexToRgb(b);
+  return _rgbToHex(A[0]+(B[0]-A[0])*t, A[1]+(B[1]-A[1])*t, A[2]+(B[2]-A[2])*t);
+}
+/* Paint a part's region with its base colour blended toward _animColor at `alpha`. */
+function _pulseRegion(region, alpha){
+  var base = (BAG[region] && BAG[region].color) || '#ffffff';
+  var col  = _lerpHexStr(base, _animColor, alpha);
+  if (region === 'ribbon'){
+    if (bagHandleClip && bagTexCtx){
+      bagTexCtx.save(); bagTexCtx.clip(bagHandleClip.path);
+      bagTexCtx.fillStyle = col; bagTexCtx.fillRect(0,0,2048,2048); bagTexCtx.restore();
+      if (bagTexture) bagTexture.needsUpdate = true;
+    } else if (bagFrontRef && bagFrontRef.material){
+      bagFrontRef.material.color.setHex(hexNum(col)); bagFrontRef.material.needsUpdate = true;
+    }
+  } else {
+    if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
+    bagTexCtx.fillStyle = col; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
+    if (bagTexture) bagTexture.needsUpdate = true;
+  }
 }
 function stopHueGuide(restore){
   if (_hueAnim.raf) cancelAnimationFrame(_hueAnim.raf);
@@ -9347,9 +9506,9 @@ function startHueGuide(region){
     if (_hueAnim.region !== region) return;
     if (now - _hueAnim.last > 70){          /* ~14 fps — keep texture uploads light */
       _hueAnim.last = now;
-      var hex = hslToHex(((now - _hueAnim.t0) * _hueAnimSpeed) % 360, _hueAnimSat, 45);
-      if (region === 'ribbon'){ if (bagFrontRef && bagFrontRef.material) bagFrontRef.material.color.setHex(hexNum(hex)); }
-      else _paintRegionColor(region, hex);
+      var deg   = ((now - _hueAnim.t0) * _hueAnimSpeed) % 360;
+      var alpha = _animOpMin + (_animOpMax - _animOpMin) * (0.5 - 0.5 * Math.cos(deg * Math.PI / 180));
+      _pulseRegion(region, alpha);
     }
     _hueAnim.raf = requestAnimationFrame(loop);
   };
@@ -9368,6 +9527,8 @@ var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dp
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : '3d';
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
+  var stage = document.querySelector('.canvas-stage');
+  if (stage) stage.classList.toggle('mode-2d', viewMode === '2d');  /* shrinks live 3D into bottom-right preview */
   var ov = document.getElementById('atlas2d'); if (!ov) return;
   if (viewMode === '2d'){
     if (typeof stopHueGuide === 'function') stopHueGuide(true);
@@ -9387,7 +9548,7 @@ function _allUVBounds(){ var uv=typeof BAG_UV!=='undefined'?BAG_UV:{}; var regio
 function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.10; a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
 function _a2s(ax,ay){ return { x:ax*a2d.zoom+a2d.panX, y:ay*a2d.zoom+a2d.panY }; }
 function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoom }; }
-function _evPos(e){ var r=a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:(e.clientY-r.top)*a2d.dpr }; }
+function _evPos(e){ var r=a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:a2d.canvas.height - (e.clientY-r.top)*a2d.dpr }; }  /* y flipped to match the vertically-flipped render */
 function _drawableLayers(){ return BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='text'||L.kind==='sticker'||L.kind==='logo'); }); }
 function _layerBox(L){
   var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
@@ -9444,42 +9605,51 @@ function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=
 function atlas2dRender(){
   var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
   ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#e8e8ec'; ctx.fillRect(0,0,c.width,c.height);
-  /* draw full bag texture so both exterior and interior UV areas are visible */
+  var uv=typeof BAG_UV!=='undefined'?BAG_UV:{};
+  /* Everything in UV space is drawn vertically flipped so the editor reads the same
+     way up as the real bag (the atlas itself is stored V-flipped for the 3D texture).
+     Labels are drawn afterwards in normal space so the text stays upright. */
+  ctx.save();
+  ctx.translate(0, c.height); ctx.scale(1, -1);
+  /* full bag texture backdrop */
   if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){
     ctx.imageSmoothingEnabled=true;
     try{ var o0=_a2s(0,0),o1=_a2s(2048,2048); ctx.drawImage(bagTexCanvas,0,0,2048,2048,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
   }
-  /* draw the real UV layout: the actual island shapes (wireframe + tint) per part */
-  var uv=typeof BAG_UV!=='undefined'?BAG_UV:{};
+  /* real UV island shapes (wireframe + tint), or legacy exterior/interior boxes */
   if (bagUVGuideCanvas){
     try{ var g0=_a2s(0,0),g1=_a2s(2048,2048); ctx.drawImage(bagUVGuideCanvas,0,0,2048,2048,g0.x,g0.y,g1.x-g0.x,g1.y-g0.y); }catch(_){}
-    [ {bb:uv.exterior,label:'Exterior',col:'rgba(40,120,255,0.95)'},
-      {bb:uv.interior,label:'Interior',col:'rgba(0,150,90,0.95)'},
-      {bb:uv.handles, label:'Handles', col:'rgba(200,130,0,0.98)'},
-      {bb:uv.rivets,  label:'Rivets',  col:'rgba(190,30,140,0.98)'} ].forEach(function(it){
-      if(!it.bb) return; var p=_a2s(it.bb.x,it.bb.y);
-      ctx.fillStyle=it.col; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
-      ctx.fillText(it.label, p.x+3*D, p.y-3*D);
-    });
   } else {
-    /* legacy single-mesh models: simple exterior/interior boxes */
-    [ {r:uv.exterior,label:'Exterior',fill:'rgba(40,120,255,0.08)',stroke:'rgba(40,120,255,0.50)'},
-      {r:uv.interior,label:'Interior',fill:'rgba(0,180,100,0.08)',stroke:'rgba(0,180,100,0.50)'} ].forEach(function(item){
+    [ {r:uv.exterior,fill:'rgba(40,120,255,0.08)',stroke:'rgba(40,120,255,0.50)'},
+      {r:uv.interior,fill:'rgba(0,180,100,0.08)',stroke:'rgba(0,180,100,0.50)'} ].forEach(function(item){
       if(!item.r) return;
       var p0=_a2s(item.r.x,item.r.y), p1=_a2s(item.r.x+item.r.w,item.r.y+item.r.h);
       ctx.fillStyle=item.fill; ctx.fillRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
       ctx.strokeStyle=item.stroke; ctx.lineWidth=1.5*D; ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
-      ctx.fillStyle=item.stroke; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
-      ctx.fillText(item.label, p0.x+4*D, p0.y-3*D);
     });
   }
-  var e=_exuv();
+  /* layer selection boxes */
   _drawableLayers().forEach(function(L){
     var b=_layerBox(L), tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
     ctx.strokeStyle=sel?'#00B3A4':'rgba(0,0,0,0.30)'; ctx.lineWidth=(sel?2:1)*D;
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     if (sel){ var rh=_boxLocalToScreen(b,0,-1.5); ctx.beginPath(); ctx.moveTo((tl.x+tr.x)/2,(tl.y+tr.y)/2); ctx.lineTo(rh.x,rh.y); ctx.stroke();
       ctx.fillStyle='#00B3A4'; var s=9*D; ctx.fillRect(br.x-s/2,br.y-s/2,s,s); ctx.beginPath(); ctx.arc(rh.x,rh.y,6*D,0,Math.PI*2); ctx.fill(); }
+  });
+  ctx.restore();
+  /* upright labels at each island's visual top (normal screen space) */
+  var labelDefs = bagUVGuideCanvas
+    ? [ {bb:uv.exterior,label:'Exterior',col:'rgba(40,120,255,0.95)'},
+        {bb:uv.interior,label:'Interior',col:'rgba(0,150,90,0.95)'},
+        {bb:uv.handles, label:'Handles', col:'rgba(200,130,0,0.98)'},
+        {bb:uv.rivets,  label:'Rivets',  col:'rgba(190,30,140,0.98)'} ]
+    : [ {bb:uv.exterior,label:'Exterior',col:'rgba(40,120,255,0.7)'},
+        {bb:uv.interior,label:'Interior',col:'rgba(0,150,90,0.8)'} ];
+  labelDefs.forEach(function(it){
+    if(!it.bb) return;
+    var p=_a2s(it.bb.x, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island canvas-bottom → visual top */
+    ctx.fillStyle=it.col; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
+    ctx.fillText(it.label, p.x+3*D, ly-3*D);
   });
 }
 
@@ -9509,8 +9679,38 @@ function goConfigStep(n) {
   if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
   applyStepCamera(n);
   if (typeof startHueGuide === 'function') startHueGuide(STEP_PART[n] || null);
+  if (n === 7 && typeof renderReviewSummary === 'function') renderReviewSummary();
 }
 function configStepNext() { goConfigStep(currentConfigStep + 1); }
+
+/* Build the Review-step summary of every choice. Pricing/fees live in the always-
+   visible Summary block below, kept current by updatePricing(). */
+function renderReviewSummary() {
+  var host = document.getElementById('review-summary'); if (!host) return;
+  function swatch(c){ return '<span style="display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,0.15);background:' + (c||'#fff') + ';vertical-align:-2px;margin-right:6px;"></span>'; }
+  function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
+  function row(label, valHTML){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--imp-border);font-size:13px;"><span style="color:var(--imp-fg-3);">'+label+'</span><span style="color:var(--imp-fg);font-weight:600;text-align:right;">'+valHTML+'</span></div>'; }
+  var model = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
+  var layers = (BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='logo'||L.kind==='sticker'||L.kind==='text'); }) : [];
+  var artHTML;
+  if (!layers.length) { artHTML = '<span style="color:var(--imp-fg-3);font-weight:400;">None</span>'; }
+  else {
+    artHTML = layers.map(function(L){
+      var kind = L.kind==='text' ? ('“'+(L.content||'').slice(0,16)+'”') : (L.tiled?'Pattern':'Graphic');
+      var surf = cap(L.surface||'exterior');
+      return kind + ' · ' + surf;
+    }).join('<br>');
+  }
+  var h = '';
+  if (model) h += row('Size', model.label + ' <span style="color:var(--imp-fg-3);font-weight:400;">('+model.dims+')</span>');
+  h += row('Quantity', (S.qty||0).toLocaleString() + ' units');
+  h += row('Exterior', swatch(BAG.exterior.color) + cap(BAG.exterior.finish));
+  h += row('Interior', swatch(BAG.interior.color) + cap(BAG.interior.finish));
+  if (BAG.ribbon) h += row('Handles', swatch(BAG.ribbon.color) + cap(BAG.ribbon.finish||''));
+  if (BAG.rivet)  h += row('Rivets', swatch(BAG.rivet.color) + '');
+  h += row('Artwork', artHTML);
+  host.innerHTML = h;
+}
 function configStepPrev() { goConfigStep(currentConfigStep - 1); }
 
 /* ─── HEADER INIT (via shared.js) ─── */
