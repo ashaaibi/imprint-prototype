@@ -1658,7 +1658,7 @@
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
       <div class="hue-slider-wrap">
-        <input type="range" class="hue-slider" id="bag-ext-hslider" min="0" max="360" value="0" oninput="onBagHue('exterior', this.value)">
+        <input type="range" class="hue-slider" id="bag-ext-hslider" min="0" max="360" value="175" oninput="onBagHue('exterior', this.value)">
       </div>
       <div class="mono-swatches" id="bag-ext-swatches"></div>
       <div class="color-hex" id="bag-ext-chex">#FF0000</div>
@@ -1719,7 +1719,7 @@
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
       <div class="hue-slider-wrap">
-        <input type="range" class="hue-slider" id="bag-int-hslider" min="0" max="360" value="0" oninput="onBagHue('interior', this.value)">
+        <input type="range" class="hue-slider" id="bag-int-hslider" min="0" max="360" value="175" oninput="onBagHue('interior', this.value)">
       </div>
       <div class="mono-swatches" id="bag-int-swatches"></div>
       <div class="color-hex" id="bag-int-chex">#FF0000</div>
@@ -1779,7 +1779,7 @@
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
       <div class="hue-slider-wrap">
-        <input type="range" class="hue-slider" id="bag-rib-hslider" min="0" max="360" value="0" oninput="onBagHue('ribbon', this.value)">
+        <input type="range" class="hue-slider" id="bag-rib-hslider" min="0" max="360" value="175" oninput="onBagHue('ribbon', this.value)">
       </div>
       <div class="mono-swatches" id="bag-rib-swatches"></div>
       <div class="color-hex" id="bag-rib-chex">#FF0000</div>
@@ -2694,8 +2694,8 @@ const S = {
   product: 'bag',
   size: 'S',
   dims: '120×120×70',
-  qty: 500,
-  pu: 4.40,
+  qty: 200,
+  pu: 5.90,
   hasLogo: false,
   logoImg: null,       /* HTMLImageElement for canvas texture */
   customColor: false,
@@ -2719,9 +2719,9 @@ const S = {
 };
 /* ─── PAPER BAG STATE ───────────────── */
 const BAG = {
-  exterior: { color: '#FFFFFF', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'Custom', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  interior: { color: '#FFFFFF', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'Custom', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  ribbon:   { color: '#CC0000', swatchName: 'True', customHex: '#FFFFFF' },
+  exterior: { color: '#00E6D2', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  interior: { color: '#00E6D2', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   artwork: {
     type: 'none',  /* tab highlight only — rendering is driven by each layer's .visible */
     nextId: 100,   /* id source for user-added layers */
@@ -4774,6 +4774,7 @@ function updateLayerThumb(L) {
 function eyeOpenSVG()  { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>'; }
 function eyeClosedSVG(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'; }
 function trashSVG()    { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'; }
+function duplicateSVG(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'; }
 function lockSVG(locked) { return locked
   ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
   : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'; }
@@ -4793,6 +4794,7 @@ function renderLayersList() {
         '<span class="layer-name" id="lyr-' + L.id + '-name">' + escapeHTML(layerAutoName(L)) + '</span>' +
         '<button class="layer-icon-btn' + (L.visible ? '' : ' off') + '" title="Show / hide" onclick="event.stopPropagation();toggleLayerVisible(' + L.id + ')">' + (L.visible ? eyeOpenSVG() : eyeClosedSVG()) + '</button>' +
         '<button class="layer-icon-btn' + (L.locked ? ' on' : '') + '" title="' + (L.locked ? 'Unlock layer' : 'Lock layer') + '" onclick="event.stopPropagation();toggleLayerLock(' + L.id + ')">' + lockSVG(L.locked) + '</button>' +
+        '<button class="layer-icon-btn" ' + (L.locked ? 'disabled title="Unlock to duplicate"' : 'title="Duplicate layer"') + ' onclick="event.stopPropagation();duplicateLayer(' + L.id + ')">' + duplicateSVG() + '</button>' +
         '<button class="layer-icon-btn danger" ' + ((L.isDefault || L.locked) ? ('disabled title="' + (L.locked ? 'Unlock to delete' : 'Default layers can&#39;t be deleted') + '"') : 'title="Delete layer"') + ' onclick="event.stopPropagation();deleteLayer(' + L.id + ')">' + trashSVG() + '</button>' +
         '<span class="layer-chevron">&#9658;</span>' +
       '</div>' +
@@ -5586,6 +5588,24 @@ function deleteLayer(id) {
   var list = document.getElementById('layers-list');
   if (list && list.getAttribute('data-expanded') === String(id)) list.removeAttribute('data-expanded');
   renderLayersList(); drawBagTexture();
+}
+function duplicateLayer(id) {
+  var L = getLayer(id); if (!L || L.locked) return;
+  var copy = Object.assign({}, L);
+  copy.id = BAG.artwork.nextId++;
+  copy.isDefault = false;
+  copy.locked = false;
+  copy.visible = true;
+  if (L.areas)   copy.areas   = Object.assign({}, L.areas);
+  if (L.recolor) { try { copy.recolor = JSON.parse(JSON.stringify(L.recolor)); } catch (e) { copy.recolor = L.recolor; } }
+  if (typeof copy.posU === 'number') copy.posU = Math.max(2, Math.min(98, copy.posU + 4));
+  if (typeof copy.posV === 'number') copy.posV = Math.max(2, Math.min(98, copy.posV + 4));
+  var i = BAG.artwork.layers.indexOf(L);
+  if (i >= 0) BAG.artwork.layers.splice(i, 0, copy);  /* directly above the original */
+  else        BAG.artwork.layers.unshift(copy);        /* duplicating a default → add to stack */
+  renderLayersList(); drawBagTexture();
+  if (typeof expandLayer === 'function') expandLayer(copy.id);
+  if (typeof scheduleHistory === 'function') scheduleHistory();
 }
 function addLayer(kind) {
   closeAddLayerMenu();
@@ -7244,13 +7264,13 @@ function updateBagQtyGridFromEntry(entry) {
   var html = '';
   tiers.forEach(function(t, i) {
     var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '&nbsp;';
-    html += '<button class="qopt' + (i === 1 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
+    html += '<button class="qopt' + (i === 0 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
       '<span class="qnum">' + t.qty.toLocaleString() + '</span>' +
       '<span class="qpu">' + fmtUnit(t.pu) + ' / unit</span>' +
       '<span class="qsave">' + saveStr + '</span></button>';
   });
   grid.innerHTML = html;
-  S.qty = tiers[1].qty; S.pu = tiers[1].pu;
+  S.qty = tiers[0].qty; S.pu = tiers[0].pu;
   var vmsg = document.getElementById('vmsg-bag');
   if (vmsg && tiers[2]) {
     vmsg.innerHTML = 'Order <strong>' + tiers[2].qty.toLocaleString() + '</strong> and pay <strong>' + fmtUnit(tiers[2].pu) + ' / unit</strong> — save <strong>' + tiers[2].save + '%</strong> vs. 200 units.';
@@ -7316,14 +7336,14 @@ function updateBagQtyGrid(size) {
   var html = '';
   tiers.forEach(function(t, i) {
     var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '&nbsp;';
-    html += '<button class="qopt' + (i === 1 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
+    html += '<button class="qopt' + (i === 0 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
       '<span class="qnum">' + t.qty.toLocaleString() + '</span>' +
       '<span class="qpu">' + fmtUnit(t.pu) + ' / unit</span>' +
       '<span class="qsave">' + saveStr + '</span>' +
       '</button>';
   });
   grid.innerHTML = html;
-  var first = tiers[1];
+  var first = tiers[0];
   S.qty = first.qty; S.pu = first.pu;
   var vmsg = document.getElementById('vmsg-bag');
   if (vmsg && tiers[2]) {
