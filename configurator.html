@@ -2156,6 +2156,9 @@
         <input type="range" class="test-slider" min="8" max="80" step="1" value="30" oninput="onA2Dnum('gridSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview</span>
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onPreviewToggle(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Full mesh wireframe</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off = clean island outlines only. On = every triangle edge.</div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">21</span></div>
         <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
@@ -4576,14 +4579,23 @@ function computeIslandRegion(geom) {
     if (y < miny) miny = y; if (y > maxy) maxy = y;
     return [x, y];
   }
+  /* boundary-edge outline: edges used by exactly one triangle (in UV space, keyed by
+     quantized position so seams/welds are handled) → clean island silhouette + hole
+     borders with no internal triangulation diagonals. */
+  var eCount = {}, ePts = {};
+  function vk(i){ return Math.round(ua[i*2]*4096) + ',' + Math.round((1-ua[i*2+1])*4096); }
+  function edge(i,j){ var ka=vk(i), kb=vk(j); var k = ka<kb ? ka+'|'+kb : kb+'|'+ka; eCount[k]=(eCount[k]||0)+1; if(!ePts[k]) ePts[k]=[ua[i*2]*2048,(1-ua[i*2+1])*2048,ua[j*2]*2048,(1-ua[j*2+1])*2048]; }
   var n = idx ? idx.count : uvAttr.count;
   for (var t = 0; t < n; t += 3) {
     var a = idx ? idx.getX(t) : t, b = idx ? idx.getX(t+1) : t+1, c = idx ? idx.getX(t+2) : t+2;
     var p0 = px(a), p1 = px(b), p2 = px(c);
     path.moveTo(p0[0], p0[1]); path.lineTo(p1[0], p1[1]); path.lineTo(p2[0], p2[1]); path.closePath();
+    edge(a,b); edge(b,c); edge(c,a);
   }
   if (!isFinite(minx)) return null;
-  return { path: path, bbox: { x: minx, y: miny, w: maxx - minx, h: maxy - miny } };
+  var outline = new Path2D();
+  for (var k in eCount){ if (eCount[k]===1){ var e=ePts[k]; outline.moveTo(e[0],e[1]); outline.lineTo(e[2],e[3]); } }
+  return { path: path, outline: outline, bbox: { x: minx, y: miny, w: maxx - minx, h: maxy - miny } };
 }
 
 /* Bake a UV-layout guide for the 2D editor: the real island shapes (wireframe of
@@ -4613,11 +4625,13 @@ function buildUVGuide() {
   regions.forEach(function(r) {
     /* tint fill (set Tint opacity to 0 → only the lines show, no triangle fill) */
     if (A2D.tintOpacity > 0) { g.globalAlpha = A2D.tintOpacity; g.fillStyle = single || ('rgb(' + r.rgb + ')'); g.fill(r.clip.path); }
-    /* outline — globalAlpha drives opacity for BOTH single + per-part colours */
+    /* outline — clean island silhouette (default) or full triangle mesh. globalAlpha
+       drives opacity for both single + per-part colours. */
     if (A2D.outlineThickness > 0 && A2D.outlineOpacity > 0) {
       g.globalAlpha = A2D.outlineOpacity;
       g.strokeStyle = single || ('rgb(' + r.rgb + ')');
-      g.lineWidth = A2D.outlineThickness; g.stroke(r.clip.path);
+      g.lineWidth = A2D.outlineThickness;
+      g.stroke((A2D.wireFull || !r.clip.outline) ? r.clip.path : r.clip.outline);
     }
   });
   g.globalAlpha = 1;
@@ -9449,7 +9463,8 @@ function applyStepCamera(n){
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
   if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 2 || n === 4 || n === 5) startCamTween(viewThetaRad('front'), VIEW_PHI);
+  else if (n === 5) startCamTween(viewThetaRad('front'), 0.18);   /* Rivets → top-down view */
+  else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
@@ -9588,7 +9603,8 @@ var A2D = {
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:0,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewBrightness:1.3, previewSaturate:1.15
+  previewOn:true, previewBrightness:1.3, previewSaturate:1.15,
+  wireFull:false            /* false = clean island outlines only; true = full triangle mesh */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
@@ -9697,11 +9713,12 @@ function atlas2dStartLoop(){ if (a2d.raf) return; var loop=function(){ if (viewM
 function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=0; }
 function atlas2dRender(){
   var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
-  /* 1. white background */
-  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle=A2D.bgColor; ctx.fillRect(0,0,c.width,c.height);
+  var _dark = (document.documentElement.getAttribute('data-theme')==='dark');
+  /* 1. background (theme-aware) */
+  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle = _dark ? '#15151a' : A2D.bgColor; ctx.fillRect(0,0,c.width,c.height);
   /* 2. grid pattern (screen-space graph paper) */
   if (A2D.gridOn){
-    var gs=A2D.gridSize*D; ctx.strokeStyle=A2D.gridColor; ctx.lineWidth=1;
+    var gs=A2D.gridSize*D; ctx.strokeStyle = _dark ? 'rgba(255,255,255,0.07)' : A2D.gridColor; ctx.lineWidth=1;
     ctx.beginPath();
     for(var gx=(a2d.panX%gs+gs)%gs; gx<c.width; gx+=gs){ ctx.moveTo(gx,0); ctx.lineTo(gx,c.height); }
     for(var gy=(a2d.panY%gs+gs)%gs; gy<c.height; gy+=gs){ ctx.moveTo(0,gy); ctx.lineTo(c.width,gy); }
@@ -9848,6 +9865,20 @@ initBagColorPickers();
 initCPickerEvents();
 initThree();
 updateDimPill();
+
+/* Dark-mode for the 3D scene: darken the studio floor when the theme is dark
+   (the stage gradient background is already theme-aware via CSS). */
+function _applyConfigTheme(){
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  try {
+    if (T && T.floor && T.floor.material){
+      T.floor.material.color.set(dark ? '#141414' : ((typeof REALISM!=='undefined' && REALISM.floorColor) ? REALISM.floorColor : '#ffffff'));
+      T.floor.material.needsUpdate = true;
+    }
+  } catch(e){}
+}
+try { new MutationObserver(_applyConfigTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] }); } catch(e){}
+setTimeout(_applyConfigTheme, 1200);   /* after the realism floor is built */
 </script>
 
 <!-- ─── CUSTOM COLOR PICKER POPUP ─── -->
