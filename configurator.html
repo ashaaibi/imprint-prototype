@@ -3168,6 +3168,7 @@ function openExtCPicker(e) {
 }
 function openBagCPicker(region, e) {
   e.stopPropagation();
+  if (typeof _markTouched === 'function') _markTouched(region);
   var rect=(e.currentTarget||e.target).getBoundingClientRect();
   BAG[region].swatchName='Custom';
   var hex=BAG[region].customHex||'#FFFFFF';
@@ -6453,6 +6454,7 @@ function toggleAdvanced(id) {
 /* ─── BAG COLOR ─────────────────────── */
 function onBagHue(region, hue) {
   hue = parseInt(hue);
+  if (typeof _markTouched === 'function') _markTouched(region);
   if (BAG[region].swatchName === 'Custom') {
     renderBagSwatches(region, hue, BAG[region].customHex || '#FFFFFF');
     return;
@@ -6471,6 +6473,7 @@ function onBagHue(region, hue) {
    hue), then re-fires every customer-facing config slider as a safety net. Admin/realism
    tuning sliders live outside .config-step, so they're left untouched. */
 function _applyDefaultControls() {
+  _suppressTouch = true;
   try {
     ['exterior','interior','ribbon','rivet'].forEach(function(rg){
       var pfx = { exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv' }[rg];
@@ -6483,9 +6486,11 @@ function _applyDefaultControls() {
       try { sl.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
     });
   } catch (e) {}
+  _suppressTouch = false;
 }
 
 function pickBagSwatch(region, hex, name) {
+  if (typeof _markTouched === 'function') _markTouched(region);
   BAG[region].swatchName = name;
   BAG[region].color = hex;
   var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib', rivet:'riv'}[region];
@@ -9014,6 +9019,62 @@ function applyStepCamera(n){
 /* ─── STEPPED FLOW (Nike By You style) ─── */
 var CONFIG_STEP_COUNT = 5;
 var currentConfigStep = 1;
+/* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
+var _uiSoundOn = true, _audioCtx = null;
+function _audio(){ if(!_audioCtx){ try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ _audioCtx = null; } } return _audioCtx; }
+function playUISound(type){
+  if(!_uiSoundOn) return;
+  var ctx = _audio(); if(!ctx) return;
+  if (ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
+  var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  if (type === 'pop'){ o.type='sine'; o.frequency.setValueAtTime(680,t); o.frequency.exponentialRampToValueAtTime(1080,t+0.05); }
+  else { o.type='triangle'; o.frequency.setValueAtTime(430,t); o.frequency.exponentialRampToValueAtTime(660,t+0.04); }
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.085,t+0.009);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+  o.start(t); o.stop(t+0.18);
+}
+document.addEventListener('click', function(e){
+  var el = (e.target && e.target.closest) ? e.target.closest('button, .bag-sopt, .finish-card, .mono-swatch-wrap, .cstep-pill, .layer-icon-btn, .qopt, [data-sound]') : null;
+  if (el && !el.disabled) playUISound(el.matches('.mono-swatch-wrap, .finish-card, .qopt, .bag-sopt') ? 'pop' : 'click');
+}, true);
+
+/* ─── PHASE C: hue guidance animation ──────────────────────────────────
+   When the user lands on a part's step, that part idle-cycles through the hue
+   spectrum to signal what they're editing — until they pick a colour or leave
+   the step. Purely visual; never writes to saved BAG state. */
+var STEP_PART = { 2:'exterior', 3:'interior', 4:'ribbon' };
+var _partTouched = {}, _suppressTouch = false;
+var _hueAnim = { region:null, raf:0, t0:0, last:0 };
+function _paintRegionColor(region, hex){
+  if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
+  bagTexCtx.fillStyle = hex; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
+  if (bagTexture) bagTexture.needsUpdate = true;
+}
+function stopHueGuide(restore){
+  if (_hueAnim.raf) cancelAnimationFrame(_hueAnim.raf);
+  _hueAnim.raf = 0; var rg = _hueAnim.region; _hueAnim.region = null;
+  if (rg && restore){ if (rg === 'ribbon') applyRibbonColor(); else if (typeof drawBagTexture === 'function') drawBagTexture(); }
+}
+function startHueGuide(region){
+  stopHueGuide(true);
+  if (!region || _partTouched[region] || !bagMeshRef) return;
+  _hueAnim.region = region; _hueAnim.t0 = (typeof performance!=='undefined'?performance.now():Date.now()); _hueAnim.last = 0;
+  var loop = function(now){
+    if (_hueAnim.region !== region) return;
+    if (now - _hueAnim.last > 70){          /* ~14 fps — keep texture uploads light */
+      _hueAnim.last = now;
+      var hex = hslToHex(((now - _hueAnim.t0) * 0.05) % 360, 100, 45);
+      if (region === 'ribbon'){ if (bagFrontRef && bagFrontRef.material) bagFrontRef.material.color.setHex(hexNum(hex)); }
+      else _paintRegionColor(region, hex);
+    }
+    _hueAnim.raf = requestAnimationFrame(loop);
+  };
+  _hueAnim.raf = requestAnimationFrame(loop);
+}
+function _markTouched(region){ stopHueGuide(false); if (!_suppressTouch && region) _partTouched[region] = true; }
+
 function goConfigStep(n) {
   n = Math.max(1, Math.min(CONFIG_STEP_COUNT, n));
   currentConfigStep = n;
@@ -9039,6 +9100,7 @@ function goConfigStep(n) {
   var panel = document.querySelector('.controls-panel');
   if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
   applyStepCamera(n);
+  if (typeof startHueGuide === 'function') startHueGuide(STEP_PART[n] || null);
 }
 function configStepNext() { goConfigStep(currentConfigStep + 1); }
 function configStepPrev() { goConfigStep(currentConfigStep - 1); }
