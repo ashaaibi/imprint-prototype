@@ -4711,7 +4711,9 @@ function buildPaperBagMesh() {
     if (!collected.length) { console.error('No mesh in ' + model.file); finishConfigLoading(); return; }
 
     var byMat = {};
-    collected.forEach(function(p) { if (p.name && !byMat[p.name]) byMat[p.name] = p.geom; });
+    /* Normalise material names: strip Blender's duplicate suffix (".001" etc.) and any
+       glTF "-N" so M_exterior.001 / M_exterior still match. */
+    collected.forEach(function(p) { var nm=(p.name||'').replace(/[.\-]\d+$/,''); if (nm && !byMat[nm]) byMat[nm] = p.geom; });
     var named = byMat['M_exterior'] || byMat['M_interior'] || byMat['M_handles'] || byMat['M_rivets'];
 
     var bodyGeom = null, handleGeom = null, rivetGeom = null;
