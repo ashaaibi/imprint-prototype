@@ -4379,6 +4379,9 @@ function buildPaperBagMesh() {
     onSizeTune('handleScaleAdj', initSize.handleScaleAdj);
     onSizeTune('handleYOff',     initSize.handleYOff);
     if (typeof updateSizeTuningPanel === 'function') updateSizeTuningPanel(initSize); /* sync testing panel to current size */
+    /* Nudge default-driven controls so their values apply on load (e.g. colour hue
+       sliders sit at their default but their handler must fire to paint the material). */
+    if (typeof _applyDefaultControls === 'function') _applyDefaultControls();
     /* Model ready → hide the premium loader and play the intro 360° spin */
     finishConfigLoading();
   }, function(err) {
@@ -6401,6 +6404,24 @@ function onBagHue(region, hue) {
   updateBagColorDisplay(region, color);
   if (region === 'ribbon') applyRibbonColor();
   else drawBagTexture();
+}
+/* On load, fire the controls whose default value only "kicks in" once their handler
+   runs. Explicitly applies the three part colours (so the bag isn't stuck on a stale
+   hue), then re-fires every customer-facing config slider as a safety net. Admin/realism
+   tuning sliders live outside .config-step, so they're left untouched. */
+function _applyDefaultControls() {
+  try {
+    ['exterior','interior','ribbon'].forEach(function(rg){
+      var pfx = { exterior:'ext', interior:'int', ribbon:'rib' }[rg];
+      var hs = document.getElementById('bag-' + pfx + '-hslider');
+      if (hs && typeof onBagHue === 'function') onBagHue(rg, hs.value);
+    });
+  } catch (e) { console.warn('default colour apply failed', e); }
+  try {
+    document.querySelectorAll('.config-step input[type="range"]').forEach(function(sl){
+      try { sl.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+    });
+  } catch (e) {}
 }
 
 function pickBagSwatch(region, hex, name) {
