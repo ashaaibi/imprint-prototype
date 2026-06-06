@@ -292,6 +292,8 @@
       pointer-events: none; display: none;
     }
     .canvas-stage.mode-2d .mini3d-label { display: block; }
+    .canvas-stage.mode-2d.no-preview #three-canvas { display: none !important; }
+    .canvas-stage.mode-2d.no-preview .mini3d-label { display: none; }
     html[dir="rtl"] .mini3d-label { right: auto; left: 16px; }
     .drag-hint {
       display: none; /* removed: empty viewport pill */
@@ -2152,26 +2154,28 @@
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('gridOn',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Grid size</span><span class="slider-val" id="a2d-gridSize-val">30</span></div>
         <input type="range" class="test-slider" min="8" max="80" step="1" value="30" oninput="onA2Dnum('gridSize',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">12</span></div>
-        <input type="range" class="test-slider" min="7" max="28" step="1" value="12" oninput="onA2Dnum('labelSize',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#5a5a66</span></div>
-        <input type="color" value="#5a5a66" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelColor',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">per-part</span></div>
-        <input type="color" value="#888888" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('outlineColor',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline thickness</span><span class="slider-val" id="a2d-outlineThickness-val">1.6</span></div>
-        <input type="range" class="test-slider" min="0.5" max="8" step="0.1" value="1.6" oninput="onA2Dnum('outlineThickness',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline opacity</span><span class="slider-val" id="a2d-outlineOpacity-val">0.7</span></div>
-        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.7" oninput="onA2Dnum('outlineOpacity',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Tint opacity</span><span class="slider-val" id="a2d-tintOpacity-val">0.06</span></div>
-        <input type="range" class="test-slider" min="0" max="0.5" step="0.01" value="0.06" oninput="onA2Dnum('tintOpacity',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline resolution</span><span class="slider-val" id="a2d-guideRes-val">3072</span></div>
-        <input type="range" class="test-slider" min="1024" max="4096" step="512" value="3072" oninput="onA2Dnum('guideRes',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline padding</span><span class="slider-val" id="a2d-padding-val">6</span></div>
-        <input type="range" class="test-slider" min="0" max="30" step="1" value="6" oninput="onA2Dnum('padding',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle size</span><span class="slider-val" id="a2d-handleSize-val">9</span></div>
-        <input type="range" class="test-slider" min="4" max="20" step="1" value="9" oninput="onA2Dnum('handleSize',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle color</span><span class="slider-val" id="a2d-handleColor-val">#00B3A4</span></div>
-        <input type="color" value="#00B3A4" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('handleColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onPreviewToggle(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">21</span></div>
+        <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
+        <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">#000000</span></div>
+        <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('outlineColor',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline thickness</span><span class="slider-val" id="a2d-outlineThickness-val">0.5</span></div>
+        <input type="range" class="test-slider" min="0" max="0.5" step="0.01" value="0.5" oninput="onA2Dnum('outlineThickness',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline opacity</span><span class="slider-val" id="a2d-outlineOpacity-val">1</span></div>
+        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="1" oninput="onA2Dnum('outlineOpacity',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Tint opacity</span><span class="slider-val" id="a2d-tintOpacity-val">0</span></div>
+        <input type="range" class="test-slider" min="0" max="0.5" step="0.01" value="0" oninput="onA2Dnum('tintOpacity',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline resolution (raster)</span><span class="slider-val" id="a2d-guideRes-val">2048</span></div>
+        <input type="range" class="test-slider" min="512" max="4096" step="256" value="2048" oninput="onA2Dnum('guideRes',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Island padding (gap fill)</span><span class="slider-val" id="a2d-padding-val">0</span></div>
+        <input type="range" class="test-slider" min="0" max="40" step="1" value="0" oninput="onA2Dpadding(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle size</span><span class="slider-val" id="a2d-handleSize-val">10</span></div>
+        <input type="range" class="test-slider" min="4" max="20" step="1" value="10" oninput="onA2Dnum('handleSize',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle color</span><span class="slider-val" id="a2d-handleColor-val">#000000</span></div>
+        <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('handleColor',this.value,false)"></div>
 
       <div class="slider-row">
         <div class="slider-top">
@@ -3859,10 +3863,17 @@ function drawBagTextureDebug() {
    background (clean 2D editor). Falls back to the bbox rect for legacy models. */
 function _drawBodyRegion(region, uv, clip, kraftRender){
   if (!uv) return;
+  var col = BAG[region].color;
   bagTexCtx.save();
-  if (clip && clip.path) bagTexCtx.clip(clip.path);
-  bagTexCtx.fillStyle = BAG[region].color;
-  bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
+  if (clip && clip.path) {
+    bagTexCtx.fillStyle = col; bagTexCtx.fill(clip.path);
+    /* dilate the colour fill by `padding` px (thick stroke) to cover gaps/holes around
+       the handle bases & rivets so they don't read as white halos */
+    if (A2D.padding > 0){ bagTexCtx.strokeStyle = col; bagTexCtx.lineJoin='round'; bagTexCtx.lineCap='round'; bagTexCtx.lineWidth = A2D.padding * 2; bagTexCtx.stroke(clip.path); }
+    bagTexCtx.clip(clip.path);          /* kraft + base pattern stay inside the island */
+  } else {
+    bagTexCtx.fillStyle = col; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
+  }
   if (BAG[region].finish === 'kraft' || kraftRender > 0) drawKraftOverlay(bagTexCtx, uv, kraftRender);
   if (bagPatternsLoaded) drawPatternOnRegion(bagTexCtx, region, uv);
   bagTexCtx.restore();
@@ -4592,7 +4603,7 @@ function buildUVGuide() {
     regions.forEach(function(r){ try { bagShellClip.addPath(r.clip.path); } catch(e){} });
   } else { bagShellClip = null; }
   if (!regions.length) return;
-  var RES = Math.max(1024, Math.min(4096, A2D.guideRes|0)) || 2048;
+  var RES = Math.max(512, Math.min(4096, A2D.guideRes|0)) || 2048;  /* triangle raster quality */
   var k = RES / 2048;                       /* island paths are in 2048-space */
   var cv = document.createElement('canvas'); cv.width = cv.height = RES;
   var g = cv.getContext('2d');
@@ -4600,16 +4611,16 @@ function buildUVGuide() {
   g.lineJoin = 'round'; g.lineCap = 'round';
   var single = A2D.outlineColor;
   regions.forEach(function(r) {
-    var stroke = single || ('rgba(' + r.rgb + ',' + A2D.outlineOpacity + ')');
-    /* tint fill */
-    g.fillStyle = 'rgba(' + r.rgb + ',' + A2D.tintOpacity + ')'; g.fill(r.clip.path);
-    /* padding halo (soft, wider, low-alpha) then the crisp outline on top */
-    if (A2D.padding > 0) {
-      g.strokeStyle = single ? single : ('rgba(' + r.rgb + ',' + (A2D.outlineOpacity * 0.25) + ')');
-      g.lineWidth = A2D.outlineThickness + A2D.padding * 2; g.stroke(r.clip.path);
+    /* tint fill (set Tint opacity to 0 → only the lines show, no triangle fill) */
+    if (A2D.tintOpacity > 0) { g.globalAlpha = A2D.tintOpacity; g.fillStyle = single || ('rgb(' + r.rgb + ')'); g.fill(r.clip.path); }
+    /* outline — globalAlpha drives opacity for BOTH single + per-part colours */
+    if (A2D.outlineThickness > 0 && A2D.outlineOpacity > 0) {
+      g.globalAlpha = A2D.outlineOpacity;
+      g.strokeStyle = single || ('rgb(' + r.rgb + ')');
+      g.lineWidth = A2D.outlineThickness; g.stroke(r.clip.path);
     }
-    g.strokeStyle = stroke; g.lineWidth = A2D.outlineThickness; g.stroke(r.clip.path);
   });
+  g.globalAlpha = 1;
   bagUVGuideCanvas = cv;
 }
 
@@ -4684,6 +4695,10 @@ function buildPaperBagMesh() {
          still uses the BAG_UV rects). */
       bagExtClip = computeIslandRegion(byMat['M_exterior']);
       bagIntClip = computeIslandRegion(byMat['M_interior']);
+      /* Derive the body UV boxes from geometry too → rearranging UVs in Maya and
+         re-exporting "just works" with no hand-entered coordinates. */
+      if (bagExtClip) BAG_UV.exterior = bagExtClip.bbox;
+      if (bagIntClip) BAG_UV.interior = bagIntClip.bbox;
       buildUVGuide();
       console.log('[imprint] BUILD=parts-atlas+uvguide · material-named bag · clips handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip, 'ext:', !!bagExtClip, 'int:', !!bagIntClip, '· UV guide:', !!bagUVGuideCanvas);
     } else {
@@ -8600,6 +8615,7 @@ function onBodyDoubleSided(on){ BODY_DOUBLE_SIDED=!!on; if (bagMeshRef && bagMes
 function onA2Dnum(key,val,rebuild){ A2D[key]=parseFloat(val); var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=parseFloat(val); if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dcol(key,val,rebuild){ A2D[key]=val; var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=val; if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dtog(key,on){ A2D[key]=!!on; }
+function onA2Dpadding(val){ A2D.padding=parseFloat(val); var el=document.getElementById('a2d-padding-val'); if(el) el.textContent=parseFloat(val); if(typeof drawBagTexture==='function') drawBagTexture(); }
 function onSpinRampInSlider(v) {
   spinRampInMs = parseFloat(v) * 1000;
   document.getElementById('spin-rampin-val').textContent = parseFloat(v).toFixed(2) + 's';
@@ -9526,7 +9542,11 @@ function _pulseRegion(region, alpha){
     }
   } else {
     if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
+    var clip = (region === 'exterior') ? bagExtClip : (region === 'interior') ? bagIntClip : null;
+    bagTexCtx.save();
+    if (clip && clip.path) bagTexCtx.clip(clip.path);   /* keep the pulse on this part only — no bleed onto handles/rivets */
     bagTexCtx.fillStyle = col; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
+    bagTexCtx.restore();
     if (bagTexture) bagTexture.needsUpdate = true;
   }
 }
@@ -9562,12 +9582,13 @@ var viewMode = '3d';
 /* 2D-editor appearance settings (all live-tunable from the Testing panel). */
 var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
-  labelSize:12, labelColor:'#5a5a66',
-  outlineColor:'',          /* '' = per-part colour; else a single colour for all */
-  outlineThickness:1.6, outlineOpacity:0.7, tintOpacity:0.06,
-  guideRes:3072,            /* bake resolution for the UV guide (crisper outlines) */
-  padding:6,                /* px halo drawn outside each island outline */
-  handleSize:9, handleColor:'#00B3A4'
+  labelSize:21, labelColor:'#000000',
+  outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
+  outlineThickness:0.5, outlineOpacity:1.0, tintOpacity:0.0,
+  guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
+  padding:0,                /* dilate each island's colour fill to cover gaps (px) */
+  handleSize:10, handleColor:'#000000',
+  previewOn:true, previewBrightness:1.3, previewSaturate:1.15
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
@@ -9576,15 +9597,27 @@ function setViewMode(mode){
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
   var stage = document.querySelector('.canvas-stage');
   if (stage) stage.classList.toggle('mode-2d', viewMode === '2d');  /* shrinks live 3D into bottom-right preview */
+  if (stage) stage.classList.toggle('no-preview', viewMode === '2d' && !A2D.previewOn);
   var ov = document.getElementById('atlas2d'); if (!ov) return;
   if (viewMode === '2d'){
     if (typeof stopHueGuide === 'function') stopHueGuide(true);
+    /* preview: stop auto-rotation, animate to the front, zoom out to fit the small frame */
+    if (!_saved3DView && typeof orbit !== 'undefined' && orbit) _saved3DView = { theta:orbit.theta, phi:orbit.phi, radius:orbit.radius };
+    try { spinAllowed=false; spinFactor=0; spinTarget=0; spinRamp=null; if (orbit) orbit.autoSpin=false; } catch(e){}
+    try { if (typeof startCamTween==='function') startCamTween(viewThetaRad('front'), VIEW_PHI); if (orbit) orbit.radius = Math.min(MAX_ZOOM_OUT, 7.0); } catch(e){}
     ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
     atlas2dInit(); atlas2dResize(); atlas2dFit();
     a2d.sel = _drawableLayers()[0] || null;
     atlas2dStartLoop();
-  } else { ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); atlas2dStopLoop(); }
+  } else {
+    ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); atlas2dStopLoop();
+    /* restore the 3D view the user had */
+    try { camTween=null; } catch(e){}
+    if (_saved3DView && typeof orbit !== 'undefined' && orbit){ orbit.theta=_saved3DView.theta; orbit.phi=_saved3DView.phi; orbit.radius=_saved3DView.radius; _saved3DView=null; }
+  }
 }
+var _saved3DView = null;
+function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelector('.canvas-stage'); if(stage) stage.classList.toggle('no-preview', viewMode==='2d' && !A2D.previewOn); }
 function atlas2dInit(){
   if (!a2d.canvas){ a2d.canvas = document.getElementById('atlas2d-canvas'); if (!a2d.canvas) return; a2d.ctx = a2d.canvas.getContext('2d'); }
   if (!a2d.bound){ _atlasBind(a2d.canvas); window.addEventListener('resize', function(){ if (viewMode==='2d'){ atlas2dResize(); } }); a2d.bound = true; }
@@ -9607,7 +9640,7 @@ function _layerBox(L){
 }
 function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
-function _hitHandle(sp){ var L=a2d.sel; if(!L) return null; var b=_layerBox(L); var hs={ scale:_boxLocalToScreen(b,1,1), rot:_boxLocalToScreen(b,0,-1.5) }; var R=16*a2d.dpr; for (var k in hs){ var h=hs[k]; if (Math.hypot(sp.x-h.x, sp.y-h.y)<=R) return k; } return null; }
+function _hitHandle(sp){ var L=a2d.sel; if(!L) return null; var b=_layerBox(L); var hs={ scale:_boxLocalToScreen(b,1,-1), rot:_boxLocalToScreen(b,0,1.6) }; var R=Math.max(16,A2D.handleSize+8)*a2d.dpr; for (var k in hs){ var h=hs[k]; if (Math.hypot(sp.x-h.x, sp.y-h.y)<=R) return k; } return null; }
 function _atlasBind(c){
   c.addEventListener('pointerdown', _aDown);
   c.addEventListener('pointermove', _aMove);
@@ -9646,7 +9679,7 @@ function _aMove(e){
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y); L.posU=Math.max(-20,Math.min(120,(ap.x-e_.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120,(ap.y-e_.y)/e_.h*100)); _a2dApply(); }
   else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
-  else if (a2d.op==='rotate'){ var c1=_a2s(b.cx,b.cy), ang=Math.atan2(-(sp.y-c1.y),sp.x-c1.x)*180/Math.PI; var deg=-(ang+90); while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap */ L.rotation=deg; _a2dApply(); }
+  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=-ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap */ L.rotation=deg; _a2dApply(); }
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
@@ -9679,10 +9712,14 @@ function atlas2dRender(){
      real bag. Labels are drawn afterwards in normal space so they stay upright. */
   ctx.save();
   ctx.translate(0, c.height); ctx.scale(1, -1);
-  /* 3-6. bag texture backdrop (exterior→interior→handles→rivets→artwork already baked) */
+  /* 3-6. bag texture backdrop (exterior→interior→handles→rivets→artwork already baked).
+     The atlas bakes artwork pre-darkened to survive 3D tone-mapping, so brighten/saturate
+     here to read closer to the lit 3D preview. */
   if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){
     ctx.imageSmoothingEnabled=true;
+    ctx.filter = 'brightness(' + A2D.previewBrightness + ') saturate(' + A2D.previewSaturate + ')';
     try{ var o0=_a2s(0,0),o1=_a2s(2048,2048); ctx.drawImage(bagTexCanvas,0,0,2048,2048,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
+    ctx.filter = 'none';
   }
   /* real UV island outlines (hi-res baked guide), or legacy boxes */
   if (bagUVGuideCanvas){
@@ -9705,13 +9742,14 @@ function atlas2dRender(){
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
     if (sel){
-      var rh=_boxLocalToScreen(b,0,-1.6), topMid={x:(tl.x+tr.x)/2,y:(tl.y+tr.y)/2};
-      /* rotation stick + circular handle */
+      /* rotate handle at the visual TOP (local +y), resize at the visual BOTTOM-RIGHT
+         (local 1,-1). NB the view is vertically flipped, so these local signs map to the
+         expected on-screen corners. */
+      var rh=_boxLocalToScreen(b,0,1.6), topMid={x:(bl.x+br.x)/2,y:(bl.y+br.y)/2};
       ctx.strokeStyle=HC; ctx.lineWidth=1.6*D;
       ctx.beginPath(); ctx.moveTo(topMid.x,topMid.y); ctx.lineTo(rh.x,rh.y); ctx.stroke();
-      _a2dHandleDot(ctx, rh.x, rh.y, HS, HC);
-      /* resize circular handle (bottom-right corner) */
-      _a2dHandleDot(ctx, br.x, br.y, HS, HC);
+      _a2dHandleDot(ctx, rh.x, rh.y, HS, HC);   /* rotate (top) */
+      _a2dHandleDot(ctx, tr.x, tr.y, HS, HC);   /* resize (bottom-right) */
     }
   });
   ctx.restore();
