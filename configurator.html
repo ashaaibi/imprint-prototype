@@ -3766,8 +3766,13 @@ function drawBagTexture() {
     drawPatternOnRegion(bagTexCtx, 'interior', BAG_UV.interior);
   }
 
-  // 5. Artwork overlay on exterior
+  // 5. Artwork overlay on body (exterior + interior layers)
   drawArtworkOnBag();
+
+  // 6. Handle + rivet islands LAST: their colour + artwork, clipped to each island so
+  //    they overwrite any body bleed in the overlapping UV-bbox region (texels are
+  //    disjoint from the body, so the body is never touched).
+  drawPartsOverlay();
 
   if (bagTexture) bagTexture.needsUpdate = true;
   rebuildBumpMap();
@@ -3904,10 +3909,11 @@ function layerShowsOn(L, key) { return !L.areas || L.areas[key] !== false; }
 /* Clip ctx to the union of the layer's checked face rects. Returns the number
    of checked faces (0 ⇒ nothing to draw). Caller must save()/restore() around it. */
 function clipToLayerAreas(ctx, L, ms) {
-  /* Freeform: clip to the whole exterior printable region — artwork prints
-     wherever it is placed (per-model via BAG_UV.exterior), no per-face masking. */
+  /* Freeform within the layer's target print surface. Body surfaces (exterior/
+     interior) clip to their atlas rect; handles/rivets are drawn by drawPartsOverlay
+     (island-clipped) and never reach here. */
   ms = ms || 1;
-  var e = BAG_UV.exterior;
+  var e = (L && L.surface === 'interior') ? BAG_UV.interior : BAG_UV.exterior;
   ctx.beginPath();
   ctx.rect(e.x * ms, e.y * ms, e.w * ms, e.h * ms);
   ctx.clip();
@@ -3938,7 +3944,7 @@ function _layerFilter(){
 }
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
-  var ue = BAG_UV.exterior;
+  var ue = layerBBox(L);
   if (L.kind === 'logo' || L.kind === 'sticker') {
     if (!L.img || !L.img.naturalWidth) return;
     if (L.kind === 'sticker' && L.tiled) {
@@ -3978,9 +3984,8 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       }
       dctx.restore();
       if (hasCF) {
-        /* Treat ALL enabled faces as ONE continuous region: crop/fade over their union
-           bounding box, so e.g. front+right wrap and crop together (not face-by-face). */
-        var _eu = BAG_UV.exterior;
+        /* Crop/fade over the layer's whole target-surface region as one continuous area. */
+        var _eu = ue;
         dctx.save();
         dctx.setTransform(1, 0, 0, 1, 0, 0);
         _applyRegionCropFade(dctx, _eu.x * ms, _eu.y * ms, _eu.w * ms, _eu.h * ms, L);
@@ -4098,6 +4103,7 @@ function drawArtworkOnBag() {
   for (var li = BAG.artwork.layers.length - 1; li >= 0; li--) {
     var L = BAG.artwork.layers[li];
     if (!L || !L.visible) continue;
+    if ((L.surface === 'handles' && bagHandleClip) || (L.surface === 'rivets' && bagRivetClip)) continue; /* painted by drawPartsOverlay */
     if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
@@ -4109,6 +4115,50 @@ function drawArtworkOnBag() {
 
   /* Rebuild PBR maps from scratch then overlay artwork finish */
   rebuildPBRMaps();
+}
+
+/* The placement bbox a layer is positioned within — its target print surface.
+   Defaults to the exterior (back-compatible with layers that have no .surface). */
+function layerBBox(L) {
+  var s = L && L.surface;
+  if (s === 'interior') return BAG_UV.interior;
+  if (s === 'handles' && bagHandleClip) return bagHandleClip.bbox;
+  if (s === 'rivets'  && bagRivetClip)  return bagRivetClip.bbox;
+  return BAG_UV.exterior;
+}
+
+/* Paint the handle + rivet islands: base colour first, then any artwork layers that
+   target that surface (z-order bottom→top), all clipped to the island path so nothing
+   spills onto the body. Called after drawArtworkOnBag so it overwrites body bleed. */
+function drawPartsOverlay() {
+  if (!bagTexCtx) return;
+  var corr = getArtCorr();
+  var parts = [
+    { surface: 'handles', clip: bagHandleClip, color: (BAG.ribbon && BAG.ribbon.color) || '#cccccc' },
+    { surface: 'rivets',  clip: bagRivetClip,  color: (BAG.rivet  && BAG.rivet.color)  || '#888888' }
+  ];
+  parts.forEach(function(part) {
+    if (!part.clip) return;
+    /* base colour */
+    bagTexCtx.save();
+    bagTexCtx.clip(part.clip.path);
+    bagTexCtx.fillStyle = part.color;
+    bagTexCtx.fillRect(0, 0, 2048, 2048);
+    bagTexCtx.restore();
+    /* artwork layers for this surface */
+    for (var li = BAG.artwork.layers.length - 1; li >= 0; li--) {
+      var L = BAG.artwork.layers[li];
+      if (!L || !L.visible || L.surface !== part.surface) continue;
+      if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
+      if (L.kind === 'text' && !L.content) continue;
+      if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue;
+      bagTexCtx.save();
+      bagTexCtx.globalAlpha = (L.opacity != null ? L.opacity : 100) / 100;
+      bagTexCtx.clip(part.clip.path);
+      drawLayerContent(bagTexCtx, L, 1, corr, 'color');
+      bagTexCtx.restore();
+    }
+  });
 }
 
 var artworkOriginalBlur = 8; /* px — controls Original Color swatch blur; also masks sharpness */
@@ -4318,6 +4368,11 @@ function drawKraftOverlay(ctx, uv, renderOpacity) {
 
 var bagGroup = null;
 var bagMeshRef = null, bagFrontRef = null, bagBackRef = null, bagRivetRef = null;
+/* Canvas-space (2048²) clip regions for the handle/rivet UV islands — set at load
+   for material-named models so those parts can sample the shared atlas (colour +
+   artwork painted into their own island, clipped so nothing bleeds onto the body).
+   null for legacy single-mesh models (handles/rivets stay solid-colour). */
+var bagHandleClip = null, bagRivetClip = null;
 var bagFrontOrigScale = { x:1, y:1, z:1 };
 var bagBackOrigScale  = { x:1, y:1, z:1 };
 var bagFrontOrigPos   = { x:0, y:0, z:0 };
@@ -4396,6 +4451,32 @@ function mergeBagGeoms(geoms) {
   return m;
 }
 
+/* Build a canvas-space (2048²) clip region from a geometry's UV islands. Each UV
+   triangle is added to a Path2D using the same transform as the body atlas
+   (canvas_x = u·2048, canvas_y = (1−v)·2048). Returns { path, bbox } or null.
+   Used to paint handle/rivet colour + artwork into exactly their own texels. */
+function computeIslandRegion(geom) {
+  if (!geom) return null;
+  var uvAttr = geom.getAttribute('uv'); if (!uvAttr) return null;
+  var ua = uvAttr.array, idx = geom.getIndex();
+  var path = (typeof Path2D !== 'undefined') ? new Path2D() : null; if (!path) return null;
+  var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  function px(i) {
+    var x = ua[i*2] * 2048, y = (1 - ua[i*2+1]) * 2048;
+    if (x < minx) minx = x; if (x > maxx) maxx = x;
+    if (y < miny) miny = y; if (y > maxy) maxy = y;
+    return [x, y];
+  }
+  var n = idx ? idx.count : uvAttr.count;
+  for (var t = 0; t < n; t += 3) {
+    var a = idx ? idx.getX(t) : t, b = idx ? idx.getX(t+1) : t+1, c = idx ? idx.getX(t+2) : t+2;
+    var p0 = px(a), p1 = px(b), p2 = px(c);
+    path.moveTo(p0[0], p0[1]); path.lineTo(p1[0], p1[1]); path.lineTo(p2[0], p2[1]); path.closePath();
+  }
+  if (!isFinite(minx)) return null;
+  return { path: path, bbox: { x: minx, y: miny, w: maxx - minx, h: maxy - miny } };
+}
+
 function buildPaperBagMesh() {
   // Dispose old bag group
   if (T.box && T.box === bagGroup) {
@@ -4413,6 +4494,8 @@ function buildPaperBagMesh() {
     bagGroup = null;
   }
   bagMeshRef = null; bagFrontRef = null; bagBackRef = null; bagRivetRef = null;
+  bagHandleClip = null; bagRivetClip = null;
+  if (BAG_UV) { delete BAG_UV.handles; delete BAG_UV.rivets; }
 
   if (typeof rlmResetBag === 'function') rlmResetBag();
   initBagTexture();
@@ -4453,6 +4536,12 @@ function buildPaperBagMesh() {
       bodyGeom   = mergeBagGeoms([byMat['M_exterior'], byMat['M_interior']]);
       handleGeom = byMat['M_handles'] || null;
       rivetGeom  = byMat['M_rivets']  || null;
+      /* Handles + rivets sample the shared atlas → compute their UV-island clips so
+         colour/artwork paints into exactly their texels (no bleed onto the body). */
+      bagHandleClip = computeIslandRegion(handleGeom);
+      bagRivetClip  = computeIslandRegion(rivetGeom);
+      if (bagHandleClip) BAG_UV.handles = bagHandleClip.bbox;
+      if (bagRivetClip)  BAG_UV.rivets  = bagRivetClip.bbox;
     } else {
       /* Legacy single-mesh GLB → split by connected-component topology. */
       var baked  = collected[0].geom;
@@ -4490,22 +4579,27 @@ function buildPaperBagMesh() {
     bagMeshRef = bodyMesh;
     bagGroup.add(bodyMesh);
 
-    // Handles — one solid-colour mesh (bagBackRef stays null; ribbon code guards it)
+    // Handles — sample the shared atlas when we have an island clip (colour + artwork
+    // live in the canvas, material.color stays white); else legacy solid colour.
     if (handleGeom) {
-      var hMesh = new THREE.Mesh(handleGeom, new THREE.MeshPhysicalMaterial({
-        color: hexNum(BAG.ribbon.color), roughness: 0.60, metalness: 0.10,
-        envMapIntensity: 0.50, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
-      }));
+      var hMat = bagHandleClip
+        ? new THREE.MeshPhysicalMaterial({ map: bagTexture, color: 0xffffff, roughness: 0.60, metalness: 0.10,
+            envMapIntensity: 0.50, opacity: 1.0, transparent: true, side: THREE.DoubleSide })
+        : new THREE.MeshPhysicalMaterial({ color: hexNum(BAG.ribbon.color), roughness: 0.60, metalness: 0.10,
+            envMapIntensity: 0.50, opacity: 1.0, transparent: true, side: THREE.DoubleSide });
+      var hMesh = new THREE.Mesh(handleGeom, hMat);
       hMesh.name = 'front_handle';
       bagFrontRef = hMesh;
       bagGroup.add(hMesh);
     }
-    // Rivets — solid metallic accent
+    // Rivets — sample the atlas when we have an island clip; else legacy solid accent.
     if (rivetGeom) {
-      var rMesh = new THREE.Mesh(rivetGeom, new THREE.MeshPhysicalMaterial({
-        color: hexNum(BAG.rivet.color), roughness: 0.35, metalness: 0.55,
-        envMapIntensity: 0.70, opacity: 1.0, transparent: false, side: THREE.DoubleSide,
-      }));
+      var rMat = bagRivetClip
+        ? new THREE.MeshPhysicalMaterial({ map: bagTexture, color: 0xffffff, roughness: 0.35, metalness: 0.55,
+            envMapIntensity: 0.70, opacity: 1.0, transparent: true, side: THREE.DoubleSide })
+        : new THREE.MeshPhysicalMaterial({ color: hexNum(BAG.rivet.color), roughness: 0.35, metalness: 0.55,
+            envMapIntensity: 0.70, opacity: 1.0, transparent: false, side: THREE.DoubleSide });
+      var rMesh = new THREE.Mesh(rivetGeom, rMat);
       rMesh.name = 'rivet';
       bagRivetRef = rMesh;
       bagGroup.add(rMesh);
@@ -5074,7 +5168,30 @@ function _areaIcon(key){
   return '<svg class="area-ic" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">' + (p[key] || p.front) + '</svg>';
 }
 function layerAreasHTML(L) {
-  return '';   /* Freeform placement — per-face "Show on" toggles removed */
+  /* Print-surface selector. Exterior + interior always; handles/rivets only on
+     material-named models (where the islands are paintable). */
+  var cur = (L && L.surface) || 'exterior';
+  var opts = [{ k:'exterior', n:'Exterior' }, { k:'interior', n:'Interior' }];
+  if (bagHandleClip) opts.push({ k:'handles', n:'Handles' });
+  if (bagRivetClip)  opts.push({ k:'rivets',  n:'Rivets' });
+  var h = '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:8px">Print Surface</div>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+  opts.forEach(function(o) {
+    var on = (cur === o.k);
+    h += '<button onclick="onLayerSurface(' + L.id + ',\'' + o.k + '\')" style="flex:1 1 0;min-width:60px;font-size:11px;font-weight:600;cursor:pointer;padding:7px 6px;border-radius:7px;border:1px solid ' +
+      (on ? 'var(--imp-accent,#00E6D2)' : 'var(--imp-border)') + ';background:' +
+      (on ? 'var(--imp-accent,#00E6D2)' : 'var(--imp-surface)') + ';color:' +
+      (on ? '#06201d' : 'var(--imp-fg-2)') + ';">' + o.n + '</button>';
+  });
+  h += '</div>';
+  return h;
+}
+function onLayerSurface(id, surface) {
+  var L = BAG.artwork.layers.find(function(x) { return x.id === id; });
+  if (!L) return;
+  L.surface = surface;
+  drawBagTexture();
+  renderLayersList();
 }
 function onLayerAreaToggle(id, key, btn) {
   var L = getLayer(id); if (!L) return;
@@ -5782,6 +5899,7 @@ function duplicateLayer(id) {
   copy.locked = false;
   copy.visible = true;
   if (L.areas)   copy.areas   = Object.assign({}, L.areas);
+  if (L.surface) copy.surface = L.surface;
   if (L.recolor) { try { copy.recolor = JSON.parse(JSON.stringify(L.recolor)); } catch (e) { copy.recolor = L.recolor; } }
   if (typeof copy.posU === 'number') copy.posU = Math.max(2, Math.min(98, copy.posU + 4));
   if (typeof copy.posV === 'number') copy.posV = Math.max(2, Math.min(98, copy.posV + 4));
@@ -6655,6 +6773,8 @@ function renderBagSwatches(region, hue, activeHex) {
 }
 
 function applyRibbonColor() {
+  /* Atlas-sampling handles → colour lives in the canvas island; repaint instead. */
+  if (bagHandleClip) { if (typeof drawBagTexture === 'function') drawBagTexture(); return; }
   if (!bagFrontRef && !bagBackRef) return;
   var col = hexNum(BAG.ribbon.color);
   [bagFrontRef, bagBackRef].forEach(function(m) {
@@ -6662,6 +6782,7 @@ function applyRibbonColor() {
   });
 }
 function applyRivetColor() {
+  if (bagRivetClip) { if (typeof drawBagTexture === 'function') drawBagTexture(); return; }
   if (!bagRivetRef || !bagRivetRef.material) return;
   bagRivetRef.material.color.setHex(hexNum(BAG.rivet.color));
   bagRivetRef.material.needsUpdate = true;
