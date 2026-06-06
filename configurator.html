@@ -4049,6 +4049,18 @@ function _layerFilter(){
   if (LAYER_CONTRAST   !== 1) f += ' contrast(' + LAYER_CONTRAST + ')';
   return f === '' ? 'none' : f.replace(/^ /, '');
 }
+/* Feather (erase) the four edges of a canvas inward by `f` px via destination-out
+   gradients — used to soften a pattern's crop box. */
+function _featherCanvasEdges(ctx, w, h, f){
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  function band(x0,y0,x1,y1,rw,rh,rx,ry){ var g=ctx.createLinearGradient(x0,y0,x1,y1); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.fillRect(rx,ry,rw,rh); }
+  band(0,0,f,0, f,h, 0,0);          /* left  */
+  band(w,0,w-f,0, f,h, w-f,0);      /* right */
+  band(0,0,0,f, w,f, 0,0);          /* top   */
+  band(0,h,0,h-f, w,f, 0,h-f);      /* bottom*/
+  ctx.restore();
+}
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
   var ue = layerBBox(L);
@@ -4056,9 +4068,10 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
   if (L.kind === 'logo' || L.kind === 'sticker') {
     if (!L.img || !L.img.naturalWidth) return;
     if (L.kind === 'sticker' && L.tiled) {
-      /* PATTERN: tile the (recolored) image. scale = tile size (smaller = denser),
-         gap = extra spacing, odd rows half-drop → diagonal stagger. Transparent
-         margins are trimmed so gap 0 = tiles touch with no whitespace. */
+      /* PATTERN: tile the (recolored) image inside a rectangular CROP BOX (the layer's
+         bounding box — moved/resized/rotated in the 2D editor). Density = how many times
+         it repeats across the box; Gap = spacing; Feather softens the box edges. Library
+         patterns stack vertically; uploads use the diagonal half-drop. */
       var box = _patTrimBox(L); if (!box) return;
       var cell = document.createElement('canvas'); cell.width = box.sw; cell.height = box.sh;
       var cctx = cell.getContext('2d');
@@ -4067,39 +4080,29 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
         cctx.globalCompositeOperation = 'source-atop'; cctx.fillStyle = L.color; cctx.fillRect(0, 0, box.sw, box.sh);
       }
       var cAsp = cell.width / cell.height;
-      var tW = sref * (L.scale / 100) * ms, tH = tW / cAsp;
-      var gpx = ((L.gap != null ? L.gap : 0) / 100) * tW;
-      var cw = tW + gpx, ch = tH + gpx;
-      /* Whole-pattern crop/fade masks the entire tiled region per face. When active we
-         tile onto an offscreen first, mask there, then composite — a direct destination-out
-         on the shared texture would erase the base bag colour + lower layers. */
-      var hasCF = (L.cropT || 0) || (L.cropB || 0) || (L.cropL || 0) || (L.cropR || 0) || (L.fade || 0);
-      var dctx = ctx, scratch = null;
-      if (hasCF) { scratch = _getPatScratch(ctx.canvas.width, ctx.canvas.height); dctx = scratch; }
-      dctx.save();
-      dctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
-      dctx.rotate(L.rotation * Math.PI / 180);
-      dctx.scale(corr.x, -corr.y);
-      if (mode !== 'mask') dctx.filter = _layerFilter();
-      var reach = Math.max(ue.w, ue.h) * ms * 1.7;  /* tiling spread across the full atlas */
-      var nC = Math.min(80, Math.ceil(reach / cw) + 2);
-      var nR = Math.min(80, Math.ceil(reach / ch) + 2);
-      for (var rr = -nR; rr <= nR; rr++) {
-        var xo = (L.patStack !== 'vertical' && (rr & 1)) ? cw / 2 : 0;  /* half-drop (diagonal) for uploads; vertical/grid for library */
-        for (var cc = -nC; cc <= nC; cc++) {
-          dctx.drawImage(cell, cc * cw + xo - tW / 2, rr * ch - tH / 2, tW, tH);
-        }
+      var boxW = Math.max(8, sref * (L.scale / 100) * ms);   /* square crop box */
+      var density = Math.max(1, L.density || 6);
+      var tileW = boxW / density, tileH = tileW / cAsp;
+      var gpx = ((L.gap != null ? L.gap : 0) / 100) * tileW;
+      var cw = tileW + gpx, ch = tileH + gpx;
+      var SW = Math.max(1, Math.ceil(boxW));
+      var sc = document.createElement('canvas'); sc.width = SW; sc.height = SW;
+      var sx = sc.getContext('2d');
+      if (mode !== 'mask') sx.filter = _layerFilter();
+      var nR = Math.min(300, Math.ceil(SW / ch) + 2), nC = Math.min(300, Math.ceil(SW / cw) + 2);
+      for (var rr = -1; rr <= nR; rr++) {
+        var xo = (L.patStack !== 'vertical' && (rr & 1)) ? cw / 2 : 0;  /* diagonal (upload) vs vertical (library) */
+        for (var cc = -1; cc <= nC; cc++) { sx.drawImage(cell, cc * cw + xo, rr * ch, tileW, tileH); }
       }
-      dctx.restore();
-      if (hasCF) {
-        /* Crop/fade over the layer's whole target-surface region as one continuous area. */
-        var _eu = ue;
-        dctx.save();
-        dctx.setTransform(1, 0, 0, 1, 0, 0);
-        _applyRegionCropFade(dctx, _eu.x * ms, _eu.y * ms, _eu.w * ms, _eu.h * ms, L);
-        dctx.restore();
-        ctx.drawImage(scratch.canvas, 0, 0);
-      }
+      sx.filter = 'none';
+      var fpx = ((L.feather || 0) / 100) * (SW * 0.5);
+      if (fpx > 0.5) _featherCanvasEdges(sx, SW, SW, fpx);   /* soften the crop edges */
+      ctx.save();
+      ctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
+      ctx.rotate(L.rotation * Math.PI / 180);
+      ctx.scale(corr.x, -corr.y);
+      ctx.drawImage(sc, -boxW / 2, -boxW / 2, boxW, boxW);
+      ctx.restore();
       return;
     }
     var maxW = sref * (L.scale / 100) * ms;
@@ -5845,13 +5848,12 @@ function buildLayerBodyHTML(L) {
     }
     /* size now lives in the flat editor (after Show on) */
     if (L.tiled) {
+      /* Move/resize(=crop box)/rotate happen in the 2D editor. Here: tile spacing,
+         repeat count, and edge feather. */
+      h += sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×');
       h += sliderRow(id, 'gap', 'Gap', 0, 200, 1, (L.gap != null ? L.gap : 0), '%');
-      h += '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:8px">Crop &amp; Fade (whole pattern)</div>';
-      h += sliderRow(id, 'cropT', 'Crop top', 0, 95, 1, (L.cropT || 0), '%');
-      h += sliderRow(id, 'cropB', 'Crop bottom', 0, 95, 1, (L.cropB || 0), '%');
-      h += sliderRow(id, 'cropL', 'Crop left', 0, 95, 1, (L.cropL || 0), '%');
-      h += sliderRow(id, 'cropR', 'Crop right', 0, 95, 1, (L.cropR || 0), '%');
-      h += sliderRow(id, 'fade', 'Fade (soften crop)', 0, 95, 1, (L.fade || 0), '%');
+      h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
+      h += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">Move, resize (crop) &amp; rotate the pattern in the 2D editor.</div>';
     }
   } else { /* text */
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="Text" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
@@ -5939,7 +5941,7 @@ function renderLayerSwatches(L) {
 function onLayerProp(id, prop, val) {
   var L = getLayer(id); if (!L) return;
   val = parseFloat(val); L[prop] = val;
-  var suffix = prop === 'fontSize' ? 'px' : prop === 'rotation' ? '°' : '%';
+  var suffix = prop === 'fontSize' ? 'px' : prop === 'rotation' ? '°' : prop === 'density' ? '×' : '%';
   var lbl = document.getElementById('lyr-' + id + '-' + layerCtrlKey(prop) + '-val');
   if (lbl) lbl.textContent = Math.round(val) + suffix;
   drawBagTexture();
@@ -6069,7 +6071,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 12 : 18), posU:25.46, posV:85.31, rotation:0,
+    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), posU:25.46, posV:85.31, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else {
@@ -9586,6 +9588,7 @@ function _layerBox(L){
   var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
   var sref=(typeof _layerScaleRef==='function')?_layerScaleRef():e.w;
   if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
+  else if (L.tiled){ var wp=sref*((L.scale||18)/100); hw=wp/2; hh=wp/2; }  /* pattern crop box = square */
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
   return { cx:cx, cy:cy, hw:hw, hh:hh, ang:-(L.rotation||0)*Math.PI/180 };
 }
