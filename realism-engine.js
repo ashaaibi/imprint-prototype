@@ -101,6 +101,8 @@
     } catch (e) { console.warn('[realism] initRealismScene', e); }
   };
 
+  window.rlmResetBag = function () { _rlmInit.bag = false; };
+
   window.initRealismBag = function () {
     if (_rlmInit.bag) return;
     try {

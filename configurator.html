@@ -1148,7 +1148,7 @@
     /* ─── SIZE GRID (cards) ───────────────── */
     .bag-size-list {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-bottom: 4px;
     }
@@ -1460,7 +1460,8 @@
       html[dir="rtl"] .preview-panel { border-left: none; border-bottom: 1px solid var(--imp-border); }
       .canvas-stage { min-height: 360px; }
       .controls-panel { max-height: none; padding-bottom: 100px; }
-      .finish-grid, .bag-size-list { grid-template-columns: repeat(2, 1fr); }
+      .finish-grid { grid-template-columns: repeat(2, 1fr); }
+      .bag-size-list { grid-template-columns: repeat(3, 1fr); }
     }
     /* On touch devices, hide the dimensions pill + "drag/scroll" hint (overcrowds the small stage) */
     @media (max-width: 1024px) and (pointer: coarse) {
@@ -1571,7 +1572,7 @@
       <canvas id="three-canvas"></canvas>
       <div class="atlas2d" id="atlas2d" aria-hidden="true">
         <canvas id="atlas2d-canvas"></canvas>
-        <div class="atlas2d-hint">Drag art to place · corner to scale · top handle to rotate · scroll/pinch to zoom · drag empty space to pan</div>
+        <div class="atlas2d-hint"></div>
       </div>
       <div class="vp-history">
         <button id="vp-undo" class="vp-hist-btn" title="Undo (⌘Z)" onclick="undoConfig()" disabled>
@@ -1588,13 +1589,16 @@
         </div>
         <div class="cfg-loader-text" data-en="Preparing your studio…" data-ar="نُجهّز الاستوديو…">Preparing your studio…</div>
       </div>
+      <div id="bag-switch-overlay" style="display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,0.18);align-items:center;justify-content:center;border-radius:inherit;">
+        <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
+      </div>
       <div class="dim-pill" id="dim-pill">30 × 34 × 17 cm</div>
       <div class="mode-toggle" id="mode-toggle">
         <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
         <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
     </div>
-    <div class="drag-hint" data-en="Drag to rotate · Scroll to zoom" data-ar="اسحب للتدوير · مرر للتكبير">Drag to rotate · Scroll to zoom</div>
+    <div class="drag-hint" data-en="" data-ar=""></div>
   </section>
 
   <!-- ── RIGHT: CONTROLS ────────────────── -->
@@ -1607,7 +1611,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           <span data-en="Back" data-ar="رجوع">Back</span>
         </button>
-        <span class="cstep-counter" id="cstep-counter">1 / 5</span>
+        <span class="cstep-counter" id="cstep-counter">1 / 6</span>
         <button class="cstep-btn cstep-next" id="cstep-next" onclick="configStepNext()">
           <span id="cstep-next-label" data-en="Next" data-ar="التالي">Next</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1619,7 +1623,8 @@
           <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
           <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
           <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Rivets" data-ar="البرشام">Rivets</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
         </div>
       </div>
     </div>
@@ -1646,7 +1651,7 @@
     </div>
 
     <!-- Bag Artwork ─────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="5">
+    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="6">
       <label class="cl"><span data-en="Artwork" data-ar="التصميم">Artwork</span></label>
       <!-- Layers panel -->
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
@@ -1813,13 +1818,6 @@
       <div class="mono-swatches" id="bag-rib-swatches"></div>
       <div class="color-hex" id="bag-rib-chex">#FF0000</div>
 
-      <div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px"><span data-en="Rivet Color" data-ar="لون البرشام">Rivet Color</span></div>
-      <div class="hue-slider-wrap">
-        <input type="range" class="hue-slider" id="bag-riv-hslider" min="0" max="360" value="175" oninput="onBagHue('rivet', this.value)">
-      </div>
-      <div class="mono-swatches" id="bag-riv-swatches"></div>
-      <div class="color-hex" id="bag-riv-chex">#00E6D2</div>
-
       <div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"><span data-en="Material Finish" data-ar="تشطيب المادة">Material Finish</span></div>
       <div class="finish-grid" id="bag-rib-finish-grid">
         <div class="finish-card" data-finish="gloss" onclick="applyBagFinish('ribbon','gloss',this)">
@@ -1867,6 +1865,17 @@
       </div>
     </div>
 
+    <!-- Rivets ──────────────────────────── -->
+    <div class="cs bag-section config-step" id="bag-rivets-section" data-cstep="5">
+      <label class="cl"><span data-en="Rivets" data-ar="البرشام">Rivets</span></label>
+      <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Rivet Color" data-ar="لون البرشام">Rivet Color</span></div>
+      <div class="hue-slider-wrap">
+        <input type="range" class="hue-slider" id="bag-riv-hslider" min="0" max="360" value="175" oninput="onBagHue('rivet', this.value)">
+      </div>
+      <div class="mono-swatches" id="bag-riv-swatches"></div>
+      <div class="color-hex" id="bag-riv-chex">#00E6D2</div>
+    </div>
+
     <!-- Size ───────────────────────────── -->
 
     <!-- Quantity ───────────────────────── -->
@@ -1886,7 +1895,7 @@
           <span class="bag-sopt-price">from AED 5.90/unit</span>
         </button>
         <button class="bag-sopt" onclick="onBagSize('wine',this)">
-          <span class="bag-sopt-key">Wine · Tall</span>
+          <span class="bag-sopt-key">Luxury · Tall</span>
           <span class="bag-sopt-dims">11 × 30 × 13 cm</span>
           <span class="bag-sopt-price">from AED 7.50/unit</span>
         </button>
@@ -1900,7 +1909,7 @@
         <button class="qopt" onclick="onQty(200, 5.90, 0, this)">
           <span class="qnum">200</span>
           <span class="qpu">AED 5.90 / unit</span>
-          <span class="qsave">&nbsp;</span>
+          <span class="qsave"></span>
         </button>
         <button class="qopt on" onclick="onQty(500, 4.40, 25, this)">
           <span class="qnum">500</span>
@@ -2019,6 +2028,26 @@
         <input type="range" class="test-slider" id="idle-delay-slider"
                min="0" max="15" step="0.5" value="6"
                oninput="onIdleDelaySlider(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
+          <span class="slider-name">Hue anim speed</span>
+          <span class="slider-val" id="hue-anim-speed-val">0.050</span>
+        </div>
+        <input type="range" class="test-slider" id="hue-anim-speed"
+               min="0.001" max="0.30" step="0.001" value="0.050"
+               oninput="onHueAnimSpeed(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
+          <span class="slider-name">Hue anim saturation</span>
+          <span class="slider-val" id="hue-anim-sat-val">100</span>
+        </div>
+        <input type="range" class="test-slider" id="hue-anim-sat"
+               min="0" max="100" step="1" value="100"
+               oninput="onHueAnimSat(this.value)">
       </div>
 
       <div class="slider-row">
@@ -2793,7 +2822,7 @@ const BAG_MODELS = {
   gift: { key:'gift', label:'Gift · Boxy', file:'paper_bag/gift_paper_bag.glb', dims:'19 × 24 × 14 cm',
     uv:{ exterior:{x:66,y:723,w:942,h:1278}, interior:{x:1042,y:723,w:943,h:1278} },
     tiers:[{qty:200,pu:5.90,save:0},{qty:500,pu:4.40,save:25},{qty:1000,pu:3.50,save:41},{qty:2000,pu:2.70,save:54}] },
-  wine: { key:'wine', label:'Wine · Tall', file:'paper_bag/wine_paper_bag.glb', dims:'11 × 30 × 13 cm',
+  wine: { key:'wine', label:'Luxury · Tall', file:'paper_bag/wine_paper_bag.glb', dims:'11 × 30 × 13 cm',
     uv:{ exterior:{x:115,y:119,w:908,h:1869}, interior:{x:1065,y:119,w:908,h:1869} },
     tiers:[{qty:200,pu:7.50,save:0},{qty:500,pu:5.60,save:25},{qty:1000,pu:4.40,save:41},{qty:2000,pu:3.40,save:55}] },
 };
@@ -4344,6 +4373,7 @@ function buildPaperBagMesh() {
   }
   bagMeshRef = null; bagFrontRef = null; bagBackRef = null; bagRivetRef = null;
 
+  if (typeof rlmResetBag === 'function') rlmResetBag();
   initBagTexture();
 
   var loader = new THREE.GLTFLoader();
@@ -4481,8 +4511,22 @@ function finishConfigLoading() {
     }
     playIntro();
     configReady = true; /* finish changes now ease instead of snapping */
+    /* hide model-switching overlay */
+    var sov = document.getElementById('bag-switch-overlay');
+    if (sov) sov.style.display = 'none';
     if (typeof pushHistory === 'function') pushHistory(); /* seed undo/redo baseline */
     if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); /* center bag in mobile gap */
+    /* preload sibling bag models in background on first load */
+    if (!window._bagPreloaded) {
+      window._bagPreloaded = true;
+      setTimeout(function() {
+        Object.keys(BAG_MODELS).forEach(function(k) {
+          if (k === currentBagModel) return;
+          var ldr = new THREE.GLTFLoader();
+          ldr.load(BAG_MODELS[k].file, function(){}, undefined, function(){});
+        });
+      }, 800);
+    }
   }, wait);
 }
 
@@ -7344,10 +7388,14 @@ function applyBagSizeScale(sx, sy, sz, normMult) {
 
 function onBagSize(key, btn) {
   if (!BAG_MODELS[key]) return;
+  if (currentBagModel === key) return;
   currentBagModel = key;
   document.querySelectorAll('.bag-sopt').forEach(function(b) { b.classList.remove('on'); });
   if (btn) btn.classList.add('on');
-  buildPaperBagMesh();   /* swap GLB → re-split into body/handles/rivet, repaint, refresh price tiers */
+  /* show a switching overlay */
+  var sov = document.getElementById('bag-switch-overlay');
+  if (sov) sov.style.display = 'flex';
+  setTimeout(function() { buildPaperBagMesh(); }, 10);
 }
 
 function updateBagQtyGridFromEntry(entry) {
@@ -7356,7 +7404,7 @@ function updateBagQtyGridFromEntry(entry) {
   if (!grid) return;
   var html = '';
   tiers.forEach(function(t, i) {
-    var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '&nbsp;';
+    var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '';
     html += '<button class="qopt' + (i === 0 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
       '<span class="qnum">' + t.qty.toLocaleString() + '</span>' +
       '<span class="qpu">' + fmtUnit(t.pu) + ' / unit</span>' +
@@ -7428,7 +7476,7 @@ function updateBagQtyGrid(size) {
   if (!grid) return;
   var html = '';
   tiers.forEach(function(t, i) {
-    var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '&nbsp;';
+    var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '';
     html += '<button class="qopt' + (i === 0 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
       '<span class="qnum">' + t.qty.toLocaleString() + '</span>' +
       '<span class="qpu">' + fmtUnit(t.pu) + ' / unit</span>' +
@@ -8190,6 +8238,8 @@ function onIdleDelaySlider(v) {
   idleDelaySec = parseFloat(v);
   document.getElementById('idle-delay-val').textContent = idleDelaySec.toFixed(1) + 's';
 }
+function onHueAnimSpeed(v) { _hueAnimSpeed = parseFloat(v); var el=document.getElementById('hue-anim-speed-val'); if(el) el.textContent = _hueAnimSpeed.toFixed(3); }
+function onHueAnimSat(v)   { _hueAnimSat = parseInt(v);   var el=document.getElementById('hue-anim-sat-val');   if(el) el.textContent = _hueAnimSat; }
 function onSpinRampInSlider(v) {
   spinRampInMs = parseFloat(v) * 1000;
   document.getElementById('spin-rampin-val').textContent = parseFloat(v).toFixed(2) + 's';
@@ -9017,17 +9067,17 @@ document.addEventListener('imprint:countrychange', function() {
 
 var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
 function applyStepCamera(n){
-  /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Artwork */
-  var artwork = (n === 5);
+  /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Rivets, 6 Artwork */
+  var artwork = (n === 6);
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
   if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
+  else if (n === 2 || n === 4 || n === 5) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
-var CONFIG_STEP_COUNT = 5;
+var CONFIG_STEP_COUNT = 6;
 var currentConfigStep = 1;
 /* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
 var _uiSoundOn = true, _audioCtx = null;
@@ -9056,6 +9106,8 @@ document.addEventListener('click', function(e){
    the step. Purely visual; never writes to saved BAG state. */
 var STEP_PART = { 2:'exterior', 3:'interior', 4:'ribbon' };
 var _partTouched = {}, _suppressTouch = false;
+var _hueAnimSpeed = 0.05;   /* deg/ms for the hue cycle */
+var _hueAnimSat   = 100;    /* saturation % for hue cycle */
 var _hueAnim = { region:null, raf:0, t0:0, last:0 };
 function _paintRegionColor(region, hex){
   if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
@@ -9075,7 +9127,7 @@ function startHueGuide(region){
     if (_hueAnim.region !== region) return;
     if (now - _hueAnim.last > 70){          /* ~14 fps — keep texture uploads light */
       _hueAnim.last = now;
-      var hex = hslToHex(((now - _hueAnim.t0) * 0.05) % 360, 100, 45);
+      var hex = hslToHex(((now - _hueAnim.t0) * _hueAnimSpeed) % 360, _hueAnimSat, 45);
       if (region === 'ribbon'){ if (bagFrontRef && bagFrontRef.material) bagFrontRef.material.color.setHex(hexNum(hex)); }
       else _paintRegionColor(region, hex);
     }
@@ -9111,7 +9163,8 @@ function atlas2dInit(){
 }
 function atlas2dResize(){ var c=a2d.canvas; if(!c) return; var r=c.getBoundingClientRect(); a2d.dpr=window.devicePixelRatio||1; c.width=Math.max(1,Math.round(r.width*a2d.dpr)); c.height=Math.max(1,Math.round(r.height*a2d.dpr)); }
 function _exuv(){ return (typeof BAG_UV!=='undefined'&&BAG_UV.exterior)?BAG_UV.exterior:{x:0,y:0,w:2048,h:2048}; }
-function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var e=_exuv(); var pad=0.14; a2d.zoom=Math.min(c.width*(1-pad)/e.w, c.height*(1-pad)/e.h); a2d.panX=(c.width-e.w*a2d.zoom)/2 - e.x*a2d.zoom; a2d.panY=(c.height-e.h*a2d.zoom)/2 - e.y*a2d.zoom; }
+function _allUVBounds(){ var uv=typeof BAG_UV!=='undefined'?BAG_UV:{}; var regions=[uv.exterior,uv.interior].filter(Boolean); if(!regions.length) return _exuv(); var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; regions.forEach(function(r){ x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w); y1=Math.max(y1,r.y+r.h); }); return {x:x0,y:y0,w:x1-x0,h:y1-y0}; }
+function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.10; a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
 function _a2s(ax,ay){ return { x:ax*a2d.zoom+a2d.panX, y:ay*a2d.zoom+a2d.panY }; }
 function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoom }; }
 function _evPos(e){ var r=a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:(e.clientY-r.top)*a2d.dpr }; }
@@ -9169,16 +9222,28 @@ function _a2dApply(){ var now=(typeof performance!=='undefined'&&performance.now
 function atlas2dStartLoop(){ if (a2d.raf) return; var loop=function(){ if (viewMode!=='2d'){ a2d.raf=0; return; } atlas2dRender(); a2d.raf=requestAnimationFrame(loop); }; a2d.raf=requestAnimationFrame(loop); }
 function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=0; }
 function atlas2dRender(){
-  var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var e=_exuv(), D=a2d.dpr;
-  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#e9e9ec'; ctx.fillRect(0,0,c.width,c.height);
-  var p0=_a2s(e.x,e.y), p1=_a2s(e.x+e.w,e.y+e.h);
-  if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){ ctx.imageSmoothingEnabled=true; try{ ctx.drawImage(bagTexCanvas, e.x,e.y,e.w,e.h, p0.x,p0.y, p1.x-p0.x, p1.y-p0.y); }catch(_){} }
-  ctx.strokeStyle='rgba(20,20,20,0.10)'; ctx.lineWidth=1*D; ctx.beginPath();
-  for (var gx=1;gx<8;gx++){ var x=p0.x+(p1.x-p0.x)*gx/8; ctx.moveTo(x,p0.y); ctx.lineTo(x,p1.y); }
-  for (var gy=1;gy<8;gy++){ var y=p0.y+(p1.y-p0.y)*gy/8; ctx.moveTo(p0.x,y); ctx.lineTo(p1.x,y); }
-  ctx.stroke();
-  ctx.strokeStyle='rgba(20,20,20,0.45)'; ctx.lineWidth=1.5*D; ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
-  ctx.fillStyle='rgba(20,20,20,0.55)'; ctx.font=(12*D)+'px sans-serif'; ctx.textBaseline='bottom'; ctx.fillText('Exterior · printable area', p0.x+4*D, p0.y-4*D);
+  var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
+  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#e8e8ec'; ctx.fillRect(0,0,c.width,c.height);
+  /* draw full bag texture so both exterior and interior UV areas are visible */
+  if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){
+    ctx.imageSmoothingEnabled=true;
+    try{ var o0=_a2s(0,0),o1=_a2s(2048,2048); ctx.drawImage(bagTexCanvas,0,0,2048,2048,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
+  }
+  /* draw labeled outlines for each UV region */
+  var uv=typeof BAG_UV!=='undefined'?BAG_UV:{};
+  var uvRegions=[
+    {r:uv.exterior,label:'Exterior',fill:'rgba(40,120,255,0.08)',stroke:'rgba(40,120,255,0.50)'},
+    {r:uv.interior,label:'Interior', fill:'rgba(0,180,100,0.08)', stroke:'rgba(0,180,100,0.50)'}
+  ];
+  uvRegions.forEach(function(item){
+    if(!item.r) return;
+    var p0=_a2s(item.r.x,item.r.y), p1=_a2s(item.r.x+item.r.w,item.r.y+item.r.h);
+    ctx.fillStyle=item.fill; ctx.fillRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
+    ctx.strokeStyle=item.stroke; ctx.lineWidth=1.5*D; ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
+    ctx.fillStyle=item.stroke; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
+    ctx.fillText(item.label, p0.x+4*D, p0.y-3*D);
+  });
+  var e=_exuv();
   _drawableLayers().forEach(function(L){
     var b=_layerBox(L), tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
     ctx.strokeStyle=sel?'#00B3A4':'rgba(0,0,0,0.30)'; ctx.lineWidth=(sel?2:1)*D;
