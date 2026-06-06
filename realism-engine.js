@@ -747,10 +747,10 @@
       _rlmDefaultPaperDone = true;
       _rlmFinishKeys().forEach(function (key) {
         var fm = _rlmFm(key);
-        fm.tile = 7.0;
+        fm.tile = 8.0;
         fm.albedo.img = alb; fm.albedo.opacity = 0.45; fm.albedo.blend = 'multiply'; fm.albedo.invert = false; fm.albedo.name = 'paper-2-DIFFUSE';
         if (nrmOk) { fm.normal.img = nrm; fm.normal.name = 'paper-2-NORM.png'; }
-        fm.normal.strength = 1.10; fm.normal.invert = false;
+        fm.normal.strength = 0.2; fm.normal.invert = false;
       });
       var act = _activeFinish();
       try { applyFinishCustomMaps(act); } catch (e) {}
