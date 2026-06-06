@@ -10,3 +10,6 @@
 Imprint_PRD_v1.1.md
 Imprint_Phase1_PRD_v1.0.pdf
 Imprint_Prototype_Spec_v1.0.pdf
+node_modules/
+package.json
+package-lock.json
