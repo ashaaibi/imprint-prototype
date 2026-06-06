@@ -2140,6 +2140,12 @@
         </div>
       </div>
 
+      <!-- Bag rendering -->
+      <div style="margin:14px 0 8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Bag rendering</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Double-sided walls</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onBodyDoubleSided(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off = single-sided culling (no z-fighting stripes). Turn on only if the bag interior shows holes.</div></div>
+
       <!-- 2D editor appearance -->
       <div style="margin:14px 0 8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">2D editor</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Show grid</span>
@@ -4456,6 +4462,9 @@ var bagMeshRef = null, bagFrontRef = null, bagBackRef = null, bagRivetRef = null
    artwork painted into their own island, clipped so nothing bleeds onto the body).
    null for legacy single-mesh models (handles/rivets stay solid-colour). */
 var bagHandleClip = null, bagRivetClip = null;
+/* Bag body render side. FrontSide (culling) avoids inner/outer wall z-fighting; flip to
+   true if a model's interior normals are reversed and the inside shows holes. */
+var BODY_DOUBLE_SIDED = false;
 /* Exterior/interior island clips + a baked UV-layout guide (wireframe + tint of the
    real islands) for the 2D editor. Computed at load for material-named models. */
 var bagExtClip = null, bagIntClip = null, bagUVGuideCanvas = null;
@@ -4706,10 +4715,13 @@ function buildPaperBagMesh() {
       console.log('[imprint] BUILD=parts-atlas+uvguide · LEGACY topology bag (no atlas parts, no UV guide) — material names not found:', Object.keys(byMat));
     }
 
-    // Body — textured atlas (exterior = left UV half, interior = right UV half)
+    // Body — textured atlas (exterior = left UV half, interior = right UV half).
+    // FrontSide (back-face culling) so the inner and outer walls never overlap on a
+    // pixel → kills the zoomed-out z-fighting stripes. Toggleable in Testing.
     var bodyMesh = new THREE.Mesh(bodyGeom, new THREE.MeshPhysicalMaterial({
       map: bagTexture, roughness: 1.0, metalness: 1.0, envMapIntensity: 0.60,
-      transmission: 0.0, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
+      transmission: 0.0, opacity: 1.0, transparent: true,
+      side: BODY_DOUBLE_SIDED ? THREE.DoubleSide : THREE.FrontSide,
     }));
     bodyMesh.name = 'bag';
     bagMeshRef = bodyMesh;
@@ -8207,7 +8219,7 @@ function initThree() {
   T.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
 
   T.scene = new THREE.Scene();
-  T.camera = new THREE.PerspectiveCamera(31, W / H, 0.35, 36); /* product-lens FOV; tight near/far → better depth precision (reduces inner/outer wall z-fighting stripes when zoomed out) */
+  T.camera = new THREE.PerspectiveCamera(31, W / H, 0.4, 22); /* product-lens FOV; tight near/far → better depth precision (zoom radius is 1.2–16.3) */
   sphericalToCamera();
 
   /* ── Studio 6-light rig ── */
@@ -8583,6 +8595,7 @@ function onHueAnimSpeed(v) { _hueAnimSpeed = parseFloat(v); var el=document.getE
 function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
 function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
 function onAnimOpMax(v)    { _animOpMax = parseFloat(v); var el=document.getElementById('anim-opmax-val'); if(el) el.textContent = _animOpMax.toFixed(2); }
+function onBodyDoubleSided(on){ BODY_DOUBLE_SIDED=!!on; if (bagMeshRef && bagMeshRef.material){ bagMeshRef.material.side = on ? THREE.DoubleSide : THREE.FrontSide; bagMeshRef.material.needsUpdate=true; } }
 /* ── 2D editor appearance (testing) ── */
 function onA2Dnum(key,val,rebuild){ A2D[key]=parseFloat(val); var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=parseFloat(val); if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dcol(key,val,rebuild){ A2D[key]=val; var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=val; if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
