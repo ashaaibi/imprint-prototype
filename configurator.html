@@ -9777,7 +9777,7 @@ function _layerBox(L){
   if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
   else if (L.tiled){ var wp=sref*((L.scale||18)/100); hw=wp/2; hh=wp/2; }  /* pattern crop box = square */
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
-  return { cx:cx, cy:cy, hw:hw, hh:hh, ang:-(L.rotation||0)*Math.PI/180 };
+  return { cx:cx, cy:cy, hw:hw, hh:hh, ang:(L.rotation||0)*Math.PI/180 };   /* match the artwork's net (mirrored) rotation so box + image turn together */
 }
 function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
@@ -9820,7 +9820,7 @@ function _aMove(e){
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
   else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
-  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=-ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap; clockwise handle → clockwise art */ L.rotation=deg; _a2dApply(); }
+  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var deg=Math.atan2(-dx,dy)*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* handle follows the cursor (5° snap) */ L.rotation=deg; _a2dApply(); }
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
