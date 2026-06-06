@@ -4373,6 +4373,9 @@ var bagMeshRef = null, bagFrontRef = null, bagBackRef = null, bagRivetRef = null
    artwork painted into their own island, clipped so nothing bleeds onto the body).
    null for legacy single-mesh models (handles/rivets stay solid-colour). */
 var bagHandleClip = null, bagRivetClip = null;
+/* Exterior/interior island clips + a baked UV-layout guide (wireframe + tint of the
+   real islands) for the 2D editor. Computed at load for material-named models. */
+var bagExtClip = null, bagIntClip = null, bagUVGuideCanvas = null;
 var bagFrontOrigScale = { x:1, y:1, z:1 };
 var bagBackOrigScale  = { x:1, y:1, z:1 };
 var bagFrontOrigPos   = { x:0, y:0, z:0 };
@@ -4477,6 +4480,27 @@ function computeIslandRegion(geom) {
   return { path: path, bbox: { x: minx, y: miny, w: maxx - minx, h: maxy - miny } };
 }
 
+/* Bake a UV-layout guide for the 2D editor: the real island shapes (wireframe of
+   every UV triangle + a faint colour tint) for all four parts, drawn once into a
+   2048² offscreen canvas so the editor can blit it cheaply each frame. */
+function buildUVGuide() {
+  bagUVGuideCanvas = null;
+  var regions = [
+    { clip: bagExtClip,    rgb: '40,120,255' },
+    { clip: bagIntClip,    rgb: '0,170,100'  },
+    { clip: bagHandleClip, rgb: '235,150,0'  },
+    { clip: bagRivetClip,  rgb: '210,40,150' }
+  ].filter(function(r) { return r.clip && r.clip.path; });
+  if (!regions.length) return;
+  var cv = document.createElement('canvas'); cv.width = cv.height = 2048;
+  var g = cv.getContext('2d');
+  regions.forEach(function(r) {
+    g.fillStyle   = 'rgba(' + r.rgb + ',0.06)'; g.fill(r.clip.path);
+    g.strokeStyle = 'rgba(' + r.rgb + ',0.55)'; g.lineWidth = 1.25; g.stroke(r.clip.path);
+  });
+  bagUVGuideCanvas = cv;
+}
+
 function buildPaperBagMesh() {
   // Dispose old bag group
   if (T.box && T.box === bagGroup) {
@@ -4495,6 +4519,7 @@ function buildPaperBagMesh() {
   }
   bagMeshRef = null; bagFrontRef = null; bagBackRef = null; bagRivetRef = null;
   bagHandleClip = null; bagRivetClip = null;
+  bagExtClip = null; bagIntClip = null; bagUVGuideCanvas = null;
   if (BAG_UV) { delete BAG_UV.handles; delete BAG_UV.rivets; }
 
   if (typeof rlmResetBag === 'function') rlmResetBag();
@@ -4542,6 +4567,11 @@ function buildPaperBagMesh() {
       bagRivetClip  = computeIslandRegion(rivetGeom);
       if (bagHandleClip) BAG_UV.handles = bagHandleClip.bbox;
       if (bagRivetClip)  BAG_UV.rivets  = bagRivetClip.bbox;
+      /* Exterior/interior island shapes (for the 2D-editor UV guide only — painting
+         still uses the BAG_UV rects). */
+      bagExtClip = computeIslandRegion(byMat['M_exterior']);
+      bagIntClip = computeIslandRegion(byMat['M_interior']);
+      buildUVGuide();
     } else {
       /* Legacy single-mesh GLB → split by connected-component topology. */
       var baked  = collected[0].geom;
@@ -9358,7 +9388,7 @@ function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoo
 function _evPos(e){ var r=a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:(e.clientY-r.top)*a2d.dpr }; }
 function _drawableLayers(){ return BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='text'||L.kind==='sticker'||L.kind==='logo'); }); }
 function _layerBox(L){
-  var e=_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
+  var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
   if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=e.w*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
   return { cx:cx, cy:cy, hw:hw, hh:hh, ang:-(L.rotation||0)*Math.PI/180 };
@@ -9388,7 +9418,7 @@ function _aMove(e){
   if (!a2d.op) return;
   var sp=_evPos(e); if (a2d.pointers[e.pointerId]) a2d.pointers[e.pointerId]={x:sp.x,y:sp.y};
   if (a2d.op==='pinch'){ var ids=Object.keys(a2d.pointers); if(ids.length<2) return; var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; var d=Math.hypot(p.x-q.x,p.y-q.y)||1; var nz=Math.max(0.05,Math.min(20,a2d.pinchZ0*(d/a2d.pinchD0))); var m=a2d.pinchMid, aPt=_s2a(m.x,m.y); a2d.zoom=nz; a2d.panX=m.x-aPt.x*nz; a2d.panY=m.y-aPt.y*nz; return; }
-  var e_=_exuv();
+  var e_=(a2d.sel && typeof layerBBox==='function')?layerBBox(a2d.sel):_exuv();
   if (a2d.op==='pan'){ a2d.panX=a2d.start.panX+(sp.x-a2d.start.sp.x); a2d.panY=a2d.start.panY+(sp.y-a2d.start.sp.y); return; }
   if (!a2d.sel) return;
   var L=a2d.sel, b=a2d.start.box;
@@ -9417,20 +9447,30 @@ function atlas2dRender(){
     ctx.imageSmoothingEnabled=true;
     try{ var o0=_a2s(0,0),o1=_a2s(2048,2048); ctx.drawImage(bagTexCanvas,0,0,2048,2048,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
   }
-  /* draw labeled outlines for each UV region */
+  /* draw the real UV layout: the actual island shapes (wireframe + tint) per part */
   var uv=typeof BAG_UV!=='undefined'?BAG_UV:{};
-  var uvRegions=[
-    {r:uv.exterior,label:'Exterior',fill:'rgba(40,120,255,0.08)',stroke:'rgba(40,120,255,0.50)'},
-    {r:uv.interior,label:'Interior', fill:'rgba(0,180,100,0.08)', stroke:'rgba(0,180,100,0.50)'}
-  ];
-  uvRegions.forEach(function(item){
-    if(!item.r) return;
-    var p0=_a2s(item.r.x,item.r.y), p1=_a2s(item.r.x+item.r.w,item.r.y+item.r.h);
-    ctx.fillStyle=item.fill; ctx.fillRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
-    ctx.strokeStyle=item.stroke; ctx.lineWidth=1.5*D; ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
-    ctx.fillStyle=item.stroke; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
-    ctx.fillText(item.label, p0.x+4*D, p0.y-3*D);
-  });
+  if (bagUVGuideCanvas){
+    try{ var g0=_a2s(0,0),g1=_a2s(2048,2048); ctx.drawImage(bagUVGuideCanvas,0,0,2048,2048,g0.x,g0.y,g1.x-g0.x,g1.y-g0.y); }catch(_){}
+    [ {bb:uv.exterior,label:'Exterior',col:'rgba(40,120,255,0.95)'},
+      {bb:uv.interior,label:'Interior',col:'rgba(0,150,90,0.95)'},
+      {bb:uv.handles, label:'Handles', col:'rgba(200,130,0,0.98)'},
+      {bb:uv.rivets,  label:'Rivets',  col:'rgba(190,30,140,0.98)'} ].forEach(function(it){
+      if(!it.bb) return; var p=_a2s(it.bb.x,it.bb.y);
+      ctx.fillStyle=it.col; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
+      ctx.fillText(it.label, p.x+3*D, p.y-3*D);
+    });
+  } else {
+    /* legacy single-mesh models: simple exterior/interior boxes */
+    [ {r:uv.exterior,label:'Exterior',fill:'rgba(40,120,255,0.08)',stroke:'rgba(40,120,255,0.50)'},
+      {r:uv.interior,label:'Interior',fill:'rgba(0,180,100,0.08)',stroke:'rgba(0,180,100,0.50)'} ].forEach(function(item){
+      if(!item.r) return;
+      var p0=_a2s(item.r.x,item.r.y), p1=_a2s(item.r.x+item.r.w,item.r.y+item.r.h);
+      ctx.fillStyle=item.fill; ctx.fillRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
+      ctx.strokeStyle=item.stroke; ctx.lineWidth=1.5*D; ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
+      ctx.fillStyle=item.stroke; ctx.font='bold '+(11*D)+'px sans-serif'; ctx.textBaseline='bottom';
+      ctx.fillText(item.label, p0.x+4*D, p0.y-3*D);
+    });
+  }
   var e=_exuv();
   _drawableLayers().forEach(function(L){
     var b=_layerBox(L), tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
