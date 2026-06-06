@@ -3846,17 +3846,14 @@ function layerShowsOn(L, key) { return !L.areas || L.areas[key] !== false; }
 /* Clip ctx to the union of the layer's checked face rects. Returns the number
    of checked faces (0 ⇒ nothing to draw). Caller must save()/restore() around it. */
 function clipToLayerAreas(ctx, L, ms) {
-  var n = 0;
+  /* Freeform: clip to the whole exterior printable region — artwork prints
+     wherever it is placed (per-model via BAG_UV.exterior), no per-face masking. */
+  ms = ms || 1;
+  var e = BAG_UV.exterior;
   ctx.beginPath();
-  for (var i = 0; i < BAG_AREAS.length; i++) {
-    var a = BAG_AREAS[i];
-    if (!layerShowsOn(L, a.key)) continue;
-    var r = layerAreaRect(a, ms);
-    ctx.rect(r.x, r.y, r.w, r.h);
-    n++;
-  }
-  if (n > 0) ctx.clip();
-  return n;
+  ctx.rect(e.x * ms, e.y * ms, e.w * ms, e.h * ms);
+  ctx.clip();
+  return 1;
 }
 function getArtCorr() {
   var f = currentBagScaleFactors || { sx:1, sy:1, sz:1 };
@@ -3925,21 +3922,11 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       if (hasCF) {
         /* Treat ALL enabled faces as ONE continuous region: crop/fade over their union
            bounding box, so e.g. front+right wrap and crop together (not face-by-face). */
-        var ux0 = Infinity, uy0 = Infinity, ux1 = -Infinity, uy1 = -Infinity, anyF = false;
-        for (var pai = 0; pai < BAG_AREAS.length; pai++) {
-          var pa = BAG_AREAS[pai];
-          if (!layerShowsOn(L, pa.key)) continue;
-          var pr = layerAreaRect(pa, ms);
-          if (pr.x < ux0) ux0 = pr.x; if (pr.y < uy0) uy0 = pr.y;
-          if (pr.x + pr.w > ux1) ux1 = pr.x + pr.w; if (pr.y + pr.h > uy1) uy1 = pr.y + pr.h;
-          anyF = true;
-        }
-        if (anyF) {
-          dctx.save();
-          dctx.setTransform(1, 0, 0, 1, 0, 0);
-          _applyRegionCropFade(dctx, ux0, uy0, ux1 - ux0, uy1 - uy0, L);
-          dctx.restore();
-        }
+        var _eu = BAG_UV.exterior;
+        dctx.save();
+        dctx.setTransform(1, 0, 0, 1, 0, 0);
+        _applyRegionCropFade(dctx, _eu.x * ms, _eu.y * ms, _eu.w * ms, _eu.h * ms, L);
+        dctx.restore();
         ctx.drawImage(scratch.canvas, 0, 0);
       }
       return;
@@ -4947,13 +4934,7 @@ function _areaIcon(key){
   return '<svg class="area-ic" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">' + (p[key] || p.front) + '</svg>';
 }
 function layerAreasHTML(L) {
-  var h = '<div class="ctrl-color-label" style="margin-top:16px;margin-bottom:10px">Show on</div><div class="area-chips">';
-  BAG_AREAS.forEach(function(a) {
-    var on = layerShowsOn(L, a.key);
-    h += '<button type="button" class="area-chip' + (on ? ' on' : '') + '" onclick="onLayerAreaToggle(' + L.id + ',\'' + a.key + '\',this)">' +
-      _areaIcon(a.key) + '<span class="area-lbl">' + a.label + '</span></button>';
-  });
-  return h + '</div>';
+  return '';   /* Freeform placement — per-face "Show on" toggles removed */
 }
 function onLayerAreaToggle(id, key, btn) {
   var L = getLayer(id); if (!L) return;
