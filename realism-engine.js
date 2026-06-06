@@ -722,6 +722,9 @@
       if (typeof bagTexCanvas === 'undefined' || !bagTexCanvas) return;
       var ctx = bagTexCanvas.getContext('2d'), S = bagTexCanvas.width, img = fm.albedo.img;
       ctx.save();
+      /* clip to the shells so the paper overlay never fills the transparent gaps
+         (material-named models); legacy models have no shell clip → full canvas. */
+      if (typeof bagShellClip !== 'undefined' && bagShellClip) { try { ctx.clip(bagShellClip); } catch(e){} }
       ctx.globalCompositeOperation = fm.albedo.blend || 'source-over';
       ctx.globalAlpha = (fm.albedo.opacity == null ? 1 : fm.albedo.opacity);
       if (fm.albedo.invert) ctx.filter = 'invert(1)';
