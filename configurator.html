@@ -1871,12 +1871,12 @@
     <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Quantity" data-ar="الكمية">Quantity</span></label>
       <div class="qty-grid" id="bag-qty-grid">
-        <button class="qopt on" onclick="onQty(200, 5.90, 0, this)">
+        <button class="qopt" onclick="onQty(200, 5.90, 0, this)">
           <span class="qnum">200</span>
           <span class="qpu">AED 5.90 / unit</span>
           <span class="qsave">&nbsp;</span>
         </button>
-        <button class="qopt" onclick="onQty(500, 4.40, 25, this)">
+        <button class="qopt on" onclick="onQty(500, 4.40, 25, this)">
           <span class="qnum">500</span>
           <span class="qpu">AED 4.40 / unit</span>
           <span class="qsave">Save 25%</span>
@@ -1893,7 +1893,7 @@
         </button>
       </div>
       <div class="vol-msg" id="vmsg-bag">
-        Order <strong>500</strong> and pay <strong>AED 4.40 / unit</strong> — save <strong>25%</strong> vs. 200 units.
+        Order <strong>1,000</strong> and pay <strong>AED 3.50 / unit</strong> — save <strong>41%</strong> vs. 200 units.
       </div>
     </div>
 
@@ -2694,8 +2694,8 @@ const S = {
   product: 'bag',
   size: 'S',
   dims: '120×120×70',
-  qty: 200,
-  pu: 9.50,
+  qty: 500,
+  pu: 4.40,
   hasLogo: false,
   logoImg: null,       /* HTMLImageElement for canvas texture */
   customColor: false,
@@ -7244,16 +7244,16 @@ function updateBagQtyGridFromEntry(entry) {
   var html = '';
   tiers.forEach(function(t, i) {
     var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '&nbsp;';
-    html += '<button class="qopt' + (i === 0 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
+    html += '<button class="qopt' + (i === 1 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
       '<span class="qnum">' + t.qty.toLocaleString() + '</span>' +
       '<span class="qpu">' + fmtUnit(t.pu) + ' / unit</span>' +
       '<span class="qsave">' + saveStr + '</span></button>';
   });
   grid.innerHTML = html;
-  S.qty = tiers[0].qty; S.pu = tiers[0].pu;
+  S.qty = tiers[1].qty; S.pu = tiers[1].pu;
   var vmsg = document.getElementById('vmsg-bag');
-  if (vmsg && tiers[1]) {
-    vmsg.innerHTML = 'Order <strong>' + tiers[1].qty.toLocaleString() + '</strong> and pay <strong>' + fmtUnit(tiers[1].pu) + ' / unit</strong> — save <strong>' + tiers[1].save + '%</strong> vs. 200 units.';
+  if (vmsg && tiers[2]) {
+    vmsg.innerHTML = 'Order <strong>' + tiers[2].qty.toLocaleString() + '</strong> and pay <strong>' + fmtUnit(tiers[2].pu) + ' / unit</strong> — save <strong>' + tiers[2].save + '%</strong> vs. 200 units.';
   }
   updatePricing();
 }
@@ -7316,18 +7316,18 @@ function updateBagQtyGrid(size) {
   var html = '';
   tiers.forEach(function(t, i) {
     var saveStr = t.save > 0 ? 'Save ' + t.save + '%' : '&nbsp;';
-    html += '<button class="qopt' + (i === 0 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
+    html += '<button class="qopt' + (i === 1 ? ' on' : '') + '" onclick="onQty(' + t.qty + ',' + t.pu + ',' + t.save + ',this)">' +
       '<span class="qnum">' + t.qty.toLocaleString() + '</span>' +
       '<span class="qpu">' + fmtUnit(t.pu) + ' / unit</span>' +
       '<span class="qsave">' + saveStr + '</span>' +
       '</button>';
   });
   grid.innerHTML = html;
-  var first = tiers[0];
+  var first = tiers[1];
   S.qty = first.qty; S.pu = first.pu;
   var vmsg = document.getElementById('vmsg-bag');
-  if (vmsg && tiers[1]) {
-    vmsg.innerHTML = 'Order <strong>' + tiers[1].qty.toLocaleString() + '</strong> and pay <strong>' + fmtUnit(tiers[1].pu) + ' / unit</strong> — save <strong>' + tiers[1].save + '%</strong> vs. 200 units.';
+  if (vmsg && tiers[2]) {
+    vmsg.innerHTML = 'Order <strong>' + tiers[2].qty.toLocaleString() + '</strong> and pay <strong>' + fmtUnit(tiers[2].pu) + ' / unit</strong> — save <strong>' + tiers[2].save + '%</strong> vs. 200 units.';
   }
   updatePricing();
 }
