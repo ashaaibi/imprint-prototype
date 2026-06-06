@@ -1784,6 +1784,13 @@
       <div class="mono-swatches" id="bag-rib-swatches"></div>
       <div class="color-hex" id="bag-rib-chex">#FF0000</div>
 
+      <div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px"><span data-en="Rivet Color" data-ar="لون البرشام">Rivet Color</span></div>
+      <div class="hue-slider-wrap">
+        <input type="range" class="hue-slider" id="bag-riv-hslider" min="0" max="360" value="175" oninput="onBagHue('rivet', this.value)">
+      </div>
+      <div class="mono-swatches" id="bag-riv-swatches"></div>
+      <div class="color-hex" id="bag-riv-chex">#00E6D2</div>
+
       <div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"><span data-en="Material Finish" data-ar="تشطيب المادة">Material Finish</span></div>
       <div class="finish-grid" id="bag-rib-finish-grid">
         <div class="finish-card" data-finish="gloss" onclick="applyBagFinish('ribbon','gloss',this)">
@@ -1839,30 +1846,20 @@
     <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
       <div class="bag-size-list">
-        <button class="bag-sopt" onclick="onBagSize('XS',this)">
-          <span class="bag-sopt-key">XS · Petite</span>
-          <span class="bag-sopt-dims">24 × 32 × 10 cm</span>
-          <span class="bag-sopt-price">from AED 5.90/unit</span>
-        </button>
-        <button class="bag-sopt on" onclick="onBagSize('S',this)">
-          <span class="bag-sopt-key">S · Slim</span>
-          <span class="bag-sopt-dims">24 × 36 × 10 cm</span>
+        <button class="bag-sopt on" onclick="onBagSize('wide',this)">
+          <span class="bag-sopt-key">Wide · Boutique</span>
+          <span class="bag-sopt-dims">28 × 20 × 14 cm</span>
           <span class="bag-sopt-price">from AED 6.20/unit</span>
         </button>
-        <button class="bag-sopt" onclick="onBagSize('M',this)">
-          <span class="bag-sopt-key">M · Classic</span>
-          <span class="bag-sopt-dims">30 × 34 × 17 cm</span>
+        <button class="bag-sopt" onclick="onBagSize('gift',this)">
+          <span class="bag-sopt-key">Gift · Boxy</span>
+          <span class="bag-sopt-dims">19 × 24 × 14 cm</span>
+          <span class="bag-sopt-price">from AED 5.90/unit</span>
+        </button>
+        <button class="bag-sopt" onclick="onBagSize('wine',this)">
+          <span class="bag-sopt-key">Wine · Tall</span>
+          <span class="bag-sopt-dims">11 × 30 × 13 cm</span>
           <span class="bag-sopt-price">from AED 7.50/unit</span>
-        </button>
-        <button class="bag-sopt" onclick="onBagSize('L',this)">
-          <span class="bag-sopt-key">L · Tall</span>
-          <span class="bag-sopt-dims">33 × 50 × 12 cm</span>
-          <span class="bag-sopt-price">from AED 8.90/unit</span>
-        </button>
-        <button class="bag-sopt" onclick="onBagSize('XL',this)">
-          <span class="bag-sopt-key">XL · Grand</span>
-          <span class="bag-sopt-dims">50 × 39 × 18 cm</span>
-          <span class="bag-sopt-price">from AED 9.80/unit</span>
         </button>
       </div>
     </div>
@@ -2722,6 +2719,7 @@ const BAG = {
   exterior: { color: '#00E6D2', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   interior: { color: '#00E6D2', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
+  rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   artwork: {
     type: 'none',  /* tab highlight only — rendering is driven by each layer's .visible */
     nextId: 100,   /* id source for user-added layers */
@@ -2749,11 +2747,33 @@ BAG.artwork.layers = [];
 /* BAG_UV: canvas coords for Blender GLB where V_glb = 1 - V_obj.
    Three.js r128 keeps V_glb as-is, so with flipY=true on CanvasTexture:
    canvas_y = V_obj_min * 2048  (NOT (1-V_max)*2048) */
-const BAG_UV = {
-  exterior: { x:  117, y:  372, w: 1832, h: 1138 }, /* U 0.0573–0.9521  V_obj 0.1816–0.7374 (exterior + bottom) */
-  interior: { x:  130, y:   82, w:  510, h:  675 }, /* U 0.0633–0.3122  V_obj 0.0401–0.3700 */
-  front:    { x: 1048, y:  784, w:  580, h:  748 }, /* U 0.5117–0.7949  V_obj 0.3828–0.7480 — reserved */
+/* Mutable — set per active model by setBagUVForModel(). Canvas is 2048².
+   canvas_x = U_min·2048, canvas_y = V_maya_min·2048 (flipY=true on the texture
+   already accounts for V_glb = 1 − V_maya), w/h = ΔU·2048 / ΔV_maya·2048. */
+var BAG_UV = {
+  exterior: { x:  31, y: 1005, w: 982, h: 1007 },
+  interior: { x: 1041, y: 1005, w: 982, h: 1007 },
+  front:    { x: 1048, y:  784, w:  580, h:  748 }, /* reserved */
 };
+
+/* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
+const BAG_MODELS = {
+  wide: { key:'wide', label:'Wide · Boutique', file:'paper_bag/wide_paper_bag.glb', dims:'28 × 20 × 14 cm',
+    uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} },
+    tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
+  gift: { key:'gift', label:'Gift · Boxy', file:'paper_bag/gift_paper_bag.glb', dims:'19 × 24 × 14 cm',
+    uv:{ exterior:{x:66,y:723,w:942,h:1278}, interior:{x:1042,y:723,w:943,h:1278} },
+    tiers:[{qty:200,pu:5.90,save:0},{qty:500,pu:4.40,save:25},{qty:1000,pu:3.50,save:41},{qty:2000,pu:2.70,save:54}] },
+  wine: { key:'wine', label:'Wine · Tall', file:'paper_bag/wine_paper_bag.glb', dims:'11 × 30 × 13 cm',
+    uv:{ exterior:{x:115,y:119,w:908,h:1869}, interior:{x:1065,y:119,w:908,h:1869} },
+    tiers:[{qty:200,pu:7.50,save:0},{qty:500,pu:5.60,save:25},{qty:1000,pu:4.40,save:41},{qty:2000,pu:3.40,save:55}] },
+};
+var currentBagModel = 'wide';
+function setBagUVForModel(key){
+  var m = BAG_MODELS[key]; if (!m) return;
+  BAG_UV.exterior = { x:m.uv.exterior.x, y:m.uv.exterior.y, w:m.uv.exterior.w, h:m.uv.exterior.h };
+  BAG_UV.interior = { x:m.uv.interior.x, y:m.uv.interior.y, w:m.uv.interior.w, h:m.uv.interior.h };
+}
 
 
 const FINISH_DESC = {
@@ -3151,11 +3171,11 @@ function openBagCPicker(region, e) {
   var rect=(e.currentTarget||e.target).getBoundingClientRect();
   BAG[region].swatchName='Custom';
   var hex=BAG[region].customHex||'#FFFFFF';
-  var prefix={exterior:'ext',interior:'int',ribbon:'rib'}[region];
+  var prefix={exterior:'ext',interior:'int',ribbon:'rib',rivet:'riv'}[region];
   var hue=parseInt(document.getElementById('bag-'+prefix+'-hslider').value);
   renderBagSwatches(region, hue, hex);
   BAG[region].color=hex; updateBagColorDisplay(region,hex);
-  if(region==='ribbon') applyRibbonColor(); else drawBagTexture();
+  if(region==='ribbon') applyRibbonColor(); else if(region==='rivet') applyRivetColor(); else drawBagTexture();
   openCPicker(function(picked){
     BAG[region].customHex=picked;
     BAG[region].color=picked; updateBagColorDisplay(region,picked);
@@ -3163,7 +3183,7 @@ function openBagCPicker(region, e) {
     var h=hexToHSV(picked).h;
     document.getElementById('bag-'+prefix+'-hslider').value=h;
     renderBagSwatches(region, h, picked);
-    if(region==='ribbon') applyRibbonColor(); else drawBagTexture();
+    if(region==='ribbon') applyRibbonColor(); else if(region==='rivet') applyRivetColor(); else drawBagTexture();
   }, rect, hex);
 }
 function openTextCPicker(e) {
@@ -3719,16 +3739,18 @@ function _snapshotState(){
     exterior: JSON.parse(JSON.stringify(BAG.exterior)),
     interior: JSON.parse(JSON.stringify(BAG.interior)),
     ribbon: BAG.ribbon ? JSON.parse(JSON.stringify(BAG.ribbon)) : null,
+    rivet: BAG.rivet ? JSON.parse(JSON.stringify(BAG.rivet)) : null,
     artType: BAG.artwork.type, nextId: BAG.artwork.nextId,
     layers: BAG.artwork.layers.map(_cloneLayerSnap),
-    sizeKey: currentBagSizeKey
+    sizeKey: currentBagSizeKey,
+    model: currentBagModel
   };
 }
 function _histSignature(){
   var L = BAG.artwork.layers.map(function(l){
     var o = {}; for (var k in l) { if (k === '__uid') continue; if (k==='img'||k==='srcImg'||k==='cutCanvas') o[k]=_imgId(l[k]); else o[k]=l[k]; } return o;
   });
-  try { return JSON.stringify({ e:BAG.exterior, i:BAG.interior, r:BAG.ribbon||0, t:BAG.artwork.type, n:BAG.artwork.nextId, L:L, s:currentBagSizeKey }); }
+  try { return JSON.stringify({ e:BAG.exterior, i:BAG.interior, r:BAG.ribbon||0, rv:BAG.rivet||0, t:BAG.artwork.type, n:BAG.artwork.nextId, L:L, s:currentBagSizeKey, m:currentBagModel }); }
   catch(e){ return null; }
 }
 function pushHistory(){
@@ -3746,7 +3768,7 @@ function _syncSizeUI(key){
   document.querySelectorAll('.bag-sopt').forEach(function(b){ var oc = b.getAttribute('onclick') || ''; b.classList.toggle('on', oc.indexOf("'" + key + "'") >= 0); });
 }
 function _syncBagColorPanel(rg){
-  var pfx = { exterior:'ext', interior:'int', ribbon:'rib' }[rg]; if (!pfx || !BAG[rg]) return;
+  var pfx = { exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv' }[rg]; if (!pfx || !BAG[rg]) return;
   var hs = document.getElementById('bag-' + pfx + '-hslider'); var hue = hs ? parseInt(hs.value) : 0;
   if (typeof renderBagSwatches === 'function') renderBagSwatches(rg, hue, BAG[rg].color);
   if (typeof updateBagColorDisplay === 'function') updateBagColorDisplay(rg, BAG[rg].color);
@@ -3755,16 +3777,15 @@ function _restoreState(snap){
   if (!snap) return;
   _histSuppress = true;
   try {
-    ['exterior','interior','ribbon'].forEach(function(rg){ if (snap[rg] && BAG[rg]) { for (var k in snap[rg]) BAG[rg][k] = snap[rg][k]; } });
+    ['exterior','interior','ribbon','rivet'].forEach(function(rg){ if (snap[rg] && BAG[rg]) { for (var k in snap[rg]) BAG[rg][k] = snap[rg][k]; } });
     BAG.artwork.type = snap.artType; BAG.artwork.nextId = snap.nextId;
     BAG.artwork.layers = snap.layers.map(_cloneLayerSnap);
-    if (snap.sizeKey) {
-      var e = BAG_SIZES.find(function(x){ return x.key === snap.sizeKey; });
-      if (e) {
-        currentBagSizeKey = snap.sizeKey;
-        if (typeof applyBagSizeScale === 'function') applyBagSizeScale(e.sx, e.sy, e.sz, e.normMult);
-        if (typeof onSizeTune === 'function') { onSizeTune('handleScaleAdj', e.handleScaleAdj); onSizeTune('handleYOff', e.handleYOff); }
-        _syncSizeUI(snap.sizeKey);
+    if (snap.model && BAG_MODELS[snap.model]) {
+      _syncSizeUI(snap.model);
+      if (snap.model !== currentBagModel) {
+        currentBagModel = snap.model;
+        if (typeof updateBagQtyGridFromEntry === 'function') updateBagQtyGridFromEntry(BAG_MODELS[snap.model]);
+        buildPaperBagMesh();   /* rebuild swapped model from the already-restored BAG state */
       }
     }
     ['exterior','interior','ribbon'].forEach(function(rg){ if (BAG[rg] && BAG[rg].finish && typeof applyBagFinish === 'function') applyBagFinish(rg, BAG[rg].finish, null, true); });
@@ -3778,6 +3799,7 @@ function _restoreState(snap){
       });
     }
     if (typeof applyRibbonColor === 'function') applyRibbonColor();
+    if (typeof applyRivetColor === 'function') applyRivetColor();
     ['exterior','interior'].forEach(_syncBagColorPanel);
     if (typeof renderLayersList === 'function') renderLayersList();
     drawBagTexture();
@@ -4249,13 +4271,43 @@ function drawKraftOverlay(ctx, uv, renderOpacity) {
 }
 
 var bagGroup = null;
-var bagMeshRef = null, bagFrontRef = null, bagBackRef = null;
+var bagMeshRef = null, bagFrontRef = null, bagBackRef = null, bagRivetRef = null;
 var bagFrontOrigScale = { x:1, y:1, z:1 };
 var bagBackOrigScale  = { x:1, y:1, z:1 };
 var bagFrontOrigPos   = { x:0, y:0, z:0 };
 var bagBackOrigPos    = { x:0, y:0, z:0 };
 var bagBodyOrigBounds = { minX:0, maxX:0, minY:0, maxY:0, minZ:0, maxZ:0 };
 var currentBagScaleFactors = { sx:1.0, sy:1.0, sz:1.0 };
+
+/* Split the single-mesh bag GLB into body / handles / rivet triangle lists by
+   connected-component topology (welded by rounded position). Validated against
+   all three models: body = largest component, handles = the two strap components,
+   rivet = the four small (<1000-tri) components. Operates on flat BufferGeometry
+   arrays so it runs directly on geometry.attributes. */
+function splitBagGeometry(pos, uv, index) {
+  var triCount = index ? index.length / 3 : pos.length / 9;
+  function tri(t) { return index ? [index[t*3], index[t*3+1], index[t*3+2]] : [t*3, t*3+1, t*3+2]; }
+  var vcount = pos.length / 3;
+  var wmap = {}, weld = new Int32Array(vcount), wn = 0;
+  for (var v = 0; v < vcount; v++) {
+    var k = Math.round(pos[v*3]*1000) + ',' + Math.round(pos[v*3+1]*1000) + ',' + Math.round(pos[v*3+2]*1000);
+    var w = wmap[k]; if (w === undefined) { w = wn++; wmap[k] = w; } weld[v] = w;
+  }
+  var par = new Int32Array(wn); for (var i = 0; i < wn; i++) par[i] = i;
+  function find(x) { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; }
+  function uni(a, b) { a = find(a); b = find(b); if (a !== b) par[a] = b; }
+  for (var t = 0; t < triCount; t++) { var f = tri(t); uni(weld[f[0]], weld[f[1]]); uni(weld[f[1]], weld[f[2]]); }
+  var comps = {};
+  for (var t2 = 0; t2 < triCount; t2++) { var r = find(weld[tri(t2)[0]]); (comps[r] || (comps[r] = [])).push(t2); }
+  var arr = Object.keys(comps).map(function(k){ return comps[k]; }).sort(function(a, b){ return b.length - a.length; });
+  var out = { body: [], handles: [], rivet: [] };
+  arr.forEach(function(tris, i) {
+    if (i === 0) out.body = tris;
+    else if (tris.length < 1000) out.rivet = out.rivet.concat(tris);
+    else out.handles = out.handles.concat(tris);
+  });
+  return out;
+}
 
 function buildPaperBagMesh() {
   // Dispose old bag group
@@ -4273,61 +4325,77 @@ function buildPaperBagMesh() {
     });
     bagGroup = null;
   }
-  bagMeshRef = null; bagFrontRef = null; bagBackRef = null;
+  bagMeshRef = null; bagFrontRef = null; bagBackRef = null; bagRivetRef = null;
 
   initBagTexture();
 
   var loader = new THREE.GLTFLoader();
-  // GLTFLoader.load() doesn't handle data: URIs — decode to ArrayBuffer and use parse() instead
-  var b64str = BAG_GLB_B64.split(',')[1];
-  var binary = atob(b64str);
-  var glbBuf = new ArrayBuffer(binary.length);
-  var glbView = new Uint8Array(glbBuf);
-  for (var i = 0; i < binary.length; i++) glbView[i] = binary.charCodeAt(i);
-  loader.parse(glbBuf, '', function(gltf) {
+  var model = BAG_MODELS[currentBagModel] || BAG_MODELS.wide;
+  setBagUVForModel(currentBagModel);
+  if (typeof updateBagQtyGridFromEntry === 'function') updateBagQtyGridFromEntry(model);
+  // Real file URL (same-origin on Pages/dev-server) — load() handles it directly
+  loader.load(model.file, function(gltf) {
     bagGroup = new THREE.Group();
 
-    // Collect meshes first, then reparent (avoids mutating scene graph mid-traverse)
-    var meshesToAdd = [];
-    gltf.scene.traverse(function(child) {
-      if (!child.isMesh) return;
-      meshesToAdd.push(child);
-    });
-    meshesToAdd.forEach(function(child) {
-      var name = (child.name || '').toLowerCase();
+    // New models are ONE mesh — split it into body / handles / rivet by topology.
+    var src = null;
+    gltf.scene.traverse(function(c) { if (c.isMesh && !src) src = c; });
+    if (!src) { console.error('No mesh in ' + model.file); finishConfigLoading(); return; }
+    src.updateWorldMatrix(true, true);
+    var baked = src.geometry.clone();
+    baked.applyMatrix4(src.matrixWorld);            /* bake the GLB's stand-up rotation + 0.01 scale */
+    if (!baked.getAttribute('normal')) baked.computeVertexNormals();
+    var posArr = baked.getAttribute('position').array;
+    var uvArr  = baked.getAttribute('uv') ? baked.getAttribute('uv').array : null;
+    var idxAttr = baked.getIndex();
+    var idxArr = idxAttr ? idxAttr.array : null;
+    var split = splitBagGeometry(posArr, uvArr, idxArr);
 
-      if (name === 'bag' || name === 'paper_bag' || (name.indexOf('bag') !== -1 && name.indexOf('handle') === -1)) {
-        child.material = new THREE.MeshPhysicalMaterial({
-          map: bagTexture,
-          roughness: 1.0,
-          metalness: 1.0,
-          envMapIntensity: 0.60,
-          transmission: 0.0,
-          opacity: 1.0,
-          transparent: true,
-        });
-        bagMeshRef = child;
-      } else {
-        var ribColor = hexNum(BAG.ribbon.color);
-        child.material = new THREE.MeshPhysicalMaterial({
-          color: ribColor,
-          roughness: 1 - 0.40,
-          metalness: 1 - 0.90,
-          envMapIntensity: 0.50,
-          transmission: 0.0,
-          opacity: 1.0,
-          transparent: true,
-        });
-        if (name.indexOf('front') !== -1) {
-          bagFrontRef = child;
-          bagFrontOrigScale = { x: child.scale.x, y: child.scale.y, z: child.scale.z };
-        } else {
-          bagBackRef = child;
-          bagBackOrigScale = { x: child.scale.x, y: child.scale.y, z: child.scale.z };
-        }
+    function _subGeo(triList) {
+      var g = new THREE.BufferGeometry();
+      g.setAttribute('position', baked.getAttribute('position').clone());
+      if (baked.getAttribute('uv'))     g.setAttribute('uv', baked.getAttribute('uv').clone());
+      if (baked.getAttribute('normal')) g.setAttribute('normal', baked.getAttribute('normal').clone());
+      var out = new Array(triList.length * 3);
+      for (var i = 0; i < triList.length; i++) {
+        var t = triList[i];
+        if (idxArr) { out[i*3]=idxArr[t*3]; out[i*3+1]=idxArr[t*3+1]; out[i*3+2]=idxArr[t*3+2]; }
+        else        { out[i*3]=t*3;          out[i*3+1]=t*3+1;          out[i*3+2]=t*3+2; }
       }
-      bagGroup.add(child);
-    });
+      g.setIndex(out);
+      g.computeBoundingBox(); g.computeBoundingSphere();
+      return g;
+    }
+
+    // Body — textured atlas (exterior = left UV half, interior = right UV half)
+    var bodyMesh = new THREE.Mesh(_subGeo(split.body), new THREE.MeshPhysicalMaterial({
+      map: bagTexture, roughness: 1.0, metalness: 1.0, envMapIntensity: 0.60,
+      transmission: 0.0, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
+    }));
+    bodyMesh.name = 'bag';
+    bagMeshRef = bodyMesh;
+    bagGroup.add(bodyMesh);
+
+    // Handles — one solid-colour mesh (bagBackRef stays null; ribbon code guards it)
+    if (split.handles.length) {
+      var hMesh = new THREE.Mesh(_subGeo(split.handles), new THREE.MeshPhysicalMaterial({
+        color: hexNum(BAG.ribbon.color), roughness: 0.60, metalness: 0.10,
+        envMapIntensity: 0.50, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
+      }));
+      hMesh.name = 'front_handle';
+      bagFrontRef = hMesh;
+      bagGroup.add(hMesh);
+    }
+    // Rivets — solid metallic accent
+    if (split.rivet.length) {
+      var rMesh = new THREE.Mesh(_subGeo(split.rivet), new THREE.MeshPhysicalMaterial({
+        color: hexNum(BAG.rivet.color), roughness: 0.35, metalness: 0.55,
+        envMapIntensity: 0.70, opacity: 1.0, transparent: false, side: THREE.DoubleSide,
+      }));
+      rMesh.name = 'rivet';
+      bagRivetRef = rMesh;
+      bagGroup.add(rMesh);
+    }
 
     // Auto-scale to fit ~1.4 units tall
     var bbox = new THREE.Box3().setFromObject(bagGroup);
@@ -4369,23 +4437,15 @@ function buildPaperBagMesh() {
     if (typeof initRealismBag === 'function') initRealismBag();
     drawBagTexture();
     if (typeof renderLayersList === 'function') renderLayersList(); /* Layers panel is the only artwork UI now */
-    var initSize = BAG_SIZES.find(function(e){ return e.key === currentBagSizeKey; }) || BAG_SIZES[0];
-    BAG.exterior.patternStretchU = initSize.extStretchU;
-    BAG.exterior.patternStretchV = initSize.extStretchV;
-    BAG.interior.patternStretchU = initSize.intStretchU;
-    BAG.interior.patternStretchV = initSize.intStretchV;
-    applyBagSizeScale(initSize.sx, initSize.sy, initSize.sz, initSize.normMult);
-    // Apply handle tuning immediately so defaults take effect without slider interaction
-    onSizeTune('handleScaleAdj', initSize.handleScaleAdj);
-    onSizeTune('handleYOff',     initSize.handleYOff);
-    if (typeof updateSizeTuningPanel === 'function') updateSizeTuningPanel(initSize); /* sync testing panel to current size */
+    applyRibbonColor();
+    if (typeof applyRivetColor === 'function') applyRivetColor();
     /* Nudge default-driven controls so their values apply on load (e.g. colour hue
        sliders sit at their default but their handler must fire to paint the material). */
     if (typeof _applyDefaultControls === 'function') _applyDefaultControls();
     /* Model ready → hide the premium loader and play the intro 360° spin */
     finishConfigLoading();
-  }, function(err) {
-    console.error('GLB parse error', err);
+  }, undefined, function(err) {
+    console.error('GLB load error', err);
     finishConfigLoading();
   });
 }
@@ -6403,6 +6463,7 @@ function onBagHue(region, hue) {
   BAG[region].color = color;
   updateBagColorDisplay(region, color);
   if (region === 'ribbon') applyRibbonColor();
+  else if (region === 'rivet') applyRivetColor();
   else drawBagTexture();
 }
 /* On load, fire the controls whose default value only "kicks in" once their handler
@@ -6411,8 +6472,8 @@ function onBagHue(region, hue) {
    tuning sliders live outside .config-step, so they're left untouched. */
 function _applyDefaultControls() {
   try {
-    ['exterior','interior','ribbon'].forEach(function(rg){
-      var pfx = { exterior:'ext', interior:'int', ribbon:'rib' }[rg];
+    ['exterior','interior','ribbon','rivet'].forEach(function(rg){
+      var pfx = { exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv' }[rg];
       var hs = document.getElementById('bag-' + pfx + '-hslider');
       if (hs && typeof onBagHue === 'function') onBagHue(rg, hs.value);
     });
@@ -6427,22 +6488,23 @@ function _applyDefaultControls() {
 function pickBagSwatch(region, hex, name) {
   BAG[region].swatchName = name;
   BAG[region].color = hex;
-  var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib'}[region];
+  var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib', rivet:'riv'}[region];
   var hue = parseInt(document.getElementById('bag-' + prefix + '-hslider').value);
   renderBagSwatches(region, hue, hex);
   updateBagColorDisplay(region, hex);
   if (region === 'ribbon') applyRibbonColor();
+  else if (region === 'rivet') applyRivetColor();
   else drawBagTexture();
 }
 
 function updateBagColorDisplay(region, hex) {
-  var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib'}[region];
+  var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib', rivet:'riv'}[region];
   var el = document.getElementById('bag-' + prefix + '-chex');
   if (el) el.textContent = hex.toUpperCase();
 }
 
 function renderBagSwatches(region, hue, activeHex) {
-  var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib'}[region];
+  var prefix = {exterior:'ext', interior:'int', bottom:'bot', ribbon:'rib', rivet:'riv'}[region];
   var colorName = hueColorName(hue);
   var prefixes = swatchPrefixes(colorName);
   var swatches = monoSwatchColors(hue);
@@ -6473,11 +6535,16 @@ function applyRibbonColor() {
     if (m && m.material) { m.material.color.setHex(col); m.material.needsUpdate = true; }
   });
 }
+function applyRivetColor() {
+  if (!bagRivetRef || !bagRivetRef.material) return;
+  bagRivetRef.material.color.setHex(hexNum(BAG.rivet.color));
+  bagRivetRef.material.needsUpdate = true;
+}
 
 /* ─── BAG FINISH ────────────────────── */
 function onBagFinish(region, key, btn) {
   BAG[region].finish = key;
-  var prefix = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+  var prefix = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   document.querySelectorAll('#bag-' + prefix + '-finish-cards .fc').forEach(function(b) { b.classList.remove('on'); });
   btn.classList.add('on');
   if (region === 'exterior' && bagMeshRef) {
@@ -6612,7 +6679,7 @@ function initBagPBRMaps() {
 function onBagTransmission(region, v) {
   var val = parseFloat(v);
   var actual = val * PBR_MAX.transmission;           /* 0–1 slider → 0–PBR_MAX.transmission */
-  var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+  var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   document.getElementById('bag-' + pfx + '-trans-val').textContent = val.toFixed(2);
   if (region === 'exterior' || region === 'interior') {
     BAG_PBR[region].transmission = actual;
@@ -6628,7 +6695,7 @@ function onBagTransmission(region, v) {
 
 function onBagOpacity(region, v) {
   var val = parseFloat(v);
-  var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+  var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   document.getElementById('bag-' + pfx + '-opac-val').textContent = val.toFixed(2);
   if (region === 'exterior' || region === 'interior') {
     BAG_PBR[region].opacity = val;
@@ -6710,7 +6777,7 @@ const BAG_FINISH_PRESETS = {
 function applyBagFinish(region, key, btn, instant) {
   var prevFinish = BAG[region].finish; /* capture before overwrite — used for kraft fade-out */
   BAG[region].finish = key;
-  var prefix = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+  var prefix = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   var p = BAG_FINISH_PRESETS[key];
   if (!p) return;
   var grid = document.getElementById('bag-' + prefix + '-finish-grid');
@@ -6891,7 +6958,7 @@ function onFinishPresetSlider(key, prop, val) {
 function onBagRoughness(region, v) {
   var val = parseFloat(v);
   var actual = val * PBR_MAX.roughness;              /* 0–1 slider → 0–PBR_MAX.roughness */
-  var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+  var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   document.getElementById('bag-' + pfx + '-rough-val').textContent = val.toFixed(2);
   if (region === 'exterior' || region === 'interior') {
     BAG_PBR[region].roughness = actual;
@@ -6907,7 +6974,7 @@ function onBagRoughness(region, v) {
 function onBagMetalness(region, v) {
   var val = parseFloat(v);
   var actual = val * PBR_MAX.metalness;              /* 0–1 slider → 0–PBR_MAX.metalness */
-  var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+  var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   document.getElementById('bag-' + pfx + '-metal-val').textContent = val.toFixed(2);
   if (region === 'exterior' || region === 'interior') {
     BAG_PBR[region].metalness = actual;
@@ -6926,7 +6993,7 @@ function onPbrMaxRoughness(v) {
   document.getElementById('pbr-max-rough-val').textContent = PBR_MAX.roughness.toFixed(2);
   /* Re-apply all section sliders with the new max */
   ['exterior', 'interior', 'ribbon'].forEach(function(r) {
-    var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[r];
+    var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[r];
     var el = document.getElementById('bag-' + pfx + '-rough');
     if (el) onBagRoughness(r, el.value);
   });
@@ -6936,7 +7003,7 @@ function onPbrMaxMetalness(v) {
   PBR_MAX.metalness = parseFloat(v);
   document.getElementById('pbr-max-metal-val').textContent = PBR_MAX.metalness.toFixed(2);
   ['exterior', 'interior', 'ribbon'].forEach(function(r) {
-    var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[r];
+    var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[r];
     var el = document.getElementById('bag-' + pfx + '-metal');
     if (el) onBagMetalness(r, el.value);
   });
@@ -6946,7 +7013,7 @@ function onPbrMaxTransmission(v) {
   PBR_MAX.transmission = parseFloat(v);
   document.getElementById('pbr-max-trans-val').textContent = PBR_MAX.transmission.toFixed(2);
   ['exterior', 'interior', 'ribbon'].forEach(function(r) {
-    var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[r];
+    var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[r];
     var el = document.getElementById('bag-' + pfx + '-trans');
     if (el) onBagTransmission(r, el.value);
   });
@@ -7128,7 +7195,7 @@ function randomizeBag() {
 function clearBag() {
   /* Each region → clean white, no pattern */
   ['exterior','interior','ribbon'].forEach(function(region) {
-    var pfx = {exterior:'ext', interior:'int', ribbon:'rib'}[region];
+    var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
     BAG[region].swatchName = 'Custom';
     BAG[region].customHex  = '#FFFFFF';
     BAG[region].color      = '#FFFFFF';
@@ -7150,6 +7217,7 @@ function clearBag() {
   applyBagFinish('ribbon',   'softtouch', null, true);
 
   applyRibbonColor();
+  if (typeof applyRivetColor === 'function') applyRivetColor();
   drawBagTexture();
   updatePricing();
   checkCart();
@@ -7222,6 +7290,7 @@ function onSize(s, d, btn) {
 }
 
 function applyBagSizeScale(sx, sy, sz, normMult) {
+  return; /* legacy per-axis size scaling — superseded by distinct GLB models per size */
   if (!T.box || S.product !== 'bag') return;
   normMult = normMult || 1.0;
   var sf = bagNormScale * normMult;
@@ -7259,23 +7328,11 @@ function applyBagSizeScale(sx, sy, sz, normMult) {
 }
 
 function onBagSize(key, btn) {
-  var entry = BAG_SIZES.find(function(e) { return e.key === key; });
-  if (!entry) return;
-  currentBagSizeKey = key;
+  if (!BAG_MODELS[key]) return;
+  currentBagModel = key;
   document.querySelectorAll('.bag-sopt').forEach(function(b) { b.classList.remove('on'); });
   if (btn) btn.classList.add('on');
-  // Apply per-size UV stretch values for both regions
-  BAG.exterior.patternStretchU = entry.extStretchU;
-  BAG.exterior.patternStretchV = entry.extStretchV;
-  BAG.interior.patternStretchU = entry.intStretchU;
-  BAG.interior.patternStretchV = entry.intStretchV;
-  applyBagSizeScale(entry.sx, entry.sy, entry.sz, entry.normMult);
-  updateSizeTuningPanel(entry);
-  // Fire handle tuning so the 3D mesh picks up per-size defaults immediately
-  onSizeTune('handleScaleAdj', entry.handleScaleAdj);
-  onSizeTune('handleYOff',     entry.handleYOff);
-  updateBagQtyGridFromEntry(entry);
-  drawBagTexture();
+  buildPaperBagMesh();   /* swap GLB → re-split into body/handles/rivet, repaint, refresh price tiers */
 }
 
 function updateBagQtyGridFromEntry(entry) {
@@ -7959,7 +8016,7 @@ function animate(now) {
         tw.from[2] + (tw.to[2] - tw.from[2]) * e
       );
       BAG[rg].color = hex;
-      if (rg === 'ribbon') applyRibbonColor(); else bagDirty = true;
+      if (rg === 'ribbon') applyRibbonColor(); else if (rg === 'rivet') applyRivetColor(); else bagDirty = true;
       if (t >= 1) { colorTweens[rg] = null; }
     });
   }
