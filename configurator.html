@@ -2175,6 +2175,9 @@
         <input type="range" class="test-slider" min="512" max="4096" step="256" value="2048" oninput="onA2Dnum('guideRes',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Island padding (gap fill)</span><span class="slider-val" id="a2d-padding-val">0</span></div>
         <input type="range" class="test-slider" min="0" max="40" step="1" value="0" oninput="onA2Dpadding(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Atlas edge padding</span><span class="slider-val" id="atlas-pad-val">0</span></div>
+        <input type="range" class="test-slider" min="0" max="512" step="32" value="0" onchange="onAtlasPad(this.value)"></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Adds a margin around the printable area so artwork at a UV edge isn't clipped (rebuilds the bag).</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle size</span><span class="slider-val" id="a2d-handleSize-val">10</span></div>
         <input type="range" class="test-slider" min="4" max="20" step="1" value="10" oninput="onA2Dnum('handleSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle color</span><span class="slider-val" id="a2d-handleColor-val">#000000</span></div>
@@ -3536,15 +3539,34 @@ function onFinish(key, btn) {
 
 /* ─── PAPER BAG TEXTURE ─────────────── */
 let bagTexCanvas, bagTexCtx, bagTexture;
+/* Atlas padding: a transparent margin (px) around the 2048 printable core so artwork
+   placed at the very edge of a UV island isn't clipped at the canvas boundary. UV 0–1
+   is mapped to the central 2048 region via texture offset/repeat, so 3D printing is
+   unchanged; the margin only gives the 2D editor room. Default 0 = no change. */
+var ATLAS_PAD = 0;
+function _atlasW(){ return 2048 + 2 * ATLAS_PAD; }
+function applyAtlasPad(){
+  if (!bagTexCanvas || !bagTexture) return;
+  var W = _atlasW();
+  if (bagTexCanvas.width !== W){ bagTexCanvas.width = bagTexCanvas.height = W; }
+  bagTexture.repeat.set(2048 / W, 2048 / W);
+  bagTexture.offset.set(ATLAS_PAD / W, ATLAS_PAD / W);
+  bagTexture.needsUpdate = true;
+  if (typeof buildUVGuide === 'function') buildUVGuide();
+  if (typeof drawBagTexture === 'function') drawBagTexture();
+}
 let bagPatternImgs = [];
 let bagPatternsLoaded = false;
 
 function initBagTexture() {
   if (bagTexCanvas) return;
   bagTexCanvas = document.createElement('canvas');
-  bagTexCanvas.width = bagTexCanvas.height = 2048;
+  bagTexCanvas.width = bagTexCanvas.height = _atlasW();
   bagTexCtx = bagTexCanvas.getContext('2d');
   bagTexture = new THREE.CanvasTexture(bagTexCanvas);
+  var W = _atlasW();
+  bagTexture.repeat.set(2048 / W, 2048 / W);   /* map UV 0–1 onto the central 2048 core */
+  bagTexture.offset.set(ATLAS_PAD / W, ATLAS_PAD / W);
   loadPatternsFromFolder();
 }
 
@@ -3836,7 +3858,7 @@ function drawPatternOnRegion(ctx, region, uv) {
 
 function drawBagTextureDebug() {
   if (!bagTexCtx) return;
-  var W = 2048, H = 2048;
+  var W = bagTexCanvas.width, H = bagTexCanvas.height;
   bagTexCtx.clearRect(0, 0, W, H);
   // Paint V bands: each band = 0.1 V units = 204.8px height
   // With flipY=true: canvas y=0 = V=1 (top), canvas y=2048 = V=0 (bottom)
@@ -3883,7 +3905,7 @@ function _drawBodyRegion(region, uv, clip, kraftRender){
 }
 function drawBagTexture() {
   if (!bagTexCtx) return;
-  var W = 2048, H = 2048;
+  var W = bagTexCanvas.width, H = bagTexCanvas.height;
   bagTexCtx.clearRect(0, 0, W, H);
 
   // 1. Background. Material-named models → leave gaps TRANSPARENT so the 2D editor's
@@ -4247,7 +4269,7 @@ function drawArtworkOnBag() {
 
 /* Artwork is now freeform across the whole atlas — layers position against the full
    2048² canvas. (Scale stays referenced to the exterior width via _layerScaleRef.) */
-function layerBBox(L) { return { x: 0, y: 0, w: 2048, h: 2048 }; }
+function layerBBox(L) { return { x: ATLAS_PAD, y: ATLAS_PAD, w: 2048, h: 2048 }; }
 function _layerScaleRef() { return (BAG_UV.exterior && BAG_UV.exterior.w) ? BAG_UV.exterior.w : 982; }
 
 /* Paint the handle + rivet island base colours (artwork is drawn separately, freeform). */
@@ -4259,7 +4281,7 @@ function drawPartsOverlay() {
     bagTexCtx.save();
     bagTexCtx.clip(part.clip.path);
     bagTexCtx.fillStyle = part.color;
-    bagTexCtx.fillRect(0, 0, 2048, 2048);
+    bagTexCtx.fillRect(0, 0, bagTexCanvas.width, bagTexCanvas.height);
     bagTexCtx.restore();
   });
 }
@@ -4574,7 +4596,7 @@ function computeIslandRegion(geom) {
   var path = (typeof Path2D !== 'undefined') ? new Path2D() : null; if (!path) return null;
   var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
   function px(i) {
-    var x = ua[i*2] * 2048, y = (1 - ua[i*2+1]) * 2048;
+    var x = ATLAS_PAD + ua[i*2] * 2048, y = ATLAS_PAD + (1 - ua[i*2+1]) * 2048;
     if (x < minx) minx = x; if (x > maxx) maxx = x;
     if (y < miny) miny = y; if (y > maxy) maxy = y;
     return [x, y];
@@ -4584,7 +4606,7 @@ function computeIslandRegion(geom) {
      borders with no internal triangulation diagonals. */
   var eCount = {}, ePts = {};
   function vk(i){ return Math.round(ua[i*2]*4096) + ',' + Math.round((1-ua[i*2+1])*4096); }
-  function edge(i,j){ var ka=vk(i), kb=vk(j); var k = ka<kb ? ka+'|'+kb : kb+'|'+ka; eCount[k]=(eCount[k]||0)+1; if(!ePts[k]) ePts[k]=[ua[i*2]*2048,(1-ua[i*2+1])*2048,ua[j*2]*2048,(1-ua[j*2+1])*2048]; }
+  function edge(i,j){ var ka=vk(i), kb=vk(j); var k = ka<kb ? ka+'|'+kb : kb+'|'+ka; eCount[k]=(eCount[k]||0)+1; if(!ePts[k]) ePts[k]=[ATLAS_PAD+ua[i*2]*2048,ATLAS_PAD+(1-ua[i*2+1])*2048,ATLAS_PAD+ua[j*2]*2048,ATLAS_PAD+(1-ua[j*2+1])*2048]; }
   var n = idx ? idx.count : uvAttr.count;
   for (var t = 0; t < n; t += 3) {
     var a = idx ? idx.getX(t) : t, b = idx ? idx.getX(t+1) : t+1, c = idx ? idx.getX(t+2) : t+2;
@@ -4616,7 +4638,7 @@ function buildUVGuide() {
   } else { bagShellClip = null; }
   if (!regions.length) return;
   var RES = Math.max(512, Math.min(4096, A2D.guideRes|0)) || 2048;  /* triangle raster quality */
-  var k = RES / 2048;                       /* island paths are in 2048-space */
+  var k = RES / _atlasW();                   /* island paths are in padded-canvas space */
   var cv = document.createElement('canvas'); cv.width = cv.height = RES;
   var g = cv.getContext('2d');
   g.scale(k, k);
@@ -8630,6 +8652,14 @@ function onA2Dnum(key,val,rebuild){ A2D[key]=parseFloat(val); var el=document.ge
 function onA2Dcol(key,val,rebuild){ A2D[key]=val; var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=val; if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dtog(key,on){ A2D[key]=!!on; }
 function onA2Dpadding(val){ A2D.padding=parseFloat(val); var el=document.getElementById('a2d-padding-val'); if(el) el.textContent=parseFloat(val); if(typeof drawBagTexture==='function') drawBagTexture(); }
+function onAtlasPad(val){
+  ATLAS_PAD = Math.max(0, parseInt(val)||0);
+  var el=document.getElementById('atlas-pad-val'); if(el) el.textContent=ATLAS_PAD;
+  var W=_atlasW();
+  if (bagTexCanvas){ bagTexCanvas.width=bagTexCanvas.height=W; }
+  if (bagTexture){ bagTexture.repeat.set(2048/W,2048/W); bagTexture.offset.set(ATLAS_PAD/W,ATLAS_PAD/W); bagTexture.needsUpdate=true; }
+  if (typeof buildPaperBagMesh==='function') buildPaperBagMesh();   /* recompute island clips with the new padding */
+}
 function onSpinRampInSlider(v) {
   spinRampInMs = parseFloat(v) * 1000;
   document.getElementById('spin-rampin-val').textContent = parseFloat(v).toFixed(2) + 's';
@@ -9550,7 +9580,7 @@ function _pulseRegion(region, alpha){
   if (region === 'ribbon'){
     if (bagHandleClip && bagTexCtx){
       bagTexCtx.save(); bagTexCtx.clip(bagHandleClip.path);
-      bagTexCtx.fillStyle = col; bagTexCtx.fillRect(0,0,2048,2048); bagTexCtx.restore();
+      bagTexCtx.fillStyle = col; bagTexCtx.fillRect(0,0,bagTexCanvas.width,bagTexCanvas.height); bagTexCtx.restore();
       if (bagTexture) bagTexture.needsUpdate = true;
     } else if (bagFrontRef && bagFrontRef.material){
       bagFrontRef.material.color.setHex(hexNum(col)); bagFrontRef.material.needsUpdate = true;
@@ -9735,12 +9765,12 @@ function atlas2dRender(){
   if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){
     ctx.imageSmoothingEnabled=true;
     ctx.filter = 'brightness(' + A2D.previewBrightness + ') saturate(' + A2D.previewSaturate + ')';
-    try{ var o0=_a2s(0,0),o1=_a2s(2048,2048); ctx.drawImage(bagTexCanvas,0,0,2048,2048,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
+    try{ var _w=bagTexCanvas.width; var o0=_a2s(0,0),o1=_a2s(_w,_w); ctx.drawImage(bagTexCanvas,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
     ctx.filter = 'none';
   }
   /* real UV island outlines (hi-res baked guide), or legacy boxes */
   if (bagUVGuideCanvas){
-    try{ var g0=_a2s(0,0),g1=_a2s(2048,2048); ctx.drawImage(bagUVGuideCanvas,0,0,2048,2048,g0.x,g0.y,g1.x-g0.x,g1.y-g0.y); }catch(_){}
+    try{ var _gw=bagTexCanvas.width; var g0=_a2s(0,0),g1=_a2s(_gw,_gw); ctx.drawImage(bagUVGuideCanvas,0,0,bagUVGuideCanvas.width,bagUVGuideCanvas.height,g0.x,g0.y,g1.x-g0.x,g1.y-g0.y); }catch(_){}
   } else {
     [ {r:uv.exterior,fill:'rgba(40,120,255,0.08)',stroke:'rgba(40,120,255,0.50)'},
       {r:uv.interior,fill:'rgba(0,180,100,0.08)',stroke:'rgba(0,180,100,0.50)'} ].forEach(function(item){
