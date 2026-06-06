@@ -4572,6 +4572,7 @@ function buildPaperBagMesh() {
       bagExtClip = computeIslandRegion(byMat['M_exterior']);
       bagIntClip = computeIslandRegion(byMat['M_interior']);
       buildUVGuide();
+      console.log('[imprint] BUILD=parts-atlas+uvguide · material-named bag · clips handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip, 'ext:', !!bagExtClip, 'int:', !!bagIntClip, '· UV guide:', !!bagUVGuideCanvas);
     } else {
       /* Legacy single-mesh GLB → split by connected-component topology. */
       var baked  = collected[0].geom;
@@ -4598,6 +4599,7 @@ function buildPaperBagMesh() {
       bodyGeom   = _subGeo(split.body);
       handleGeom = split.handles.length ? _subGeo(split.handles) : null;
       rivetGeom  = split.rivet.length   ? _subGeo(split.rivet)   : null;
+      console.log('[imprint] BUILD=parts-atlas+uvguide · LEGACY topology bag (no atlas parts, no UV guide) — material names not found:', Object.keys(byMat));
     }
 
     // Body — textured atlas (exterior = left UV half, interior = right UV half)
