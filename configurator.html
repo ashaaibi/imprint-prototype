@@ -4355,6 +4355,47 @@ function splitBagGeometry(pos, uv, index) {
   return out;
 }
 
+/* Merge several indexed BufferGeometries (each with position + optional normal/uv)
+   into one — used to fuse the M_exterior and M_interior glTF primitives back into a
+   single textured body that shares the atlas (exterior = left UV half, interior =
+   right UV half). */
+function mergeBagGeoms(geoms) {
+  geoms = (geoms || []).filter(Boolean);
+  if (!geoms.length) return null;
+  var totalV = 0, totalI = 0, hasUV = true, hasN = true;
+  geoms.forEach(function(g) {
+    var vc = g.getAttribute('position').count;
+    var idx = g.getIndex();
+    totalV += vc;
+    totalI += idx ? idx.count : vc;
+    if (!g.getAttribute('uv'))     hasUV = false;
+    if (!g.getAttribute('normal')) hasN  = false;
+  });
+  if (geoms.length === 1) { geoms[0].computeBoundingBox(); geoms[0].computeBoundingSphere(); return geoms[0]; }
+  var pos = new Float32Array(totalV * 3);
+  var nor = hasN ? new Float32Array(totalV * 3) : null;
+  var uv  = hasUV ? new Float32Array(totalV * 2) : null;
+  var idxArr = (totalV > 65535) ? new Uint32Array(totalI) : new Uint16Array(totalI);
+  var vOff = 0, iOff = 0;
+  geoms.forEach(function(g) {
+    var vc = g.getAttribute('position').count;
+    pos.set(g.getAttribute('position').array, vOff * 3);
+    if (nor) nor.set(g.getAttribute('normal').array, vOff * 3);
+    if (uv)  uv.set(g.getAttribute('uv').array,  vOff * 2);
+    var idx = g.getIndex();
+    if (idx) { var ia = idx.array; for (var i = 0; i < ia.length; i++) idxArr[iOff + i] = ia[i] + vOff; iOff += ia.length; }
+    else     { for (var j = 0; j < vc; j++) idxArr[iOff + j] = vOff + j; iOff += vc; }
+    vOff += vc;
+  });
+  var m = new THREE.BufferGeometry();
+  m.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  if (nor) m.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  if (uv)  m.setAttribute('uv',     new THREE.BufferAttribute(uv, 2));
+  m.setIndex(new THREE.BufferAttribute(idxArr, 1));
+  m.computeBoundingBox(); m.computeBoundingSphere();
+  return m;
+}
+
 function buildPaperBagMesh() {
   // Dispose old bag group
   if (T.box && T.box === bagGroup) {
@@ -4384,38 +4425,64 @@ function buildPaperBagMesh() {
   loader.load(model.file, function(gltf) {
     bagGroup = new THREE.Group();
 
-    // New models are ONE mesh — split it into body / handles / rivet by topology.
-    var src = null;
-    gltf.scene.traverse(function(c) { if (c.isMesh && !src) src = c; });
-    if (!src) { console.error('No mesh in ' + model.file); finishConfigLoading(); return; }
-    src.updateWorldMatrix(true, true);
-    var baked = src.geometry.clone();
-    baked.applyMatrix4(src.matrixWorld);            /* bake the GLB's stand-up rotation + 0.01 scale */
-    if (!baked.getAttribute('normal')) baked.computeVertexNormals();
-    var posArr = baked.getAttribute('position').array;
-    var uvArr  = baked.getAttribute('uv') ? baked.getAttribute('uv').array : null;
-    var idxAttr = baked.getIndex();
-    var idxArr = idxAttr ? idxAttr.array : null;
-    var split = splitBagGeometry(posArr, uvArr, idxArr);
+    /* Build body / handles / rivets. New models (e.g. wide) are authored as separate
+       glTF primitives named by material — M_exterior / M_interior / M_handles /
+       M_rivets — so we read parts by material name (robust: immune to the geometry
+       welding that broke the old topology split). Legacy single-mesh models fall back
+       to the connected-component split. Every primitive's world matrix is baked so the
+       GLB's stand-up rotation + scale are preserved. */
+    var collected = [];
+    gltf.scene.traverse(function(c) {
+      if (!c.isMesh) return;
+      c.updateWorldMatrix(true, true);
+      var g = c.geometry.clone();
+      g.applyMatrix4(c.matrixWorld);
+      if (!g.getAttribute('normal')) g.computeVertexNormals();
+      collected.push({ name: (c.material && c.material.name) || '', geom: g });
+    });
+    if (!collected.length) { console.error('No mesh in ' + model.file); finishConfigLoading(); return; }
 
-    function _subGeo(triList) {
-      var g = new THREE.BufferGeometry();
-      g.setAttribute('position', baked.getAttribute('position').clone());
-      if (baked.getAttribute('uv'))     g.setAttribute('uv', baked.getAttribute('uv').clone());
-      if (baked.getAttribute('normal')) g.setAttribute('normal', baked.getAttribute('normal').clone());
-      var out = new Array(triList.length * 3);
-      for (var i = 0; i < triList.length; i++) {
-        var t = triList[i];
-        if (idxArr) { out[i*3]=idxArr[t*3]; out[i*3+1]=idxArr[t*3+1]; out[i*3+2]=idxArr[t*3+2]; }
-        else        { out[i*3]=t*3;          out[i*3+1]=t*3+1;          out[i*3+2]=t*3+2; }
-      }
-      g.setIndex(out);
-      g.computeBoundingBox(); g.computeBoundingSphere();
-      return g;
+    var byMat = {};
+    collected.forEach(function(p) { if (p.name && !byMat[p.name]) byMat[p.name] = p.geom; });
+    var named = byMat['M_exterior'] || byMat['M_interior'] || byMat['M_handles'] || byMat['M_rivets'];
+
+    var bodyGeom = null, handleGeom = null, rivetGeom = null;
+    if (named) {
+      /* Material-named primitives → body = exterior + interior fused (shared atlas:
+         exterior = left UV half, interior = right UV half); handles + rivets separate. */
+      bodyGeom   = mergeBagGeoms([byMat['M_exterior'], byMat['M_interior']]);
+      handleGeom = byMat['M_handles'] || null;
+      rivetGeom  = byMat['M_rivets']  || null;
+    } else {
+      /* Legacy single-mesh GLB → split by connected-component topology. */
+      var baked  = collected[0].geom;
+      var posArr = baked.getAttribute('position').array;
+      var uvArr  = baked.getAttribute('uv') ? baked.getAttribute('uv').array : null;
+      var idxAttr = baked.getIndex();
+      var idxArr = idxAttr ? idxAttr.array : null;
+      var split = splitBagGeometry(posArr, uvArr, idxArr);
+      var _subGeo = function(triList) {
+        var g = new THREE.BufferGeometry();
+        g.setAttribute('position', baked.getAttribute('position').clone());
+        if (baked.getAttribute('uv'))     g.setAttribute('uv', baked.getAttribute('uv').clone());
+        if (baked.getAttribute('normal')) g.setAttribute('normal', baked.getAttribute('normal').clone());
+        var out = new Array(triList.length * 3);
+        for (var i = 0; i < triList.length; i++) {
+          var t = triList[i];
+          if (idxArr) { out[i*3]=idxArr[t*3]; out[i*3+1]=idxArr[t*3+1]; out[i*3+2]=idxArr[t*3+2]; }
+          else        { out[i*3]=t*3;          out[i*3+1]=t*3+1;          out[i*3+2]=t*3+2; }
+        }
+        g.setIndex(out);
+        g.computeBoundingBox(); g.computeBoundingSphere();
+        return g;
+      };
+      bodyGeom   = _subGeo(split.body);
+      handleGeom = split.handles.length ? _subGeo(split.handles) : null;
+      rivetGeom  = split.rivet.length   ? _subGeo(split.rivet)   : null;
     }
 
     // Body — textured atlas (exterior = left UV half, interior = right UV half)
-    var bodyMesh = new THREE.Mesh(_subGeo(split.body), new THREE.MeshPhysicalMaterial({
+    var bodyMesh = new THREE.Mesh(bodyGeom, new THREE.MeshPhysicalMaterial({
       map: bagTexture, roughness: 1.0, metalness: 1.0, envMapIntensity: 0.60,
       transmission: 0.0, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
     }));
@@ -4424,8 +4491,8 @@ function buildPaperBagMesh() {
     bagGroup.add(bodyMesh);
 
     // Handles — one solid-colour mesh (bagBackRef stays null; ribbon code guards it)
-    if (split.handles.length) {
-      var hMesh = new THREE.Mesh(_subGeo(split.handles), new THREE.MeshPhysicalMaterial({
+    if (handleGeom) {
+      var hMesh = new THREE.Mesh(handleGeom, new THREE.MeshPhysicalMaterial({
         color: hexNum(BAG.ribbon.color), roughness: 0.60, metalness: 0.10,
         envMapIntensity: 0.50, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
       }));
@@ -4434,8 +4501,8 @@ function buildPaperBagMesh() {
       bagGroup.add(hMesh);
     }
     // Rivets — solid metallic accent
-    if (split.rivet.length) {
-      var rMesh = new THREE.Mesh(_subGeo(split.rivet), new THREE.MeshPhysicalMaterial({
+    if (rivetGeom) {
+      var rMesh = new THREE.Mesh(rivetGeom, new THREE.MeshPhysicalMaterial({
         color: hexNum(BAG.rivet.color), roughness: 0.35, metalness: 0.55,
         envMapIntensity: 0.70, opacity: 1.0, transparent: false, side: THREE.DoubleSide,
       }));
