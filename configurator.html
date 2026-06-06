@@ -2177,7 +2177,13 @@
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off = clean island outlines only. On = every triangle edge.</div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Triangle cleaning</span><span class="slider-val" id="a2d-triClean-val">0</span></div>
-        <input type="range" class="test-slider" min="0" max="80" step="1" value="0" oninput="onA2Dnum('triClean',this.value,true)"></div>
+        <input type="range" class="test-slider" min="0" max="400" step="1" value="0" oninput="onA2Dnum('triClean',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Shell silhouette</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('silhouetteOn',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette color</span><span class="slider-val" id="a2d-silhouetteColor-val">#000000</span></div>
+        <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('silhouetteColor',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette thickness</span><span class="slider-val" id="a2d-silhouetteThickness-val">2</span></div>
+        <input type="range" class="test-slider" min="0" max="8" step="0.1" value="2" oninput="onA2Dnum('silhouetteThickness',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">21</span></div>
         <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
@@ -2976,13 +2982,13 @@ var BAG_UV = {
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
 const BAG_MODELS = {
   wide: { key:'wide', label:'Wide · Boutique', file:'paper_bag/wide_paper_bag.glb', dims:'28 × 20 × 14 cm',
-    uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} },
+    uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} }, front:{ posU:23.47, posV:61.17 },
     tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
   gift: { key:'gift', label:'Gift · Boxy', file:'paper_bag/gift_paper_bag.glb', dims:'19 × 24 × 14 cm',
-    uv:{ exterior:{x:66,y:723,w:942,h:1278}, interior:{x:1042,y:723,w:943,h:1278} },
+    uv:{ exterior:{x:66,y:723,w:942,h:1278}, interior:{x:1042,y:723,w:943,h:1278} }, front:{ posU:23.56, posV:56.81 },
     tiers:[{qty:200,pu:5.90,save:0},{qty:500,pu:4.40,save:25},{qty:1000,pu:3.50,save:41},{qty:2000,pu:2.70,save:54}] },
   wine: { key:'wine', label:'Luxury · Tall', file:'paper_bag/wine_paper_bag.glb', dims:'11 × 30 × 13 cm',
-    uv:{ exterior:{x:115,y:119,w:908,h:1869}, interior:{x:1065,y:119,w:908,h:1869} },
+    uv:{ exterior:{x:115,y:119,w:908,h:1869}, interior:{x:1065,y:119,w:908,h:1869} }, front:{ posU:23.17, posV:66.00 },
     tiers:[{qty:200,pu:7.50,save:0},{qty:500,pu:5.60,save:25},{qty:1000,pu:4.40,save:41},{qty:2000,pu:3.40,save:55}] },
 };
 var currentBagModel = 'wide';
@@ -4669,12 +4675,12 @@ function buildUVGuide() {
   var g = cv.getContext('2d');
   g.scale(k, k);
   g.lineJoin = 'round'; g.lineCap = 'round';
-  var single = A2D.outlineColor;
+  var single = A2D.outlineColor ? _themeColor(A2D.outlineColor) : '';
+  var silCol = _themeColor(A2D.silhouetteColor);
   regions.forEach(function(r) {
     /* tint fill (set Tint opacity to 0 → only the lines show, no triangle fill) */
     if (A2D.tintOpacity > 0) { g.globalAlpha = A2D.tintOpacity; g.fillStyle = single || ('rgb(' + r.rgb + ')'); g.fill(r.clip.path); }
-    /* outline — clean island silhouette (default) or full triangle mesh. globalAlpha
-       drives opacity for both single + per-part colours. */
+    /* mesh wireframe — clean island outline (default) or full triangle mesh */
     if (A2D.outlineThickness > 0 && A2D.outlineOpacity > 0) {
       g.globalAlpha = A2D.outlineOpacity;
       g.strokeStyle = single || ('rgb(' + r.rgb + ')');
@@ -4687,6 +4693,10 @@ function buildUVGuide() {
         r.clip.edges.forEach(function(e){ if (e[5] || e[4] >= A2D.triClean){ strokePath.moveTo(e[0],e[1]); strokePath.lineTo(e[2],e[3]); } });
       }
       g.stroke(strokePath);
+    }
+    /* separate shell SILHOUETTE outline (outer boundary), own colour + thickness */
+    if (A2D.silhouetteOn && A2D.silhouetteThickness > 0 && r.clip.outline) {
+      g.globalAlpha = 1; g.strokeStyle = silCol; g.lineWidth = A2D.silhouetteThickness; g.stroke(r.clip.outline);
     }
   });
   g.globalAlpha = 1;
@@ -6160,16 +6170,17 @@ function addLayer(kind) {
   var id = BAG.artwork.nextId++;
   var L;
   var allAreas = { front:true, back:true, left:true, right:true, bottom:true, interior:true };
+  var _fp = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel] && BAG_MODELS[currentBagModel].front) || { posU:25.46, posV:85.31 };
   if (kind === 'logo') {
-    L = { id:id, kind:'logo', isDefault:false, visible:true, img:null, fileName:'', scale:18, posU:25.46, posV:85.31, rotation:0,
+    L = { id:id, kind:'logo', isDefault:false, visible:true, img:null, fileName:'', scale:18, posU:_fp.posU, posV:_fp.posV, rotation:0,
           color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
   } else if (kind === 'text') {
-    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:130, posU:25.46, posV:85.31, rotation:0, font:'inter',
+    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:130, posU:_fp.posU, posV:_fp.posV, rotation:0, font:'inter',
           color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), posU:25.46, posV:85.31, rotation:0,
+    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else {
@@ -8212,6 +8223,13 @@ function _hexToRgb(h) {
 function _rgbToHex(r, g, b) {
   return '#' + [r, g, b].map(function(v){ return Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0'); }).join('');
 }
+/* In dark mode, invert dark UI colours (label/outline/handle) to their light
+   complement so they stay visible; light colours are left as-is. */
+function _themeColor(hex){
+  if (document.documentElement.getAttribute('data-theme') !== 'dark') return hex;
+  var c = _hexToRgb(hex), lum = (0.299*c[0] + 0.587*c[1] + 0.114*c[2]) / 255;
+  return (lum < 0.5) ? _rgbToHex(255-c[0], 255-c[1], 255-c[2]) : hex;
+}
 function startColorTween(region, toHex) {
   colorTweens[region] = {
     from: _hexToRgb(BAG[region].color || '#ffffff'),
@@ -9670,7 +9688,8 @@ var A2D = {
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.3, previewSaturate:1.15, previewContrast:1.0,
   wireFull:true,            /* false = clean island outlines only; true = full triangle mesh */
-  triClean:0                /* px: hide internal edges shorter than this (declutter the mesh) */
+  triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
+  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0  /* outer shell outline */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
@@ -9742,7 +9761,7 @@ function _layerBox(L){
 }
 function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
-function _hitHandle(sp){ var L=a2d.sel; if(!L) return null; var b=_layerBox(L); var hs={ scale:_boxLocalToScreen(b,1,-1), rot:_boxLocalToScreen(b,0,1.6) }; var R=Math.max(16,A2D.handleSize+8)*a2d.dpr; for (var k in hs){ var h=hs[k]; if (Math.hypot(sp.x-h.x, sp.y-h.y)<=R) return k; } return null; }
+function _hitHandle(sp){ var L=a2d.sel; if(!L) return null; var b=_layerBox(L); var hs={ scale:_boxLocalToScreen(b,1,-1), rotate:_boxLocalToScreen(b,0,1.6) }; var R=Math.max(16,A2D.handleSize+8)*a2d.dpr; for (var k in hs){ var h=hs[k]; if (Math.hypot(sp.x-h.x, sp.y-h.y)<=R) return k; } return null; }
 function _atlasBind(c){
   c.addEventListener('pointerdown', _aDown);
   c.addEventListener('pointermove', _aMove);
@@ -9767,7 +9786,7 @@ function _aMove(e){
     /* hover cursor feedback */
     var cur='grab';
     var hh0=_hitHandle(sp);
-    if (hh0==='rot') cur='pointer';
+    if (hh0==='rotate') cur='pointer';
     else if (hh0==='scale') cur='nwse-resize';
     else { var ap0=_s2a(sp.x,sp.y); if (_hitLayer(ap0.x,ap0.y)) cur='move'; }
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
@@ -9779,7 +9798,7 @@ function _aMove(e){
   if (a2d.op==='pan'){ a2d.panX=a2d.start.panX+(sp.x-a2d.start.sp.x); a2d.panY=a2d.start.panY+(sp.y-a2d.start.sp.y); return; }
   if (!a2d.sel) return;
   var L=a2d.sel, b=a2d.start.box;
-  if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y); L.posU=Math.max(-20,Math.min(120,(ap.x-e_.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120,(ap.y-e_.y)/e_.h*100)); _a2dApply(); }
+  if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
   else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
   else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=-ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap */ L.rotation=deg; _a2dApply(); }
 }
@@ -9876,7 +9895,7 @@ function atlas2dRender(){
     });
   }
   /* 7. layer selection boxes + image-5 handles (dashed box, circular handles on sticks) */
-  var HS=A2D.handleSize*D, HC=A2D.handleColor;
+  var HS=A2D.handleSize*D, HC=_themeColor(A2D.handleColor);
   _drawableLayers().forEach(function(L){
     var b=_layerBox(L), tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
     ctx.strokeStyle=sel?HC:'rgba(0,0,0,0.28)'; ctx.lineWidth=(sel?2:1)*D;
@@ -9900,7 +9919,7 @@ function atlas2dRender(){
     ? [ {bb:uv.exterior,label:'Exterior'},{bb:uv.interior,label:'Interior'},
         {bb:uv.handles,label:'Handles'},{bb:uv.rivets,label:'Rivets'} ]
     : [ {bb:uv.exterior,label:'Exterior'},{bb:uv.interior,label:'Interior'} ];
-  ctx.fillStyle=A2D.labelColor; ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif'; ctx.textBaseline='bottom';
+  ctx.fillStyle=_themeColor(A2D.labelColor); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif'; ctx.textBaseline='bottom';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
     var p=_a2s(it.bb.x, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island canvas-bottom → visual top */
@@ -10003,6 +10022,7 @@ function _applyConfigTheme(){
     }
   } catch(e){}
   try { if (typeof rlmRefreshBg === 'function') rlmRefreshBg(); } catch(e){}   /* rebuild studio sky for the theme */
+  try { if (typeof buildUVGuide === 'function') buildUVGuide(); } catch(e){}   /* re-theme the baked UV outline */
 }
 try { new MutationObserver(_applyConfigTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] }); } catch(e){}
 setTimeout(_applyConfigTheme, 1200);   /* after the realism floor is built */
