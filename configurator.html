@@ -372,6 +372,7 @@
     .a2dc-btn { border: none; background: transparent; cursor: pointer; padding: 5px 7px;
       border-radius: 6px; font-size: 13px; line-height: 1; color: var(--imp-fg); font-family: var(--imp-font); }
     .a2dc-btn:hover { background: var(--imp-surface-2); }
+    .a2dc-btn svg { width: 16px; height: 16px; display: block; }
     .a2dc-sep { width: 1px; height: 18px; background: var(--imp-border); margin: 0 3px; flex: 0 0 auto; }
     .a2dc-step { display: inline-flex; align-items: center; gap: 3px; padding: 0 2px; }
     .a2dc-step b { font-weight: 600; font-size: 10px; color: var(--imp-fg-2); min-width: 42px; text-align: center; }
@@ -4309,12 +4310,11 @@ function drawPartsOverlay() {
   if (!bagTexCtx) return;
   [ { clip: bagHandleClip, color: (BAG.ribbon && BAG.ribbon.color) || '#cccccc' },
     { clip: bagRivetClip,  color: (BAG.rivet  && BAG.rivet.color)  || '#888888' } ].forEach(function(part) {
-    if (!part.clip) return;
-    bagTexCtx.save();
-    bagTexCtx.clip(part.clip.path);
+    if (!part.clip || !part.clip.path) return;
+    /* fill the island path directly — ctx.clip() with a very dense path (10k+ tris)
+       can yield an empty clip on some browsers, leaving the part transparent. */
     bagTexCtx.fillStyle = part.color;
-    bagTexCtx.fillRect(0, 0, bagTexCanvas.width, bagTexCanvas.height);
-    bagTexCtx.restore();
+    bagTexCtx.fill(part.clip.path);
   });
 }
 
@@ -4694,9 +4694,16 @@ function buildUVGuide() {
       }
       g.stroke(strokePath);
     }
-    /* separate shell SILHOUETTE outline (outer boundary), own colour + thickness */
-    if (A2D.silhouetteOn && A2D.silhouetteThickness > 0 && r.clip.outline) {
-      g.globalAlpha = 1; g.strokeStyle = silCol; g.lineWidth = A2D.silhouetteThickness; g.stroke(r.clip.outline);
+    /* separate shell SILHOUETTE — outline of the whole filled (tint) area, so it
+       traces the complete island shape (not just detected boundary edges). Built on
+       an offscreen via dilate-minus-fill, then composited (avoids erasing the guide). */
+    if (A2D.silhouetteOn && A2D.silhouetteThickness > 0 && r.clip.path) {
+      var oc=document.createElement('canvas'); oc.width=oc.height=RES;
+      var o=oc.getContext('2d'); o.scale(k,k); o.fillStyle=silCol; o.lineJoin='round';
+      var t=A2D.silhouetteThickness, steps=18;
+      for (var si=0; si<steps; si++){ var ang=si/steps*Math.PI*2; o.save(); o.translate(Math.cos(ang)*t, Math.sin(ang)*t); o.fill(r.clip.path); o.restore(); }
+      o.globalCompositeOperation='destination-out'; o.fill(r.clip.path);   /* knock out interior → outer ring */
+      g.save(); g.setTransform(1,0,0,1,0,0); g.globalAlpha=1; g.drawImage(oc,0,0); g.restore();
     }
   });
   g.globalAlpha = 1;
@@ -9631,9 +9638,8 @@ function _pulseRegion(region, alpha){
   var base = (BAG[region] && BAG[region].color) || '#ffffff';
   var col  = _lerpHexStr(base, _animColor, alpha);
   if (region === 'ribbon'){
-    if (bagHandleClip && bagTexCtx){
-      bagTexCtx.save(); bagTexCtx.clip(bagHandleClip.path);
-      bagTexCtx.fillStyle = col; bagTexCtx.fillRect(0,0,bagTexCanvas.width,bagTexCanvas.height); bagTexCtx.restore();
+    if (bagHandleClip && bagHandleClip.path && bagTexCtx){
+      bagTexCtx.fillStyle = col; bagTexCtx.fill(bagHandleClip.path);
       if (bagTexture) bagTexture.needsUpdate = true;
     } else if (bagFrontRef && bagFrontRef.material){
       bagFrontRef.material.color.setHex(hexNum(col)); bagFrontRef.material.needsUpdate = true;
@@ -9641,10 +9647,9 @@ function _pulseRegion(region, alpha){
   } else {
     if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
     var clip = (region === 'exterior') ? bagExtClip : (region === 'interior') ? bagIntClip : null;
-    bagTexCtx.save();
-    if (clip && clip.path) bagTexCtx.clip(clip.path);   /* keep the pulse on this part only — no bleed onto handles/rivets */
-    bagTexCtx.fillStyle = col; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
-    bagTexCtx.restore();
+    bagTexCtx.fillStyle = col;
+    if (clip && clip.path) bagTexCtx.fill(clip.path);   /* island fill — no dense-clip pitfall */
+    else bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
     if (bagTexture) bagTexture.needsUpdate = true;
   }
 }
@@ -9714,6 +9719,7 @@ function setViewMode(mode){
   } else {
     ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); atlas2dStopLoop();
     var _cb=document.getElementById('a2d-ctxbar'); if(_cb) _cb.style.display='none';   /* hide contextual bar */
+    var _cv=document.getElementById('three-canvas'); if(_cv){ _cv.style.removeProperty('width'); _cv.style.removeProperty('height'); }  /* clear mini-preview sizing so 3D fills the stage */
     /* restore the 3D view the user had */
     try { camTween=null; } catch(e){}
     if (_saved3DView && typeof orbit !== 'undefined' && orbit){ orbit.theta=_saved3DView.theta; orbit.phi=_saved3DView.phi; orbit.radius=_saved3DView.radius; _saved3DView=null; }
@@ -9800,7 +9806,7 @@ function _aMove(e){
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
   else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
-  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=-ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap */ L.rotation=deg; _a2dApply(); }
+  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var ang=Math.atan2(-dx,dy); var deg=ang*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* 5° magnetic snap; clockwise handle → clockwise art */ L.rotation=deg; _a2dApply(); }
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
@@ -9819,16 +9825,19 @@ function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=
 /* ── Contextual layer toolbar (floats under the selected layer in the 2D editor) ── */
 var _ctxBarFor = null;
 function _ctxL(){ return (viewMode==='2d') ? a2d.sel : null; }
+var _frontSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="14" height="14" rx="2"/><path d="M3 9v10a2 2 0 0 0 2 2h10"/></svg>';
+var _backSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="14" rx="2"/><path d="M21 15V5a2 2 0 0 0-2-2H9"/></svg>';
+var _tintSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1.5a2 2 0 0 0 0 4z"/></svg>';
 function renderCtxBar(L){
   var bar=document.getElementById('a2d-ctxbar'); if(!bar) return;
   function ib(t,l,fn){ return '<button class="a2dc-btn" title="'+t+'" onclick="'+fn+'">'+l+'</button>'; }
   function step(t,prop,dn,up){ return '<span class="a2dc-step"><button title="'+t+' down" onclick="ctxStep(\''+prop+'\','+dn+')">–</button><b>'+t+'</b><button title="'+t+' up" onclick="ctxStep(\''+prop+'\','+up+')">+</button></span>'; }
   var h='';
-  if (L.kind==='text'){ h+=ib('Cycle font','Aa','ctxFontCycle()')+step('Size','fontSize',-10,10); }
+  if (L.kind==='text'){ h+=ib('Cycle font','<b style="font-family:Georgia,serif;font-size:14px;">Aa</b>','ctxFontCycle()')+step('Size','fontSize',-10,10); }
   else if (L.tiled){ h+=step('Density','density',-1,1)+step('Gap','gap',-5,5)+step('Feather','feather',-5,5); }
-  else { h+='<label class="a2dc-btn" title="Tint colour" style="position:relative;overflow:hidden;display:inline-flex;">&#127912;<input type="color" value="'+((L.swatchName==='Custom'&&L.customHex)?L.customHex:'#ffffff')+'" oninput="ctxTint(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>'; }
-  h+='<span class="a2dc-sep"></span>'+ib('Bring to front','⭱','ctxFront()')+ib('Send to back','⭳','ctxBack()');
-  h+='<span class="a2dc-sep"></span>'+ib('Duplicate','⧉','ctxDup()')+ib(L.locked?'Unlock':'Lock',L.locked?'🔒':'🔓','ctxLock()')+ib('Delete','🗑','ctxDel()');
+  else { h+='<label class="a2dc-btn" title="Tint colour" style="position:relative;overflow:hidden;display:inline-flex;">'+_tintSVG+'<input type="color" value="'+((L.swatchName==='Custom'&&L.customHex)?L.customHex:'#ffffff')+'" oninput="ctxTint(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>'; }
+  h+='<span class="a2dc-sep"></span>'+ib('Bring to front',_frontSVG,'ctxFront()')+ib('Send to back',_backSVG,'ctxBack()');
+  h+='<span class="a2dc-sep"></span>'+ib('Duplicate',duplicateSVG(),'ctxDup()')+ib(L.locked?'Unlock':'Lock',lockSVG(L.locked),'ctxLock()')+ib('Delete','<span style="color:#c0392b;display:inline-flex;">'+trashSVG()+'</span>','ctxDel()');
   bar.innerHTML=h;
 }
 function updateCtxBar(){
