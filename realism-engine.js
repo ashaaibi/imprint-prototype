@@ -281,6 +281,8 @@
       T.scene.background = null;
     }
   }
+  /* Rebuild the studio backdrop on theme change so the "sky" follows dark/light. */
+  window.rlmRefreshBg = function(){ _rlmStudioBgTex = null; if (T.scene && T.scene.background) { try { if (T.scene.background.dispose) T.scene.background.dispose(); } catch(e){} T.scene.background = null; } };
 
   /* the render entry point — called from the animate() loop */
   window.realismRender = function () {
