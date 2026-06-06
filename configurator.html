@@ -314,6 +314,31 @@
       background: var(--imp-fg);
       color: var(--imp-surface);
     }
+    /* 3D / 2D mode toggle (top-left) */
+    .mode-toggle {
+      position: absolute; top: 16px; left: 16px; display: inline-flex; z-index: 3;
+      background: var(--imp-surface); border: 1px solid var(--imp-border);
+      border-radius: var(--imp-r-pill); padding: 3px; gap: 2px; box-shadow: var(--imp-shadow-xs);
+    }
+    html[dir="rtl"] .mode-toggle { left: auto; right: 16px; }
+    .mode-toggle button {
+      font-family: var(--imp-font); font-size: 12px; font-weight: 600; background: transparent;
+      border: none; color: var(--imp-fg-2); padding: 5px 14px; border-radius: var(--imp-r-pill);
+      cursor: pointer; transition: background 0.15s, color 0.15s; min-width: 38px;
+    }
+    .mode-toggle button.on { background: var(--imp-fg); color: var(--imp-surface); }
+    html[data-theme="dark"] .mode-toggle button.on { color: #0A0A0A; }
+    /* 2D atlas editor overlay */
+    .atlas2d { position: absolute; inset: 0; z-index: 2; display: none; background: #e9e9ec; touch-action: none; }
+    .atlas2d.on { display: block; }
+    .atlas2d canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+    .atlas2d.dragging canvas { cursor: grabbing; }
+    .atlas2d-hint {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 3;
+      font-size: 11px; color: var(--imp-fg-3); background: var(--imp-surface); padding: 5px 12px;
+      border-radius: var(--imp-r-pill); border: 1px solid var(--imp-border); box-shadow: var(--imp-shadow-xs);
+      pointer-events: none; white-space: nowrap; max-width: 94%; overflow: hidden; text-overflow: ellipsis;
+    }
     .dim-pill {
       position: absolute;
       bottom: 16px;
@@ -331,10 +356,10 @@
     html[dir="rtl"] .dim-pill { left: auto; right: 24px; }
 
     .vp-history {
-      position: absolute; top: 16px; left: 16px; z-index: 3;
+      position: absolute; top: 16px; right: 16px; z-index: 3;
       display: flex; gap: 6px;
     }
-    html[dir="rtl"] .vp-history { left: auto; right: 16px; }
+    html[dir="rtl"] .vp-history { right: auto; left: 16px; }
     .vp-hist-btn {
       width: 34px; height: 34px;
       display: flex; align-items: center; justify-content: center;
@@ -1488,9 +1513,10 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
-      .view-toggle { top: 14px; bottom: auto; right: 14px; }
-      html[dir="rtl"] .view-toggle { right: auto; left: 14px; }
-      .vp-history { top: 14px; left: 14px; }
+      .mode-toggle { top: 12px; left: 12px; }
+      html[dir="rtl"] .mode-toggle { left: auto; right: 12px; }
+      .vp-history { top: 12px; right: 12px; }
+      html[dir="rtl"] .vp-history { right: auto; left: 12px; }
 
       .controls-panel {
         position: fixed; left: 0; right: 0; bottom: 0;
@@ -1543,6 +1569,10 @@
 
     <div class="canvas-stage gradient-bg">
       <canvas id="three-canvas"></canvas>
+      <div class="atlas2d" id="atlas2d" aria-hidden="true">
+        <canvas id="atlas2d-canvas"></canvas>
+        <div class="atlas2d-hint">Drag art to place · corner to scale · top handle to rotate · scroll/pinch to zoom · drag empty space to pan</div>
+      </div>
       <div class="vp-history">
         <button id="vp-undo" class="vp-hist-btn" title="Undo (⌘Z)" onclick="undoConfig()" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
@@ -1559,10 +1589,9 @@
         <div class="cfg-loader-text" data-en="Preparing your studio…" data-ar="نُجهّز الاستوديو…">Preparing your studio…</div>
       </div>
       <div class="dim-pill" id="dim-pill">30 × 34 × 17 cm</div>
-      <div class="view-toggle" id="view-toggle">
-        <button class="on" data-view="front" onclick="setBagView('front', this)" data-en="Front" data-ar="أمامي">Front</button>
-        <button data-view="back"  onclick="setBagView('back',  this)" data-en="Back"  data-ar="خلفي">Back</button>
-        <button data-view="side"  onclick="setBagView('side',  this)" data-en="Side"  data-ar="جانبي">Side</button>
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
+        <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
     </div>
     <div class="drag-hint" data-en="Drag to rotate · Scroll to zoom" data-ar="اسحب للتدوير · مرر للتكبير">Drag to rotate · Scroll to zoom</div>
@@ -9055,6 +9084,109 @@ function startHueGuide(region){
   _hueAnim.raf = requestAnimationFrame(loop);
 }
 function _markTouched(region){ stopHueGuide(false); if (!_suppressTouch && region) _partTouched[region] = true; }
+
+/* ─── PHASE D: 2D atlas editor ─────────────────────────────────────────
+   The exterior printable wrap as a pannable/zoomable canvas. The live bag
+   texture is the backdrop (what you see prints), and visible layers can be
+   selected and moved / scaled / rotated — writing posU/posV/scale/rotation and
+   repainting the 3D bag live. */
+var viewMode = '3d';
+var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
+            pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
+function setViewMode(mode){
+  viewMode = (mode === '2d') ? '2d' : '3d';
+  document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
+  var ov = document.getElementById('atlas2d'); if (!ov) return;
+  if (viewMode === '2d'){
+    if (typeof stopHueGuide === 'function') stopHueGuide(true);
+    ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
+    atlas2dInit(); atlas2dResize(); atlas2dFit();
+    a2d.sel = _drawableLayers()[0] || null;
+    atlas2dStartLoop();
+  } else { ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); atlas2dStopLoop(); }
+}
+function atlas2dInit(){
+  if (!a2d.canvas){ a2d.canvas = document.getElementById('atlas2d-canvas'); if (!a2d.canvas) return; a2d.ctx = a2d.canvas.getContext('2d'); }
+  if (!a2d.bound){ _atlasBind(a2d.canvas); window.addEventListener('resize', function(){ if (viewMode==='2d'){ atlas2dResize(); } }); a2d.bound = true; }
+}
+function atlas2dResize(){ var c=a2d.canvas; if(!c) return; var r=c.getBoundingClientRect(); a2d.dpr=window.devicePixelRatio||1; c.width=Math.max(1,Math.round(r.width*a2d.dpr)); c.height=Math.max(1,Math.round(r.height*a2d.dpr)); }
+function _exuv(){ return (typeof BAG_UV!=='undefined'&&BAG_UV.exterior)?BAG_UV.exterior:{x:0,y:0,w:2048,h:2048}; }
+function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var e=_exuv(); var pad=0.14; a2d.zoom=Math.min(c.width*(1-pad)/e.w, c.height*(1-pad)/e.h); a2d.panX=(c.width-e.w*a2d.zoom)/2 - e.x*a2d.zoom; a2d.panY=(c.height-e.h*a2d.zoom)/2 - e.y*a2d.zoom; }
+function _a2s(ax,ay){ return { x:ax*a2d.zoom+a2d.panX, y:ay*a2d.zoom+a2d.panY }; }
+function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoom }; }
+function _evPos(e){ var r=a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:(e.clientY-r.top)*a2d.dpr }; }
+function _drawableLayers(){ return BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='text'||L.kind==='sticker'||L.kind==='logo'); }); }
+function _layerBox(L){
+  var e=_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
+  if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
+  else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=e.w*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
+  return { cx:cx, cy:cy, hw:hw, hh:hh, ang:-(L.rotation||0)*Math.PI/180 };
+}
+function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
+function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
+function _hitHandle(sp){ var L=a2d.sel; if(!L) return null; var b=_layerBox(L); var hs={ scale:_boxLocalToScreen(b,1,1), rot:_boxLocalToScreen(b,0,-1.5) }; var R=16*a2d.dpr; for (var k in hs){ var h=hs[k]; if (Math.hypot(sp.x-h.x, sp.y-h.y)<=R) return k; } return null; }
+function _atlasBind(c){
+  c.addEventListener('pointerdown', _aDown);
+  c.addEventListener('pointermove', _aMove);
+  c.addEventListener('pointerup', _aUp);
+  c.addEventListener('pointercancel', _aUp);
+  c.addEventListener('wheel', _aWheel, { passive:false });
+}
+function _aDown(e){
+  try { a2d.canvas.setPointerCapture(e.pointerId); } catch(_){}
+  var sp=_evPos(e); a2d.pointers[e.pointerId]={x:sp.x,y:sp.y};
+  var ids=Object.keys(a2d.pointers);
+  if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
+  var hh=_hitHandle(sp);
+  if (hh){ a2d.op=hh; a2d.start={ sp:sp, scale:a2d.sel.scale, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) }; return; }
+  var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
+  if (L){ a2d.sel=L; a2d.op='move'; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; }
+  else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
+}
+function _aMove(e){
+  if (!a2d.op) return;
+  var sp=_evPos(e); if (a2d.pointers[e.pointerId]) a2d.pointers[e.pointerId]={x:sp.x,y:sp.y};
+  if (a2d.op==='pinch'){ var ids=Object.keys(a2d.pointers); if(ids.length<2) return; var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; var d=Math.hypot(p.x-q.x,p.y-q.y)||1; var nz=Math.max(0.05,Math.min(20,a2d.pinchZ0*(d/a2d.pinchD0))); var m=a2d.pinchMid, aPt=_s2a(m.x,m.y); a2d.zoom=nz; a2d.panX=m.x-aPt.x*nz; a2d.panY=m.y-aPt.y*nz; return; }
+  var e_=_exuv();
+  if (a2d.op==='pan'){ a2d.panX=a2d.start.panX+(sp.x-a2d.start.sp.x); a2d.panY=a2d.start.panY+(sp.y-a2d.start.sp.y); return; }
+  if (!a2d.sel) return;
+  var L=a2d.sel, b=a2d.start.box;
+  if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y); L.posU=Math.max(-20,Math.min(120,(ap.x-e_.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120,(ap.y-e_.y)/e_.h*100)); _a2dApply(); }
+  else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
+  else if (a2d.op==='rotate'){ var c1=_a2s(b.cx,b.cy), ang=Math.atan2(sp.y-c1.y,sp.x-c1.x)*180/Math.PI; var deg=-(ang+90); while(deg>180)deg-=360; while(deg<-180)deg+=360; L.rotation=Math.round(deg); _a2dApply(); }
+}
+function _aUp(e){
+  try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
+  delete a2d.pointers[e.pointerId];
+  var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
+  var wasEdit=(a2d.op==='move'||a2d.op==='scale'||a2d.op==='rotate');
+  var n=Object.keys(a2d.pointers).length;
+  if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
+  if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
+}
+function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), f=Math.exp(-e.deltaY*0.0015), nz=Math.max(0.05,Math.min(20,a2d.zoom*f)); a2d.zoom=nz; a2d.panX=sp.x-aPt.x*nz; a2d.panY=sp.y-aPt.y*nz; }
+function _a2dApply(){ var now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now(); if (now-a2d.lastDraw>33){ a2d.lastDraw=now; if (typeof drawBagTexture==='function') drawBagTexture(); } }
+function atlas2dStartLoop(){ if (a2d.raf) return; var loop=function(){ if (viewMode!=='2d'){ a2d.raf=0; return; } atlas2dRender(); a2d.raf=requestAnimationFrame(loop); }; a2d.raf=requestAnimationFrame(loop); }
+function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=0; }
+function atlas2dRender(){
+  var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var e=_exuv(), D=a2d.dpr;
+  ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#e9e9ec'; ctx.fillRect(0,0,c.width,c.height);
+  var p0=_a2s(e.x,e.y), p1=_a2s(e.x+e.w,e.y+e.h);
+  if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){ ctx.imageSmoothingEnabled=true; try{ ctx.drawImage(bagTexCanvas, e.x,e.y,e.w,e.h, p0.x,p0.y, p1.x-p0.x, p1.y-p0.y); }catch(_){} }
+  ctx.strokeStyle='rgba(20,20,20,0.10)'; ctx.lineWidth=1*D; ctx.beginPath();
+  for (var gx=1;gx<8;gx++){ var x=p0.x+(p1.x-p0.x)*gx/8; ctx.moveTo(x,p0.y); ctx.lineTo(x,p1.y); }
+  for (var gy=1;gy<8;gy++){ var y=p0.y+(p1.y-p0.y)*gy/8; ctx.moveTo(p0.x,y); ctx.lineTo(p1.x,y); }
+  ctx.stroke();
+  ctx.strokeStyle='rgba(20,20,20,0.45)'; ctx.lineWidth=1.5*D; ctx.strokeRect(p0.x,p0.y,p1.x-p0.x,p1.y-p0.y);
+  ctx.fillStyle='rgba(20,20,20,0.55)'; ctx.font=(12*D)+'px sans-serif'; ctx.textBaseline='bottom'; ctx.fillText('Exterior · printable area', p0.x+4*D, p0.y-4*D);
+  _drawableLayers().forEach(function(L){
+    var b=_layerBox(L), tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
+    ctx.strokeStyle=sel?'#00B3A4':'rgba(0,0,0,0.30)'; ctx.lineWidth=(sel?2:1)*D;
+    ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
+    if (sel){ var rh=_boxLocalToScreen(b,0,-1.5); ctx.beginPath(); ctx.moveTo((tl.x+tr.x)/2,(tl.y+tr.y)/2); ctx.lineTo(rh.x,rh.y); ctx.stroke();
+      ctx.fillStyle='#00B3A4'; var s=9*D; ctx.fillRect(br.x-s/2,br.y-s/2,s,s); ctx.beginPath(); ctx.arc(rh.x,rh.y,6*D,0,Math.PI*2); ctx.fill(); }
+  });
+}
 
 function goConfigStep(n) {
   n = Math.max(1, Math.min(CONFIG_STEP_COUNT, n));
