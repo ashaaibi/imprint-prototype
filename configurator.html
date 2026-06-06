@@ -362,6 +362,22 @@
     .atlas2d canvas { width: 100%; height: 100%; display: block; cursor: grab; }
     .atlas2d.dragging canvas { cursor: grabbing; }
     .atlas2d-hint { display: none; }  /* removed: empty viewport pill */
+    /* contextual layer toolbar (follows the selected layer in the 2D editor) */
+    .a2d-ctxbar {
+      position: absolute; z-index: 6; transform: translateX(-50%); display: none;
+      align-items: center; gap: 2px; white-space: nowrap;
+      background: var(--imp-surface); border: 1px solid var(--imp-border);
+      border-radius: 11px; padding: 4px; box-shadow: var(--imp-shadow-md);
+    }
+    .a2dc-btn { border: none; background: transparent; cursor: pointer; padding: 5px 7px;
+      border-radius: 6px; font-size: 13px; line-height: 1; color: var(--imp-fg); font-family: var(--imp-font); }
+    .a2dc-btn:hover { background: var(--imp-surface-2); }
+    .a2dc-sep { width: 1px; height: 18px; background: var(--imp-border); margin: 0 3px; flex: 0 0 auto; }
+    .a2dc-step { display: inline-flex; align-items: center; gap: 3px; padding: 0 2px; }
+    .a2dc-step b { font-weight: 600; font-size: 10px; color: var(--imp-fg-2); min-width: 42px; text-align: center; }
+    .a2dc-step button { border: 1px solid var(--imp-border); background: var(--imp-surface); border-radius: 5px;
+      width: 21px; height: 21px; cursor: pointer; font-size: 14px; line-height: 1; color: var(--imp-fg); padding: 0; }
+    .a2dc-step button:hover { background: var(--imp-surface-2); }
     .dim-pill {
       position: absolute;
       bottom: 16px;
@@ -1633,6 +1649,7 @@
         <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
+      <div class="a2d-ctxbar" id="a2d-ctxbar"></div>
     </div>
     <div class="drag-hint" data-en="" data-ar=""></div>
   </section>
@@ -9677,6 +9694,7 @@ function setViewMode(mode){
     _fitMiniPreview();
   } else {
     ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); atlas2dStopLoop();
+    var _cb=document.getElementById('a2d-ctxbar'); if(_cb) _cb.style.display='none';   /* hide contextual bar */
     /* restore the 3D view the user had */
     try { camTween=null; } catch(e){}
     if (_saved3DView && typeof orbit !== 'undefined' && orbit){ orbit.theta=_saved3DView.theta; orbit.phi=_saved3DView.phi; orbit.radius=_saved3DView.radius; _saved3DView=null; }
@@ -9779,6 +9797,45 @@ function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), 
 function _a2dApply(){ var now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now(); if (now-a2d.lastDraw>33){ a2d.lastDraw=now; if (typeof drawBagTexture==='function') drawBagTexture(); } }
 function atlas2dStartLoop(){ if (a2d.raf) return; var loop=function(){ if (viewMode!=='2d'){ a2d.raf=0; return; } atlas2dRender(); a2d.raf=requestAnimationFrame(loop); }; a2d.raf=requestAnimationFrame(loop); }
 function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=0; }
+/* ── Contextual layer toolbar (floats under the selected layer in the 2D editor) ── */
+var _ctxBarFor = null;
+function _ctxL(){ return (viewMode==='2d') ? a2d.sel : null; }
+function renderCtxBar(L){
+  var bar=document.getElementById('a2d-ctxbar'); if(!bar) return;
+  function ib(t,l,fn){ return '<button class="a2dc-btn" title="'+t+'" onclick="'+fn+'">'+l+'</button>'; }
+  function step(t,prop,dn,up){ return '<span class="a2dc-step"><button title="'+t+' down" onclick="ctxStep(\''+prop+'\','+dn+')">–</button><b>'+t+'</b><button title="'+t+' up" onclick="ctxStep(\''+prop+'\','+up+')">+</button></span>'; }
+  var h='';
+  if (L.kind==='text'){ h+=ib('Cycle font','Aa','ctxFontCycle()')+step('Size','fontSize',-10,10); }
+  else if (L.tiled){ h+=step('Density','density',-1,1)+step('Gap','gap',-5,5)+step('Feather','feather',-5,5); }
+  else { h+='<label class="a2dc-btn" title="Tint colour" style="position:relative;overflow:hidden;display:inline-flex;">&#127912;<input type="color" value="'+((L.swatchName==='Custom'&&L.customHex)?L.customHex:'#ffffff')+'" oninput="ctxTint(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>'; }
+  h+='<span class="a2dc-sep"></span>'+ib('Bring to front','⭱','ctxFront()')+ib('Send to back','⭳','ctxBack()');
+  h+='<span class="a2dc-sep"></span>'+ib('Duplicate','⧉','ctxDup()')+ib(L.locked?'Unlock':'Lock',L.locked?'🔒':'🔓','ctxLock()')+ib('Delete','🗑','ctxDel()');
+  bar.innerHTML=h;
+}
+function updateCtxBar(){
+  var bar=document.getElementById('a2d-ctxbar'); if(!bar) return;
+  var L=_ctxL();
+  if(!L || L.kind==='ai' || a2d.op==='pan'){ bar.style.display='none'; return; }
+  if(_ctxBarFor!==L.id){ renderCtxBar(L); _ctxBarFor=L.id; }
+  var b=_layerBox(L), H=a2d.canvas.height, dpr=a2d.dpr||1;
+  var cs=[_boxLocalToScreen(b,-1,-1),_boxLocalToScreen(b,1,-1),_boxLocalToScreen(b,1,1),_boxLocalToScreen(b,-1,1)];
+  var xs=cs.map(function(p){return p.x;}), vys=cs.map(function(p){return H-p.y;});
+  var cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2/dpr, by=Math.max.apply(null,vys)/dpr;
+  var stage=document.querySelector('.canvas-stage'); if(!stage) return;
+  var crect=a2d.canvas.getBoundingClientRect(), srect=stage.getBoundingClientRect();
+  bar.style.display='flex';
+  bar.style.left=(crect.left-srect.left+cx)+'px';
+  bar.style.top=(crect.top-srect.top+by+12)+'px';
+}
+function ctxDup(){ var L=_ctxL(); if(L) duplicateLayer(L.id); }
+function ctxDel(){ var L=_ctxL(); if(L){ var id=L.id; a2d.sel=null; deleteLayer(id); _ctxBarFor=null; } }
+function ctxLock(){ var L=_ctxL(); if(L){ toggleLayerLock(L.id); _ctxBarFor=null; } }
+function ctxFront(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.indexOf(L); if(i>0){ a.splice(i,1); a.unshift(L); drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); } }
+function ctxBack(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.indexOf(L); if(i>=0&&i<a.length-1){ a.splice(i,1); a.push(L); drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); } }
+function ctxStep(prop,d){ var L=_ctxL(); if(!L) return; var def=(prop==='density')?6:(prop==='fontSize')?100:0; var nv=(L[prop]!=null?L[prop]:def)+d; var mn=(prop==='density')?1:(prop==='fontSize')?20:0; nv=Math.max(mn,nv); if(prop==='gap')nv=Math.min(200,nv); if(prop==='feather')nv=Math.min(95,nv); L[prop]=nv; drawBagTexture(); }
+function ctxFontCycle(){ var L=_ctxL(); if(!L||L.kind!=='text') return; var f=['cormorant','inter','barlow','playfair']; var i=f.indexOf(L.font); if(typeof onLayerFont==='function') onLayerFont(L.id, f[(i+1)%f.length]); }
+function ctxTint(hex){ var L=_ctxL(); if(!L) return; L.swatchName='Custom'; L.color=hex; L.customHex=hex; drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); }
+
 function atlas2dRender(){
   var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
   var _dark = (document.documentElement.getAttribute('data-theme')==='dark');
@@ -9849,6 +9906,7 @@ function atlas2dRender(){
     var p=_a2s(it.bb.x, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island canvas-bottom → visual top */
     ctx.fillText(it.label, p.x+3*D, ly-3*D);
   });
+  updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
 }
 /* white-filled circular handle with a coloured ring (image-5 style) */
 function _a2dHandleDot(ctx, x, y, r, color){
