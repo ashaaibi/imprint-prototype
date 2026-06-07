@@ -2106,9 +2106,9 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Pulse color</span>
-          <span class="slider-val" id="anim-color-val">#e69d00</span>
+          <span class="slider-val" id="anim-color-val">#ff0000</span>
         </div>
-        <input type="color" id="anim-color" value="#e69d00"
+        <input type="color" id="anim-color" value="#ff0000"
                style="width:100%;height:28px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;"
                oninput="onAnimColor(this.value)">
       </div>
@@ -2341,6 +2341,16 @@
         <input type="range" class="test-slider" id="max-zoom-slider"
                min="2.0" max="24.0" step="0.5" value="16.3"
                oninput="onMaxZoomSlider(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
+          <span class="slider-name">Mobile default zoom</span>
+          <span class="slider-val" id="mobile-zoom-val">5.6</span>
+        </div>
+        <input type="range" class="test-slider" id="mobile-zoom-slider"
+               min="2.0" max="12.0" step="0.1" value="5.6"
+               oninput="onMobileZoomSlider(this.value)">
       </div>
 
       <div class="slider-row">
@@ -4934,6 +4944,7 @@ function finishConfigLoading() {
     var sov = document.getElementById('bag-switch-overlay');
     if (sov) sov.style.display = 'none';
     if (typeof pushHistory === 'function') pushHistory(); /* seed undo/redo baseline */
+    if (typeof _isMobileView === 'function' && _isMobileView()) orbit.radius = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM_OUT, MOBILE_ZOOM)); /* pull back a touch on phones */
     if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); /* center bag in mobile gap */
     /* preload sibling bag models in background on first load */
     if (!window._bagPreloaded) {
@@ -8188,6 +8199,7 @@ let zoomVelocity = 0;
 
 let MAX_ZOOM_OUT = 16.3;           /* maximum orbit radius (zoom out limit) */
 let MIN_ZOOM     = 1.2;            /* minimum orbit radius (zoom in limit) */
+let MOBILE_ZOOM  = 5.6;            /* default orbit radius on mobile (a bit further than desktop 4.6) */
 let LIFT          = 0.00;          /* extra Y above ground from the Object Y offset slider */
 let GROUND_OFFSET = 0;             /* shifts entire assembly (box + shadow) together */
 let DAMPING       = 0.95;
@@ -8411,26 +8423,13 @@ function initThree() {
 /* On mobile the controls sheet covers the lower part of the screen, so shift the
    product up via a camera view-offset to keep it centered in the *visible* gap
    between the top controls and the top of the sheet (recomputed per snap/drag). */
+/* Kept as a stable entry point for callers (resize observer, sheet drag, load). The actual
+   framing is owned by _updateMobileFraming(), which reads live layout every frame; here we
+   just invalidate its cache so it re-applies on the next tick. Single source of truth → no
+   competing offset formulas. */
 function updateMobileCameraOffset() {
-  if (typeof T === 'undefined' || !T.camera) return;
-  var cam = T.camera;
-  var stage = document.querySelector('.canvas-stage');
-  if (!stage) return;
-  var W = stage.clientWidth, H = stage.clientHeight;
-  if (!W || !H) return;
-  if (!window.matchMedia('(max-width: 760px)').matches) {
-    if (cam.view && cam.view.enabled) cam.clearViewOffset();
-    return;
-  }
-  var ih = window.innerHeight, headerH = 60;
-  var sheet = document.querySelector('.controls-panel');
-  var sheetY = sheet ? (parseFloat(sheet.style.getPropertyValue('--sheet-y')) || 0.52 * ih) : 0.52 * ih;
-  var sheetTopScreen = 0.10 * ih + sheetY;        /* sheet: bottom:0, height:90vh, translateY(sheetY) */
-  var sheetTopCanvas = sheetTopScreen - headerH;   /* y (in canvas space) where the sheet starts */
-  var gapTop = 64;                                 /* below the floating view controls */
-  var gapCenter = Math.max(gapTop, (gapTop + sheetTopCanvas) / 2);
-  cam.setViewOffset(W, H, 0, (H / 2) - gapCenter, W, H);
-  cam.updateProjectionMatrix();
+  if (typeof _mobFrameSig !== 'undefined') _mobFrameSig = '';
+  if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
 }
 
 function animate(now) {
@@ -8779,6 +8778,14 @@ function onMinZoomSlider(v) {
   MIN_ZOOM = parseFloat(v);
   document.getElementById('min-zoom-val').textContent = parseFloat(v).toFixed(1);
   if (orbit.radius < MIN_ZOOM) orbit.radius = MIN_ZOOM;
+}
+function onMobileZoomSlider(v) {
+  MOBILE_ZOOM = parseFloat(v);
+  document.getElementById('mobile-zoom-val').textContent = parseFloat(v).toFixed(1);
+  /* live-apply on mobile so the effect is visible while tuning */
+  if (typeof _isMobileView === 'function' && _isMobileView()) {
+    orbit.radius = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM_OUT, MOBILE_ZOOM));
+  }
 }
 function onRotStrSlider(v) {
   ROT_STRENGTH = parseFloat(v);
@@ -9630,7 +9637,7 @@ var _partTouched = {}, _suppressTouch = false;
    colour (default red) in and out between an opacity min and max, to signal what
    you're editing. Purely visual; restored when you pick a colour or leave the step. */
 var _hueAnimSpeed = 0.300;  /* pulse rate (cycle progresses _hueAnimSpeed·dt degrees) */
-var _animColor    = '#e69d00';
+var _animColor    = '#ff0000';
 var _animOpMin    = 0.80;
 var _animOpMax    = 1.00;
 var _hueAnim = { region:null, raf:0, t0:0, last:0 };
@@ -9646,6 +9653,7 @@ function _pulseRegion(region, alpha){
   if (region === 'ribbon'){
     if (bagHandleClip && bagHandleClip.path && bagTexCtx){
       bagTexCtx.fillStyle = col; bagTexCtx.fill(bagHandleClip.path);
+      if (A2D.padding > 0){ bagTexCtx.strokeStyle = col; bagTexCtx.lineJoin='round'; bagTexCtx.lineCap='round'; bagTexCtx.lineWidth = A2D.padding * 2; bagTexCtx.stroke(bagHandleClip.path); }
       if (bagTexture) bagTexture.needsUpdate = true;
     } else if (bagFrontRef && bagFrontRef.material){
       bagFrontRef.material.color.setHex(hexNum(col)); bagFrontRef.material.needsUpdate = true;
@@ -9654,7 +9662,12 @@ function _pulseRegion(region, alpha){
     if(!bagTexCtx) return; var uv = BAG_UV[region]; if(!uv) return;
     var clip = (region === 'exterior') ? bagExtClip : (region === 'interior') ? bagIntClip : null;
     bagTexCtx.fillStyle = col;
-    if (clip && clip.path) bagTexCtx.fill(clip.path);   /* island fill — no dense-clip pitfall */
+    if (clip && clip.path){
+      bagTexCtx.fill(clip.path);   /* island fill — no dense-clip pitfall */
+      /* dilate by `padding` px (same as _drawBodyRegion) so the pulse covers gaps/holes
+         around handle bases & rivets instead of flashing white halos */
+      if (A2D.padding > 0){ bagTexCtx.strokeStyle = col; bagTexCtx.lineJoin='round'; bagTexCtx.lineCap='round'; bagTexCtx.lineWidth = A2D.padding * 2; bagTexCtx.stroke(clip.path); }
+    }
     else bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
     if (bagTexture) bagTexture.needsUpdate = true;
   }
@@ -10078,26 +10091,31 @@ _applyMobileDefaults();
    offsetting the camera view by however much the sheet covers the canvas. Reads live
    element positions, so it's correct on real devices (address bar etc.) and updates as
    the sheet is dragged. Cleared on desktop / 2D mode. */
-var _mobFrameCovered = -1;
+var _mobFrameSig = '';
 function _updateMobileFraming(){
   if (!T || !T.camera) return;
   var cam = T.camera;
   var stage = document.querySelector('.canvas-stage'), sheet = document.querySelector('.controls-panel');
   var active = _isMobileView() && viewMode !== '2d' && stage && sheet;
-  var covered = 0;
+  var covered = 0, sr = null;
   if (active){
-    var sr = stage.getBoundingClientRect(), pr = sheet.getBoundingClientRect();
+    sr = stage.getBoundingClientRect(); var pr = sheet.getBoundingClientRect();
     covered = Math.max(0, Math.round(sr.bottom - pr.top));   /* css px of the canvas hidden by the sheet */
     if (covered > sr.height - 40) covered = Math.max(0, sr.height - 40);  /* keep a minimum visible band */
   }
-  if (covered === _mobFrameCovered) return;   /* only touch the projection when it changes */
-  _mobFrameCovered = covered;
-  var sr2 = stage ? stage.getBoundingClientRect() : null;
-  if (!active || covered <= 2 || !sr2){ if (cam.view && cam.view.enabled) cam.clearViewOffset(); return; }
-  cam.setViewOffset(sr2.width, sr2.height + covered, 0, covered, sr2.width, sr2.height);  /* lift subject into the visible band */
+  /* Key the guard on the FULL inputs to setViewOffset (stage w/h + covered), not just
+     covered. The first frames can run before the stage has its real size; if we keyed on
+     covered alone, the offset would be baked from those stale dimensions and never refresh
+     once the size settled (covered unchanged) — which trapped the bag low until the sheet
+     was nudged. Re-applying when the size settles fixes the initial framing automatically. */
+  var sig = active && sr ? (Math.round(sr.width)+'x'+Math.round(sr.height)+':'+covered) : 'off';
+  if (sig === _mobFrameSig) return;
+  _mobFrameSig = sig;
+  if (!active || covered <= 2 || !sr || sr.width < 2 || sr.height < 2){ if (cam.view && cam.view.enabled) cam.clearViewOffset(); return; }
+  cam.setViewOffset(sr.width, sr.height + covered, 0, covered, sr.width, sr.height);  /* lift subject into the visible band */
 }
-window.addEventListener('resize', function(){ _mobFrameCovered = -1; });
-if (window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ _mobFrameCovered=-1; }); window.visualViewport.addEventListener('scroll', function(){ _mobFrameCovered=-1; }); }
+window.addEventListener('resize', function(){ _mobFrameSig = ''; });
+if (window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ _mobFrameSig=''; }); window.visualViewport.addEventListener('scroll', function(){ _mobFrameSig=''; }); }
 </script>
 
 <!-- ─── CUSTOM COLOR PICKER POPUP ─── -->
