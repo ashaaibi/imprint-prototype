@@ -2211,12 +2211,12 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle color</span><span class="slider-val" id="a2d-handleColor-val">#000000</span></div>
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('handleColor',this.value,false)"></div>
       <div style="margin:12px 0 6px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Color grading (match 3D)</div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Brightness</span><span class="slider-val" id="a2d-previewBrightness-val">1.3</span></div>
-        <input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1.3" oninput="onA2Dnum('previewBrightness',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Saturation</span><span class="slider-val" id="a2d-previewSaturate-val">1.15</span></div>
-        <input type="range" class="test-slider" min="0" max="2.5" step="0.01" value="1.15" oninput="onA2Dnum('previewSaturate',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="a2d-previewContrast-val">1</span></div>
-        <input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1" oninput="onA2Dnum('previewContrast',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Brightness</span><span class="slider-val" id="a2d-previewBrightness-val">1.55</span></div>
+        <input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1.55" oninput="onA2Dnum('previewBrightness',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Saturation</span><span class="slider-val" id="a2d-previewSaturate-val">1.4</span></div>
+        <input type="range" class="test-slider" min="0" max="2.5" step="0.01" value="1.4" oninput="onA2Dnum('previewSaturate',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="a2d-previewContrast-val">1.28</span></div>
+        <input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1.28" oninput="onA2Dnum('previewContrast',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Preview zoom</span><span class="slider-val" id="a2d-previewZoom-val">3.5</span></div>
         <input type="range" class="test-slider" min="2" max="16" step="0.5" value="3.5" oninput="onA2Dnum('previewZoom',this.value,false); if(viewMode==='2d'&&typeof orbit!=='undefined'&&orbit){orbit.radius=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM_OUT,A2D.previewZoom));}"></div>
 
@@ -2920,8 +2920,8 @@ const S = {
 };
 /* ─── PAPER BAG STATE ───────────────── */
 const BAG = {
-  exterior: { color: '#00E6D2', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  interior: { color: '#00E6D2', finish: 'gloss', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  exterior: { color: '#00E6D2', finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  interior: { color: '#00E6D2', finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   artwork: {
@@ -9710,7 +9710,7 @@ var A2D = {
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:8,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewBrightness:1.3, previewSaturate:1.15, previewContrast:1.0, previewZoom:3.5,
+  previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false  /* outer shell outline */
@@ -9829,13 +9829,25 @@ function _aMove(e){
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
   else if (a2d.op==='scale'){
     if (L.tiled){
-      /* NON-proportional: corner sets width (local x) and height (local y) independently */
-      var ap3=_s2a(sp.x,sp.y), ddx=ap3.x-b.cx, ddy=ap3.y-b.cy;
-      var ca=Math.cos(-b.ang), sa=Math.sin(-b.ang);
-      var lx=Math.abs(ddx*ca - ddy*sa), ly=Math.abs(ddx*sa + ddy*ca);
+      /* NON-proportional, anchored at the OPPOSITE (top-left) corner: the box grows toward
+         the dragged handle while its opposite corner stays pinned — instead of scaling
+         symmetrically about the center (the old "alt-resize" feel). Rotation is unchanged,
+         so the layer still rotates about its center. */
+      var ca=Math.cos(b.ang), sa=Math.sin(b.ang);                  /* box rotation (fixed while scaling) */
+      var anchX=b.cx - b.hw*ca - b.hh*sa, anchY=b.cy - b.hw*sa + b.hh*ca;  /* pinned corner, atlas coords */
+      var ap3=_s2a(sp.x,sp.y), vx=ap3.x-anchX, vy=ap3.y-anchY;
+      var fullW = vx*ca + vy*sa;                                   /* along the box's local +x (toward handle) */
+      var fullH = -(vx*(-sa) + vy*ca);                             /* along local -y (handle sits on the -y side) */
       var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982;
-      L.scale  = Math.max(2, Math.min(400, lx*2/srefp*100));
-      L.scaleH = Math.max(2, Math.min(400, ly*2/srefp*100));
+      var minpx=srefp*0.02;
+      fullW=Math.max(minpx, fullW); fullH=Math.max(minpx, fullH);
+      L.scale  = Math.max(2, Math.min(400, fullW/srefp*100));
+      L.scaleH = Math.max(2, Math.min(400, fullH/srefp*100));
+      /* move the center so the pinned corner stays put with the NEW half-extents */
+      var nhw=srefp*L.scale/200, nhh=srefp*L.scaleH/200;
+      var ncx=anchX + nhw*ca + nhh*sa, ncy=anchY + nhw*sa - nhh*ca;
+      L.posU=Math.max(-20,Math.min(120,(ncx-e_.x)/e_.w*100));
+      L.posV=Math.max(-20,Math.min(120,(ncy-e_.y)/e_.h*100));
       _a2dApply();
     } else {
       var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0;
@@ -10081,10 +10093,11 @@ setTimeout(_applyConfigTheme, 1200);   /* after the realism floor is built */
 
 /* ─── MOBILE ─── */
 function _isMobileView(){ return window.matchMedia('(max-width: 760px)').matches; }
-/* Mobile-only defaults: tuned 2D-editor grading, and no live preview (no room). */
+/* Mobile-only defaults: no live preview (no room). Color grading now uses the shared
+   defaults so the 2D editor matches the 3D view on every device. */
 function _applyMobileDefaults(){
   if (!_isMobileView()) return;
-  A2D.previewSaturate = 1.14; A2D.previewContrast = 1.41; A2D.previewOn = false;
+  A2D.previewOn = false;
 }
 _applyMobileDefaults();
 /* Center the bag in the VISIBLE 3D area (between the header and the bottom sheet) by
