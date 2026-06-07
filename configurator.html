@@ -7054,6 +7054,15 @@ function _applyDefaultControls() {
       try { sl.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
     });
   } catch (e) {}
+  /* Re-apply the default finishes so they're definitely "clicked" on load (e.g. soft-touch
+     on the handles), after the realism engine has initialised the materials — keeps the
+     finish cards, PBR sliders and the 3D materials all in sync. */
+  try {
+    [['exterior','ext'],['interior','int'],['ribbon','rib']].forEach(function(pair){
+      var rg=pair[0], fin=(BAG[rg] && BAG[rg].finish) || 'softtouch';
+      if (typeof applyBagFinish === 'function') applyBagFinish(rg, fin, null, true);
+    });
+  } catch (e) { console.warn('default finish apply failed', e); }
   _suppressTouch = false;
 }
 
@@ -10049,6 +10058,24 @@ function atlas2dRender(){
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
     ctx.fillText(it.label, p.x, ly-5*D);
   });
+  /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB
+     populated BAG_FACES. Drawn smaller + dimmer, centered inside each face panel. */
+  if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
+    var _ar = (typeof getLang==='function' && getLang()==='ar');
+    var FN = _ar ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
+                 : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
+    ctx.font='600 '+(Math.max(9,A2D.labelSize*0.52)*D)+'px sans-serif'; ctx.textBaseline='middle';
+    ctx.save(); ctx.globalAlpha=0.5;
+    ['exterior','interior'].forEach(function(grp){
+      var faces=BAG_FACES[grp]||{};
+      Object.keys(faces).forEach(function(f){
+        var bb=faces[f]; if(!bb) return;
+        var p=_a2s(bb.x + bb.w/2, bb.y + bb.h/2);
+        ctx.fillText(FN[f]||f, p.x, c.height - p.y);
+      });
+    });
+    ctx.restore();
+  }
   ctx.textAlign='left';
   updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
 }
