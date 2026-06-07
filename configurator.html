@@ -2217,8 +2217,8 @@
         <input type="range" class="test-slider" min="0" max="2.5" step="0.01" value="1.15" oninput="onA2Dnum('previewSaturate',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="a2d-previewContrast-val">1</span></div>
         <input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1" oninput="onA2Dnum('previewContrast',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Preview zoom</span><span class="slider-val" id="a2d-previewZoom-val">7</span></div>
-        <input type="range" class="test-slider" min="2" max="16" step="0.5" value="7" oninput="onA2Dnum('previewZoom',this.value,false); if(viewMode==='2d'&&typeof orbit!=='undefined'&&orbit){orbit.radius=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM_OUT,A2D.previewZoom));}"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Preview zoom</span><span class="slider-val" id="a2d-previewZoom-val">3.5</span></div>
+        <input type="range" class="test-slider" min="2" max="16" step="0.5" value="3.5" oninput="onA2Dnum('previewZoom',this.value,false); if(viewMode==='2d'&&typeof orbit!=='undefined'&&orbit){orbit.radius=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM_OUT,A2D.previewZoom));}"></div>
 
       <div class="slider-row">
         <div class="slider-top">
@@ -2519,41 +2519,7 @@
                oninput="onPatternStretch('interior','v',this.value)">
       </div>
 
-      <!-- Size Tuning sub-section -->
-      <div style="margin-top:18px;margin-bottom:6px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Size Tuning</div>
-      <div style="font-size:10px;color:var(--secondary);margin-bottom:10px;">Adjusting: <strong id="size-tuning-label" style="color:var(--primary);">XS · Petite</strong></div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Handle Y offset</span><span class="slider-val" id="size-tune-yoff-val">0.00</span></div>
-        <input type="range" class="test-slider" id="size-tune-yoff" min="-6" max="6" step="0.01" value="0.00" oninput="onSizeTune('handleYOff',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Handle scale</span><span class="slider-val" id="size-tune-hscale-val">1.00</span></div>
-        <input type="range" class="test-slider" id="size-tune-hscale" min="0.5" max="2.0" step="0.01" value="1.00" oninput="onSizeTune('handleScaleAdj',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Ext pattern U stretch</span><span class="slider-val" id="size-tune-extu-val">0.65</span></div>
-        <input type="range" class="test-slider" id="size-tune-extu" min="0.1" max="5.0" step="0.05" value="0.65" oninput="onSizeTune('extStretchU',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Ext pattern V stretch</span><span class="slider-val" id="size-tune-extv-val">1.00</span></div>
-        <input type="range" class="test-slider" id="size-tune-extv" min="0.1" max="5.0" step="0.05" value="1.00" oninput="onSizeTune('extStretchV',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Ext text/logo U stretch</span><span class="slider-val" id="size-tune-textu-val">1.00</span></div>
-        <input type="range" class="test-slider" id="size-tune-textu" min="0.1" max="5.0" step="0.05" value="1.00" oninput="onSizeTune('textStretchU',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Ext text/logo V stretch</span><span class="slider-val" id="size-tune-textv-val">1.00</span></div>
-        <input type="range" class="test-slider" id="size-tune-textv" min="0.1" max="5.0" step="0.05" value="1.00" oninput="onSizeTune('textStretchV',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Int pattern U stretch</span><span class="slider-val" id="size-tune-intu-val">2.05</span></div>
-        <input type="range" class="test-slider" id="size-tune-intu" min="0.1" max="5.0" step="0.05" value="2.05" oninput="onSizeTune('intStretchU',this.value)">
-      </div>
-      <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Int pattern V stretch</span><span class="slider-val" id="size-tune-intv-val">2.05</span></div>
-        <input type="range" class="test-slider" id="size-tune-intv" min="0.1" max="5.0" step="0.05" value="2.05" oninput="onSizeTune('intStretchV',this.value)">
-      </div>
+      <!-- Size Tuning removed -->
 
       <!-- Pattern Thumbnails sub-section -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Pattern Thumbnails</div>
@@ -3576,6 +3542,9 @@ function onFinish(key, btn) {
 
 /* ─── PAPER BAG TEXTURE ─────────────── */
 let bagTexCanvas, bagTexCtx, bagTexture;
+/* Clean colour+artwork snapshot (no finish/PBR overlay) — what the 2D editor shows, so
+   the finish maps only affect the 3D viewer. */
+var bagCleanCanvas = null, bagCleanCtx = null;
 /* Atlas padding: a transparent margin (px) around the 2048 printable core so artwork
    placed at the very edge of a UV island isn't clipped at the canvas boundary. UV 0–1
    is mapped to the central 2048 region via texture offset/repeat, so 3D printing is
@@ -3604,6 +3573,8 @@ function initBagTexture() {
   var W = _atlasW();
   bagTexture.repeat.set(2048 / W, 2048 / W);   /* map UV 0–1 onto the central 2048 core */
   bagTexture.offset.set(ATLAS_PAD / W, ATLAS_PAD / W);
+  bagCleanCanvas = document.createElement('canvas'); bagCleanCanvas.width = bagCleanCanvas.height = W;
+  bagCleanCtx = bagCleanCanvas.getContext('2d');
   loadPatternsFromFolder();
 }
 
@@ -3956,11 +3927,18 @@ function drawBagTexture() {
   _drawBodyRegion('interior', BAG_UV.interior, bagIntClip, kraftOverlayRender.interior);
   // 4. Handle + rivet base colours (island-clipped).
   drawPartsOverlay();
-  // 4b. Paper-grain finish overlay on the BASE colours only — done before artwork so it
-  //     never tints the layers (artwork colours stay pure). Skipped mid-drag for speed.
-  if (!_a2dDragging && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
-  // 5. Artwork — freeform across the whole atlas, on top of every base colour + finish.
+  // 5. Artwork — freeform across the whole atlas, on top of every base colour.
   drawArtworkOnBag();
+
+  // Snapshot the CLEAN colours+artwork (no finish/PBR overlay) → this is what the 2D
+  // editor displays, so the finish maps only show in the 3D viewer.
+  if (bagCleanCtx) {
+    if (bagCleanCanvas.width !== W) { bagCleanCanvas.width = bagCleanCanvas.height = W; }
+    bagCleanCtx.clearRect(0, 0, W, H); bagCleanCtx.drawImage(bagTexCanvas, 0, 0);
+  }
+  // Finish (paper) overlay — applied to the 3D colour map AFTER the clean snapshot, so
+  // it never appears in the 2D editor. Skipped mid-drag for speed.
+  if (!_a2dDragging && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
 
   if (bagTexture) bagTexture.needsUpdate = true;
   if (!_a2dDragging) {            /* skip heavy passes mid-drag → smooth FPS; full redraw on release */
@@ -4162,28 +4140,29 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
         cctx.globalCompositeOperation = 'source-atop'; cctx.fillStyle = L.color; cctx.fillRect(0, 0, box.sw, box.sh);
       }
       var cAsp = cell.width / cell.height;
-      var boxW = Math.max(8, sref * (L.scale / 100) * ms);   /* square crop box */
+      var boxW = Math.max(8, sref * (L.scale / 100) * ms);                         /* crop box width  */
+      var boxH = Math.max(8, sref * ((L.scaleH != null ? L.scaleH : L.scale) / 100) * ms);  /* crop box height (independent → non-proportional) */
       var density = Math.max(1, L.density || 6);
       var tileW = (sref / density), tileH = tileW / cAsp;   /* tile size fixed → resizing the box CROPS the tiling (density = tile size) */
       var gpx = ((L.gap != null ? L.gap : 0) / 100) * tileW;
       var cw = tileW + gpx, ch = tileH + gpx;
-      var SW = Math.max(1, Math.ceil(boxW));
-      var sc = document.createElement('canvas'); sc.width = SW; sc.height = SW;
+      var SW = Math.max(1, Math.ceil(boxW)), SH = Math.max(1, Math.ceil(boxH));
+      var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
       var sx = sc.getContext('2d');
       if (mode !== 'mask') sx.filter = _layerFilter();
-      var nR = Math.min(300, Math.ceil(SW / ch) + 2), nC = Math.min(300, Math.ceil(SW / cw) + 2);
+      var nR = Math.min(400, Math.ceil(SH / ch) + 2), nC = Math.min(400, Math.ceil(SW / cw) + 2);
       for (var rr = -1; rr <= nR; rr++) {
         var xo = (L.patStack !== 'vertical' && (rr & 1)) ? cw / 2 : 0;  /* diagonal (upload) vs vertical (library) */
         for (var cc = -1; cc <= nC; cc++) { sx.drawImage(cell, cc * cw + xo, rr * ch, tileW, tileH); }
       }
       sx.filter = 'none';
-      var fpx = ((L.feather || 0) / 100) * (SW * 0.5);
-      if (fpx > 0.5) _featherCanvasEdges(sx, SW, SW, fpx);   /* soften the crop edges */
+      var fpx = ((L.feather || 0) / 100) * (Math.min(SW,SH) * 0.5);
+      if (fpx > 0.5) _featherCanvasEdges(sx, SW, SH, fpx);   /* soften the crop edges */
       ctx.save();
       ctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
       ctx.rotate(L.rotation * Math.PI / 180);
       ctx.scale(corr.x, -corr.y);
-      ctx.drawImage(sc, -boxW / 2, -boxW / 2, boxW, boxW);
+      ctx.drawImage(sc, -boxW / 2, -boxH / 2, boxW, boxH);
       ctx.restore();
       return;
     }
@@ -6213,7 +6192,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else {
@@ -8577,6 +8556,7 @@ function animate(now) {
   if (bagDirty) drawBagTexture();
 
   sphericalToCamera();
+  if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
   if (typeof realismRender === 'function') realismRender();
   else T.renderer.render(T.scene, T.camera);
 }
@@ -9717,7 +9697,7 @@ var A2D = {
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:8,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewBrightness:1.3, previewSaturate:1.15, previewContrast:1.0, previewZoom:7.0,
+  previewOn:true, previewBrightness:1.3, previewSaturate:1.15, previewContrast:1.0, previewZoom:3.5,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false  /* outer shell outline */
@@ -9790,7 +9770,7 @@ function _layerBox(L){
   var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
   var sref=(typeof _layerScaleRef==='function')?_layerScaleRef():e.w;
   if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
-  else if (L.tiled){ var wp=sref*((L.scale||18)/100); hw=wp/2; hh=wp/2; }  /* pattern crop box = square */
+  else if (L.tiled){ hw=sref*((L.scale||18)/100)/2; hh=sref*(((L.scaleH!=null?L.scaleH:L.scale)||18)/100)/2; }  /* pattern crop box (independent w/h → non-proportional) */
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
   return { cx:cx, cy:cy, hw:hw, hh:hh, ang:(L.rotation||0)*Math.PI/180 };   /* match the artwork's net (mirrored) rotation so box + image turn together */
 }
@@ -9834,7 +9814,22 @@ function _aMove(e){
   if (!a2d.sel) return;
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
-  else if (a2d.op==='scale'){ var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0; if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); _a2dApply(); }
+  else if (a2d.op==='scale'){
+    if (L.tiled){
+      /* NON-proportional: corner sets width (local x) and height (local y) independently */
+      var ap3=_s2a(sp.x,sp.y), ddx=ap3.x-b.cx, ddy=ap3.y-b.cy;
+      var ca=Math.cos(-b.ang), sa=Math.sin(-b.ang);
+      var lx=Math.abs(ddx*ca - ddy*sa), ly=Math.abs(ddx*sa + ddy*ca);
+      var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982;
+      L.scale  = Math.max(2, Math.min(400, lx*2/srefp*100));
+      L.scaleH = Math.max(2, Math.min(400, ly*2/srefp*100));
+      _a2dApply();
+    } else {
+      var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0;
+      if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f));
+      _a2dApply();
+    }
+  }
   else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var deg=Math.atan2(-dx,dy)*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* handle follows the cursor (5° snap) */ L.rotation=deg; _a2dApply(); }
 }
 function _aUp(e){
@@ -9915,10 +9910,11 @@ function atlas2dRender(){
   /* 3-6. bag texture backdrop (exterior→interior→handles→rivets→artwork already baked).
      The atlas bakes artwork pre-darkened to survive 3D tone-mapping, so brighten/saturate
      here to read closer to the lit 3D preview. */
-  if (typeof bagTexCanvas!=='undefined' && bagTexCanvas){
+  var _bd = (bagCleanCanvas && bagCleanCanvas.width) ? bagCleanCanvas : bagTexCanvas;   /* clean (no finish) for the editor */
+  if (typeof _bd!=='undefined' && _bd){
     ctx.imageSmoothingEnabled=true;
     ctx.filter = 'brightness(' + A2D.previewBrightness + ') saturate(' + A2D.previewSaturate + ') contrast(' + A2D.previewContrast + ')';
-    try{ var _w=bagTexCanvas.width; var o0=_a2s(0,0),o1=_a2s(_w,_w); ctx.drawImage(bagTexCanvas,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
+    try{ var _w=_bd.width; var o0=_a2s(0,0),o1=_a2s(_w,_w); ctx.drawImage(_bd,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
     ctx.filter = 'none';
   }
   /* real UV island outlines (hi-res baked guide), or legacy boxes */
@@ -10069,6 +10065,39 @@ function _applyConfigTheme(){
 }
 try { new MutationObserver(_applyConfigTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] }); } catch(e){}
 setTimeout(_applyConfigTheme, 1200);   /* after the realism floor is built */
+
+/* ─── MOBILE ─── */
+function _isMobileView(){ return window.matchMedia('(max-width: 760px)').matches; }
+/* Mobile-only defaults: tuned 2D-editor grading, and no live preview (no room). */
+function _applyMobileDefaults(){
+  if (!_isMobileView()) return;
+  A2D.previewSaturate = 1.14; A2D.previewContrast = 1.41; A2D.previewOn = false;
+}
+_applyMobileDefaults();
+/* Center the bag in the VISIBLE 3D area (between the header and the bottom sheet) by
+   offsetting the camera view by however much the sheet covers the canvas. Reads live
+   element positions, so it's correct on real devices (address bar etc.) and updates as
+   the sheet is dragged. Cleared on desktop / 2D mode. */
+var _mobFrameCovered = -1;
+function _updateMobileFraming(){
+  if (!T || !T.camera) return;
+  var cam = T.camera;
+  var stage = document.querySelector('.canvas-stage'), sheet = document.querySelector('.controls-panel');
+  var active = _isMobileView() && viewMode !== '2d' && stage && sheet;
+  var covered = 0;
+  if (active){
+    var sr = stage.getBoundingClientRect(), pr = sheet.getBoundingClientRect();
+    covered = Math.max(0, Math.round(sr.bottom - pr.top));   /* css px of the canvas hidden by the sheet */
+    if (covered > sr.height - 40) covered = Math.max(0, sr.height - 40);  /* keep a minimum visible band */
+  }
+  if (covered === _mobFrameCovered) return;   /* only touch the projection when it changes */
+  _mobFrameCovered = covered;
+  var sr2 = stage ? stage.getBoundingClientRect() : null;
+  if (!active || covered <= 2 || !sr2){ if (cam.view && cam.view.enabled) cam.clearViewOffset(); return; }
+  cam.setViewOffset(sr2.width, sr2.height + covered, 0, covered, sr2.width, sr2.height);  /* lift subject into the visible band */
+}
+window.addEventListener('resize', function(){ _mobFrameCovered = -1; });
+if (window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ _mobFrameCovered=-1; }); window.visualViewport.addEventListener('scroll', function(){ _mobFrameCovered=-1; }); }
 </script>
 
 <!-- ─── CUSTOM COLOR PICKER POPUP ─── -->
