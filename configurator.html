@@ -1756,40 +1756,40 @@
       <div class="finish-grid" id="bag-ext-finish-grid">
         <div class="finish-card" data-finish="gloss" onclick="applyBagFinish('exterior','gloss',this)">
           <div class="finish-preview" id="fp-ext-gloss" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
-          <span class="finish-name">Gloss</span><span class="finish-sub">high-shine</span>
+          <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
         </div>
         <div class="finish-card" data-finish="matte" onclick="applyBagFinish('exterior','matte',this)">
           <div class="finish-preview" id="fp-ext-matte" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
-          <span class="finish-name">Matte</span><span class="finish-sub">non-reflective</span>
+          <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
         </div>
         <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('exterior','softtouch',this)">
           <div class="finish-preview" id="fp-ext-softtouch" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
-          <span class="finish-name">Soft Touch</span><span class="finish-sub">velvet hand-feel</span>
+          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
         </div>
         <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('exterior','kraft',this)">
           <div class="finish-preview" id="fp-ext-kraft" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
-          <span class="finish-name">Kraft</span><span class="finish-sub">natural fiber</span>
+          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
         </div>
         <div class="finish-card" data-finish="foil" onclick="applyBagFinish('exterior','foil',this)">
           <div class="finish-preview" id="fp-ext-foil" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name">Foil Stamp</span><span class="finish-sub">metallic accent</span>
+          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
         </div>
       </div>
 
       <div class="advanced-toggle" onclick="toggleAdvanced('bag-ext-adv')">
-        <span class="adv-arrow">&#9658;</span> Advanced
+        <span class="adv-arrow">&#9658;</span> <span data-en="Advanced" data-ar="إعدادات متقدمة">Advanced</span>
       </div>
       <div class="advanced-body" id="bag-ext-adv">
         <div class="ctrl-slider-row" style="margin-top:12px">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Roughness</span><span class="ctrl-slider-val" id="bag-ext-rough-val">0.20</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Roughness" data-ar="الخشونة">Roughness</span><span class="ctrl-slider-val" id="bag-ext-rough-val">0.20</span></div>
           <input type="range" class="test-slider" id="bag-ext-rough" min="0" max="1" step="0.01" value="0.20" oninput="onBagRoughness('exterior',this.value)">
         </div>
         <div class="ctrl-slider-row">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Metalness</span><span class="ctrl-slider-val" id="bag-ext-metal-val">0.17</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Metalness" data-ar="المعدنية">Metalness</span><span class="ctrl-slider-val" id="bag-ext-metal-val">0.17</span></div>
           <input type="range" class="test-slider" id="bag-ext-metal" min="0" max="1" step="0.01" value="0.17" oninput="onBagMetalness('exterior',this.value)">
         </div>
         <div class="ctrl-slider-row">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Transmission</span><span class="ctrl-slider-val" id="bag-ext-trans-val">0.00</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Transmission" data-ar="النفاذية">Transmission</span><span class="ctrl-slider-val" id="bag-ext-trans-val">0.00</span></div>
           <input type="range" class="test-slider" id="bag-ext-trans" min="0" max="1" step="0.01" value="0.00" oninput="onBagTransmission('exterior',this.value)">
         </div>
         <div class="ctrl-slider-row">
@@ -1817,40 +1817,40 @@
       <div class="finish-grid" id="bag-int-finish-grid">
         <div class="finish-card" data-finish="gloss" onclick="applyBagFinish('interior','gloss',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
-          <span class="finish-name">Gloss</span><span class="finish-sub">high-shine</span>
+          <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
         </div>
         <div class="finish-card" data-finish="matte" onclick="applyBagFinish('interior','matte',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
-          <span class="finish-name">Matte</span><span class="finish-sub">non-reflective</span>
+          <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
         </div>
         <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('interior','softtouch',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
-          <span class="finish-name">Soft Touch</span><span class="finish-sub">velvet hand-feel</span>
+          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
         </div>
         <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('interior','kraft',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
-          <span class="finish-name">Kraft</span><span class="finish-sub">natural fiber</span>
+          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
         </div>
         <div class="finish-card" data-finish="foil" onclick="applyBagFinish('interior','foil',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name">Foil Stamp</span><span class="finish-sub">metallic accent</span>
+          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
         </div>
       </div>
 
       <div class="advanced-toggle" onclick="toggleAdvanced('bag-int-adv')">
-        <span class="adv-arrow">&#9658;</span> Advanced
+        <span class="adv-arrow">&#9658;</span> <span data-en="Advanced" data-ar="إعدادات متقدمة">Advanced</span>
       </div>
       <div class="advanced-body" id="bag-int-adv">
         <div class="ctrl-slider-row" style="margin-top:12px">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Roughness</span><span class="ctrl-slider-val" id="bag-int-rough-val">0.20</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Roughness" data-ar="الخشونة">Roughness</span><span class="ctrl-slider-val" id="bag-int-rough-val">0.20</span></div>
           <input type="range" class="test-slider" id="bag-int-rough" min="0" max="1" step="0.01" value="0.20" oninput="onBagRoughness('interior',this.value)">
         </div>
         <div class="ctrl-slider-row">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Metalness</span><span class="ctrl-slider-val" id="bag-int-metal-val">0.17</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Metalness" data-ar="المعدنية">Metalness</span><span class="ctrl-slider-val" id="bag-int-metal-val">0.17</span></div>
           <input type="range" class="test-slider" id="bag-int-metal" min="0" max="1" step="0.01" value="0.17" oninput="onBagMetalness('interior',this.value)">
         </div>
         <div class="ctrl-slider-row">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Transmission</span><span class="ctrl-slider-val" id="bag-int-trans-val">0.00</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Transmission" data-ar="النفاذية">Transmission</span><span class="ctrl-slider-val" id="bag-int-trans-val">0.00</span></div>
           <input type="range" class="test-slider" id="bag-int-trans" min="0" max="1" step="0.01" value="0.00" oninput="onBagTransmission('interior',this.value)">
         </div>
         <div class="ctrl-slider-row">
@@ -1877,40 +1877,40 @@
       <div class="finish-grid" id="bag-rib-finish-grid">
         <div class="finish-card" data-finish="gloss" onclick="applyBagFinish('ribbon','gloss',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
-          <span class="finish-name">Gloss</span><span class="finish-sub">high-shine</span>
+          <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
         </div>
         <div class="finish-card" data-finish="matte" onclick="applyBagFinish('ribbon','matte',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
-          <span class="finish-name">Matte</span><span class="finish-sub">non-reflective</span>
+          <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
         </div>
         <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('ribbon','softtouch',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
-          <span class="finish-name">Soft Touch</span><span class="finish-sub">velvet hand-feel</span>
+          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
         </div>
         <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('ribbon','kraft',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
-          <span class="finish-name">Kraft</span><span class="finish-sub">natural fiber</span>
+          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
         </div>
         <div class="finish-card" data-finish="foil" onclick="applyBagFinish('ribbon','foil',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name">Foil Stamp</span><span class="finish-sub">metallic accent</span>
+          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
         </div>
       </div>
 
       <div class="advanced-toggle" onclick="toggleAdvanced('bag-rib-adv')">
-        <span class="adv-arrow">&#9658;</span> Advanced
+        <span class="adv-arrow">&#9658;</span> <span data-en="Advanced" data-ar="إعدادات متقدمة">Advanced</span>
       </div>
       <div class="advanced-body" id="bag-rib-adv">
         <div class="ctrl-slider-row" style="margin-top:12px">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Roughness</span><span class="ctrl-slider-val" id="bag-rib-rough-val">0.20</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Roughness" data-ar="الخشونة">Roughness</span><span class="ctrl-slider-val" id="bag-rib-rough-val">0.20</span></div>
           <input type="range" class="test-slider" id="bag-rib-rough" min="0" max="1" step="0.01" value="0.20" oninput="onBagRoughness('ribbon',this.value)">
         </div>
         <div class="ctrl-slider-row">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Metalness</span><span class="ctrl-slider-val" id="bag-rib-metal-val">0.17</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Metalness" data-ar="المعدنية">Metalness</span><span class="ctrl-slider-val" id="bag-rib-metal-val">0.17</span></div>
           <input type="range" class="test-slider" id="bag-rib-metal" min="0" max="1" step="0.01" value="0.17" oninput="onBagMetalness('ribbon',this.value)">
         </div>
         <div class="ctrl-slider-row">
-          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Transmission</span><span class="ctrl-slider-val" id="bag-rib-trans-val">0.00</span></div>
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Transmission" data-ar="النفاذية">Transmission</span><span class="ctrl-slider-val" id="bag-rib-trans-val">0.00</span></div>
           <input type="range" class="test-slider" id="bag-rib-trans" min="0" max="1" step="0.01" value="0.00" oninput="onBagTransmission('ribbon',this.value)">
         </div>
         <div class="ctrl-slider-row">
@@ -3196,6 +3196,26 @@ function swatchPrefixes(colorName) {
   };
   return map[colorName] || ['Light', 'Soft', 'True', 'Deep', 'Dark'];
 }
+/* Arabic for the swatch words (base colour names + descriptive prefixes + Custom/Color). */
+var COLOR_AR = {
+  Red:'أحمر', Orange:'برتقالي', Amber:'كهرماني', Yellow:'أصفر', Green:'أخضر', Teal:'أزرق مخضر',
+  Cyan:'سماوي', Blue:'أزرق', Violet:'بنفسجي', Purple:'أرجواني', Rose:'وردي',
+  Custom:'مخصص', Color:'لون', Original:'الأصلي', True:'أصيل', Light:'فاتح', Soft:'ناعم', Deep:'غامق', Dark:'داكن', Vivid:'زاهي',
+  Blush:'خدّي', Cherry:'كرزي', Crimson:'قرمزي', Peach:'خوخي', Apricot:'مشمشي', Rust:'صدئي',
+  Cream:'كريمي', Honey:'عسلي', Golden:'ذهبي', Caramel:'كراميلي', Butter:'زبدي', Lemon:'ليموني', Corn:'ذرة', Mustard:'خردلي',
+  Mint:'نعناعي', Sage:'مريمي', Forest:'غابة', Jungle:'أدغال', Seafoam:'زبد البحر', Aqua:'مائي',
+  Ice:'جليدي', Ocean:'محيطي', Abyss:'هاوية', Baby:'فاتح', Sky:'سماوي', Royal:'ملكي', Navy:'كحلي',
+  Lavender:'خزامي', Lilac:'ليلكي', Plum:'برقوقي', Mauve:'بنفسجي فاتح', Orchid:'أوركيد', Grape:'عنبي',
+  Pink:'زهري', Magenta:'أرجواني وردي', Berry:'توتي'
+};
+function _trW(w){ return (COLOR_AR[w] != null) ? COLOR_AR[w] : w; }
+/* Build a two-line swatch label that carries data-en/data-ar so it also re-translates on a
+   later language switch (and shows the right language immediately). */
+function _swLbl(top, bottom){
+  var ar = (typeof getLang==='function' && getLang()==='ar');
+  return '<span data-en="'+top+'" data-ar="'+_trW(top)+'">'+(ar?_trW(top):top)+'</span><br>'+
+         '<span data-en="'+bottom+'" data-ar="'+_trW(bottom)+'">'+(ar?_trW(bottom):bottom)+'</span>';
+}
 function customVividHex(hue) { return hslToHex(hue, 85, 55); }
 
 function renderSwatches(hue, activeHex) {
@@ -3207,14 +3227,14 @@ function renderSwatches(hue, activeHex) {
   var html = '<div class="mono-swatch-wrap" onclick="openExtCPicker(event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
   swatches.forEach(function(c, i) {
     var name = SWATCH_NAMES[i];
     var active = !isCustom && activeHex && c.toLowerCase() === activeHex.toLowerCase();
     html += '<div class="mono-swatch-wrap" onclick="pickSwatch(\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '" title="' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   document.getElementById('mono-swatches').innerHTML = html;
 }
@@ -3810,14 +3830,14 @@ function renderPatternSwatches(region, hue, activeHex) {
   var html = '<div class="mono-swatch-wrap" onclick="openPatCPicker(\'' + region + '\',event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
   swatches.forEach(function(c, i) {
     var name = SWATCH_NAMES[i];
     var active = !isCustom && activeHex && c.toLowerCase() === activeHex.toLowerCase();
     html += '<div class="mono-swatch-wrap" onclick="pickPatternSwatch(\'' + region + '\',\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '" title="' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   el.innerHTML = html;
   if (typeof refreshPatternThumbs === 'function') refreshPatternThumbs(region); /* keep thumbnails in sync with colors */
@@ -5198,7 +5218,7 @@ function renderArtworkSwatches(region) {
   html += '<div class="mono-swatch-wrap" onclick="openArtworkCPicker(\'' + region + '\',event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
 
   /* Hue swatches */
   swatches.forEach(function(c, i) {
@@ -5207,7 +5227,7 @@ function renderArtworkSwatches(region) {
     html += '<div class="mono-swatch-wrap" onclick="pickArtworkSwatch(\'' + region + '\',\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   container.innerHTML = html;
   var hexDisplay = isOriginal ? 'Original' : (isCustom ? custHex : r.color || custHex).toUpperCase();
@@ -6137,14 +6157,14 @@ function renderLayerSwatches(L) {
   html += '<div class="mono-swatch-wrap" onclick="openLayerCPicker(' + L.id + ',event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
   swatches.forEach(function(c, i) {
     var name = SWATCH_NAMES[i];
     var active = !isCustom && !isOriginal && L.color && c.toLowerCase() === L.color.toLowerCase();
     html += '<div class="mono-swatch-wrap" onclick="pickLayerSwatch(' + L.id + ',\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   container.innerHTML = html;
   var hexEl = document.getElementById('lyr-' + L.id + '-chex');
@@ -6327,28 +6347,38 @@ function _ensureAddSourceModal() {
   ov.innerHTML =
     '<div style="background:var(--imp-surface,#fff);color:var(--imp-fg,#111);border-radius:16px;padding:22px;width:min(380px,92vw);max-height:86vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,0.35);">' +
       '<div id="add-source-title" style="font-size:16px;font-weight:700;margin-bottom:3px;">Add</div>' +
-      '<div style="font-size:12px;color:var(--imp-fg-2,#777);margin-bottom:16px;">How do you want to add it?</div>' +
-      '<button class="_as-btn" id="add-source-upload-btn" onclick="addSourceChoose(\'upload\')"><span>⬆</span> <span class="_as-label">Upload your own</span></button>' +
-      '<button class="_as-btn" id="add-source-ai-btn" onclick="addSourceChoose(\'ai\')"><span>✦</span> <span class="_as-label">Create with AI</span></button>' +
-      '<button class="_as-btn" id="add-source-library-btn" onclick="addSourceChoose(\'library\')"><span>▦</span> <span class="_as-label">Choose from artist library</span></button>' +
+      '<div style="font-size:12px;color:var(--imp-fg-2,#777);margin-bottom:16px;" data-en="How do you want to add it?" data-ar="كيف تريد إضافته؟">How do you want to add it?</div>' +
+      '<button class="_as-btn" id="add-source-upload-btn" onclick="addSourceChoose(\'upload\')"><span>⬆</span> <span class="_as-label" data-en="Upload your own" data-ar="ارفع ملفك">Upload your own</span></button>' +
+      '<button class="_as-btn" id="add-source-ai-btn" onclick="addSourceChoose(\'ai\')"><span>✦</span> <span class="_as-label" data-en="Create with AI" data-ar="أنشئ بالذكاء الاصطناعي">Create with AI</span></button>' +
+      '<button class="_as-btn" id="add-source-library-btn" onclick="addSourceChoose(\'library\')"><span>▦</span> <span class="_as-label" data-en="Choose from artist library" data-ar="اختر من مكتبة الفنانين">Choose from artist library</span></button>' +
       '<div id="add-source-ai" style="display:none;margin-top:6px;">' +
-        '<textarea id="add-source-ai-prompt" rows="2" placeholder="Describe your design…" style="width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--imp-border,#ddd);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>' +
-        '<button class="_as-btn" style="margin-top:8px;justify-content:center;" onclick="addSourceAiGenerate()">Generate</button>' +
+        '<textarea id="add-source-ai-prompt" rows="2" placeholder="Describe your design…" data-en="Describe your design…" data-ar="صف تصميمك…" style="width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--imp-border,#ddd);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>' +
+        '<button class="_as-btn" style="margin-top:8px;justify-content:center;" onclick="addSourceAiGenerate()" data-en="Generate" data-ar="إنشاء">Generate</button>' +
         '<div id="add-source-ai-note" style="font-size:11px;color:var(--imp-fg-3,#999);margin-top:4px;line-height:1.4;"></div>' +
       '</div>' +
       '<div id="add-source-library" style="display:none;margin-top:6px;"></div>' +
-      '<button onclick="cancelAddSource()" style="width:100%;margin-top:12px;background:none;border:none;color:var(--imp-fg-3,#999);font-size:12px;cursor:pointer;padding:8px;font-family:inherit;">Cancel</button>' +
+      '<button onclick="cancelAddSource()" style="width:100%;margin-top:12px;background:none;border:none;color:var(--imp-fg-3,#999);font-size:12px;cursor:pointer;padding:8px;font-family:inherit;" data-en="Cancel" data-ar="إلغاء">Cancel</button>' +
     '</div>';
   ov.addEventListener('click', function(e){ if (e.target === ov) cancelAddSource(); });
   document.body.appendChild(ov);
+  if (typeof applyTranslations === 'function') applyTranslations();
 }
 function openAddSourcePrompt(id, kind) {
   _ensureAddSourceModal();
   _addSrc.id = id; _addSrc.kind = kind;
   var isFont = (kind === 'font');
-  document.getElementById('add-source-title').textContent = 'Add ' + (kind === 'pattern' ? 'Pattern' : isFont ? 'Font' : 'Graphic');
+  var _ar = (typeof getLang==='function' && getLang()==='ar');
+  var _kindName = _ar ? (kind === 'pattern' ? 'نمط' : isFont ? 'خط' : 'رسمة')
+                      : (kind === 'pattern' ? 'Pattern' : isFont ? 'Font' : 'Graphic');
+  document.getElementById('add-source-title').textContent = (_ar ? 'إضافة ' : 'Add ') + _kindName;
   var aiBtn = document.getElementById('add-source-ai-btn'); if (aiBtn) aiBtn.style.display = isFont ? 'none' : 'flex';
-  var upLbl = document.querySelector('#add-source-upload-btn ._as-label'); if (upLbl) upLbl.textContent = isFont ? 'Upload your own font' : 'Upload your own';
+  var upLbl = document.querySelector('#add-source-upload-btn ._as-label');
+  if (upLbl){
+    var upEn = isFont ? 'Upload your own font' : 'Upload your own';
+    var upAr = isFont ? 'ارفع خطك الخاص' : 'ارفع ملفك';
+    upLbl.setAttribute('data-en', upEn); upLbl.setAttribute('data-ar', upAr);
+    upLbl.textContent = _ar ? upAr : upEn;
+  }
   document.getElementById('add-source-ai').style.display = 'none';
   document.getElementById('add-source-library').style.display = 'none';
   var note = document.getElementById('add-source-ai-note'); if (note) note.textContent = '';
@@ -7139,14 +7169,14 @@ function renderBagSwatches(region, hue, activeHex) {
   var html = '<div class="mono-swatch-wrap" onclick="openBagCPicker(\'' + region + '\',event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
   swatches.forEach(function(c, i) {
     var name = SWATCH_NAMES[i];
     var active = !isCustom && activeHex && c.toLowerCase() === activeHex.toLowerCase();
     html += '<div class="mono-swatch-wrap" onclick="pickBagSwatch(\'' + region + '\',\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '" title="' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   el.innerHTML = html;
   if (typeof refreshPatternThumbs === 'function') refreshPatternThumbs(region); /* keep thumbnails in sync with colors */
@@ -9453,14 +9483,14 @@ function renderTextSwatches(hue, activeHex) {
   var html = '<div class="mono-swatch-wrap" onclick="openTextCPicker(event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
   swatches.forEach(function(c, i) {
     var name = SWATCH_NAMES[i];
     var active = !isCustom && activeHex && c.toLowerCase() === activeHex.toLowerCase();
     html += '<div class="mono-swatch-wrap" onclick="pickTextSwatch(\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '" title="' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   document.getElementById('text-mono-swatches').innerHTML = html;
 }
@@ -9519,14 +9549,14 @@ function renderLogoSwatches(hue, activeHex) {
   var html = '<div class="mono-swatch-wrap" onclick="openLogoCPicker(event)">' +
     '<div class="cust-ring"><div class="cust-inner' + (isCustom ? ' active' : '') + '" style="background:' + custHex + '">' +
     '<span class="mono-swatch-check">&#10003;</span></div></div>' +
-    '<div class="mono-swatch-label"><span>Custom</span><br><span>Color</span></div></div>';
+    '<div class="mono-swatch-label">'+_swLbl('Custom','Color')+'</div></div>';
   swatches.forEach(function(c, i) {
     var name = SWATCH_NAMES[i];
     var active = !isCustom && activeHex && c.toLowerCase() === activeHex.toLowerCase();
     html += '<div class="mono-swatch-wrap" onclick="pickLogoSwatch(\'' + c + '\',\'' + name + '\')">' +
       '<div class="mono-swatch' + (active ? ' active' : '') + '" style="background:' + c + '" title="' + c + '">' +
       '<span class="mono-swatch-check">&#10003;</span></div>' +
-      '<div class="mono-swatch-label"><span>' + prefixes[i] + '</span><br><span>' + colorName + '</span></div></div>';
+      '<div class="mono-swatch-label">'+_swLbl(prefixes[i],colorName)+'</div></div>';
   });
   document.getElementById('logo-mono-swatches').innerHTML = html;
 }
