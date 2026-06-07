@@ -2185,8 +2185,12 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview</span>
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onPreviewToggle(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Full mesh wireframe</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off = clean island outlines only. On = every triangle edge.</div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Show handles in 2D</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onShowPart2D('handles',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Show rivets in 2D</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onShowPart2D('rivets',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Triangle cleaning</span><span class="slider-val" id="a2d-triClean-val">0</span></div>
         <input type="range" class="test-slider" min="0" max="400" step="1" value="0" oninput="onA2Dnum('triClean',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Shell silhouette</span>
@@ -2969,6 +2973,10 @@ var BAG_UV = {
   interior: { x: 1041, y: 1005, w: 982, h: 1007 },
   front:    { x: 1048, y:  784, w:  580, h:  748 }, /* reserved */
 };
+/* Per-face UV boxes (front/back/left/right/base), populated at load time when the GLB uses
+   the per-face material convention (M_ext_front …). Empty when the bag uses the 4-material
+   convention. Enables exact per-face artwork placement + Smart Sort. */
+var BAG_FACES = { exterior: {}, interior: {} };
 
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
 const BAG_MODELS = {
@@ -3955,6 +3963,11 @@ function drawBagTexture() {
   if (bagCleanCtx) {
     if (bagCleanCanvas.width !== W) { bagCleanCanvas.width = bagCleanCanvas.height = W; }
     bagCleanCtx.clearRect(0, 0, W, H); bagCleanCtx.drawImage(bagTexCanvas, 0, 0);
+    /* The 2D editor doesn't show handles/rivets unless toggled on — knock their island
+       fills out of the editor snapshot (3D still has them in bagTexCanvas). */
+    var _erase = function(clip){ if (!clip || !clip.path) return; bagCleanCtx.save(); bagCleanCtx.globalCompositeOperation='destination-out'; bagCleanCtx.fillStyle='#000'; bagCleanCtx.fill(clip.path); bagCleanCtx.lineJoin='round'; bagCleanCtx.lineWidth=Math.max(2,(A2D.padding||0)*2); bagCleanCtx.strokeStyle='#000'; bagCleanCtx.stroke(clip.path); bagCleanCtx.restore(); };
+    if (!A2D.showHandles2D) _erase(bagHandleClip);
+    if (!A2D.showRivets2D)  _erase(bagRivetClip);
   }
   // Finish (paper) overlay — applied to the 3D colour map AFTER the clean snapshot, so
   // it never appears in the 2D editor. Skipped mid-drag for speed.
@@ -4666,17 +4679,26 @@ function computeIslandRegion(geom) {
    2048² offscreen canvas so the editor can blit it cheaply each frame. */
 function buildUVGuide() {
   bagUVGuideCanvas = null;
-  var regions = [
+  /* ALL parts — used for the 3D finish-albedo clip (handles/rivets must always be covered
+     by the finish in the 3D viewer, regardless of the 2D-editor toggles). */
+  var allRegions = [
     { clip: bagExtClip,    rgb: '40,120,255', body:true },
     { clip: bagIntClip,    rgb: '0,170,100',  body:true },
-    { clip: bagHandleClip, rgb: '235,150,0'  },
-    { clip: bagRivetClip,  rgb: '210,40,150' }
+    { clip: bagHandleClip, rgb: '235,150,0', part:'handles' },
+    { clip: bagRivetClip,  rgb: '210,40,150', part:'rivets'  }
   ].filter(function(r) { return r.clip && r.clip.path; });
   /* combined shell clip for the finish-albedo overlay (keeps gaps transparent) */
-  if (typeof Path2D !== 'undefined' && regions.length) {
+  if (typeof Path2D !== 'undefined' && allRegions.length) {
     bagShellClip = new Path2D();
-    regions.forEach(function(r){ try { bagShellClip.addPath(r.clip.path); } catch(e){} });
+    allRegions.forEach(function(r){ try { bagShellClip.addPath(r.clip.path); } catch(e){} });
   } else { bagShellClip = null; }
+  /* What we actually DRAW into the 2D-editor guide: handles/rivets only when their toggle
+     is on (user doesn't overlay artwork on them, so hide by default). */
+  var regions = allRegions.filter(function(r){
+    if (r.part === 'handles') return !!A2D.showHandles2D;
+    if (r.part === 'rivets')  return !!A2D.showRivets2D;
+    return true;
+  });
   if (!regions.length) return;
   var RES = Math.max(512, Math.min(4096, A2D.guideRes|0)) || 2048;  /* triangle raster quality */
   var k = RES / _atlasW();                   /* island paths are in padded-canvas space */
@@ -4775,35 +4797,49 @@ function buildPaperBagMesh() {
     });
     if (!collected.length) { console.error('No mesh in ' + model.file); finishConfigLoading(); return; }
 
-    var byMat = {};
-    /* Normalise material names: strip Blender's duplicate suffix (".001" etc.) and any
-       glTF "-N" so M_exterior.001 / M_exterior still match. */
-    collected.forEach(function(p) { var nm=(p.name||'').replace(/[.\-]\d+$/,''); if (nm && !byMat[nm]) byMat[nm] = p.geom; });
-    var named = byMat['M_exterior'] || byMat['M_interior'] || byMat['M_handles'] || byMat['M_rivets'];
+    /* Group primitives by material name. Two supported conventions:
+         • 4-material : M_exterior / M_interior / M_handles / M_rivets
+         • per-face   : M_ext_front/back/left/right/base + M_int_*  (handles/rivets same)
+       Names are normalised (strip Blender ".001" / glTF "-N") and matched by PREFIX, so
+       both conventions — and any re-export duplicate suffixes — load correctly. */
+    var grp = { ext:[], int:[], handles:[], rivets:[], extFace:{}, intFace:{} };
+    collected.forEach(function(p) {
+      var nm = (p.name || '').replace(/[.\-]\d+$/, '').toLowerCase();
+      if (/^m_ext/.test(nm))      { grp.ext.push(p.geom); var fe = nm.replace(/^m_ext(erior)?_?/, ''); if (fe) grp.extFace[fe] = p.geom; }
+      else if (/^m_int/.test(nm)) { grp.int.push(p.geom); var fi = nm.replace(/^m_int(erior)?_?/, ''); if (fi) grp.intFace[fi] = p.geom; }
+      else if (/handle/.test(nm)) { grp.handles.push(p.geom); }
+      else if (/rivet/.test(nm))  { grp.rivets.push(p.geom); }
+    });
+    var named = grp.ext.length || grp.int.length || grp.handles.length || grp.rivets.length;
 
     var bodyGeom = null, handleGeom = null, rivetGeom = null;
     if (named) {
-      /* Material-named primitives → body = exterior + interior fused (shared atlas:
-         exterior = left UV half, interior = right UV half); handles + rivets separate. */
-      bodyGeom   = mergeBagGeoms([byMat['M_exterior'], byMat['M_interior']]);
-      handleGeom = byMat['M_handles'] || null;
-      rivetGeom  = byMat['M_rivets']  || null;
+      /* Body = all exterior faces + all interior faces fused into one atlas-sharing mesh
+         (exterior = left UV half, interior = right UV half); handles + rivets separate. */
+      var extGeom = mergeBagGeoms(grp.ext);
+      var intGeom = mergeBagGeoms(grp.int);
+      bodyGeom   = mergeBagGeoms([extGeom, intGeom]);
+      handleGeom = mergeBagGeoms(grp.handles);
+      rivetGeom  = mergeBagGeoms(grp.rivets);
       /* Handles + rivets sample the shared atlas → compute their UV-island clips so
          colour/artwork paints into exactly their texels (no bleed onto the body). */
-      bagHandleClip = computeIslandRegion(handleGeom);
-      bagRivetClip  = computeIslandRegion(rivetGeom);
+      bagHandleClip = handleGeom ? computeIslandRegion(handleGeom) : null;
+      bagRivetClip  = rivetGeom  ? computeIslandRegion(rivetGeom)  : null;
       if (bagHandleClip) BAG_UV.handles = bagHandleClip.bbox;
       if (bagRivetClip)  BAG_UV.rivets  = bagRivetClip.bbox;
-      /* Exterior/interior island shapes (for the 2D-editor UV guide only — painting
-         still uses the BAG_UV rects). */
-      bagExtClip = computeIslandRegion(byMat['M_exterior']);
-      bagIntClip = computeIslandRegion(byMat['M_interior']);
+      /* Exterior/interior island shapes = UNION of their faces (for the 2D-editor guide). */
+      bagExtClip = extGeom ? computeIslandRegion(extGeom) : null;
+      bagIntClip = intGeom ? computeIslandRegion(intGeom) : null;
       /* Derive the body UV boxes from geometry too → rearranging UVs in Maya and
          re-exporting "just works" with no hand-entered coordinates. */
       if (bagExtClip) BAG_UV.exterior = bagExtClip.bbox;
       if (bagIntClip) BAG_UV.interior = bagIntClip.bbox;
+      /* Per-face UV boxes (only when the per-face convention is used). */
+      BAG_FACES = { exterior:{}, interior:{} };
+      Object.keys(grp.extFace).forEach(function(f){ var cl=computeIslandRegion(grp.extFace[f]); if (cl) BAG_FACES.exterior[f]=cl.bbox; });
+      Object.keys(grp.intFace).forEach(function(f){ var cl=computeIslandRegion(grp.intFace[f]); if (cl) BAG_FACES.interior[f]=cl.bbox; });
       buildUVGuide();
-      console.log('[imprint] BUILD=parts-atlas+uvguide · material-named bag · clips handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip, 'ext:', !!bagExtClip, 'int:', !!bagIntClip, '· UV guide:', !!bagUVGuideCanvas);
+      console.log('[imprint] BUILD=parts-atlas+uvguide · ext faces:', Object.keys(grp.extFace).join(',')||'(merged)', '· int faces:', Object.keys(grp.intFace).join(',')||'(merged)', '· handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip);
     } else {
       /* Legacy single-mesh GLB → split by connected-component topology. */
       var baked  = collected[0].geom;
@@ -8729,6 +8765,15 @@ function onBodyDoubleSided(on){ BODY_DOUBLE_SIDED=!!on; if (bagMeshRef && bagMes
 function onA2Dnum(key,val,rebuild){ A2D[key]=parseFloat(val); var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=parseFloat(val); if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dcol(key,val,rebuild){ A2D[key]=val; var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=val; if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dtog(key,on){ A2D[key]=!!on; }
+/* Toggle a hardware part (handles/rivets) in the 2D editor: rebuild the UV guide (so the
+   outline/silhouette appears/disappears) and repaint the bag (so the fill is added/erased
+   from the editor snapshot). 3D is unaffected. */
+function onShowPart2D(part, on){
+  A2D[part === 'rivets' ? 'showRivets2D' : 'showHandles2D'] = !!on;
+  if (typeof buildUVGuide === 'function') buildUVGuide();
+  if (typeof drawBagTexture === 'function') drawBagTexture();
+  if (viewMode === '2d' && typeof atlas2dRender === 'function') atlas2dRender();
+}
 function onA2Dpadding(val){ A2D.padding=parseFloat(val); var el=document.getElementById('a2d-padding-val'); if(el) el.textContent=parseFloat(val); if(typeof drawBagTexture==='function') drawBagTexture(); }
 function onAtlasPad(val){
   ATLAS_PAD = Math.max(0, parseInt(val)||0);
@@ -9726,9 +9771,10 @@ var A2D = {
   padding:8,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5,
-  wireFull:true,            /* false = clean island outlines only; true = full triangle mesh */
+  wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
-  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false  /* outer shell outline */
+  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
+  showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
@@ -9989,17 +10035,21 @@ function atlas2dRender(){
     }
   });
   ctx.restore();
-  /* 8. upright labels at each island's visual top (normal screen space) */
-  var labelDefs = bagUVGuideCanvas
-    ? [ {bb:uv.exterior,label:'Exterior'},{bb:uv.interior,label:'Interior'},
-        {bb:uv.handles,label:'Handles'},{bb:uv.rivets,label:'Rivets'} ]
-    : [ {bb:uv.exterior,label:'Exterior'},{bb:uv.interior,label:'Interior'} ];
-  ctx.fillStyle=_themeColor(A2D.labelColor); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif'; ctx.textBaseline='bottom';
+  /* 8. upright labels centered over each island's visual top (normal screen space).
+     Handles/Rivets labels follow their 2D-editor toggles (hidden when the part is off). */
+  var labelDefs = [ {bb:uv.exterior,label:'Exterior'}, {bb:uv.interior,label:'Interior'} ];
+  if (bagUVGuideCanvas){
+    if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:'Handles'});
+    if (A2D.showRivets2D)  labelDefs.push({bb:uv.rivets, label:'Rivets'});
+  }
+  ctx.fillStyle=_themeColor(A2D.labelColor); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif';
+  ctx.textBaseline='bottom'; ctx.textAlign='center';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
-    var p=_a2s(it.bb.x, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island canvas-bottom → visual top */
-    ctx.fillText(it.label, p.x+3*D, ly-3*D);
+    var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
+    ctx.fillText(it.label, p.x, ly-5*D);
   });
+  ctx.textAlign='left';
   updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
 }
 /* white-filled circular handle with a coloured ring (image-5 style) */
