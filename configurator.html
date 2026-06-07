@@ -2105,6 +2105,16 @@
 
       <div class="slider-row">
         <div class="slider-top">
+          <span class="slider-name">Pulse fps</span>
+          <span class="slider-val" id="pulse-fps-val">15</span>
+        </div>
+        <input type="range" class="test-slider" id="pulse-fps"
+               min="5" max="60" step="1" value="15"
+               oninput="onPulseFps(this.value)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top">
           <span class="slider-name">Pulse color</span>
           <span class="slider-val" id="anim-color-val">#ff0000</span>
         </div>
@@ -2175,7 +2185,7 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview</span>
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onPreviewToggle(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Full mesh wireframe</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off = clean island outlines only. On = every triangle edge.</div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Triangle cleaning</span><span class="slider-val" id="a2d-triClean-val">0</span></div>
         <input type="range" class="test-slider" min="0" max="400" step="1" value="0" oninput="onA2Dnum('triClean',this.value,true)"></div>
@@ -2193,8 +2203,8 @@
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelColor',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">#000000</span></div>
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('outlineColor',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline thickness</span><span class="slider-val" id="a2d-outlineThickness-val">0.5</span></div>
-        <input type="range" class="test-slider" min="0" max="3" step="0.05" value="0.5" oninput="onA2Dnum('outlineThickness',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline thickness</span><span class="slider-val" id="a2d-outlineThickness-val">0.05</span></div>
+        <input type="range" class="test-slider" min="0" max="3" step="0.05" value="0.05" oninput="onA2Dnum('outlineThickness',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline opacity</span><span class="slider-val" id="a2d-outlineOpacity-val">1</span></div>
         <input type="range" class="test-slider" min="0" max="1" step="0.05" value="1" oninput="onA2Dnum('outlineOpacity',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Tint opacity</span><span class="slider-val" id="a2d-tintOpacity-val">0</span></div>
@@ -6185,7 +6195,7 @@ function duplicateLayer(id) {
   if (i >= 0) BAG.artwork.layers.splice(i, 0, copy);  /* directly above the original */
   else        BAG.artwork.layers.unshift(copy);        /* duplicating a default → add to stack */
   renderLayersList(); drawBagTexture();
-  if (typeof expandLayer === 'function') expandLayer(copy.id);
+  /* new layers stay collapsed by default — the user expands to edit settings */
   if (typeof scheduleHistory === 'function') scheduleHistory();
 }
 function addLayer(kind) {
@@ -6211,7 +6221,8 @@ function addLayer(kind) {
   }
   L.opacity = (L.opacity != null ? L.opacity : 100);
   BAG.artwork.layers.unshift(L); /* new layer on top of the stack */
-  expandLayer(id);
+  /* keep the new layer collapsed by default — the user expands for more settings */
+  if (typeof renderLayersList === 'function') renderLayersList();
   if (kind === 'logo') pickLayerLogoFile(id);
   else if (kind === 'sticker' || kind === 'pattern') openAddSourcePrompt(id, kind);
   else if (kind === 'text') openAddSourcePrompt(id, 'font');
@@ -6851,7 +6862,8 @@ function applyCutout() {
     L.recolor.hue = 0; L.recolor.sat = 100;
     L.visible = true;
     applyStickerRecolor(L, function() {
-      expandLayer(idForCb);
+      if (!isNew) expandLayer(idForCb);   /* new layers stay collapsed; only re-expand when refining an existing one */
+      else renderLayersList();
       if (isNew && typeof setBagView === 'function') setBagView('front');
     });
     return;
@@ -6861,7 +6873,7 @@ function applyCutout() {
   img.onload = function() {
     L.img = img; L.visible = true;
     if (L === BAG.artwork.logo && typeof refreshStandaloneLogoUpload === 'function') refreshStandaloneLogoUpload();
-    expandLayer(idForCb);
+    if (!isNew) expandLayer(idForCb); else renderLayersList();   /* new layers stay collapsed */
     drawBagTexture();
     if (isNew && typeof setBagView === 'function') setBagView('front');
   };
@@ -8708,6 +8720,7 @@ function onIdleDelaySlider(v) {
   document.getElementById('idle-delay-val').textContent = idleDelaySec.toFixed(1) + 's';
 }
 function onHueAnimSpeed(v) { _hueAnimSpeed = parseFloat(v); var el=document.getElementById('hue-anim-speed-val'); if(el) el.textContent = _hueAnimSpeed.toFixed(3); }
+function onPulseFps(v) { _pulseFps = Math.max(1, parseFloat(v)||15); var el=document.getElementById('pulse-fps-val'); if(el) el.textContent = Math.round(_pulseFps); }
 function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
 function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
 function onAnimOpMax(v)    { _animOpMax = parseFloat(v); var el=document.getElementById('anim-opmax-val'); if(el) el.textContent = _animOpMax.toFixed(2); }
@@ -9637,6 +9650,7 @@ var _partTouched = {}, _suppressTouch = false;
    colour (default red) in and out between an opacity min and max, to signal what
    you're editing. Purely visual; restored when you pick a colour or leave the step. */
 var _hueAnimSpeed = 0.300;  /* pulse rate (cycle progresses _hueAnimSpeed·dt degrees) */
+var _pulseFps     = 15;     /* pulse redraw rate (fps) — higher = smoother/faster, controllable in Testing */
 var _animColor    = '#ff0000';
 var _animOpMin    = 0.80;
 var _animOpMax    = 1.00;
@@ -9683,7 +9697,8 @@ function startHueGuide(region){
   _hueAnim.region = region; _hueAnim.t0 = (typeof performance!=='undefined'?performance.now():Date.now()); _hueAnim.last = 0;
   var loop = function(now){
     if (_hueAnim.region !== region) return;
-    if (now - _hueAnim.last > 70){          /* ~14 fps — keep texture uploads light */
+    var _frame = 1000 / (_pulseFps || 15);   /* throttle texture uploads to the configured pulse fps */
+    if (now - _hueAnim.last >= _frame){
       _hueAnim.last = now;
       var deg   = ((now - _hueAnim.t0) * _hueAnimSpeed) % 360;
       var alpha = _animOpMin + (_animOpMax - _animOpMin) * (0.5 - 0.5 * Math.cos(deg * Math.PI / 180));
@@ -9706,12 +9721,12 @@ var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
   labelSize:21, labelColor:'#000000',
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
-  outlineThickness:0.5, outlineOpacity:1.0, tintOpacity:0.0,
+  outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:8,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5,
-  wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
+  wireFull:true,            /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false  /* outer shell outline */
 };
