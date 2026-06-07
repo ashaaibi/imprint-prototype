@@ -2185,6 +2185,8 @@
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('silhouetteColor',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette thickness</span><span class="slider-val" id="a2d-silhouetteThickness-val">2</span></div>
         <input type="range" class="test-slider" min="0" max="8" step="0.1" value="2" oninput="onA2Dnum('silhouetteThickness',this.value,true)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette dashed</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('silhouetteDash',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">21</span></div>
         <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
@@ -2215,6 +2217,8 @@
         <input type="range" class="test-slider" min="0" max="2.5" step="0.01" value="1.15" oninput="onA2Dnum('previewSaturate',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="a2d-previewContrast-val">1</span></div>
         <input type="range" class="test-slider" min="0.5" max="2" step="0.01" value="1" oninput="onA2Dnum('previewContrast',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Preview zoom</span><span class="slider-val" id="a2d-previewZoom-val">7</span></div>
+        <input type="range" class="test-slider" min="2" max="16" step="0.5" value="7" oninput="onA2Dnum('previewZoom',this.value,false); if(viewMode==='2d'&&typeof orbit!=='undefined'&&orbit){orbit.radius=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM_OUT,A2D.previewZoom));}"></div>
 
       <div class="slider-row">
         <div class="slider-top">
@@ -3952,14 +3956,17 @@ function drawBagTexture() {
   _drawBodyRegion('interior', BAG_UV.interior, bagIntClip, kraftOverlayRender.interior);
   // 4. Handle + rivet base colours (island-clipped).
   drawPartsOverlay();
-  // 5. Artwork — freeform across the whole atlas, on top of every base colour, so a
-  //    layer prints on whichever surface(s) it overlaps.
+  // 4b. Paper-grain finish overlay on the BASE colours only — done before artwork so it
+  //     never tints the layers (artwork colours stay pure). Skipped mid-drag for speed.
+  if (!_a2dDragging && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
+  // 5. Artwork — freeform across the whole atlas, on top of every base colour + finish.
   drawArtworkOnBag();
 
   if (bagTexture) bagTexture.needsUpdate = true;
-  rebuildBumpMap();
-  if (typeof applyFinishAlbedo === 'function') applyFinishAlbedo();   /* per-finish albedo overlay (no-op when none) */
-  if (typeof scheduleHistory === 'function') scheduleHistory();
+  if (!_a2dDragging) {            /* skip heavy passes mid-drag → smooth FPS; full redraw on release */
+    rebuildBumpMap();
+    if (typeof scheduleHistory === 'function') scheduleHistory();
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -4157,7 +4164,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       var cAsp = cell.width / cell.height;
       var boxW = Math.max(8, sref * (L.scale / 100) * ms);   /* square crop box */
       var density = Math.max(1, L.density || 6);
-      var tileW = boxW / density, tileH = tileW / cAsp;
+      var tileW = (sref / density), tileH = tileW / cAsp;   /* tile size fixed → resizing the box CROPS the tiling (density = tile size) */
       var gpx = ((L.gap != null ? L.gap : 0) / 100) * tileW;
       var cw = tileW + gpx, ch = tileH + gpx;
       var SW = Math.max(1, Math.ceil(boxW));
@@ -4296,8 +4303,8 @@ function drawArtworkOnBag() {
     drawLayerContent(bagTexCtx, L, 1, corr, 'color');
     bagTexCtx.restore();
   }
-  /* Rebuild PBR maps from scratch then overlay artwork finish */
-  rebuildPBRMaps();
+  /* Rebuild PBR maps from scratch then overlay artwork finish (skipped mid-drag) */
+  if (!_a2dDragging) rebuildPBRMaps();
 }
 
 /* Artwork is now freeform across the whole atlas — layers position against the full
@@ -4698,16 +4705,21 @@ function buildUVGuide() {
       }
       g.stroke(strokePath);
     }
-    /* separate shell SILHOUETTE — outline of the whole filled (tint) area, so it
-       traces the complete island shape (not just detected boundary edges). Built on
-       an offscreen via dilate-minus-fill, then composited (avoids erasing the guide). */
+    /* separate shell SILHOUETTE — solid: outline of the whole filled (tint) area via an
+       offscreen dilate-minus-fill (complete shape). Dashed: stroke the boundary contour
+       with a dash pattern. */
     if (A2D.silhouetteOn && A2D.silhouetteThickness > 0 && r.clip.path) {
-      var oc=document.createElement('canvas'); oc.width=oc.height=RES;
-      var o=oc.getContext('2d'); o.scale(k,k); o.fillStyle=silCol; o.lineJoin='round';
-      var t=A2D.silhouetteThickness, steps=18;
-      for (var si=0; si<steps; si++){ var ang=si/steps*Math.PI*2; o.save(); o.translate(Math.cos(ang)*t, Math.sin(ang)*t); o.fill(r.clip.path); o.restore(); }
-      o.globalCompositeOperation='destination-out'; o.fill(r.clip.path);   /* knock out interior → outer ring */
-      g.save(); g.setTransform(1,0,0,1,0,0); g.globalAlpha=1; g.drawImage(oc,0,0); g.restore();
+      if (A2D.silhouetteDash && r.clip.outline){
+        g.save(); g.globalAlpha=1; g.strokeStyle=silCol; g.lineWidth=A2D.silhouetteThickness;
+        g.setLineDash([A2D.silhouetteThickness*3, A2D.silhouetteThickness*2.5]); g.stroke(r.clip.outline); g.setLineDash([]); g.restore();
+      } else {
+        var oc=document.createElement('canvas'); oc.width=oc.height=RES;
+        var o=oc.getContext('2d'); o.scale(k,k); o.fillStyle=silCol; o.lineJoin='round';
+        var t=A2D.silhouetteThickness, steps=18;
+        for (var si=0; si<steps; si++){ var ang=si/steps*Math.PI*2; o.save(); o.translate(Math.cos(ang)*t, Math.sin(ang)*t); o.fill(r.clip.path); o.restore(); }
+        o.globalCompositeOperation='destination-out'; o.fill(r.clip.path);   /* knock out interior → outer ring */
+        g.save(); g.setTransform(1,0,0,1,0,0); g.globalAlpha=1; g.drawImage(oc,0,0); g.restore();
+      }
     }
   });
   g.globalAlpha = 1;
@@ -9705,13 +9717,14 @@ var A2D = {
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:8,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewBrightness:1.3, previewSaturate:1.15, previewContrast:1.0,
+  previewOn:true, previewBrightness:1.3, previewSaturate:1.15, previewContrast:1.0, previewZoom:7.0,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
-  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0  /* outer shell outline */
+  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false  /* outer shell outline */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
+var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : '3d';
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
@@ -9724,7 +9737,7 @@ function setViewMode(mode){
     /* preview: stop auto-rotation, animate to the front, zoom out to fit the small frame */
     if (!_saved3DView && typeof orbit !== 'undefined' && orbit) _saved3DView = { theta:orbit.theta, phi:orbit.phi, radius:orbit.radius };
     try { spinAllowed=false; spinFactor=0; spinTarget=0; spinRamp=null; if (orbit) orbit.autoSpin=false; } catch(e){}
-    try { if (typeof startCamTween==='function') startCamTween(viewThetaRad('front'), VIEW_PHI); if (orbit) orbit.radius = Math.min(MAX_ZOOM_OUT, 7.0); } catch(e){}
+    try { if (typeof startCamTween==='function') startCamTween(viewThetaRad('front'), VIEW_PHI); if (orbit) orbit.radius = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM_OUT, A2D.previewZoom)); } catch(e){}
     ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
     atlas2dInit(); atlas2dResize(); atlas2dFit();
     a2d.sel = _drawableLayers()[0] || null;
@@ -9757,7 +9770,9 @@ function _fitMiniPreview(){
   if(!stage||!cv) return;
   if (viewMode!=='2d'){ cv.style.removeProperty('height'); return; }
   var asp = (stage.clientWidth/stage.clientHeight) || 1.6;
-  cv.style.setProperty('height', Math.round(244/asp)+'px', 'important');
+  var hgt = Math.round(244/asp);
+  cv.style.setProperty('height', hgt+'px', 'important');
+  var lbl=document.querySelector('.mini3d-label'); if(lbl) lbl.style.bottom=(16+hgt+6)+'px';   /* sit just above the box */
 }
 function atlas2dInit(){
   if (!a2d.canvas){ a2d.canvas = document.getElementById('atlas2d-canvas'); if (!a2d.canvas) return; a2d.ctx = a2d.canvas.getContext('2d'); }
@@ -9795,9 +9810,9 @@ function _aDown(e){
   var ids=Object.keys(a2d.pointers);
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
   var hh=_hitHandle(sp);
-  if (hh){ a2d.op=hh; a2d.start={ sp:sp, scale:a2d.sel.scale, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) }; if(a2d.canvas) a2d.canvas.style.cursor=(hh==='scale')?'nwse-resize':'grabbing'; return; }
+  if (hh){ a2d.op=hh; _a2dDragging=true; a2d.start={ sp:sp, scale:a2d.sel.scale, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) }; if(a2d.canvas) a2d.canvas.style.cursor=(hh==='scale')?'nwse-resize':'grabbing'; return; }
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
-  if (L){ a2d.sel=L; a2d.op='move'; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
+  if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
   else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
 }
 function _aMove(e){
@@ -9830,6 +9845,7 @@ function _aUp(e){
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
+  if (a2d.op===null) _a2dDragging=false;   /* exit fast-drag → next redraw is full quality */
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
 }
 function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), f=Math.exp(-e.deltaY*0.0015), nz=Math.max(0.05,Math.min(20,a2d.zoom*f)); a2d.zoom=nz; a2d.panX=sp.x-aPt.x*nz; a2d.panY=sp.y-aPt.y*nz; }
