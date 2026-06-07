@@ -2205,6 +2205,16 @@
         <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke thickness</span><span class="slider-val" id="a2d-labelStroke-val">4</span></div>
+        <input type="range" class="test-slider" min="0" max="12" step="0.5" value="4" oninput="onA2Dnum('labelStroke',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke color</span><span class="slider-val" id="a2d-labelStrokeColor-val">#ffffff</span></div>
+        <input type="color" value="#ffffff" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelStrokeColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">14</span></div>
+        <input type="range" class="test-slider" min="6" max="36" step="1" value="14" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
+        <input type="color" value="#333333" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('subLabelColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
+        <input type="range" class="test-slider" min="0" max="5" step="0.1" value="1" oninput="onAutoEditDelay(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">#000000</span></div>
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('outlineColor',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline thickness</span><span class="slider-val" id="a2d-outlineThickness-val">0.05</span></div>
@@ -4154,6 +4164,12 @@ function _featherCanvasEdges(ctx, w, h, f){
   band(0,h,0,h-f, w,f, 0,h-f);      /* bottom*/
   ctx.restore();
 }
+/* Box-crop clip (edge handles): clip the layer content to its box minus the per-side crop
+   fractions. Applied in the final (post-scale) local space; visual-top maps to +y here. */
+function _applyBoxCrop(ctx, L, w, h){
+  var cl=L.cropBoxL||0, cr=L.cropBoxR||0, ct=L.cropBoxT||0, cb=L.cropBoxB||0;
+  if (cl||cr||ct||cb){ ctx.beginPath(); ctx.rect(-w/2+cl*w, -h/2+cb*h, w*(1-cl-cr), h*(1-ct-cb)); ctx.clip(); }
+}
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
   var ue = layerBBox(L);
@@ -4195,6 +4211,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       ctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
       ctx.rotate(L.rotation * Math.PI / 180);
       ctx.scale(corr.x, -corr.y);
+      _applyBoxCrop(ctx, L, boxW, boxH);
       ctx.drawImage(sc, -boxW / 2, -boxH / 2, boxW, boxH);
       ctx.restore();
       return;
@@ -4208,6 +4225,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
     ctx.translate(cx, cy);
     ctx.rotate(L.rotation * Math.PI / 180);
     ctx.scale(corr.x, -corr.y);
+    _applyBoxCrop(ctx, L, dw, dh);
     if (mode === 'mask') {
       ctx.drawImage(L.img, -dw / 2, -dh / 2, dw, dh);
     } else {
@@ -4235,6 +4253,10 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
     ctx.translate(cx2, cy2);
     ctx.rotate(L.rotation * Math.PI / 180);
     ctx.scale(corr.x, -corr.y);
+    if (L.cropBoxL||L.cropBoxR||L.cropBoxT||L.cropBoxB){
+      var _tfs=L.fontSize*ms, _tl=L.content.split('\n'), _tml=_tl.reduce(function(m,s){return Math.max(m,s.length);},1);
+      _applyBoxCrop(ctx, L, Math.max(20,_tml*_tfs*0.30)*2, Math.max(_tfs*0.6,_tl.length*_tfs*0.68)*2);
+    }
     if (mode !== 'mask') ctx.filter = _layerFilter();
     var lines = L.content.split('\n');
     var lineH = L.fontSize * ms * 1.25;
@@ -4595,6 +4617,19 @@ function splitBagGeometry(pos, uv, index) {
   return out;
 }
 
+/* Robust UV center of a geometry's island → atlas-px {cx,cy}. Uses the per-axis MEDIAN of
+   the UVs so a few stray/outlier UVs (which would blow up a min/max bbox) don't skew the
+   label position. Same atlas transform as computeIslandRegion: x=PAD+u·2048, y=PAD+(1−v)·2048. */
+function _faceUVCenter(geom){
+  if (!geom || !geom.getAttribute) return null;
+  var uv = geom.getAttribute('uv'); if (!uv || !uv.count) return null;
+  var us=[], vs=[], n=uv.count, i;
+  for (i=0;i<n;i++){ us.push(uv.getX(i)); vs.push(uv.getY(i)); }
+  us.sort(function(a,b){return a-b;}); vs.sort(function(a,b){return a-b;});
+  var mu=us[us.length>>1], mv=vs[vs.length>>1];
+  var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+  return { cx: PAD + mu*2048, cy: PAD + (1-mv)*2048 };
+}
 /* Merge several indexed BufferGeometries (each with position + optional normal/uv)
    into one — used to fuse the M_exterior and M_interior glTF primitives back into a
    single textured body that shares the atlas (exterior = left UV half, interior =
@@ -4834,10 +4869,12 @@ function buildPaperBagMesh() {
          re-exporting "just works" with no hand-entered coordinates. */
       if (bagExtClip) BAG_UV.exterior = bagExtClip.bbox;
       if (bagIntClip) BAG_UV.interior = bagIntClip.bbox;
-      /* Per-face UV boxes (only when the per-face convention is used). */
+      /* Per-face label centers (only when the per-face convention is used). Use a MEDIAN
+         UV center (robust to stray/outlier UVs that would skew a min/max bbox center —
+         e.g. M_int_front/back have a few stray verts at the UV corners). */
       BAG_FACES = { exterior:{}, interior:{} };
-      Object.keys(grp.extFace).forEach(function(f){ var cl=computeIslandRegion(grp.extFace[f]); if (cl) BAG_FACES.exterior[f]=cl.bbox; });
-      Object.keys(grp.intFace).forEach(function(f){ var cl=computeIslandRegion(grp.intFace[f]); if (cl) BAG_FACES.interior[f]=cl.bbox; });
+      Object.keys(grp.extFace).forEach(function(f){ var c=_faceUVCenter(grp.extFace[f]); if (c) BAG_FACES.exterior[f]=c; });
+      Object.keys(grp.intFace).forEach(function(f){ var c=_faceUVCenter(grp.intFace[f]); if (c) BAG_FACES.interior[f]=c; });
       buildUVGuide();
       console.log('[imprint] BUILD=parts-atlas+uvguide · ext faces:', Object.keys(grp.extFace).join(',')||'(merged)', '· int faces:', Object.keys(grp.intFace).join(',')||'(merged)', '· handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip);
     } else {
@@ -6239,17 +6276,18 @@ function addLayer(kind) {
   var id = BAG.artwork.nextId++;
   var L;
   var allAreas = { front:true, back:true, left:true, right:true, bottom:true, interior:true };
-  var _fp = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel] && BAG_MODELS[currentBagModel].front) || { posU:25.46, posV:85.31 };
+  /* New layers always drop at the front-center of the bag (U 0.3327, V 0.8109). */
+  var _fp = { posU:33.27, posV:81.09 };
   if (kind === 'logo') {
-    L = { id:id, kind:'logo', isDefault:false, visible:true, img:null, fileName:'', scale:18, posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'logo', isDefault:false, visible:true, img:null, fileName:'', scale:18, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0,
           color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
   } else if (kind === 'text') {
-    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:130, posU:_fp.posU, posV:_fp.posV, rotation:0, font:'inter',
+    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:130, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
           color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else {
@@ -6361,6 +6399,7 @@ function onLayerFontFile(input) {
     var L = getLayer(id); if (!L) return;
     if (!key) { alert('Sorry — that font file could not be loaded. Try a .ttf, .otf, or .woff file.'); return; }
     L.font = key; updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
+    _autoEdit2dAfterUpload();   /* custom font uploaded → animate into the 2D editor */
   });
 }
 /* List font files in /fonts by parsing the dev-server's directory index. */
@@ -6400,6 +6439,7 @@ function chooseLibraryFont(key) {
   _closeAddSourceOverlay(); _addSrc.id = null;
   if (!L || !key) return;
   L.font = key; updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
+  _autoEdit2dAfterUpload();   /* font chosen for the text layer → animate into the 2D editor */
 }
 /* Pattern → patterns/ , Graphic (internal kind 'sticker') → graphics/ */
 function _libFolder() { return (_addSrc && _addSrc.kind === 'pattern') ? 'patterns' : 'graphics'; }
@@ -6901,6 +6941,7 @@ function applyCutout() {
       if (!isNew) expandLayer(idForCb);   /* new layers stay collapsed; only re-expand when refining an existing one */
       else renderLayersList();
       if (isNew && typeof setBagView === 'function') setBagView('front');
+      if (isNew) _autoEdit2dAfterUpload();
     });
     return;
   }
@@ -6912,6 +6953,7 @@ function applyCutout() {
     if (!isNew) expandLayer(idForCb); else renderLayersList();   /* new layers stay collapsed */
     drawBagTexture();
     if (isNew && typeof setBagView === 'function') setBagView('front');
+    if (isNew) _autoEdit2dAfterUpload();
   };
   img.src = processed.toDataURL('image/png');
 }
@@ -8774,6 +8816,7 @@ function onBodyDoubleSided(on){ BODY_DOUBLE_SIDED=!!on; if (bagMeshRef && bagMes
 function onA2Dnum(key,val,rebuild){ A2D[key]=parseFloat(val); var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=parseFloat(val); if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dcol(key,val,rebuild){ A2D[key]=val; var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=val; if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dtog(key,on){ A2D[key]=!!on; }
+function onAutoEditDelay(v){ _autoEdit2dDelay=Math.max(0,parseFloat(v)||0); var el=document.getElementById('auto-edit-delay-val'); if(el) el.textContent=_autoEdit2dDelay.toFixed(1)+'s'; }
 /* Toggle a hardware part (handles/rivets) in the 2D editor: rebuild the UV guide (so the
    outline/silhouette appears/disappears) and repaint the bag (so the fill is added/erased
    from the editor snapshot). 3D is unaffected. */
@@ -9774,6 +9817,8 @@ var viewMode = '3d';
 var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
   labelSize:21, labelColor:'#000000',
+  labelStroke:4, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
+  subLabelSize:14, subLabelColor:'#333333',    /* per-face sub-label size + colour */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
@@ -9788,6 +9833,15 @@ var A2D = {
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
+/* After a graphic/pattern/font upload, auto-animate from 3D → the 2D editor after a short
+   delay (so the user lands in the editor ready to place artwork). Delay is testing-tunable. */
+var _autoEdit2dDelay = 1.0;   /* seconds */
+var _autoEdit2dTimer = null;
+function _autoEdit2dAfterUpload(){
+  if (viewMode === '2d') return;                 /* only ever animate 3D → 2D */
+  if (_autoEdit2dTimer) clearTimeout(_autoEdit2dTimer);
+  _autoEdit2dTimer = setTimeout(function(){ _autoEdit2dTimer=null; if (viewMode!=='2d' && typeof setViewMode==='function') setViewMode('2d'); }, Math.max(0, _autoEdit2dDelay*1000));
+}
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : '3d';
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
@@ -9859,7 +9913,16 @@ function _layerBox(L){
 }
 function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
-function _hitHandle(sp){ var L=a2d.sel; if(!L) return null; var b=_layerBox(L); var hs={ scale:_boxLocalToScreen(b,1,-1), rotate:_boxLocalToScreen(b,0,1.6) }; var R=Math.max(16,A2D.handleSize+8)*a2d.dpr; for (var k in hs){ var h=hs[k]; if (Math.hypot(sp.x-h.x, sp.y-h.y)<=R) return k; } return null; }
+function _hitHandle(sp){
+  var L=a2d.sel; if(!L) return null; var b=_layerBox(L);
+  var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
+  /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
+  var order=[ ['rotate',0,1.6],
+              ['sc-tl',-1,-1],['sc-tr',1,-1],['sc-br',1,1],['sc-bl',-1,1],
+              ['cr-t',0,-1],['cr-b',0,1],['cr-l',-1,0],['cr-r',1,0] ];
+  for (var i=0;i<order.length;i++){ var o=order[i], h=_boxLocalToScreen(b,o[1],o[2]); if (Math.hypot(sp.x-h.x,sp.y-h.y)<=R) return o[0]; }
+  return null;
+}
 function _atlasBind(c){
   c.addEventListener('pointerdown', _aDown);
   c.addEventListener('pointermove', _aMove);
@@ -9873,7 +9936,8 @@ function _aDown(e){
   var ids=Object.keys(a2d.pointers);
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
   var hh=_hitHandle(sp);
-  if (hh){ a2d.op=hh; _a2dDragging=true; a2d.start={ sp:sp, scale:a2d.sel.scale, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) }; if(a2d.canvas) a2d.canvas.style.cursor=(hh==='scale')?'nwse-resize':'grabbing'; return; }
+  if (hh){ a2d.op=hh; _a2dDragging=true; a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:a2d.sel.scaleH, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) };
+    if(a2d.canvas) a2d.canvas.style.cursor=(hh.indexOf('sc-')===0)?'nwse-resize':(hh.indexOf('cr-')===0)?'crosshair':'grabbing'; return; }
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
   if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
   else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
@@ -9885,7 +9949,8 @@ function _aMove(e){
     var cur='grab';
     var hh0=_hitHandle(sp);
     if (hh0==='rotate') cur='pointer';
-    else if (hh0==='scale') cur='nwse-resize';
+    else if (hh0 && hh0.indexOf('sc-')===0) cur='nwse-resize';
+    else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
     else { var ap0=_s2a(sp.x,sp.y); if (_hitLayer(ap0.x,ap0.y)) cur='move'; }
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
@@ -9897,33 +9962,44 @@ function _aMove(e){
   if (!a2d.sel) return;
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
-  else if (a2d.op==='scale'){
+  else if (a2d.op.indexOf('sc-')===0){
+    /* Resize from any corner, anchored at the OPPOSITE corner (the opposite corner stays
+       pinned). Patterns resize non-proportionally; graphics/text resize uniformly. */
+    var sx=(a2d.op==='sc-tr'||a2d.op==='sc-br')?1:-1, sy=(a2d.op==='sc-br'||a2d.op==='sc-bl')?1:-1;
+    var ca=Math.cos(b.ang), sa=Math.sin(b.ang);
+    var anchX=b.cx - sx*b.hw*ca + sy*b.hh*sa, anchY=b.cy - sx*b.hw*sa - sy*b.hh*ca;  /* opposite corner */
+    var ap3=_s2a(sp.x,sp.y), vx=ap3.x-anchX, vy=ap3.y-anchY;
+    var projX=vx*ca+vy*sa, projY=vx*(-sa)+vy*ca;
+    var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982, minpx=srefp*0.02;
+    var fullW=Math.max(minpx, projX*sx), fullH=Math.max(minpx, projY*sy);
     if (L.tiled){
-      /* NON-proportional, anchored at the OPPOSITE (top-left) corner: the box grows toward
-         the dragged handle while its opposite corner stays pinned — instead of scaling
-         symmetrically about the center (the old "alt-resize" feel). Rotation is unchanged,
-         so the layer still rotates about its center. */
-      var ca=Math.cos(b.ang), sa=Math.sin(b.ang);                  /* box rotation (fixed while scaling) */
-      var anchX=b.cx - b.hw*ca - b.hh*sa, anchY=b.cy - b.hw*sa + b.hh*ca;  /* pinned corner, atlas coords */
-      var ap3=_s2a(sp.x,sp.y), vx=ap3.x-anchX, vy=ap3.y-anchY;
-      var fullW = vx*ca + vy*sa;                                   /* along the box's local +x (toward handle) */
-      var fullH = -(vx*(-sa) + vy*ca);                             /* along local -y (handle sits on the -y side) */
-      var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982;
-      var minpx=srefp*0.02;
-      fullW=Math.max(minpx, fullW); fullH=Math.max(minpx, fullH);
       L.scale  = Math.max(2, Math.min(400, fullW/srefp*100));
       L.scaleH = Math.max(2, Math.min(400, fullH/srefp*100));
-      /* move the center so the pinned corner stays put with the NEW half-extents */
       var nhw=srefp*L.scale/200, nhh=srefp*L.scaleH/200;
-      var ncx=anchX + nhw*ca + nhh*sa, ncy=anchY + nhw*sa - nhh*ca;
+      var ncx=anchX + sx*nhw*ca - sy*nhh*sa, ncy=anchY + sx*nhw*sa + sy*nhh*ca;
       L.posU=Math.max(-20,Math.min(120,(ncx-e_.x)/e_.w*100));
       L.posV=Math.max(-20,Math.min(120,(ncy-e_.y)/e_.h*100));
-      _a2dApply();
     } else {
-      var c0=_a2s(b.cx,b.cy), d0=Math.hypot(a2d.start.sp.x-c0.x,a2d.start.sp.y-c0.y)||1, f=Math.hypot(sp.x-c0.x,sp.y-c0.y)/d0;
-      if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f)); else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f));
-      _a2dApply();
+      var f=Math.max(0.05, fullW/(2*(b.hw||1)));   /* uniform factor from width */
+      if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f));
+      else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f));
+      var gcx=anchX + f*(b.cx-anchX), gcy=anchY + f*(b.cy-anchY);  /* keep the anchor pinned */
+      L.posU=Math.max(-20,Math.min(120,(gcx-e_.x)/e_.w*100));
+      L.posV=Math.max(-20,Math.min(120,(gcy-e_.y)/e_.h*100));
     }
+    _a2dApply();
+  }
+  else if (a2d.op.indexOf('cr-')===0){
+    /* Crop from an edge: drag the edge handle inward to hide that side of the layer. */
+    var cca=Math.cos(b.ang), csa=Math.sin(b.ang);
+    var ap4=_s2a(sp.x,sp.y), cdx=ap4.x-b.cx, cdy=ap4.y-b.cy;
+    var lx=cdx*cca+cdy*csa, ly=cdx*(-csa)+cdy*cca;   /* cursor in box-local coords */
+    var hw=b.hw||1, hh=b.hh||1;
+    if (a2d.op==='cr-l') L.cropBoxL=Math.max(0,Math.min(0.45,(lx+hw)/(2*hw)));
+    else if (a2d.op==='cr-r') L.cropBoxR=Math.max(0,Math.min(0.45,(hw-lx)/(2*hw)));
+    else if (a2d.op==='cr-t') L.cropBoxT=Math.max(0,Math.min(0.45,(ly+hh)/(2*hh)));
+    else if (a2d.op==='cr-b') L.cropBoxB=Math.max(0,Math.min(0.45,(hh-ly)/(2*hh)));
+    _a2dApply();
   }
   else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var deg=Math.atan2(-dx,dy)*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* handle follows the cursor (5° snap) */ L.rotation=deg; _a2dApply(); }
 }
@@ -9931,7 +10007,7 @@ function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
   delete a2d.pointers[e.pointerId];
   var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
-  var wasEdit=(a2d.op==='move'||a2d.op==='scale'||a2d.op==='rotate');
+  var wasEdit=(a2d.op==='move'||a2d.op==='rotate'||(a2d.op&&(a2d.op.indexOf('sc-')===0||a2d.op.indexOf('cr-')===0)));
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
@@ -10033,48 +10109,60 @@ function atlas2dRender(){
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
     if (sel){
-      /* rotate handle at the visual TOP (local +y), resize at the visual BOTTOM-RIGHT
-         (local 1,-1). NB the view is vertically flipped, so these local signs map to the
-         expected on-screen corners. */
+      /* rotate stick at the visual TOP, 4 corner resize dots, 4 edge-midpoint crop squares */
       var rh=_boxLocalToScreen(b,0,1.6), topMid={x:(bl.x+br.x)/2,y:(bl.y+br.y)/2};
       ctx.strokeStyle=HC; ctx.lineWidth=1.6*D;
       ctx.beginPath(); ctx.moveTo(topMid.x,topMid.y); ctx.lineTo(rh.x,rh.y); ctx.stroke();
-      _a2dHandleDot(ctx, rh.x, rh.y, HS, HC);   /* rotate (top) */
-      _a2dHandleDot(ctx, tr.x, tr.y, HS, HC);   /* resize (bottom-right) */
+      _a2dHandleDot(ctx, rh.x, rh.y, HS, HC);                 /* rotate */
+      _a2dHandleDot(ctx, tl.x, tl.y, HS, HC);                 /* resize corners */
+      _a2dHandleDot(ctx, tr.x, tr.y, HS, HC);
+      _a2dHandleDot(ctx, br.x, br.y, HS, HC);
+      _a2dHandleDot(ctx, bl.x, bl.y, HS, HC);
+      var et=_boxLocalToScreen(b,0,-1), eb=_boxLocalToScreen(b,0,1), el=_boxLocalToScreen(b,-1,0), er=_boxLocalToScreen(b,1,0);
+      _a2dHandleSq(ctx, et.x, et.y, HS*0.9, HC);              /* crop edge handles */
+      _a2dHandleSq(ctx, eb.x, eb.y, HS*0.9, HC);
+      _a2dHandleSq(ctx, el.x, el.y, HS*0.9, HC);
+      _a2dHandleSq(ctx, er.x, er.y, HS*0.9, HC);
     }
   });
   ctx.restore();
-  /* 8. upright labels centered over each island's visual top (normal screen space).
-     Handles/Rivets labels follow their 2D-editor toggles (hidden when the part is off). */
-  var labelDefs = [ {bb:uv.exterior,label:'Exterior'}, {bb:uv.interior,label:'Interior'} ];
+  /* 8. upright labels (normal screen space). Arabic when the site language is Arabic.
+     A stroke (outline) is drawn under the fill for contrast (testing-tunable). */
+  var _arL = (typeof getLang==='function' && getLang()==='ar');
+  var GL = _arL ? {Exterior:'الخارج',Interior:'الداخل',Handles:'المقابض',Rivets:'البرشام'}
+                : {Exterior:'Exterior',Interior:'Interior',Handles:'Handles',Rivets:'Rivets'};
+  var labelDefs = [ {bb:uv.exterior,label:GL.Exterior}, {bb:uv.interior,label:GL.Interior} ];
   if (bagUVGuideCanvas){
-    if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:'Handles'});
-    if (A2D.showRivets2D)  labelDefs.push({bb:uv.rivets, label:'Rivets'});
+    if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:GL.Handles});
+    if (A2D.showRivets2D)  labelDefs.push({bb:uv.rivets, label:GL.Rivets});
+  }
+  var _stroke=(A2D.labelStroke||0)*D, _strokeCol=_themeColor(A2D.labelStrokeColor||'#ffffff');
+  function _drawLabel(txt,x,y){
+    if (_stroke>0){ ctx.lineJoin='round'; ctx.lineWidth=_stroke; ctx.strokeStyle=_strokeCol; ctx.strokeText(txt,x,y); }
+    ctx.fillText(txt,x,y);
   }
   ctx.fillStyle=_themeColor(A2D.labelColor); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif';
   ctx.textBaseline='bottom'; ctx.textAlign='center';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
-    ctx.fillText(it.label, p.x, ly-5*D);
+    _drawLabel(it.label, p.x, ly-5*D);
   });
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB
-     populated BAG_FACES. Drawn smaller + dimmer, centered inside each face panel. */
+     populated BAG_FACES. Centered (median UV) inside each face; size+color testing-tunable. */
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
-    var _ar = (typeof getLang==='function' && getLang()==='ar');
-    var FN = _ar ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
-                 : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
-    ctx.font='600 '+(Math.max(9,A2D.labelSize*0.52)*D)+'px sans-serif'; ctx.textBaseline='middle';
-    ctx.save(); ctx.globalAlpha=0.5;
+    var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
+                  : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
+    ctx.fillStyle=_themeColor(A2D.subLabelColor||'#333333');
+    ctx.font='600 '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif'; ctx.textBaseline='middle';
     ['exterior','interior'].forEach(function(grp){
       var faces=BAG_FACES[grp]||{};
       Object.keys(faces).forEach(function(f){
-        var bb=faces[f]; if(!bb) return;
-        var p=_a2s(bb.x + bb.w/2, bb.y + bb.h/2);
-        ctx.fillText(FN[f]||f, p.x, c.height - p.y);
+        var ce=faces[f]; if(!ce) return;
+        var p=_a2s(ce.cx, ce.cy);
+        _drawLabel(FN[f]||f, p.x, c.height - p.y);
       });
     });
-    ctx.restore();
   }
   ctx.textAlign='left';
   updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
@@ -10082,6 +10170,12 @@ function atlas2dRender(){
 /* white-filled circular handle with a coloured ring (image-5 style) */
 function _a2dHandleDot(ctx, x, y, r, color){
   ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle='#ffffff'; ctx.fill();
+  ctx.lineWidth=2*a2d.dpr; ctx.strokeStyle=color; ctx.stroke();
+}
+/* white-filled SQUARE handle (used for the edge crop handles, to distinguish from resize) */
+function _a2dHandleSq(ctx, x, y, r, color){
+  ctx.beginPath(); ctx.rect(x-r,y-r,r*2,r*2);
   ctx.fillStyle='#ffffff'; ctx.fill();
   ctx.lineWidth=2*a2d.dpr; ctx.strokeStyle=color; ctx.stroke();
 }
