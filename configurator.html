@@ -2106,10 +2106,10 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Pulse fps</span>
-          <span class="slider-val" id="pulse-fps-val">15</span>
+          <span class="slider-val" id="pulse-fps-val">10</span>
         </div>
         <input type="range" class="test-slider" id="pulse-fps"
-               min="5" max="60" step="1" value="15"
+               min="5" max="60" step="1" value="10"
                oninput="onPulseFps(this.value)">
       </div>
 
@@ -2346,20 +2346,20 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Max zoom out</span>
-          <span class="slider-val" id="max-zoom-val">16.3</span>
+          <span class="slider-val" id="max-zoom-val">20.0</span>
         </div>
         <input type="range" class="test-slider" id="max-zoom-slider"
-               min="2.0" max="24.0" step="0.5" value="16.3"
+               min="2.0" max="24.0" step="0.5" value="20.0"
                oninput="onMaxZoomSlider(this.value)">
       </div>
 
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Mobile default zoom</span>
-          <span class="slider-val" id="mobile-zoom-val">5.6</span>
+          <span class="slider-val" id="mobile-zoom-val">12.0</span>
         </div>
         <input type="range" class="test-slider" id="mobile-zoom-slider"
-               min="2.0" max="12.0" step="0.1" value="5.6"
+               min="2.0" max="20.0" step="0.1" value="12.0"
                oninput="onMobileZoomSlider(this.value)">
       </div>
 
@@ -8209,9 +8209,9 @@ let drag = false, prev = {x:0,y:0};
 const velocity = { theta: 0, phi: 0 };
 let zoomVelocity = 0;
 
-let MAX_ZOOM_OUT = 16.3;           /* maximum orbit radius (zoom out limit) */
+let MAX_ZOOM_OUT = 20.0;           /* maximum orbit radius (zoom out limit) */
 let MIN_ZOOM     = 1.2;            /* minimum orbit radius (zoom in limit) */
-let MOBILE_ZOOM  = 5.6;            /* default orbit radius on mobile (a bit further than desktop 4.6) */
+let MOBILE_ZOOM  = 12.0;           /* default orbit radius on mobile (pulled well back from desktop 4.6) */
 let LIFT          = 0.00;          /* extra Y above ground from the Object Y offset slider */
 let GROUND_OFFSET = 0;             /* shifts entire assembly (box + shadow) together */
 let DAMPING       = 0.95;
@@ -8720,7 +8720,7 @@ function onIdleDelaySlider(v) {
   document.getElementById('idle-delay-val').textContent = idleDelaySec.toFixed(1) + 's';
 }
 function onHueAnimSpeed(v) { _hueAnimSpeed = parseFloat(v); var el=document.getElementById('hue-anim-speed-val'); if(el) el.textContent = _hueAnimSpeed.toFixed(3); }
-function onPulseFps(v) { _pulseFps = Math.max(1, parseFloat(v)||15); var el=document.getElementById('pulse-fps-val'); if(el) el.textContent = Math.round(_pulseFps); }
+function onPulseFps(v) { _pulseFps = Math.max(1, parseFloat(v)||10); var el=document.getElementById('pulse-fps-val'); if(el) el.textContent = Math.round(_pulseFps); }
 function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
 function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
 function onAnimOpMax(v)    { _animOpMax = parseFloat(v); var el=document.getElementById('anim-opmax-val'); if(el) el.textContent = _animOpMax.toFixed(2); }
@@ -9650,7 +9650,7 @@ var _partTouched = {}, _suppressTouch = false;
    colour (default red) in and out between an opacity min and max, to signal what
    you're editing. Purely visual; restored when you pick a colour or leave the step. */
 var _hueAnimSpeed = 0.300;  /* pulse rate (cycle progresses _hueAnimSpeed·dt degrees) */
-var _pulseFps     = 15;     /* pulse redraw rate (fps) — higher = smoother/faster, controllable in Testing */
+var _pulseFps     = 10;     /* pulse redraw rate (fps) — higher = smoother/faster, controllable in Testing */
 var _animColor    = '#ff0000';
 var _animOpMin    = 0.80;
 var _animOpMax    = 1.00;
@@ -9697,7 +9697,7 @@ function startHueGuide(region){
   _hueAnim.region = region; _hueAnim.t0 = (typeof performance!=='undefined'?performance.now():Date.now()); _hueAnim.last = 0;
   var loop = function(now){
     if (_hueAnim.region !== region) return;
-    var _frame = 1000 / (_pulseFps || 15);   /* throttle texture uploads to the configured pulse fps */
+    var _frame = 1000 / (_pulseFps || 10);   /* throttle texture uploads to the configured pulse fps */
     if (now - _hueAnim.last >= _frame){
       _hueAnim.last = now;
       var deg   = ((now - _hueAnim.t0) * _hueAnimSpeed) % 360;
@@ -10139,6 +10139,12 @@ function _updateMobileFraming(){
   var sig = active && sr ? (Math.round(sr.width)+'x'+Math.round(sr.height)+':'+covered) : 'off';
   if (sig === _mobFrameSig) return;
   _mobFrameSig = sig;
+  /* Center the loading spinner / model-switch overlay in the SAME visible band (between the
+     header and the sheet) by shrinking their box from the bottom by `covered`. Dynamic with
+     the sheet position; cleared (back to full inset:0) on desktop / 2D. */
+  var _lb = (active && covered > 2) ? (covered + 'px') : '';
+  var _ld = document.getElementById('cfg-loader'); if (_ld) _ld.style.bottom = _lb;
+  var _sw = document.getElementById('bag-switch-overlay'); if (_sw) _sw.style.bottom = _lb;
   if (!active || covered <= 2 || !sr || sr.width < 2 || sr.height < 2){ if (cam.view && cam.view.enabled) cam.clearViewOffset(); return; }
   cam.setViewOffset(sr.width, sr.height + covered, 0, covered, sr.width, sr.height);  /* lift subject into the visible band */
 }
