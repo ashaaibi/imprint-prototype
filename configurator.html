@@ -285,7 +285,7 @@
     .canvas-stage.mode-2d #three-canvas:active { cursor: grabbing; }
     html[dir="rtl"] .canvas-stage.mode-2d #three-canvas { right: auto; left: 16px; }
     .mini3d-label {
-      position: absolute; right: 16px; bottom: 196px; z-index: 5;
+      position: absolute; right: 16px; bottom: 154px; z-index: 5;
       font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
       color: var(--imp-fg-3); background: var(--imp-surface); border: 1px solid var(--imp-border);
       border-radius: var(--imp-r-pill); padding: 3px 9px; box-shadow: var(--imp-shadow-xs);
@@ -9752,7 +9752,7 @@ function _fitMiniPreview(){
   var asp = (stage.clientWidth/stage.clientHeight) || 1.6;
   var hgt = Math.round(244/asp);
   cv.style.setProperty('height', hgt+'px', 'important');
-  var lbl=document.querySelector('.mini3d-label'); if(lbl) lbl.style.bottom=(16+hgt+6)+'px';   /* sit just above the box */
+  var lbl=document.querySelector('.mini3d-label'); if(lbl) lbl.style.bottom=(16+hgt-14)+'px';   /* overlap the top edge of the box, sitting on the viewer */
 }
 function atlas2dInit(){
   if (!a2d.canvas){ a2d.canvas = document.getElementById('atlas2d-canvas'); if (!a2d.canvas) return; a2d.ctx = a2d.canvas.getContext('2d'); }
