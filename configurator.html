@@ -5244,6 +5244,7 @@ function finishConfigLoading() {
     var sov = document.getElementById('bag-switch-overlay');
     if (sov) sov.style.display = 'none';
     if (typeof pushHistory === 'function') pushHistory(); /* seed undo/redo baseline */
+    if (typeof _prewarmLibrary === 'function') _prewarmLibrary();   /* warm artist-library thumbnails on idle */
     if (typeof _isMobileView === 'function' && _isMobileView()) orbit.radius = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM_OUT, MOBILE_ZOOM)); /* pull back a touch on phones */
     if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); /* center bag in mobile gap */
     /* preload sibling bag models in background on first load */
@@ -6642,23 +6643,30 @@ function renderFontLibrary() {
   var box = document.getElementById('add-source-library'); if (!box) return;
   box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading fonts…</div>';
   _fetchFontList(function(files) {
-    var jobs = files.map(function(f) {
-      return new Promise(function(res) {
-        _loadFontFromUrl('fonts/' + encodeURIComponent(f), f.replace(/\.[^.]+$/, ''), function(key) { res(key ? { key: key, name: f.replace(/\.[^.]+$/, '') } : null); });
-      });
-    });
-    Promise.all(jobs).then(function(loaded) {
-      var items = loaded.filter(Boolean);   /* artist fonts from /fonts only — no built-in placeholders */
-      if (!items.length) { box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No fonts in <b>/fonts</b> yet — drop <b>.ttf / .otf / .woff</b> files in that folder and they\'ll appear here.</div>'; return; }
-      var html = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Pick a font from the artist library:</div><div style="display:flex;flex-direction:column;gap:8px;">';
-      items.forEach(function(o) {
-        html += '<button onclick="chooseLibraryFont(\'' + o.key + '\')" title="' + escapeHTML(o.name) + '" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:#fff;cursor:pointer;text-align:left;">' +
-          '<span style="' + _fontPreviewStyle(o.key) + 'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHTML(o.name) + '</span>' +
-          '<span style="' + _fontPreviewStyle(o.key) + 'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span></button>';
-      });
-      html += '</div>';
-      box.innerHTML = html;
-    });
+    if (!files.length) { box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No fonts in <b>/fonts</b> yet — drop <b>.ttf / .otf / .woff</b> files in that folder and they\'ll appear here.</div>'; return; }
+    box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Pick a font from the artist library:</div><div id="_fontgrid" style="display:flex;flex-direction:column;gap:8px;"></div>';
+    var grid = document.getElementById('_fontgrid');
+    /* load fonts in row order with a small concurrency cap; append each card as it loads
+       (progressive) so the first fonts show up immediately instead of waiting for all. */
+    var idx = 0, active = 0, CONC = 3;
+    function pump() {
+      while (active < CONC && idx < files.length) {
+        var f = files[idx++]; active++;
+        _loadFontFromUrl('fonts/' + encodeURIComponent(f), f.replace(/\.[^.]+$/, ''), function (fn) { return function (key) {
+          active--;
+          if (key) {
+            var name = fn.replace(/\.[^.]+$/, ''), b = document.createElement('button');
+            b.title = name; b.setAttribute('onclick', "chooseLibraryFont('" + key + "')");
+            b.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:#fff;cursor:pointer;text-align:left;';
+            b.innerHTML = '<span style="' + _fontPreviewStyle(key) + 'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHTML(name) + '</span>' +
+              '<span style="' + _fontPreviewStyle(key) + 'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>';
+            if (grid) grid.appendChild(b);
+          }
+          pump();
+        }; }(f));
+      }
+    }
+    pump();
   });
 }
 function chooseLibraryFont(key) {
@@ -6698,13 +6706,41 @@ function renderArtistLibrary() {
   _fetchLibraryList(folder, function(files) {
     if (!files.length) { box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No ' + label + 's in <b>/' + folder + '</b> yet — drop SVG or PNG files in that folder and they\'ll appear here.</div>'; return; }
     box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Pick a ' + label + ' from the artist library:</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+      '<div id="_artgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
       files.map(function(f) {
         var safe = f.replace(/'/g, "\\'");
         return '<button onclick="chooseLibraryPattern(\'' + safe + '\')" title="' + f + '" style="aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:#fff;cursor:pointer;padding:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">' +
-          '<img src="' + folder + '/' + encodeURIComponent(f) + '" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;"></button>';
+          '<img data-src="' + folder + '/' + encodeURIComponent(f) + '" decoding="async" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .18s;"></button>';
       }).join('') + '</div>';
+    _loadThumbsInOrder(document.getElementById('_artgrid'), 6);
   });
+}
+/* Load grid thumbnails in DOM (row) order with a small concurrency cap → top rows get
+   priority, fewer simultaneous decodes = faster perceived load. Fades each in. */
+function _loadThumbsInOrder(grid, conc) {
+  if (!grid) return;
+  var imgs = Array.prototype.slice.call(grid.querySelectorAll('img[data-src]'));
+  var idx = 0, active = 0; conc = conc || 6;
+  function pump() {
+    while (active < conc && idx < imgs.length) {
+      var im = imgs[idx++]; active++;
+      im.onload = im.onerror = function () { this.style.opacity = '1'; active--; pump(); };
+      im.src = im.getAttribute('data-src'); im.removeAttribute('data-src');
+    }
+  }
+  pump();
+}
+/* Warm the artist-library lists + first thumbnails into the browser cache on idle, so the
+   first time the library opens the thumbnails appear (near) instantly. Runs once. */
+var _libWarmed = false;
+function _prewarmLibrary() {
+  if (_libWarmed) return; _libWarmed = true;
+  var go = function () {
+    try { ['graphics', 'patterns'].forEach(function (folder) {
+      _fetchLibraryList(folder, function (files) { (files || []).slice(0, 9).forEach(function (f) { var im = new Image(); im.decoding = 'async'; im.src = folder + '/' + encodeURIComponent(f); }); });
+    }); } catch (e) {}
+  };
+  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 3500 }); else setTimeout(go, 2200);
 }
 function chooseLibraryPattern(file) {
   var L = getLayer(_addSrc.id); if (!L) { _closeAddSourceOverlay(); return; }
@@ -10327,8 +10363,7 @@ function _aUp(e){
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
   if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; }   /* exit fast-drag → next redraw is full quality */
-  /* crop finished → bake it so the layer's pivot re-centers on the cropped region */
-  if (a2d.op===null && endedOp && endedOp.indexOf('cr-')===0 && a2d.sel) _bakeCrop(a2d.sel);
+  /* NOTE: crop is kept live (reversible) — drag the crop handles back out to un-crop / Ctrl-Z undoes it. */
   /* a CLICK (not a drag) on empty canvas inside a face → show the face colour bar */
   if (a2d.op===null && endedOp==='pan' && a2d.start && a2d.start.sp){
     var _up=_evPos(e); if (Math.hypot(_up.x-a2d.start.sp.x,_up.y-a2d.start.sp.y) < 5*(a2d.dpr||1)) _faceClick(_up);
