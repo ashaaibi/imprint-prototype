@@ -2233,35 +2233,35 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette thickness</span><span class="slider-val" id="a2d-silhouetteThickness-val">2</span></div>
         <input type="range" class="test-slider" min="0" max="8" step="0.1" value="2" oninput="onA2Dnum('silhouetteThickness',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette dashed</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('silhouetteDash',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('silhouetteDash',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">21</span></div>
         <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
         <input type="color" value="#000000" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelColor',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke thickness</span><span class="slider-val" id="a2d-labelStroke-val">4</span></div>
-        <input type="range" class="test-slider" min="0" max="12" step="0.5" value="4" oninput="onA2Dnum('labelStroke',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke thickness</span><span class="slider-val" id="a2d-labelStroke-val">5</span></div>
+        <input type="range" class="test-slider" min="0" max="12" step="0.5" value="5" oninput="onA2Dnum('labelStroke',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke color</span><span class="slider-val" id="a2d-labelStrokeColor-val">#ffffff</span></div>
         <input type="color" value="#ffffff" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelStrokeColor',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label bold</span><span class="slider-val" id="a2d-labelWeight-val">600</span></div>
-        <input type="range" class="test-slider" min="100" max="3000" step="50" value="600" oninput="onA2Dnum('labelWeight',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label bold</span><span class="slider-val" id="a2d-subLabelWeight-val">600</span></div>
-        <input type="range" class="test-slider" min="100" max="3000" step="50" value="600" oninput="onA2Dnum('subLabelWeight',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label bold</span><span class="slider-val" id="a2d-labelWeight-val">1000</span></div>
+        <input type="range" class="test-slider" min="100" max="3000" step="50" value="1000" oninput="onA2Dnum('labelWeight',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label bold</span><span class="slider-val" id="a2d-subLabelWeight-val">1000</span></div>
+        <input type="range" class="test-slider" min="100" max="3000" step="50" value="1000" oninput="onA2Dnum('subLabelWeight',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Show unselected layer box</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('showUnselectedBox',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">14</span></div>
-        <input type="range" class="test-slider" min="6" max="36" step="1" value="14" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('showUnselectedBox',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">15</span></div>
+        <input type="range" class="test-slider" min="6" max="36" step="1" value="15" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
         <input type="color" value="#333333" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('subLabelColor',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert label in dark</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('invertLabelDark',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('invertLabelDark',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert sub-label in dark</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('invertSubLabelDark',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('invertSubLabelDark',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert silhouette in dark</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('invertSilhouetteDark',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('invertSilhouetteDark',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label position</span></div>
         <select onchange="onA2Dsel('subLabelPos',this.value)" style="width:100%;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface,#fff);color:inherit;font-family:inherit;font-size:12px;cursor:pointer;">
           <option value="center">Center of face</option>
-          <option value="bottom">Bottom center</option>
+          <option value="bottom" selected>Bottom center</option>
           <option value="top">Top center</option>
           <option value="topleft">Top left</option>
         </select></div>
@@ -3009,8 +3009,8 @@ const S = {
 };
 /* ─── PAPER BAG STATE ───────────────── */
 const BAG = {
-  exterior: { color: '#00E6D2', finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  interior: { color: '#00E6D2', finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  exterior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  interior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   artwork: {
@@ -4026,6 +4026,22 @@ function _drawBodyRegion(region, uv, clip, kraftRender){
     /* dilate the colour fill by `padding` px (thick stroke) to cover gaps/holes around
        the handle bases & rivets so they don't read as white halos */
     if (A2D.padding > 0){ bagTexCtx.strokeStyle = col; bagTexCtx.lineJoin='round'; bagTexCtx.lineCap='round'; bagTexCtx.lineWidth = A2D.padding * 2; bagTexCtx.stroke(clip.path); }
+    /* per-face colour overrides: paint each overridden face's island on top of the base
+       colour (the others keep the region colour set in the Exterior/Interior step). */
+    var _fcs = BAG[region].faceColors, _faces = (typeof BAG_FACES!=='undefined') && BAG_FACES[region];
+    if (_fcs && _faces){ Object.keys(_fcs).forEach(function(f){
+      var fc=_fcs[f], fe=_faces[f];
+      if (fc && fe && fe.clip && fe.clip.path){
+        bagTexCtx.save();
+        /* clip to the face's (expanded) box so stray UVs in that island can't bleed onto
+           neighbouring faces (interior back/front have a few stray verts). */
+        var mx=fe.w*0.10, my=fe.h*0.10;
+        bagTexCtx.beginPath(); bagTexCtx.rect(fe.x-mx, fe.y-my, fe.w+2*mx, fe.h+2*my); bagTexCtx.clip();
+        bagTexCtx.fillStyle=fc; bagTexCtx.fill(fe.clip.path);
+        if (A2D.padding > 0){ bagTexCtx.strokeStyle=fc; bagTexCtx.lineJoin='round'; bagTexCtx.lineCap='round'; bagTexCtx.lineWidth=A2D.padding*2; bagTexCtx.stroke(fe.clip.path); }
+        bagTexCtx.restore();
+      }
+    }); }
     bagTexCtx.clip(clip.path);          /* kraft + base pattern stay inside the island */
   } else {
     bagTexCtx.fillStyle = col; bagTexCtx.fillRect(uv.x, uv.y, uv.w, uv.h);
@@ -4990,8 +5006,8 @@ function buildPaperBagMesh() {
          UV center (robust to stray/outlier UVs that would skew a min/max bbox center —
          e.g. M_int_front/back have a few stray verts at the UV corners). */
       BAG_FACES = { exterior:{}, interior:{} };
-      Object.keys(grp.extFace).forEach(function(f){ var c=_faceUVBox(grp.extFace[f]); if (c) BAG_FACES.exterior[f]=c; });
-      Object.keys(grp.intFace).forEach(function(f){ var c=(f==='back')?_faceUVBoxCluster(grp.intFace[f]):_faceUVBox(grp.intFace[f]); if (c) BAG_FACES.interior[f]=c; });
+      Object.keys(grp.extFace).forEach(function(f){ var c=_faceUVBox(grp.extFace[f]); if (c){ c.clip=computeIslandRegion(grp.extFace[f]); BAG_FACES.exterior[f]=c; } });
+      Object.keys(grp.intFace).forEach(function(f){ var c=(f==='back')?_faceUVBoxCluster(grp.intFace[f]):_faceUVBox(grp.intFace[f]); if (c){ c.clip=computeIslandRegion(grp.intFace[f]); BAG_FACES.interior[f]=c; } });
       buildUVGuide();
       console.log('[imprint] BUILD=parts-atlas+uvguide · ext faces:', Object.keys(grp.extFace).join(',')||'(merged)', '· int faces:', Object.keys(grp.intFace).join(',')||'(merged)', '· handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip);
     } else {
@@ -5135,6 +5151,57 @@ function _stopLoaderText(){ if(_loaderTimer){ clearInterval(_loaderTimer); _load
 /* Hide loading overlay (min visible time for premium feel) then play intro spin */
 var _configLoadStart = (typeof performance !== 'undefined') ? performance.now() : Date.now();
 _startLoaderText('cfg-loader-text','init');   /* begin the rotating copy on the initial load */
+
+/* ─── First-visit onboarding: pick language / country-currency / theme, or skip. ─── */
+function _maybeShowOnboarding(){
+  try { if(!/[?&]onboard\b/.test(location.search) && localStorage.getItem('imprint_onboarded')) return; } catch(e){}
+  if(typeof GCC==='undefined') return;
+  if(document.getElementById('onboard-overlay')) return;
+  var lang=(typeof getLang==='function')?getLang():'en', theme=(typeof getTheme==='function')?getTheme():'light', cc=(typeof getCountryCode==='function')?getCountryCode():'AE', ar=(lang==='ar');
+  window._obSel={lang:lang, cc:cc, theme:theme};
+  var st=document.createElement('style');
+  st.textContent='#onboard-overlay{position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;}'+
+    '.ob-card{background:var(--imp-surface,#fff);color:var(--imp-fg,#111);border-radius:18px;padding:26px;width:min(440px,94vw);max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,0.4);font-family:var(--imp-font);direction:'+(ar?'rtl':'ltr')+';}'+
+    '.ob-h{font-size:19px;font-weight:700;margin-bottom:4px;}.ob-sub{font-size:13px;color:var(--imp-fg-2,#777);margin-bottom:14px;}'+
+    '.ob-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:14px 0 8px;}'+
+    '.ob-row{display:flex;gap:8px;flex-wrap:wrap;}'+
+    '.ob-opt{flex:1;min-width:60px;padding:10px;border:1.5px solid var(--imp-border,#e5e5e5);border-radius:11px;background:var(--imp-surface,#fff);color:inherit;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:center;}'+
+    '.ob-opt.on{border-color:var(--imp-gold,#c8a96e);background:var(--imp-gold-soft,#f8f1e2);}'+
+    '.ob-cc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}'+
+    '.ob-cc .ob-opt{display:flex;flex-direction:column;gap:2px;align-items:center;}.ob-cc .flag{font-size:20px;}.ob-cc .cur{font-size:11px;color:var(--imp-fg-2,#777);}'+
+    '.ob-actions{display:flex;gap:10px;margin-top:22px;align-items:center;}.ob-skip{background:none;border:none;color:var(--imp-fg-3,#999);font-size:13px;cursor:pointer;padding:12px;font-family:inherit;}'+
+    '.ob-start{flex:1;background:var(--imp-fg,#111);color:var(--imp-bg,#fff);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}';
+  document.head.appendChild(st);
+  var ccBtns=Object.keys(GCC).map(function(code){ var c=GCC[code]; return '<button class="ob-opt'+(code===cc?' on':'')+'" data-cc="'+code+'" onclick="_obPick(this,\'cc\')"><span class="flag">'+c.flag+'</span><span>'+(ar?c.nameAr:c.name)+'</span><span class="cur">'+(ar?c.currencyAr:c.currency)+'</span></button>'; }).join('');
+  var ov=document.createElement('div'); ov.id='onboard-overlay';
+  ov.innerHTML='<div class="ob-card">'+
+    '<div class="ob-h">'+(ar?'مرحباً بك في IMPRINT':'Welcome to IMPRINT')+'</div>'+
+    '<div class="ob-sub">'+(ar?'اختر تفضيلاتك للبدء، أو تخطَّ للإعدادات الافتراضية.':'Set your preferences to begin — or skip for the defaults.')+'</div>'+
+    '<div class="ob-lbl">'+(ar?'اللغة':'Language')+'</div><div class="ob-row"><button class="ob-opt'+(lang==='en'?' on':'')+'" data-lang="en" onclick="_obPick(this,\'lang\')">English</button><button class="ob-opt'+(ar?' on':'')+'" data-lang="ar" onclick="_obPick(this,\'lang\')">العربية</button></div>'+
+    '<div class="ob-lbl">'+(ar?'الدولة / العملة':'Country / Currency')+'</div><div class="ob-cc ob-row">'+ccBtns+'</div>'+
+    '<div class="ob-lbl">'+(ar?'المظهر':'Appearance')+'</div><div class="ob-row"><button class="ob-opt'+(theme==='light'?' on':'')+'" data-theme="light" onclick="_obPick(this,\'theme\')">'+(ar?'فاتح':'Light')+'</button><button class="ob-opt'+(theme==='dark'?' on':'')+'" data-theme="dark" onclick="_obPick(this,\'theme\')">'+(ar?'داكن':'Dark')+'</button></div>'+
+    '<div class="ob-actions"><button class="ob-skip" onclick="_obFinish(false)">'+(ar?'تخطّي':'Skip')+'</button><button class="ob-start" onclick="_obFinish(true)">'+(ar?'ابدأ التصميم':'Start designing')+'</button></div>'+
+    '</div>';
+  document.body.appendChild(ov);
+}
+function _obPick(btn, kind){
+  btn.parentElement.querySelectorAll('.ob-opt').forEach(function(b){b.classList.remove('on');}); btn.classList.add('on');
+  if(kind==='lang') window._obSel.lang=btn.getAttribute('data-lang');
+  else if(kind==='cc') window._obSel.cc=btn.getAttribute('data-cc');
+  else if(kind==='theme'){ window._obSel.theme=btn.getAttribute('data-theme'); if(typeof setTheme==='function') setTheme(window._obSel.theme); }  /* live preview */
+}
+function _obFinish(apply){
+  try{ localStorage.setItem('imprint_onboarded','1'); }catch(e){}
+  var sel=window._obSel||{}, changed=false;
+  if(apply){
+    if(typeof setTheme==='function') setTheme(sel.theme);
+    var curLang=(typeof getLang==='function')?getLang():'en'; if(sel.lang && sel.lang!==curLang){ if(typeof setLang==='function') setLang(sel.lang); changed=true; }
+    var curCc=(typeof getCountryCode==='function')?getCountryCode():'AE'; if(sel.cc && sel.cc!==curCc){ if(typeof setCountryCode==='function') setCountryCode(sel.cc); changed=true; }
+  }
+  var ov=document.getElementById('onboard-overlay'); if(ov) ov.remove();
+  if(apply && changed) location.reload();  /* lang/currency need a refresh to apply everywhere */
+}
+setTimeout(_maybeShowOnboarding, 0);
 /* Size/model loading lock — prevents starting a second GLB load while one is in
    flight (which would race two meshes together and could crash). Locks the size
    buttons with a not-allowed cursor until the load finishes. */
@@ -6946,6 +7013,10 @@ function openCutoutModal(layerId, srcImg, fileName, existingBg, isNew, fromLibra
   if (_bgWant) onCutoutToggle(true);
   var _en = document.getElementById('cutout-enabled'); if (_en) _en.checked = cutout.bg.enabled;
   document.getElementById('cutout-overlay').classList.add('open');
+  /* The first preview renders before the modal is laid out → it can come up dark. Re-render
+     once the modal is visible (acts like nudging Reset crop) so the preview wakes up. */
+  requestAnimationFrame(function(){ try { renderCutoutPreview(); _positionCropOverlay(); } catch(e){} });
+  setTimeout(function(){ try { renderCutoutPreview(); _positionCropOverlay(); } catch(e){} }, 60);
 }
 function onCutoutPdfPage(delta) {
   var L = getLayer(cutout.layerId); if (!L || !L.pdfDoc || !L.pdfNumPages) return;
@@ -10010,12 +10081,12 @@ var viewMode = '3d';
 var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
   labelSize:21, labelColor:'#000000',
-  labelWeight:600, subLabelWeight:600,         /* font-weight for labels / sub-labels */
-  showUnselectedBox:false,                      /* draw the faint bounding box on UNSELECTED layers */
-  labelStroke:4, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
-  invertLabelDark:true, invertSubLabelDark:true, invertSilhouetteDark:true,  /* auto-invert these colours in dark mode */
-  subLabelSize:14, subLabelColor:'#333333',    /* per-face sub-label size + colour */
-  subLabelPos:'center',                          /* center | bottom | top | topleft */
+  labelWeight:1000, subLabelWeight:1000,         /* font-weight for labels / sub-labels */
+  showUnselectedBox:true,                      /* draw the faint bounding box on UNSELECTED layers */
+  labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
+  invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
+  subLabelSize:15, subLabelColor:'#333333',    /* per-face sub-label size + colour */
+  subLabelPos:'bottom',                          /* center | bottom | top | topleft */
   snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
@@ -10026,7 +10097,7 @@ var A2D = {
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
-  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
+  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:true,  /* outer shell outline */
   showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
@@ -10359,15 +10430,17 @@ function _showFaceBar(region, faceName, sp){
   bar.style.display='flex'; bar.style.transform='translateX(-50%)';
   bar.style.left=cssX+'px'; bar.style.top=(cssY+14)+'px';
 }
-function _faceSwatch(region,hex,name){ if(typeof pickBagSwatch==='function') pickBagSwatch(region,hex,name); }
-function _faceCustomColor(region,hex){
+/* Apply a colour to ONLY the clicked face (M_ext_<face> / M_int_<face>); other faces keep
+   the colour picked in the Exterior/Interior step. */
+function _setFaceColor(region, hex){
+  var face = a2d.faceSel && a2d.faceSel.face;
   if(typeof _markTouched==='function') _markTouched(region);
-  BAG[region].swatchName='Custom'; BAG[region].customHex=hex; BAG[region].color=hex;
-  if(typeof updateBagColorDisplay==='function') updateBagColorDisplay(region,hex);
-  var prefix={exterior:'ext',interior:'int'}[region], hueEl=document.getElementById('bag-'+prefix+'-hslider');
-  if(hueEl && typeof hexToHSV==='function'){ var hh=hexToHSV(hex).h; hueEl.value=hh; if(typeof renderBagSwatches==='function') renderBagSwatches(region,hh,hex); }
+  if(!face){ /* no specific face → fall back to whole region */ BAG[region].swatchName='Custom'; BAG[region].customHex=hex; BAG[region].color=hex; if(typeof updateBagColorDisplay==='function') updateBagColorDisplay(region,hex); }
+  else { BAG[region].faceColors = BAG[region].faceColors || {}; BAG[region].faceColors[face]=hex; }
   if(typeof drawBagTexture==='function') drawBagTexture();
 }
+function _faceSwatch(region,hex,name){ _setFaceColor(region,hex); }
+function _faceCustomColor(region,hex){ _setFaceColor(region,hex); }
 
 function atlas2dRender(){
   var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
