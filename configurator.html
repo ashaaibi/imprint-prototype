@@ -1954,6 +1954,20 @@
           <span class="bag-sopt-dims">11 × 30 × 13 cm</span>
           <span class="bag-sopt-price">from AED 7.50/unit</span>
         </button>
+        <button class="bag-sopt" id="bag-sopt-custom" onclick="onBagSizeCustom(this)">
+          <span class="bag-sopt-key" data-en="Custom size" data-ar="مقاس مخصص">Custom size</span>
+          <span class="bag-sopt-dims" id="custom-size-dims">— × — × — cm</span>
+          <span class="bag-sopt-price" data-en="enter your own" data-ar="أدخل مقاسك">enter your own</span>
+        </button>
+      </div>
+      <div id="custom-size-panel" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--imp-border);border-radius:12px;background:var(--imp-surface-2);">
+        <div style="display:flex;gap:8px;align-items:flex-end;">
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Width" data-ar="العرض">Width</span><br><input id="cs-w" type="number" min="1" step="0.5" value="28" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" step="0.5" value="20" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Depth" data-ar="العمق">Depth</span><br><input id="cs-d" type="number" min="1" step="0.5" value="14" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+        </div>
+        <label style="display:block;margin-top:9px;font-size:11px;color:var(--imp-fg-2);"><span data-en="Quantity" data-ar="الكمية">Quantity</span><br><input id="cs-qty" type="number" min="1" step="1" placeholder="e.g. 750" oninput="applyCustomQty()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+        <div style="margin-top:8px;font-size:10px;color:var(--imp-fg-3);line-height:1.45;" data-en="Updates the printed measurements only — the 3D preview keeps its current shape." data-ar="يحدّث المقاسات المطبوعة فقط — معاينة 3D تبقى بنفس الشكل.">Updates the printed measurements only — the 3D preview keeps its current shape.</div>
       </div>
     </div>
 
@@ -2213,6 +2227,12 @@
         <input type="range" class="test-slider" min="6" max="36" step="1" value="14" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
         <input type="color" value="#333333" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('subLabelColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert label in dark</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('invertLabelDark',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert sub-label in dark</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('invertSubLabelDark',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert silhouette in dark</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('invertSilhouetteDark',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label position</span></div>
         <select onchange="onA2Dsel('subLabelPos',this.value)" style="width:100%;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface,#fff);color:inherit;font-family:inherit;font-size:12px;cursor:pointer;">
           <option value="center">Center of face</option>
@@ -4800,7 +4820,7 @@ function buildUVGuide() {
   g.scale(k, k);
   g.lineJoin = 'round'; g.lineCap = 'round';
   var single = A2D.outlineColor ? _themeColor(A2D.outlineColor) : '';
-  var silCol = _themeColor(A2D.silhouetteColor);
+  var silCol = _themeColorIf(A2D.silhouetteColor, A2D.invertSilhouetteDark);
   regions.forEach(function(r) {
     /* tint fill (set Tint opacity to 0 → only the lines show, no triangle fill) */
     if (A2D.tintOpacity > 0) { g.globalAlpha = A2D.tintOpacity; g.fillStyle = single || ('rgb(' + r.rgb + ')'); g.fill(r.clip.path); }
@@ -4869,6 +4889,9 @@ function buildPaperBagMesh() {
   var model = BAG_MODELS[currentBagModel] || BAG_MODELS.wide;
   setBagUVForModel(currentBagModel);
   if (typeof updateBagQtyGridFromEntry === 'function') updateBagQtyGridFromEntry(model);
+  /* keep the bottom-left measurement pill in sync with the loaded model (unless the user is
+     in custom-size mode, which overrides the printed measurements) */
+  var _pill=document.getElementById('dim-pill'); if(_pill && typeof _customSize!=='undefined' && !_customSize.on && model.dims) _pill.textContent=model.dims;
   // Real file URL (same-origin on Pages/dev-server) — load() handles it directly
   loader.load(model.file, function(gltf) {
     bagGroup = new THREE.Group();
@@ -8022,9 +8045,45 @@ function applyBagSizeScale(sx, sy, sz, normMult) {
   updateBlobScale(T.box.position.y);
 }
 
+/* ─── CUSTOM SIZE (display-only: relabels the measurements, never resizes the mesh) ─── */
+var _customSize = { on:false, w:28, h:20, d:14, qty:0 };
+function onBagSizeCustom(btn){
+  if (_bagLoading) return;
+  _customSize.on = true;
+  document.querySelectorAll('.bag-sopt').forEach(function(b){ b.classList.remove('on'); });
+  if (btn) btn.classList.add('on');
+  var p = document.getElementById('custom-size-panel'); if (p) p.style.display = 'block';
+  applyCustomDims(); applyCustomQty();
+}
+function applyCustomDims(){
+  var gv=function(id){ var el=document.getElementById(id); return el?parseFloat(el.value):0; };
+  _customSize.w=gv('cs-w'); _customSize.h=gv('cs-h'); _customSize.d=gv('cs-d');
+  var txt=(_customSize.w||'—')+' × '+(_customSize.h||'—')+' × '+(_customSize.d||'—')+' cm';
+  var dd=document.getElementById('custom-size-dims'); if(dd) dd.textContent=txt;
+  if(_customSize.on){
+    var pill=document.getElementById('dim-pill'); if(pill) pill.textContent=txt;
+    if(typeof S!=='undefined') S.dims=txt;   /* flows into the order summary */
+  }
+}
+function applyCustomQty(){
+  var el=document.getElementById('cs-qty'); var q=el?parseInt(el.value):0;
+  if(_customSize.on && q>0){
+    _customSize.qty=q; S.qty=q;
+    document.querySelectorAll('#bag-qty-grid .qopt').forEach(function(b){ b.classList.remove('on'); });  /* custom overrides the tier */
+    if(typeof updatePricing==='function') updatePricing();
+  }
+}
+function _exitCustomSize(modelKey){
+  if(!_customSize.on && !document.getElementById('bag-sopt-custom')) return;
+  _customSize.on=false;
+  var cb=document.getElementById('bag-sopt-custom'); if(cb) cb.classList.remove('on');
+  var p=document.getElementById('custom-size-panel'); if(p) p.style.display='none';
+  var pill=document.getElementById('dim-pill'); if(pill && BAG_MODELS[modelKey] && BAG_MODELS[modelKey].dims) pill.textContent=BAG_MODELS[modelKey].dims;
+}
 function onBagSize(key, btn) {
   if (!BAG_MODELS[key]) return;
   if (_bagLoading) return;            /* a model is still loading — ignore (buttons are locked) */
+  _exitCustomSize(key);               /* leaving custom → restore this model's real dims */
   if (currentBagModel === key) return;
   currentBagModel = key;
   /* single-select: clear every other size, mark only this one */
@@ -8421,6 +8480,8 @@ function _themeColor(hex){
   var c = _hexToRgb(hex), lum = (0.299*c[0] + 0.587*c[1] + 0.114*c[2]) / 255;
   return (lum < 0.5) ? _rgbToHex(255-c[0], 255-c[1], 255-c[2]) : hex;
 }
+/* Invert-in-dark, but only when the per-element toggle wants it (label/sub-label/silhouette). */
+function _themeColorIf(hex, doInvert){ return doInvert ? _themeColor(hex) : hex; }
 function startColorTween(region, toHex) {
   colorTweens[region] = {
     from: _hexToRgb(BAG[region].color || '#ffffff'),
@@ -9887,6 +9948,7 @@ var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
   labelSize:21, labelColor:'#000000',
   labelStroke:4, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
+  invertLabelDark:true, invertSubLabelDark:true, invertSilhouetteDark:true,  /* auto-invert these colours in dark mode */
   subLabelSize:14, subLabelColor:'#333333',    /* per-face sub-label size + colour */
   subLabelPos:'center',                          /* center | bottom | top | topleft */
   snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
@@ -10210,12 +10272,17 @@ function atlas2dRender(){
       _a2dHandleSq(ctx, er.x, er.y, HS*0.9, HC);
     }
   });
-  /* magnetic-snap indicator: ring + crosshair at the face center the layer snapped to */
+  /* magnetic-snap smart guides: full-canvas vertical + horizontal lines through the snapped
+     face center (Photoshop / Illustrator style) */
   if (_a2dDragging && a2d._snapFace){
-    var sp2=_a2s(a2d._snapFace.cx, a2d._snapFace.cy), rr=11*D;
-    ctx.strokeStyle=_themeColor(A2D.handleColor); ctx.lineWidth=2*D;
-    ctx.beginPath(); ctx.arc(sp2.x,sp2.y,rr,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(sp2.x-rr-4*D,sp2.y); ctx.lineTo(sp2.x+rr+4*D,sp2.y); ctx.moveTo(sp2.x,sp2.y-rr-4*D); ctx.lineTo(sp2.x,sp2.y+rr+4*D); ctx.stroke();
+    var sp2=_a2s(a2d._snapFace.cx, a2d._snapFace.cy);
+    ctx.save();
+    ctx.setLineDash([]); ctx.strokeStyle='rgba(255,45,95,0.95)'; ctx.lineWidth=1*D;
+    ctx.beginPath();
+    ctx.moveTo(Math.round(sp2.x)+0.5, 0); ctx.lineTo(Math.round(sp2.x)+0.5, c.height);
+    ctx.moveTo(0, Math.round(sp2.y)+0.5); ctx.lineTo(c.width, Math.round(sp2.y)+0.5);
+    ctx.stroke();
+    ctx.restore();
   }
   ctx.restore();
   /* 8. upright labels (normal screen space). Arabic when the site language is Arabic.
@@ -10228,12 +10295,12 @@ function atlas2dRender(){
     if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:GL.Handles});
     if (A2D.showRivets2D)  labelDefs.push({bb:uv.rivets, label:GL.Rivets});
   }
-  var _stroke=(A2D.labelStroke||0)*D, _strokeCol=_themeColor(A2D.labelStrokeColor||'#ffffff');
+  var _stroke=(A2D.labelStroke||0)*D, _strokeCol=_themeColorIf(A2D.labelStrokeColor||'#ffffff', A2D.invertLabelDark);
   function _drawLabel(txt,x,y){
     if (_stroke>0){ ctx.lineJoin='round'; ctx.lineWidth=_stroke; ctx.strokeStyle=_strokeCol; ctx.strokeText(txt,x,y); }
     ctx.fillText(txt,x,y);
   }
-  ctx.fillStyle=_themeColor(A2D.labelColor); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif';
+  ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif';
   ctx.textBaseline='bottom'; ctx.textAlign='center';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
@@ -10245,7 +10312,7 @@ function atlas2dRender(){
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
     var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
-    ctx.fillStyle=_themeColor(A2D.subLabelColor||'#333333');
+    ctx.fillStyle=_themeColorIf(A2D.subLabelColor||'#333333', A2D.invertSubLabelDark);
     ctx.font='600 '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif';
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
