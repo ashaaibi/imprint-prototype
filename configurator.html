@@ -1658,8 +1658,9 @@
         </div>
         <div class="cfg-loader-text" data-en="Preparing your studio…" data-ar="نُجهّز الاستوديو…">Preparing your studio…</div>
       </div>
-      <div id="bag-switch-overlay" style="display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,0.18);align-items:center;justify-content:center;border-radius:inherit;">
+      <div id="bag-switch-overlay" style="display:none;position:absolute;inset:0;z-index:5;background:var(--imp-surface);flex-direction:column;gap:16px;align-items:center;justify-content:center;border-radius:inherit;">
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
+        <div class="cfg-loader-text" id="bag-switch-text">Reshaping your bag…</div>
       </div>
       <div class="dim-pill" id="dim-pill">30 × 34 × 17 cm</div>
       <div class="mode-toggle" id="mode-toggle">
@@ -2240,6 +2241,12 @@
         <input type="range" class="test-slider" min="0" max="12" step="0.5" value="4" oninput="onA2Dnum('labelStroke',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke color</span><span class="slider-val" id="a2d-labelStrokeColor-val">#ffffff</span></div>
         <input type="color" value="#ffffff" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelStrokeColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label bold</span><span class="slider-val" id="a2d-labelWeight-val">600</span></div>
+        <input type="range" class="test-slider" min="100" max="900" step="100" value="600" oninput="onA2Dnum('labelWeight',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label bold</span><span class="slider-val" id="a2d-subLabelWeight-val">600</span></div>
+        <input type="range" class="test-slider" min="100" max="900" step="100" value="600" oninput="onA2Dnum('subLabelWeight',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Show unselected layer box</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('showUnselectedBox',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">14</span></div>
         <input type="range" class="test-slider" min="6" max="36" step="1" value="14" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
@@ -2259,8 +2266,8 @@
         </select></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">2.5</span></div>
         <input type="range" class="test-slider" min="0" max="10" step="0.5" value="2.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.5</span></div>
-        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.5" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.1</span></div>
+        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.1" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
         <input type="range" class="test-slider" min="0" max="5" step="0.1" value="1" oninput="onAutoEditDelay(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">#000000</span></div>
@@ -2924,6 +2931,15 @@
 <script src="shared.js"></script>
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
+<script>
+/* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
+   the panel stays on the right (shared.js flips <html dir> globally; we pin it back here). */
+(function(){
+  function _forceLTR(){ if (document.documentElement.getAttribute('dir')!=='ltr') document.documentElement.setAttribute('dir','ltr'); }
+  _forceLTR();
+  try { new MutationObserver(_forceLTR).observe(document.documentElement,{attributes:true,attributeFilter:['dir']}); } catch(e){}
+})();
+</script>
 <script>
 /**
  * @license
@@ -5097,8 +5113,27 @@ function buildPaperBagMesh() {
   });
 }
 
+/* ─── Animated loader copy — rotates through messages so the wait feels alive. Separate
+   sets for the initial configurator load vs. a size switch; Arabic-aware. ─── */
+var _LOADER_MSGS = {
+  init: { en:['Preparing your studio…','Loading the 3D environment…','Warming up materials…','Calibrating studio lighting…','Smoothing the paper grain…','Mapping the print areas…','Almost ready…'],
+          ar:['نُجهّز الاستوديو…','نُحمّل بيئة الـ3D…','نُهيّئ الخامات…','نضبط إضاءة الاستوديو…','نُنعّم ملمس الورق…','نُحدّد مناطق الطباعة…','شارفنا على الانتهاء…'] },
+  size: { en:['Reshaping your bag…','Re-fitting the dieline…','Updating the dimensions…','Re-mapping your artwork…','Rebuilding the 3D model…','Finishing up…'],
+          ar:['نُعيد تشكيل الكيس…','نُعيد ضبط القالب…','نُحدّث الأبعاد…','نُعيد توزيع التصميم…','نُعيد بناء المجسم…','نُنهي اللمسات…'] }
+};
+var _loaderTimer=null;
+function _startLoaderText(elId, kind){
+  var el=document.getElementById(elId); if(!el) return;
+  var ar=(typeof getLang==='function' && getLang()==='ar');
+  var msgs=(_LOADER_MSGS[kind]||_LOADER_MSGS.init)[ar?'ar':'en'];
+  var i=0; el.textContent=msgs[0];
+  if(_loaderTimer) clearInterval(_loaderTimer);
+  _loaderTimer=setInterval(function(){ i=(i+1)%msgs.length; el.textContent=msgs[i]; }, 1300);
+}
+function _stopLoaderText(){ if(_loaderTimer){ clearInterval(_loaderTimer); _loaderTimer=null; } }
 /* Hide loading overlay (min visible time for premium feel) then play intro spin */
 var _configLoadStart = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+_startLoaderText('cfg-loader-text','init');   /* begin the rotating copy on the initial load */
 /* Size/model loading lock — prevents starting a second GLB load while one is in
    flight (which would race two meshes together and could crash). Locks the size
    buttons with a not-allowed cursor until the load finishes. */
@@ -5112,6 +5147,7 @@ function setBagLoading(on) {
 
 function finishConfigLoading() {
   setBagLoading(false);
+  if (typeof _stopLoaderText === 'function') _stopLoaderText();   /* stop the rotating loader copy */
   var MIN_VISIBLE = 650; /* ms — keep the loader up long enough to feel intentional */
   var elapsed = ((typeof performance !== 'undefined') ? performance.now() : Date.now()) - _configLoadStart;
   var wait = Math.max(0, MIN_VISIBLE - elapsed);
@@ -8112,6 +8148,7 @@ function onBagSize(key, btn) {
   /* show a switching overlay */
   var sov = document.getElementById('bag-switch-overlay');
   if (sov) sov.style.display = 'flex';
+  if (typeof _startLoaderText === 'function') _startLoaderText('bag-switch-text','size');   /* rotating size-load copy */
   setTimeout(function() { buildPaperBagMesh(); }, 10);
 }
 
@@ -9966,12 +10003,14 @@ var viewMode = '3d';
 var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
   labelSize:21, labelColor:'#000000',
+  labelWeight:600, subLabelWeight:600,         /* font-weight for labels / sub-labels */
+  showUnselectedBox:false,                      /* draw the faint bounding box on UNSELECTED layers */
   labelStroke:4, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:true, invertSubLabelDark:true, invertSilhouetteDark:true,  /* auto-invert these colours in dark mode */
   subLabelSize:14, subLabelColor:'#333333',    /* per-face sub-label size + colour */
   subLabelPos:'center',                          /* center | bottom | top | topleft */
   snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
-  offIslandOpacity:0.5,                          /* opacity multiplier for layers dragged off the print area */
+  offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
@@ -10189,12 +10228,41 @@ function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
   delete a2d.pointers[e.pointerId];
   var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
+  var endedOp=a2d.op;
   var wasEdit=(a2d.op==='move'||a2d.op==='rotate'||(a2d.op&&(a2d.op.indexOf('sc-')===0||a2d.op.indexOf('cr-')===0)));
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
   if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; }   /* exit fast-drag → next redraw is full quality */
+  /* crop finished → bake it so the layer's pivot re-centers on the cropped region */
+  if (a2d.op===null && endedOp && endedOp.indexOf('cr-')===0 && a2d.sel) _bakeCrop(a2d.sel);
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
+}
+/* Bake a finished crop INTO the layer: move the pivot (posU/posV) to the cropped box center
+   and resize, so rotation/transforms pivot on the visible content. Graphics get source-cropped
+   (pixels preserved); patterns just re-fit their box; text re-centers. */
+function _bakeCrop(L){
+  if(!L) return;
+  var cl=L.cropBoxL||0,cr=L.cropBoxR||0,ct=L.cropBoxT||0,cb=L.cropBoxB||0;
+  if(!(cl||cr||ct||cb)) return;
+  var b=_layerBox(L), vb=_layerCropBox(b,L), e=layerBBox(L);
+  var sref=(typeof _layerScaleRef==='function')?_layerScaleRef():e.w;
+  L.posU=Math.max(-20,Math.min(120,(vb.cx-e.x)/e.w*100));
+  L.posV=Math.max(-20,Math.min(120,(vb.cy-e.y)/e.h*100));
+  if((L.kind==='logo'||L.kind==='sticker') && !L.tiled && L.img && L.img.naturalWidth){
+    var iw=L.img.naturalWidth, ih=L.img.naturalHeight;
+    var sx=cl*iw, sy=cb*ih, sw=Math.max(1,(1-cl-cr)*iw), sh=Math.max(1,(1-ct-cb)*ih);
+    var cnv=document.createElement('canvas'); cnv.width=Math.round(sw); cnv.height=Math.round(sh);
+    cnv.getContext('2d').drawImage(L.img, sx,sy,sw,sh, 0,0,cnv.width,cnv.height);
+    var ni=new Image();
+    ni.onload=function(){ L.img=ni; L.cropBoxL=L.cropBoxR=L.cropBoxT=L.cropBoxB=0; L.scale=2*vb.hw/sref*100;
+      if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof renderLayersList==='function') renderLayersList(); if(typeof scheduleHistory==='function') scheduleHistory(); };
+    ni.src=cnv.toDataURL('image/png');
+    return;
+  }
+  /* tiled pattern / text: keep crop=0, re-fit the box to the cropped size */
+  if(L.tiled){ L.scale=2*vb.hw/sref*100; L.scaleH=2*vb.hh/sref*100; }
+  L.cropBoxL=L.cropBoxR=L.cropBoxT=L.cropBoxB=0;
 }
 function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), f=Math.exp(-e.deltaY*0.0015), nz=Math.max(0.05,Math.min(20,a2d.zoom*f)); a2d.zoom=nz; a2d.panX=sp.x-aPt.x*nz; a2d.panY=sp.y-aPt.y*nz; }
 function _a2dApply(){ var now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now(); if (now-a2d.lastDraw>33){ a2d.lastDraw=now; if (typeof drawBagTexture==='function') drawBagTexture(); } }
@@ -10304,8 +10372,10 @@ function atlas2dRender(){
   /* 7. layer selection boxes + image-5 handles (dashed box, circular handles on sticks) */
   var HS=A2D.handleSize*D, HC=_themeColor(A2D.handleColor);
   _drawableLayers().forEach(function(L){
+    var sel=(L===a2d.sel);
+    if (!sel && !A2D.showUnselectedBox) return;   /* deselected layers: no bounding box (toggle in Testing) */
     var b=_layerCropBox(_layerBox(L), L);   /* the visual (cropped) box — shrinks/shifts as you crop */
-    var tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
+    var tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1);
     ctx.strokeStyle=sel?HC:'rgba(0,0,0,0.28)'; ctx.lineWidth=(sel?2:1)*D;
     ctx.setLineDash(sel?[6*D,5*D]:[]);
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
@@ -10357,7 +10427,7 @@ function atlas2dRender(){
     if (_stroke>0){ ctx.lineJoin='round'; ctx.lineWidth=_stroke; ctx.strokeStyle=_strokeCol; ctx.strokeText(txt,x,y); }
     ctx.fillText(txt,x,y);
   }
-  ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font='600 '+(A2D.labelSize*D)+'px sans-serif';
+  ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font=(A2D.labelWeight||600)+' '+(A2D.labelSize*D)+'px sans-serif';
   ctx.textBaseline='bottom'; ctx.textAlign='center';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
@@ -10370,7 +10440,7 @@ function atlas2dRender(){
     var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
     ctx.fillStyle=_themeColorIf(A2D.subLabelColor||'#333333', A2D.invertSubLabelDark);
-    ctx.font='600 '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif';
+    ctx.font=(A2D.subLabelWeight||600)+' '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif';
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
       var faces=BAG_FACES[grp]||{};
@@ -10531,20 +10601,17 @@ function _updateMobileFraming(){
     covered = Math.max(0, Math.round(sr.bottom - pr.top));   /* css px of the canvas hidden by the sheet */
     if (covered > sr.height - 40) covered = Math.max(0, sr.height - 40);  /* keep a minimum visible band */
   }
-  /* Key the guard on the FULL inputs to setViewOffset (stage w/h + covered), not just
-     covered. The first frames can run before the stage has its real size; if we keyed on
-     covered alone, the offset would be baked from those stale dimensions and never refresh
-     once the size settled (covered unchanged) — which trapped the bag low until the sheet
-     was nudged. Re-applying when the size settles fixes the initial framing automatically. */
-  var sig = active && sr ? (Math.round(sr.width)+'x'+Math.round(sr.height)+':'+covered) : 'off';
-  if (sig === _mobFrameSig) return;
-  _mobFrameSig = sig;
-  /* Center the loading spinner / model-switch overlay in the SAME visible band (between the
-     header and the sheet) by shrinking their box from the bottom by `covered`. Dynamic with
-     the sheet position; cleared (back to full inset:0) on desktop / 2D. */
+  /* Keep the loading spinner / model-switch overlay centered in the visible band (mobile:
+     shrink from the bottom by `covered`; desktop: full canvas → perfectly centered). Run
+     EVERY frame (not gated by the sig guard) so a stale offset can never linger. */
   var _lb = (active && covered > 2) ? (covered + 'px') : '';
   var _ld = document.getElementById('cfg-loader'); if (_ld) _ld.style.bottom = _lb;
   var _sw = document.getElementById('bag-switch-overlay'); if (_sw) _sw.style.bottom = _lb;
+  /* Key the camera-offset guard on the FULL inputs to setViewOffset (stage w/h + covered),
+     not just covered, so it re-applies once the stage has its real size. */
+  var sig = active && sr ? (Math.round(sr.width)+'x'+Math.round(sr.height)+':'+covered) : 'off';
+  if (sig === _mobFrameSig) return;
+  _mobFrameSig = sig;
   if (!active || covered <= 2 || !sr || sr.width < 2 || sr.height < 2){ if (cam.view && cam.view.enabled) cam.clearViewOffset(); return; }
   cam.setViewOffset(sr.width, sr.height + covered, 0, covered, sr.width, sr.height);  /* lift subject into the visible band */
 }
