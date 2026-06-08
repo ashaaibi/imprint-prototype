@@ -2026,6 +2026,10 @@
       <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
       <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
       <div id="review-summary"></div>
+      <button id="download-spec-btn" onclick="generateSpecPDF(this)" style="width:100%;margin-top:14px;padding:12px;border:1px solid var(--imp-border);border-radius:10px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        <span data-en="Download spec sheet (PDF)" data-ar="تحميل ورقة المواصفات (PDF)">Download spec sheet (PDF)</span>
+      </button>
     </div>
 
     <!-- Price summary — ALWAYS visible (total stays present on every step) -->
@@ -2932,6 +2936,8 @@
 <script src="shared.js"></script>
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
+<script src="vendor/jspdf/jspdf.umd.min.js"></script>
+<script src="spec-pdf.js?v=1"></script>
 <script>
 /* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
    the panel stays on the right (shared.js flips <html dir> globally; we pin it back here). */
@@ -8697,7 +8703,7 @@ function initThree() {
   const stage  = canvas.parentElement;
   const W = stage.clientWidth, H = stage.clientHeight;
 
-  T.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  T.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
   T.renderer.setSize(W, H);
   T.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   T.renderer.setClearColor(0x000000, 0); /* transparent — CSS gradient shows through */
