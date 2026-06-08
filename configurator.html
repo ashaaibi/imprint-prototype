@@ -4659,17 +4659,30 @@ function _faceUVCenter(geom){
   var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
   return { cx: PAD + mu*2048, cy: PAD + (1-mv)*2048 };
 }
-/* Robust UV bounding box of a face → atlas-px {x,y,w,h}, CENTERED on the MEDIAN UV (robust
-   to asymmetric stray UVs — e.g. M_int_back's UVs trail toward U=0, which would pull a
-   percentile-midpoint off toward the neighbouring face). Half-extents use the 90th
-   percentile distance from the median so the box still reflects the panel size. */
+/* Robust UV bounding box of a face → atlas-px {x,y,w,h}. Uses 2nd–98th percentile of the
+   UVs so stray/outlier UVs don't blow up the box (gives true panel extents for anchoring
+   sub-labels at center / top / bottom / corner). */
 function _faceUVBox(geom){
   if (!geom || !geom.getAttribute) return null;
   var uv = geom.getAttribute('uv'); if (!uv || !uv.count) return null;
   var us=[], vs=[], n=uv.count, i;
   for (i=0;i<n;i++){ us.push(uv.getX(i)); vs.push(uv.getY(i)); }
   us.sort(function(a,b){return a-b;}); vs.sort(function(a,b){return a-b;});
-  var mu=us[n>>1], mv=vs[n>>1];                       /* median center */
+  function pct(a,p){ return a[Math.max(0,Math.min(a.length-1,Math.floor(a.length*p)))]; }
+  var loU=pct(us,0.02), hiU=pct(us,0.98), loV=pct(vs,0.02), hiV=pct(vs,0.98);
+  var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+  return { x:PAD+loU*2048, y:PAD+(1-hiV)*2048, w:(hiU-loU)*2048, h:(hiV-loV)*2048 };
+}
+/* Same, but CENTERED on the median UV — used ONLY for the interior Back face, whose UVs
+   trail asymmetrically toward U=0 and would otherwise pull the percentile-midpoint toward
+   the neighbouring panel. */
+function _faceUVBoxMedian(geom){
+  if (!geom || !geom.getAttribute) return null;
+  var uv = geom.getAttribute('uv'); if (!uv || !uv.count) return null;
+  var us=[], vs=[], n=uv.count, i;
+  for (i=0;i<n;i++){ us.push(uv.getX(i)); vs.push(uv.getY(i)); }
+  us.sort(function(a,b){return a-b;}); vs.sort(function(a,b){return a-b;});
+  var mu=us[n>>1], mv=vs[n>>1];
   var du=[], dv=[];
   for (i=0;i<n;i++){ du.push(Math.abs(us[i]-mu)); dv.push(Math.abs(vs[i]-mv)); }
   du.sort(function(a,b){return a-b;}); dv.sort(function(a,b){return a-b;});
@@ -4922,7 +4935,7 @@ function buildPaperBagMesh() {
          e.g. M_int_front/back have a few stray verts at the UV corners). */
       BAG_FACES = { exterior:{}, interior:{} };
       Object.keys(grp.extFace).forEach(function(f){ var c=_faceUVBox(grp.extFace[f]); if (c) BAG_FACES.exterior[f]=c; });
-      Object.keys(grp.intFace).forEach(function(f){ var c=_faceUVBox(grp.intFace[f]); if (c) BAG_FACES.interior[f]=c; });
+      Object.keys(grp.intFace).forEach(function(f){ var c=(f==='back')?_faceUVBoxMedian(grp.intFace[f]):_faceUVBox(grp.intFace[f]); if (c) BAG_FACES.interior[f]=c; });
       buildUVGuide();
       console.log('[imprint] BUILD=parts-atlas+uvguide · ext faces:', Object.keys(grp.extFace).join(',')||'(merged)', '· int faces:', Object.keys(grp.intFace).join(',')||'(merged)', '· handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip);
     } else {
