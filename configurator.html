@@ -1966,7 +1966,6 @@
           <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" step="0.5" value="20" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
           <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Depth" data-ar="العمق">Depth</span><br><input id="cs-d" type="number" min="1" step="0.5" value="14" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
         </div>
-        <label style="display:block;margin-top:9px;font-size:11px;color:var(--imp-fg-2);"><span data-en="Quantity" data-ar="الكمية">Quantity</span><br><input id="cs-qty" type="number" min="1" step="1" placeholder="e.g. 750" oninput="applyCustomQty()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
         <div style="margin-top:8px;font-size:10px;color:var(--imp-fg-3);line-height:1.45;" data-en="Updates the printed measurements only — the 3D preview keeps its current shape." data-ar="يحدّث المقاسات المطبوعة فقط — معاينة 3D تبقى بنفس الشكل.">Updates the printed measurements only — the 3D preview keeps its current shape.</div>
       </div>
     </div>
@@ -1996,6 +1995,7 @@
           <span class="qsave">Save 54%</span>
         </button>
       </div>
+      <label style="display:block;margin-top:10px;font-size:11px;color:var(--imp-fg-2);"><span data-en="Custom quantity" data-ar="كمية مخصصة">Custom quantity</span><br><input id="cs-qty" type="number" min="1" step="1" placeholder="e.g. 750" oninput="applyCustomQty()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
       <div class="vol-msg" id="vmsg-bag">
         Order <strong>1,000</strong> and pay <strong>AED 3.50 / unit</strong> — save <strong>41%</strong> vs. 200 units.
       </div>
@@ -4373,22 +4373,6 @@ function _patTrimBox(L) {
   box.forImg = img; L._trimBox = box; return box;
 }
 
-/* Is a layer's center inside a printable UV island (exterior or interior)? Used to dim
-   layers that have been dragged off the printable area. */
-function _layerInsideIslands(L){
-  if (!bagTexCtx || !L) return true;
-  var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
-  var cx=PAD+2048*((L.posU||0)/100), cy=PAD+2048*((L.posV||0)/100);
-  if (bagExtClip && bagExtClip.path){ if (bagTexCtx.isPointInPath(bagExtClip.path,cx,cy)) return true;
-    if (bagIntClip && bagIntClip.path && bagTexCtx.isPointInPath(bagIntClip.path,cx,cy)) return true;
-    return false;
-  }
-  /* legacy single-mesh: fall back to the UV rects */
-  var e=BAG_UV.exterior, i=BAG_UV.interior;
-  if (e && cx>=e.x && cx<=e.x+e.w && cy>=e.y && cy<=e.y+e.h) return true;
-  if (i && cx>=i.x && cx<=i.x+i.w && cy>=i.y && cy<=i.y+i.h) return true;
-  return false;
-}
 function drawArtworkOnBag() {
   var corr = getArtCorr();
   /* Freeform: every visible layer is placed over the WHOLE atlas (z-order: bottom of
@@ -4400,9 +4384,7 @@ function drawArtworkOnBag() {
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
     bagTexCtx.save();
-    var _oa = (L.opacity != null ? L.opacity : 100) / 100;
-    if (!_layerInsideIslands(L)) _oa *= (A2D.offIslandOpacity != null ? A2D.offIslandOpacity : 0.5);  /* dim layers dragged off the print area */
-    bagTexCtx.globalAlpha = _oa;
+    bagTexCtx.globalAlpha = (L.opacity != null ? L.opacity : 100) / 100;
     drawLayerContent(bagTexCtx, L, 1, corr, 'color');
     bagTexCtx.restore();
   }
@@ -8073,7 +8055,7 @@ function onBagSizeCustom(btn){
   document.querySelectorAll('.bag-sopt').forEach(function(b){ b.classList.remove('on'); });
   if (btn) btn.classList.add('on');
   var p = document.getElementById('custom-size-panel'); if (p) p.style.display = 'block';
-  applyCustomDims(); applyCustomQty();
+  applyCustomDims();
 }
 function applyCustomDims(){
   var gv=function(id){ var el=document.getElementById(id); return el?parseFloat(el.value):0; };
@@ -8087,8 +8069,8 @@ function applyCustomDims(){
 }
 function applyCustomQty(){
   var el=document.getElementById('cs-qty'); var q=el?parseInt(el.value):0;
-  if(_customSize.on && q>0){
-    _customSize.qty=q; S.qty=q;
+  if(q>0){
+    S.qty=q;
     document.querySelectorAll('#bag-qty-grid .qopt').forEach(function(b){ b.classList.remove('on'); });  /* custom overrides the tier */
     if(typeof updatePricing==='function') updatePricing();
   }
@@ -9987,6 +9969,7 @@ var A2D = {
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
+var _offIslandCv = null;    /* cached canvas for the off-island fade overlay */
 /* After a graphic/pattern/font upload, auto-animate from 3D → the 2D editor after a short
    delay (so the user lands in the editor ready to place artwork). Delay is testing-tunable. */
 var _autoEdit2dDelay = 1.0;   /* seconds */
@@ -10130,14 +10113,17 @@ function _aMove(e){
     var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y);
     L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100));
     L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100));
-    /* magnetic snap: if the layer center gets close to any face center, snap onto it */
-    a2d._snapFace=null;
+    /* magnetic snap — PER AXIS: snap U to a face center's U (vertical guide) and/or V to a
+       face center's V (horizontal guide), independently. Aligning on both = center snap. */
+    a2d._snapX=null; a2d._snapY=null;
     if (typeof BAG_FACES!=='undefined' && BAG_FACES && (A2D.snapDist||0)>0){
-      var _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0, bestD=A2D.snapDist, best=null, bsc=null;
+      var _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0, bdU=A2D.snapDist, bdV=A2D.snapDist, snU=null, snV=null, snAX=null, snAY=null;
       ['exterior','interior'].forEach(function(grp){ var fs=BAG_FACES[grp]||{}; Object.keys(fs).forEach(function(f){ var bb=fs[f]; if(!bb) return;
-        var fu=(bb.x+bb.w/2-_PAD)/2048*100, fv=(bb.y+bb.h/2-_PAD)/2048*100, d=Math.hypot(L.posU-fu,L.posV-fv);
-        if(d<bestD){ bestD=d; best={u:fu,v:fv}; bsc={cx:bb.x+bb.w/2, cy:bb.y+bb.h/2}; } }); });
-      if(best){ L.posU=best.u; L.posV=best.v; a2d._snapFace=bsc; }
+        var fu=(bb.x+bb.w/2-_PAD)/2048*100, fv=(bb.y+bb.h/2-_PAD)/2048*100;
+        var du=Math.abs(L.posU-fu); if(du<bdU){ bdU=du; snU=fu; snAX=bb.x+bb.w/2; }
+        var dv=Math.abs(L.posV-fv); if(dv<bdV){ bdV=dv; snV=fv; snAY=bb.y+bb.h/2; } }); });
+      if(snU!=null){ L.posU=snU; a2d._snapX=snAX; }
+      if(snV!=null){ L.posV=snV; a2d._snapY=snAY; }
     }
     _a2dApply();
   }
@@ -10190,7 +10176,7 @@ function _aUp(e){
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
-  if (a2d.op===null){ _a2dDragging=false; a2d._snapFace=null; }   /* exit fast-drag → next redraw is full quality */
+  if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; }   /* exit fast-drag → next redraw is full quality */
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
 }
 function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), f=Math.exp(-e.deltaY*0.0015), nz=Math.max(0.05,Math.min(20,a2d.zoom*f)); a2d.zoom=nz; a2d.panX=sp.x-aPt.x*nz; a2d.panY=sp.y-aPt.y*nz; }
@@ -10267,6 +10253,25 @@ function atlas2dRender(){
     try{ var _w=_bd.width; var o0=_a2s(0,0),o1=_a2s(_w,_w); ctx.drawImage(_bd,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
     ctx.filter = 'none';
   }
+  /* off-island overlay: re-cover everything OUTSIDE the UV islands with the editor
+     background (white+grid shows through) at (1 - offIslandOpacity), so any layer dragged
+     off the printable area fades into the background instead of the layer being dimmed. */
+  if ((bagExtClip||bagIntClip) && (A2D.offIslandOpacity!=null && A2D.offIslandOpacity<0.999)){
+    var _OW=bagTexCanvas.width;
+    if(!_offIslandCv || _offIslandCv.width!==_OW){ _offIslandCv=document.createElement('canvas'); _offIslandCv.width=_offIslandCv.height=_OW; }
+    var _oc=_offIslandCv.getContext('2d');
+    _oc.setTransform(1,0,0,1,0,0); _oc.clearRect(0,0,_OW,_OW);
+    _oc.fillStyle = _dark ? '#15151a' : A2D.bgColor; _oc.fillRect(0,0,_OW,_OW);
+    _oc.globalCompositeOperation='destination-out';   /* punch the islands out → only outside remains */
+    if(bagExtClip&&bagExtClip.path) _oc.fill(bagExtClip.path);
+    if(bagIntClip&&bagIntClip.path) _oc.fill(bagIntClip.path);
+    if(A2D.showHandles2D && bagHandleClip&&bagHandleClip.path) _oc.fill(bagHandleClip.path);
+    if(A2D.showRivets2D && bagRivetClip&&bagRivetClip.path) _oc.fill(bagRivetClip.path);
+    _oc.globalCompositeOperation='source-over';
+    ctx.save(); ctx.globalAlpha = 1 - A2D.offIslandOpacity;
+    var _g0=_a2s(0,0),_g1=_a2s(_OW,_OW); ctx.drawImage(_offIslandCv,0,0,_OW,_OW,_g0.x,_g0.y,_g1.x-_g0.x,_g1.y-_g0.y);
+    ctx.restore();
+  }
   /* real UV island outlines (hi-res baked guide), or legacy boxes */
   if (bagUVGuideCanvas){
     try{ var _gw=bagTexCanvas.width; var g0=_a2s(0,0),g1=_a2s(_gw,_gw); ctx.drawImage(bagUVGuideCanvas,0,0,bagUVGuideCanvas.width,bagUVGuideCanvas.height,g0.x,g0.y,g1.x-g0.x,g1.y-g0.y); }catch(_){}
@@ -10308,15 +10313,14 @@ function atlas2dRender(){
       _a2dHandleBar(ctx, er.x, er.y, yang, barLen, barTh, HC);   /* right  */
     }
   });
-  /* magnetic-snap smart guides: full-canvas vertical + horizontal lines through the snapped
-     face center (Photoshop / Illustrator style) */
-  if (_a2dDragging && a2d._snapFace){
-    var sp2=_a2s(a2d._snapFace.cx, a2d._snapFace.cy);
+  /* magnetic-snap smart guides (Photoshop / Illustrator style): a vertical line when the U
+     axis is snapped, a horizontal line when the V axis is snapped — shown independently. */
+  if (_a2dDragging && (a2d._snapX!=null || a2d._snapY!=null)){
     ctx.save();
     ctx.setLineDash([]); ctx.strokeStyle='rgba(255,45,95,0.95)'; ctx.lineWidth=1*D;
     ctx.beginPath();
-    ctx.moveTo(Math.round(sp2.x)+0.5, 0); ctx.lineTo(Math.round(sp2.x)+0.5, c.height);
-    ctx.moveTo(0, Math.round(sp2.y)+0.5); ctx.lineTo(c.width, Math.round(sp2.y)+0.5);
+    if (a2d._snapX!=null){ var gx=Math.round(_a2s(a2d._snapX,0).x)+0.5; ctx.moveTo(gx,0); ctx.lineTo(gx,c.height); }
+    if (a2d._snapY!=null){ var gy=Math.round(_a2s(0,a2d._snapY).y)+0.5; ctx.moveTo(0,gy); ctx.lineTo(c.width,gy); }
     ctx.stroke();
     ctx.restore();
   }
