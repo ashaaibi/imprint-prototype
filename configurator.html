@@ -2237,7 +2237,7 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette thickness</span><span class="slider-val" id="a2d-silhouetteThickness-val">2</span></div>
         <input type="range" class="test-slider" min="0" max="8" step="0.1" value="2" oninput="onA2Dnum('silhouetteThickness',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Silhouette dashed</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('silhouetteDash',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('silhouetteDash',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label size</span><span class="slider-val" id="a2d-labelSize-val">21</span></div>
         <input type="range" class="test-slider" min="7" max="40" step="1" value="21" oninput="onA2Dnum('labelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label color</span><span class="slider-val" id="a2d-labelColor-val">#000000</span></div>
@@ -2937,7 +2937,7 @@
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
-<script src="spec-pdf.js?v=1"></script>
+<script src="spec-pdf.js?v=2"></script>
 <script>
 /* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
    the panel stays on the right (shared.js flips <html dir> globally; we pin it back here). */
@@ -5162,25 +5162,30 @@ _startLoaderText('cfg-loader-text','init');   /* begin the rotating copy on the 
 function _maybeShowOnboarding(){
   try { if(!/[?&]onboard\b/.test(location.search) && localStorage.getItem('imprint_onboarded')) return; } catch(e){}
   if(typeof GCC==='undefined') return;
-  if(document.getElementById('onboard-overlay')) return;
-  var lang=(typeof getLang==='function')?getLang():'en', theme=(typeof getTheme==='function')?getTheme():'light', cc=(typeof getCountryCode==='function')?getCountryCode():'AE', ar=(lang==='ar');
-  window._obSel={lang:lang, cc:cc, theme:theme};
-  var st=document.createElement('style');
-  st.textContent='#onboard-overlay{position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;}'+
-    '.ob-card{background:var(--imp-surface,#fff);color:var(--imp-fg,#111);border-radius:18px;padding:26px;width:min(440px,94vw);max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,0.4);font-family:var(--imp-font);direction:'+(ar?'rtl':'ltr')+';}'+
-    '.ob-h{font-size:19px;font-weight:700;margin-bottom:4px;}.ob-sub{font-size:13px;color:var(--imp-fg-2,#777);margin-bottom:14px;}'+
-    '.ob-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:14px 0 8px;}'+
-    '.ob-row{display:flex;gap:8px;flex-wrap:wrap;}'+
-    '.ob-opt{flex:1;min-width:60px;padding:10px;border:1.5px solid var(--imp-border,#e5e5e5);border-radius:11px;background:var(--imp-surface,#fff);color:inherit;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:center;}'+
-    '.ob-opt.on{border-color:var(--imp-gold,#c8a96e);background:var(--imp-gold-soft,#f8f1e2);}'+
-    '.ob-cc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}'+
-    '.ob-cc .ob-opt{display:flex;flex-direction:column;gap:2px;align-items:center;}.ob-cc .flag{font-size:20px;}.ob-cc .cur{font-size:11px;color:var(--imp-fg-2,#777);}'+
-    '.ob-actions{display:flex;gap:10px;margin-top:22px;align-items:center;}.ob-skip{background:none;border:none;color:var(--imp-fg-3,#999);font-size:13px;cursor:pointer;padding:12px;font-family:inherit;}'+
-    '.ob-start{flex:1;background:var(--imp-fg,#111);color:var(--imp-bg,#fff);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}';
-  document.head.appendChild(st);
+  window._obSel={ lang:(typeof getLang==='function')?getLang():'en', cc:(typeof getCountryCode==='function')?getCountryCode():'AE', theme:(typeof getTheme==='function')?getTheme():'light' };
+  if(!document.getElementById('onboard-style')){
+    var st=document.createElement('style'); st.id='onboard-style';
+    st.textContent='#onboard-overlay{position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;}'+
+      '.ob-card{background:var(--imp-surface,#fff);color:var(--imp-fg,#111);border-radius:18px;padding:26px;width:min(440px,94vw);max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,0.4);font-family:var(--imp-font);}'+
+      '.ob-h{font-size:19px;font-weight:700;margin-bottom:4px;}.ob-sub{font-size:13px;color:var(--imp-fg-2,#777);margin-bottom:14px;}'+
+      '.ob-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:14px 0 8px;}'+
+      '.ob-row{display:flex;gap:8px;flex-wrap:wrap;}'+
+      '.ob-opt{flex:1;min-width:60px;padding:10px;border:1.5px solid var(--imp-border,#e5e5e5);border-radius:11px;background:var(--imp-surface,#fff);color:inherit;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:center;}'+
+      '.ob-opt.on{border-color:var(--imp-gold,#c8a96e);background:var(--imp-gold-soft,#f8f1e2);}'+
+      '.ob-cc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}'+
+      '.ob-cc .ob-opt{display:flex;flex-direction:column;gap:2px;align-items:center;}.ob-cc .flag{font-size:20px;}.ob-cc .cur{font-size:11px;color:var(--imp-fg-2,#777);}'+
+      '.ob-actions{display:flex;gap:10px;margin-top:22px;align-items:center;}.ob-skip{background:none;border:none;color:var(--imp-fg-3,#999);font-size:13px;cursor:pointer;padding:12px;font-family:inherit;}'+
+      '.ob-start{flex:1;background:var(--imp-fg,#111);color:var(--imp-bg,#fff);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}';
+    document.head.appendChild(st);
+  }
+  _buildOnboarding();
+}
+/* (Re)render the onboarding modal in the currently-selected language. */
+function _buildOnboarding(){
+  var sel=window._obSel||{lang:'en',cc:'AE',theme:'light'};
+  var lang=sel.lang, theme=sel.theme, cc=sel.cc, ar=(lang==='ar');
   var ccBtns=Object.keys(GCC).map(function(code){ var c=GCC[code]; return '<button class="ob-opt'+(code===cc?' on':'')+'" data-cc="'+code+'" onclick="_obPick(this,\'cc\')"><span class="flag">'+c.flag+'</span><span>'+(ar?c.nameAr:c.name)+'</span><span class="cur">'+(ar?c.currencyAr:c.currency)+'</span></button>'; }).join('');
-  var ov=document.createElement('div'); ov.id='onboard-overlay';
-  ov.innerHTML='<div class="ob-card">'+
+  var html='<div class="ob-card" style="direction:'+(ar?'rtl':'ltr')+';">'+
     '<div class="ob-h">'+(ar?'مرحباً بك في IMPRINT':'Welcome to IMPRINT')+'</div>'+
     '<div class="ob-sub">'+(ar?'اختر تفضيلاتك للبدء، أو تخطَّ للإعدادات الافتراضية.':'Set your preferences to begin — or skip for the defaults.')+'</div>'+
     '<div class="ob-lbl">'+(ar?'اللغة':'Language')+'</div><div class="ob-row"><button class="ob-opt'+(lang==='en'?' on':'')+'" data-lang="en" onclick="_obPick(this,\'lang\')">English</button><button class="ob-opt'+(ar?' on':'')+'" data-lang="ar" onclick="_obPick(this,\'lang\')">العربية</button></div>'+
@@ -5188,13 +5193,15 @@ function _maybeShowOnboarding(){
     '<div class="ob-lbl">'+(ar?'المظهر':'Appearance')+'</div><div class="ob-row"><button class="ob-opt'+(theme==='light'?' on':'')+'" data-theme="light" onclick="_obPick(this,\'theme\')">'+(ar?'فاتح':'Light')+'</button><button class="ob-opt'+(theme==='dark'?' on':'')+'" data-theme="dark" onclick="_obPick(this,\'theme\')">'+(ar?'داكن':'Dark')+'</button></div>'+
     '<div class="ob-actions"><button class="ob-skip" onclick="_obFinish(false)">'+(ar?'تخطّي':'Skip')+'</button><button class="ob-start" onclick="_obFinish(true)">'+(ar?'ابدأ التصميم':'Start designing')+'</button></div>'+
     '</div>';
-  document.body.appendChild(ov);
+  var ov=document.getElementById('onboard-overlay');
+  if(!ov){ ov=document.createElement('div'); ov.id='onboard-overlay'; document.body.appendChild(ov); }
+  ov.innerHTML=html;
 }
 function _obPick(btn, kind){
+  if(kind==='lang'){ window._obSel.lang=btn.getAttribute('data-lang'); _buildOnboarding(); return; }   /* re-render labels in the picked language */
   btn.parentElement.querySelectorAll('.ob-opt').forEach(function(b){b.classList.remove('on');}); btn.classList.add('on');
-  if(kind==='lang') window._obSel.lang=btn.getAttribute('data-lang');
-  else if(kind==='cc') window._obSel.cc=btn.getAttribute('data-cc');
-  else if(kind==='theme'){ window._obSel.theme=btn.getAttribute('data-theme'); if(typeof setTheme==='function') setTheme(window._obSel.theme); }  /* live preview */
+  if(kind==='cc') window._obSel.cc=btn.getAttribute('data-cc');
+  else if(kind==='theme'){ window._obSel.theme=btn.getAttribute('data-theme'); document.documentElement.setAttribute('data-theme', window._obSel.theme); }  /* live preview (not persisted yet) */
 }
 function _obFinish(apply){
   try{ localStorage.setItem('imprint_onboarded','1'); }catch(e){}
@@ -5203,7 +5210,7 @@ function _obFinish(apply){
     if(typeof setTheme==='function') setTheme(sel.theme);
     var curLang=(typeof getLang==='function')?getLang():'en'; if(sel.lang && sel.lang!==curLang){ if(typeof setLang==='function') setLang(sel.lang); changed=true; }
     var curCc=(typeof getCountryCode==='function')?getCountryCode():'AE'; if(sel.cc && sel.cc!==curCc){ if(typeof setCountryCode==='function') setCountryCode(sel.cc); changed=true; }
-  }
+  } else { if(typeof setTheme==='function' && typeof getTheme==='function') setTheme(getTheme()); }  /* skip → revert any theme preview */
   var ov=document.getElementById('onboard-overlay'); if(ov) ov.remove();
   if(apply && changed) location.reload();  /* lang/currency need a refresh to apply everywhere */
 }
@@ -10103,7 +10110,7 @@ var A2D = {
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
-  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:true,  /* outer shell outline */
+  silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
   showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,

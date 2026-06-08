@@ -71,17 +71,30 @@
 
   /* ── capture helpers ─────────────────────────────────────────────────── */
   function _raf() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
-  function _capture3D(theta, phi, radius) {
+  /* Clean isolated bag render: no floor/shadow/sky/post-fx, framed to fit. */
+  function _capture3D(theta, phi) {
     try {
-      if (typeof T_SCENE() === 'undefined') return null;
-      var o = orbit; if (!o || !T || !T.renderer) return null;
-      o.theta = theta; o.phi = Math.max(0.08, Math.min(Math.PI - 0.08, phi)); if (radius) o.radius = radius; o.autoSpin = false;
+      if (!T || !T.renderer || !T.scene || !orbit || typeof bagGroup === 'undefined' || !bagGroup) return null;
+      var box = new THREE.Box3().setFromObject(bagGroup), sph = box.getBoundingSphere(new THREE.Sphere());
+      var fov = (T.camera.fov || 31) * Math.PI / 180, d = sph.radius / Math.sin(fov / 2) * 1.12;
+      /* hide everything except the bag + lights, drop the sky background */
+      var bg = T.scene.background; T.scene.background = null;
+      var hidden = [];
+      T.scene.children.forEach(function (ch) {
+        var isLight = ch.isLight || /Light/.test(ch.type) || ch === T.lightRig;
+        if (ch !== bagGroup && !isLight && ch.visible) { hidden.push(ch); ch.visible = false; }
+      });
+      var tgt = { x: orbit.target.x, y: orbit.target.y, z: orbit.target.z };
+      orbit.target.set(sph.center.x, sph.center.y, sph.center.z);
+      orbit.theta = theta; orbit.phi = Math.max(0.08, Math.min(Math.PI - 0.08, phi)); orbit.radius = d; orbit.autoSpin = false;
       if (typeof sphericalToCamera === 'function') sphericalToCamera();
-      if (typeof realismRender === 'function') realismRender(); else T.renderer.render(T.scene, T.camera);
-      return T.renderer.domElement.toDataURL('image/png');
+      T.renderer.render(T.scene, T.camera);   /* plain render → no bloom / SSAO / vignette */
+      var url = T.renderer.domElement.toDataURL('image/png');
+      hidden.forEach(function (ch) { ch.visible = true; }); T.scene.background = bg;
+      orbit.target.set(tgt.x, tgt.y, tgt.z);
+      return url;
     } catch (e) { console.warn('3D capture failed', e); return null; }
   }
-  function T_SCENE() { return (T && T.scene) ? T.scene : undefined; }
 
   function _capture2D(region) {
     try {
@@ -90,16 +103,24 @@
       var cw = Math.round(uv.w), ch = Math.round(uv.h);
       var cn = document.createElement('canvas'); cn.width = cw; cn.height = ch; var x = cn.getContext('2d');
       x.fillStyle = '#ffffff'; x.fillRect(0, 0, cw, ch);
+      /* flipped vertically to match the 2D editor orientation, + the UV guide (silhouette/outlines) */
+      x.save(); x.translate(0, ch); x.scale(1, -1);
       x.drawImage(bagCleanCanvas, uv.x, uv.y, uv.w, uv.h, 0, 0, cw, ch);
+      if (typeof bagUVGuideCanvas !== 'undefined' && bagUVGuideCanvas && typeof bagTexCanvas !== 'undefined') {
+        var k = bagUVGuideCanvas.width / bagTexCanvas.width;
+        x.drawImage(bagUVGuideCanvas, uv.x * k, uv.y * k, uv.w * k, uv.h * k, 0, 0, cw, ch);
+      }
+      x.restore();
+      /* labels (un-flipped) at the centre-BOTTOM of each face */
       var faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) || {};
       x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '700 ' + Math.round(ch * 0.05) + 'px ' + _font(); x.lineJoin = 'round';
       Object.keys(faces).forEach(function (f) {
         var bb = faces[f]; if (!bb) return;
-        var lx = (bb.x + bb.w / 2) - uv.x, ly = (bb.y + bb.h / 2) - uv.y;
-        x.lineWidth = Math.round(ch * 0.012); x.strokeStyle = '#ffffff'; x.strokeText(_faceName(f), lx, ly);
+        var lx = (bb.x + bb.w / 2) - uv.x, ly = ch - ((bb.y + bb.h * 0.14) - uv.y);
+        x.lineWidth = Math.round(ch * 0.014); x.strokeStyle = '#ffffff'; x.strokeText(_faceName(f), lx, ly);
         x.fillStyle = '#111'; x.fillText(_faceName(f), lx, ly);
       });
-      return cn.toDataURL('image/jpeg', 0.9);
+      return cn.toDataURL('image/jpeg', 0.92);
     } catch (e) { console.warn('2D capture failed', e); return null; }
   }
 
@@ -150,15 +171,15 @@
       if (prevMode === '2d' && typeof setViewMode === 'function') { setViewMode('3d'); await _raf(); await _raf(); }
       var sv = orbit ? { theta: orbit.theta, phi: orbit.phi, radius: orbit.radius, autoSpin: orbit.autoSpin } : null;
       var ft = (typeof frontTheta === 'function') ? frontTheta() : 0.6;
-      var RAD = sv ? Math.max(4.2, sv.radius) : 4.6, VP = (typeof VIEW_PHI !== 'undefined') ? VIEW_PHI : 1.2;
-      var shots = {};
-      shots.hero = _capture3D(ft + 0.55, 1.12, RAD);
-      shots.front = _capture3D(ft, VP, RAD);
-      shots.back = _capture3D(ft + Math.PI, VP, RAD);
-      shots.right = _capture3D(ft - Math.PI / 2, VP, RAD);
-      shots.left = _capture3D(ft + Math.PI / 2, VP, RAD);
-      shots.top = _capture3D(ft, 0.18, RAD);
-      shots.bottom = _capture3D(ft, Math.PI - 0.18, RAD);
+      var VP = (typeof VIEW_PHI !== 'undefined') ? VIEW_PHI : 1.2;
+      var shots = {};   /* distance is auto-fit per shot inside _capture3D */
+      shots.hero = _capture3D(ft + 0.55, 1.12);
+      shots.front = _capture3D(ft, VP);
+      shots.back = _capture3D(ft + Math.PI, VP);
+      shots.right = _capture3D(ft - Math.PI / 2, VP);
+      shots.left = _capture3D(ft + Math.PI / 2, VP);
+      shots.top = _capture3D(ft, 0.18);
+      shots.bottom = _capture3D(ft, Math.PI - 0.18);
       if (sv && orbit) { orbit.theta = sv.theta; orbit.phi = sv.phi; orbit.radius = sv.radius; orbit.autoSpin = sv.autoSpin; if (typeof sphericalToCamera === 'function') sphericalToCamera(); if (typeof realismRender === 'function') realismRender(); }
       var dieExt = _capture2D('exterior'), dieInt = _capture2D('interior');
       if (prevMode === '2d' && typeof setViewMode === 'function') setViewMode('2d');
