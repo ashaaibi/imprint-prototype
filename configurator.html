@@ -1669,6 +1669,7 @@
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
       <div class="a2d-ctxbar" id="a2d-ctxbar"></div>
+      <div class="a2d-ctxbar" id="a2d-facebar" style="display:none;"></div>
     </div>
     <div class="drag-hint" data-en="" data-ar=""></div>
   </section>
@@ -2242,9 +2243,9 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke color</span><span class="slider-val" id="a2d-labelStrokeColor-val">#ffffff</span></div>
         <input type="color" value="#ffffff" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelStrokeColor',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label bold</span><span class="slider-val" id="a2d-labelWeight-val">600</span></div>
-        <input type="range" class="test-slider" min="100" max="900" step="100" value="600" oninput="onA2Dnum('labelWeight',this.value,false)"></div>
+        <input type="range" class="test-slider" min="100" max="3000" step="50" value="600" oninput="onA2Dnum('labelWeight',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label bold</span><span class="slider-val" id="a2d-subLabelWeight-val">600</span></div>
-        <input type="range" class="test-slider" min="100" max="900" step="100" value="600" oninput="onA2Dnum('subLabelWeight',this.value,false)"></div>
+        <input type="range" class="test-slider" min="100" max="3000" step="50" value="600" oninput="onA2Dnum('subLabelWeight',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Show unselected layer box</span>
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('showUnselectedBox',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">14</span></div>
@@ -6938,6 +6939,12 @@ function openCutoutModal(layerId, srcImg, fileName, existingBg, isNew, fromLibra
   _initCropBox();
   renderCutoutPreview();
   _positionCropOverlay();
+  /* Nudge the Remove-background toggle ON then OFF so its controls/preview initialise
+     cleanly, then settle on the intended state (OFF by default for new uploads). */
+  var _bgWant = cutout.bg.enabled;
+  onCutoutToggle(true); onCutoutToggle(false);
+  if (_bgWant) onCutoutToggle(true);
+  var _en = document.getElementById('cutout-enabled'); if (_en) _en.checked = cutout.bg.enabled;
   document.getElementById('cutout-overlay').classList.add('open');
 }
 function onCutoutPdfPage(delta) {
@@ -10037,6 +10044,7 @@ function _autoEdit2dAfterUpload(){
 }
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : '3d';
+  if (typeof _hideFaceBar==='function') _hideFaceBar();
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
   var stage = document.querySelector('.canvas-stage');
   if (stage) stage.classList.toggle('mode-2d', viewMode === '2d');  /* shrinks live 3D into bottom-right preview */
@@ -10137,6 +10145,7 @@ function _atlasBind(c){
 function _aDown(e){
   try { a2d.canvas.setPointerCapture(e.pointerId); } catch(_){}
   var sp=_evPos(e); a2d.pointers[e.pointerId]={x:sp.x,y:sp.y};
+  if (typeof _hideFaceBar==='function') _hideFaceBar();   /* any new press closes the face bar */
   var ids=Object.keys(a2d.pointers);
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
   var hh=_hitHandle(sp);
@@ -10236,6 +10245,10 @@ function _aUp(e){
   if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; }   /* exit fast-drag → next redraw is full quality */
   /* crop finished → bake it so the layer's pivot re-centers on the cropped region */
   if (a2d.op===null && endedOp && endedOp.indexOf('cr-')===0 && a2d.sel) _bakeCrop(a2d.sel);
+  /* a CLICK (not a drag) on empty canvas inside a face → show the face colour bar */
+  if (a2d.op===null && endedOp==='pan' && a2d.start && a2d.start.sp){
+    var _up=_evPos(e); if (Math.hypot(_up.x-a2d.start.sp.x,_up.y-a2d.start.sp.y) < 5*(a2d.dpr||1)) _faceClick(_up);
+  }
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
 }
 /* Bake a finished crop INTO the layer: move the pivot (posU/posV) to the cropped box center
@@ -10309,6 +10322,52 @@ function ctxBack(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.
 function ctxStep(prop,d){ var L=_ctxL(); if(!L) return; var def=(prop==='density')?6:(prop==='fontSize')?100:0; var nv=(L[prop]!=null?L[prop]:def)+d; var mn=(prop==='density')?1:(prop==='fontSize')?20:0; nv=Math.max(mn,nv); if(prop==='gap')nv=Math.min(200,nv); if(prop==='feather')nv=Math.min(95,nv); L[prop]=nv; drawBagTexture(); }
 function ctxFontCycle(){ var L=_ctxL(); if(!L||L.kind!=='text') return; var f=['cormorant','inter','barlow','playfair']; var i=f.indexOf(L.font); if(typeof onLayerFont==='function') onLayerFont(L.id, f[(i+1)%f.length]); }
 function ctxTint(hex){ var L=_ctxL(); if(!L) return; L.swatchName='Custom'; L.color=hex; L.customHex=hex; drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); }
+
+/* ── Face contextual bar: click an exterior/interior face in the 2D editor → recolour that
+   material with the same swatches as the Exterior / Interior step. ── */
+function _hideFaceBar(){ var b=document.getElementById('a2d-facebar'); if(b) b.style.display='none'; a2d.faceSel=null; }
+function _faceClick(sp){
+  _hideFaceBar();
+  if(!bagTexCtx) return;
+  var ap=_s2a(sp.x,sp.y), region=null;
+  if(bagExtClip&&bagExtClip.path&&bagTexCtx.isPointInPath(bagExtClip.path,ap.x,ap.y)) region='exterior';
+  else if(bagIntClip&&bagIntClip.path&&bagTexCtx.isPointInPath(bagIntClip.path,ap.x,ap.y)) region='interior';
+  else { var e=BAG_UV.exterior,i=BAG_UV.interior;
+    if(e&&ap.x>=e.x&&ap.x<=e.x+e.w&&ap.y>=e.y&&ap.y<=e.y+e.h) region='exterior';
+    else if(i&&ap.x>=i.x&&ap.x<=i.x+i.w&&ap.y>=i.y&&ap.y<=i.y+i.h) region='interior'; }
+  if(!region) return;
+  var faceName='', faces=(typeof BAG_FACES!=='undefined'&&BAG_FACES[region])||{}, bestD=1e9;
+  Object.keys(faces).forEach(function(f){ var bb=faces[f]; if(!bb)return; var d=Math.hypot(ap.x-(bb.x+bb.w/2),ap.y-(bb.y+bb.h/2)); if(d<bestD){bestD=d;faceName=f;} });
+  a2d.faceSel={region:region, face:faceName};
+  _showFaceBar(region, faceName, sp);
+}
+function _showFaceBar(region, faceName, sp){
+  var bar=document.getElementById('a2d-facebar'); if(!bar) return;
+  var prefix={exterior:'ext',interior:'int'}[region];
+  var hueEl=document.getElementById('bag-'+prefix+'-hslider'), hue=hueEl?parseInt(hueEl.value):0;
+  var sw=monoSwatchColors(hue), ar=(typeof getLang==='function'&&getLang()==='ar');
+  var regName=ar?(region==='exterior'?'الخارج':'الداخل'):(region==='exterior'?'Exterior':'Interior');
+  var fm=ar?{front:'أمامي',back:'خلفي',left:'يسار',right:'يمين',base:'قاعدة'}:{front:'Front',back:'Back',left:'Left',right:'Right',base:'Base'};
+  var lbl=regName+(faceName?(' · '+(fm[faceName]||faceName)):'');
+  var h='<span style="font-size:10px;font-weight:600;color:var(--imp-fg-2);padding:0 6px 0 4px;white-space:nowrap;">'+lbl+'</span><span class="a2dc-sep"></span>';
+  sw.forEach(function(hex,i){ h+='<button class="a2dc-btn" style="padding:4px;" title="'+SWATCH_NAMES[i]+'" onclick="_faceSwatch(\''+region+'\',\''+hex+'\',\''+SWATCH_NAMES[i]+'\')"><span style="display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--imp-border);background:'+hex+';"></span></button>'; });
+  h+='<span class="a2dc-sep"></span><label class="a2dc-btn" title="Custom colour" style="position:relative;overflow:hidden;display:inline-flex;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1.5a2 2 0 0 0 0 4z"/></svg><input type="color" value="'+(BAG[region].customHex||'#ffffff')+'" oninput="_faceCustomColor(\''+region+'\',this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>';
+  bar.innerHTML=h;
+  var stage=document.querySelector('.canvas-stage'); if(!stage) return;
+  var crect=a2d.canvas.getBoundingClientRect(), srect=stage.getBoundingClientRect(), dpr=a2d.dpr||1;
+  var cssX=(crect.left-srect.left)+sp.x/dpr, cssY=(crect.top-srect.top)+(a2d.canvas.height-sp.y)/dpr;
+  bar.style.display='flex'; bar.style.transform='translateX(-50%)';
+  bar.style.left=cssX+'px'; bar.style.top=(cssY+14)+'px';
+}
+function _faceSwatch(region,hex,name){ if(typeof pickBagSwatch==='function') pickBagSwatch(region,hex,name); }
+function _faceCustomColor(region,hex){
+  if(typeof _markTouched==='function') _markTouched(region);
+  BAG[region].swatchName='Custom'; BAG[region].customHex=hex; BAG[region].color=hex;
+  if(typeof updateBagColorDisplay==='function') updateBagColorDisplay(region,hex);
+  var prefix={exterior:'ext',interior:'int'}[region], hueEl=document.getElementById('bag-'+prefix+'-hslider');
+  if(hueEl && typeof hexToHSV==='function'){ var hh=hexToHSV(hex).h; hueEl.value=hh; if(typeof renderBagSwatches==='function') renderBagSwatches(region,hh,hex); }
+  if(typeof drawBagTexture==='function') drawBagTexture();
+}
 
 function atlas2dRender(){
   var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
