@@ -2242,6 +2242,8 @@
         </select></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">2.5</span></div>
         <input type="range" class="test-slider" min="0" max="10" step="0.5" value="2.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.5</span></div>
+        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.5" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
         <input type="range" class="test-slider" min="0" max="5" step="0.1" value="1" oninput="onAutoEditDelay(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">#000000</span></div>
@@ -4371,6 +4373,22 @@ function _patTrimBox(L) {
   box.forImg = img; L._trimBox = box; return box;
 }
 
+/* Is a layer's center inside a printable UV island (exterior or interior)? Used to dim
+   layers that have been dragged off the printable area. */
+function _layerInsideIslands(L){
+  if (!bagTexCtx || !L) return true;
+  var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+  var cx=PAD+2048*((L.posU||0)/100), cy=PAD+2048*((L.posV||0)/100);
+  if (bagExtClip && bagExtClip.path){ if (bagTexCtx.isPointInPath(bagExtClip.path,cx,cy)) return true;
+    if (bagIntClip && bagIntClip.path && bagTexCtx.isPointInPath(bagIntClip.path,cx,cy)) return true;
+    return false;
+  }
+  /* legacy single-mesh: fall back to the UV rects */
+  var e=BAG_UV.exterior, i=BAG_UV.interior;
+  if (e && cx>=e.x && cx<=e.x+e.w && cy>=e.y && cy<=e.y+e.h) return true;
+  if (i && cx>=i.x && cx<=i.x+i.w && cy>=i.y && cy<=i.y+i.h) return true;
+  return false;
+}
 function drawArtworkOnBag() {
   var corr = getArtCorr();
   /* Freeform: every visible layer is placed over the WHOLE atlas (z-order: bottom of
@@ -4382,7 +4400,9 @@ function drawArtworkOnBag() {
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
     bagTexCtx.save();
-    bagTexCtx.globalAlpha = (L.opacity != null ? L.opacity : 100) / 100;
+    var _oa = (L.opacity != null ? L.opacity : 100) / 100;
+    if (!_layerInsideIslands(L)) _oa *= (A2D.offIslandOpacity != null ? A2D.offIslandOpacity : 0.5);  /* dim layers dragged off the print area */
+    bagTexCtx.globalAlpha = _oa;
     drawLayerContent(bagTexCtx, L, 1, corr, 'color');
     bagTexCtx.restore();
   }
@@ -9952,6 +9972,7 @@ var A2D = {
   subLabelSize:14, subLabelColor:'#333333',    /* per-face sub-label size + colour */
   subLabelPos:'center',                          /* center | bottom | top | topleft */
   snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
+  offIslandOpacity:0.5,                          /* opacity multiplier for layers dragged off the print area */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
@@ -10045,9 +10066,20 @@ function _layerBox(L){
   return { cx:cx, cy:cy, hw:hw, hh:hh, ang:(L.rotation||0)*Math.PI/180 };   /* match the artwork's net (mirrored) rotation so box + image turn together */
 }
 function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
+/* The VISUAL (cropped) box derived from the full box + per-side crop fractions — so the
+   bounding box + handles shrink/shift to the cropped region. crop math itself still uses the
+   full box (a2d.start.box). For an uncropped layer this returns the full box unchanged. */
+function _layerCropBox(b, L){
+  if (!L) return b;
+  var cl=L.cropBoxL||0, cr=L.cropBoxR||0, ct=L.cropBoxT||0, cb=L.cropBoxB||0;
+  if (!(cl||cr||ct||cb)) return b;
+  var cxOff=(cl-cr)*b.hw, cyOff=(ct-cb)*b.hh, ca=Math.cos(b.ang), sa=Math.sin(b.ang);
+  return { cx:b.cx + cxOff*ca - cyOff*sa, cy:b.cy + cxOff*sa + cyOff*ca,
+           hw:b.hw*(1-cl-cr), hh:b.hh*(1-ct-cb), ang:b.ang };
+}
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
-  var L=a2d.sel; if(!L) return null; var b=_layerBox(L);
+  var L=a2d.sel; if(!L) return null; var b=_layerCropBox(_layerBox(L), L);  /* handles sit on the visual (cropped) box */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
   /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
   var order=[ ['rotate',0,1.6],
@@ -10250,13 +10282,14 @@ function atlas2dRender(){
   /* 7. layer selection boxes + image-5 handles (dashed box, circular handles on sticks) */
   var HS=A2D.handleSize*D, HC=_themeColor(A2D.handleColor);
   _drawableLayers().forEach(function(L){
-    var b=_layerBox(L), tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
+    var b=_layerCropBox(_layerBox(L), L);   /* the visual (cropped) box — shrinks/shifts as you crop */
+    var tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1), sel=(L===a2d.sel);
     ctx.strokeStyle=sel?HC:'rgba(0,0,0,0.28)'; ctx.lineWidth=(sel?2:1)*D;
     ctx.setLineDash(sel?[6*D,5*D]:[]);
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
     if (sel){
-      /* rotate stick at the visual TOP, 4 corner resize dots, 4 edge-midpoint crop squares */
+      /* rotate stick at the visual TOP, 4 corner resize dots, 4 edge crop BARS (lines) */
       var rh=_boxLocalToScreen(b,0,1.6), topMid={x:(bl.x+br.x)/2,y:(bl.y+br.y)/2};
       ctx.strokeStyle=HC; ctx.lineWidth=1.6*D;
       ctx.beginPath(); ctx.moveTo(topMid.x,topMid.y); ctx.lineTo(rh.x,rh.y); ctx.stroke();
@@ -10265,11 +10298,14 @@ function atlas2dRender(){
       _a2dHandleDot(ctx, tr.x, tr.y, HS, HC);
       _a2dHandleDot(ctx, br.x, br.y, HS, HC);
       _a2dHandleDot(ctx, bl.x, bl.y, HS, HC);
+      /* crop bars, oriented along each edge (screen-space edge directions) */
+      var xang=Math.atan2(tr.y-tl.y, tr.x-tl.x), yang=Math.atan2(bl.y-tl.y, bl.x-tl.x);
       var et=_boxLocalToScreen(b,0,-1), eb=_boxLocalToScreen(b,0,1), el=_boxLocalToScreen(b,-1,0), er=_boxLocalToScreen(b,1,0);
-      _a2dHandleSq(ctx, et.x, et.y, HS*0.9, HC);              /* crop edge handles */
-      _a2dHandleSq(ctx, eb.x, eb.y, HS*0.9, HC);
-      _a2dHandleSq(ctx, el.x, el.y, HS*0.9, HC);
-      _a2dHandleSq(ctx, er.x, er.y, HS*0.9, HC);
+      var barLen=Math.max(14*D, HS*2.6), barTh=Math.max(4*D, HS*0.55);
+      _a2dHandleBar(ctx, et.x, et.y, xang, barLen, barTh, HC);   /* top    (horizontal bar) */
+      _a2dHandleBar(ctx, eb.x, eb.y, xang, barLen, barTh, HC);   /* bottom */
+      _a2dHandleBar(ctx, el.x, el.y, yang, barLen, barTh, HC);   /* left   (vertical bar) */
+      _a2dHandleBar(ctx, er.x, er.y, yang, barLen, barTh, HC);   /* right  */
     }
   });
   /* magnetic-snap smart guides: full-canvas vertical + horizontal lines through the snapped
@@ -10339,11 +10375,17 @@ function _a2dHandleDot(ctx, x, y, r, color){
   ctx.fillStyle='#ffffff'; ctx.fill();
   ctx.lineWidth=2*a2d.dpr; ctx.strokeStyle=color; ctx.stroke();
 }
-/* white-filled SQUARE handle (used for the edge crop handles, to distinguish from resize) */
-function _a2dHandleSq(ctx, x, y, r, color){
-  ctx.beginPath(); ctx.rect(x-r,y-r,r*2,r*2);
+/* white-filled rounded BAR handle (edge crop handles) — a thin line/pill oriented along the
+   edge, so it reads as "crop", not "resize". `ang` = edge direction (screen radians). */
+function _a2dHandleBar(ctx, x, y, ang, len, thick, color){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  var hl=len/2, ht=thick/2, rr=ht;
+  ctx.beginPath();
+  ctx.moveTo(-hl+rr,-ht); ctx.lineTo(hl-rr,-ht); ctx.arc(hl-rr,0,rr,-Math.PI/2,Math.PI/2);
+  ctx.lineTo(-hl+rr,ht); ctx.arc(-hl+rr,0,rr,Math.PI/2,Math.PI*1.5); ctx.closePath();
   ctx.fillStyle='#ffffff'; ctx.fill();
   ctx.lineWidth=2*a2d.dpr; ctx.strokeStyle=color; ctx.stroke();
+  ctx.restore();
 }
 
 function goConfigStep(n) {
