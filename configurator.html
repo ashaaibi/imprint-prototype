@@ -2213,6 +2213,15 @@
         <input type="range" class="test-slider" min="6" max="36" step="1" value="14" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
         <input type="color" value="#333333" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('subLabelColor',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label position</span></div>
+        <select onchange="onA2Dsel('subLabelPos',this.value)" style="width:100%;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface,#fff);color:inherit;font-family:inherit;font-size:12px;cursor:pointer;">
+          <option value="center">Center of face</option>
+          <option value="bottom">Bottom center</option>
+          <option value="top">Top center</option>
+          <option value="topleft">Top left</option>
+        </select></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">2.5</span></div>
+        <input type="range" class="test-slider" min="0" max="10" step="0.5" value="2.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
         <input type="range" class="test-slider" min="0" max="5" step="0.1" value="1" oninput="onAutoEditDelay(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline color (single)</span><span class="slider-val" id="a2d-outlineColor-val">#000000</span></div>
@@ -4650,6 +4659,20 @@ function _faceUVCenter(geom){
   var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
   return { cx: PAD + mu*2048, cy: PAD + (1-mv)*2048 };
 }
+/* Robust UV bounding box of a face → atlas-px {x,y,w,h}. Uses 2nd–98th percentile of the
+   UVs so stray/outlier UVs don't blow up the box (gives true panel extents for anchoring
+   sub-labels at center / top / bottom / corner). */
+function _faceUVBox(geom){
+  if (!geom || !geom.getAttribute) return null;
+  var uv = geom.getAttribute('uv'); if (!uv || !uv.count) return null;
+  var us=[], vs=[], n=uv.count, i;
+  for (i=0;i<n;i++){ us.push(uv.getX(i)); vs.push(uv.getY(i)); }
+  us.sort(function(a,b){return a-b;}); vs.sort(function(a,b){return a-b;});
+  function pct(a,p){ return a[Math.max(0,Math.min(a.length-1,Math.floor(a.length*p)))]; }
+  var loU=pct(us,0.02), hiU=pct(us,0.98), loV=pct(vs,0.02), hiV=pct(vs,0.98);
+  var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+  return { x:PAD+loU*2048, y:PAD+(1-hiV)*2048, w:(hiU-loU)*2048, h:(hiV-loV)*2048 };
+}
 /* Merge several indexed BufferGeometries (each with position + optional normal/uv)
    into one — used to fuse the M_exterior and M_interior glTF primitives back into a
    single textured body that shares the atlas (exterior = left UV half, interior =
@@ -4893,8 +4916,8 @@ function buildPaperBagMesh() {
          UV center (robust to stray/outlier UVs that would skew a min/max bbox center —
          e.g. M_int_front/back have a few stray verts at the UV corners). */
       BAG_FACES = { exterior:{}, interior:{} };
-      Object.keys(grp.extFace).forEach(function(f){ var c=_faceUVCenter(grp.extFace[f]); if (c) BAG_FACES.exterior[f]=c; });
-      Object.keys(grp.intFace).forEach(function(f){ var c=_faceUVCenter(grp.intFace[f]); if (c) BAG_FACES.interior[f]=c; });
+      Object.keys(grp.extFace).forEach(function(f){ var c=_faceUVBox(grp.extFace[f]); if (c) BAG_FACES.exterior[f]=c; });
+      Object.keys(grp.intFace).forEach(function(f){ var c=_faceUVBox(grp.intFace[f]); if (c) BAG_FACES.interior[f]=c; });
       buildUVGuide();
       console.log('[imprint] BUILD=parts-atlas+uvguide · ext faces:', Object.keys(grp.extFace).join(',')||'(merged)', '· int faces:', Object.keys(grp.intFace).join(',')||'(merged)', '· handle:', !!bagHandleClip, 'rivet:', !!bagRivetClip);
     } else {
@@ -8846,6 +8869,7 @@ function onBodyDoubleSided(on){ BODY_DOUBLE_SIDED=!!on; if (bagMeshRef && bagMes
 function onA2Dnum(key,val,rebuild){ A2D[key]=parseFloat(val); var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=parseFloat(val); if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dcol(key,val,rebuild){ A2D[key]=val; var el=document.getElementById('a2d-'+key+'-val'); if(el) el.textContent=val; if(rebuild && typeof buildUVGuide==='function') buildUVGuide(); }
 function onA2Dtog(key,on){ A2D[key]=!!on; }
+function onA2Dsel(key,val){ A2D[key]=val; }
 function onAutoEditDelay(v){ _autoEdit2dDelay=Math.max(0,parseFloat(v)||0); var el=document.getElementById('auto-edit-delay-val'); if(el) el.textContent=_autoEdit2dDelay.toFixed(1)+'s'; }
 /* Toggle a hardware part (handles/rivets) in the 2D editor: rebuild the UV guide (so the
    outline/silhouette appears/disappears) and repaint the bag (so the fill is added/erased
@@ -9849,6 +9873,8 @@ var A2D = {
   labelSize:21, labelColor:'#000000',
   labelStroke:4, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   subLabelSize:14, subLabelColor:'#333333',    /* per-face sub-label size + colour */
+  subLabelPos:'center',                          /* center | bottom | top | topleft */
+  snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
@@ -9991,7 +10017,21 @@ function _aMove(e){
   if (a2d.op==='pan'){ a2d.panX=a2d.start.panX+(sp.x-a2d.start.sp.x); a2d.panY=a2d.start.panY+(sp.y-a2d.start.sp.y); return; }
   if (!a2d.sel) return;
   var L=a2d.sel, b=a2d.start.box;
-  if (a2d.op==='move'){ var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y); L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100)); L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100)); _a2dApply(); }
+  if (a2d.op==='move'){
+    var ap=_s2a(sp.x,sp.y), ap0=_s2a(a2d.start.sp.x,a2d.start.sp.y);
+    L.posU=Math.max(-20,Math.min(120, a2d.start.posU + (ap.x-ap0.x)/e_.w*100));
+    L.posV=Math.max(-20,Math.min(120, a2d.start.posV + (ap.y-ap0.y)/e_.h*100));
+    /* magnetic snap: if the layer center gets close to any face center, snap onto it */
+    a2d._snapFace=null;
+    if (typeof BAG_FACES!=='undefined' && BAG_FACES && (A2D.snapDist||0)>0){
+      var _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0, bestD=A2D.snapDist, best=null, bsc=null;
+      ['exterior','interior'].forEach(function(grp){ var fs=BAG_FACES[grp]||{}; Object.keys(fs).forEach(function(f){ var bb=fs[f]; if(!bb) return;
+        var fu=(bb.x+bb.w/2-_PAD)/2048*100, fv=(bb.y+bb.h/2-_PAD)/2048*100, d=Math.hypot(L.posU-fu,L.posV-fv);
+        if(d<bestD){ bestD=d; best={u:fu,v:fv}; bsc={cx:bb.x+bb.w/2, cy:bb.y+bb.h/2}; } }); });
+      if(best){ L.posU=best.u; L.posV=best.v; a2d._snapFace=bsc; }
+    }
+    _a2dApply();
+  }
   else if (a2d.op.indexOf('sc-')===0){
     /* Resize from any corner, anchored at the OPPOSITE corner (the opposite corner stays
        pinned). Patterns resize non-proportionally; graphics/text resize uniformly. */
@@ -10041,7 +10081,7 @@ function _aUp(e){
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
-  if (a2d.op===null) _a2dDragging=false;   /* exit fast-drag → next redraw is full quality */
+  if (a2d.op===null){ _a2dDragging=false; a2d._snapFace=null; }   /* exit fast-drag → next redraw is full quality */
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
 }
 function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), f=Math.exp(-e.deltaY*0.0015), nz=Math.max(0.05,Math.min(20,a2d.zoom*f)); a2d.zoom=nz; a2d.panX=sp.x-aPt.x*nz; a2d.panY=sp.y-aPt.y*nz; }
@@ -10155,6 +10195,13 @@ function atlas2dRender(){
       _a2dHandleSq(ctx, er.x, er.y, HS*0.9, HC);
     }
   });
+  /* magnetic-snap indicator: ring + crosshair at the face center the layer snapped to */
+  if (_a2dDragging && a2d._snapFace){
+    var sp2=_a2s(a2d._snapFace.cx, a2d._snapFace.cy), rr=11*D;
+    ctx.strokeStyle=_themeColor(A2D.handleColor); ctx.lineWidth=2*D;
+    ctx.beginPath(); ctx.arc(sp2.x,sp2.y,rr,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sp2.x-rr-4*D,sp2.y); ctx.lineTo(sp2.x+rr+4*D,sp2.y); ctx.moveTo(sp2.x,sp2.y-rr-4*D); ctx.lineTo(sp2.x,sp2.y+rr+4*D); ctx.stroke();
+  }
   ctx.restore();
   /* 8. upright labels (normal screen space). Arabic when the site language is Arabic.
      A stroke (outline) is drawn under the fill for contrast (testing-tunable). */
@@ -10184,12 +10231,19 @@ function atlas2dRender(){
     var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
     ctx.fillStyle=_themeColor(A2D.subLabelColor||'#333333');
-    ctx.font='600 '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif'; ctx.textBaseline='middle';
+    ctx.font='600 '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif';
+    var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
       var faces=BAG_FACES[grp]||{};
       Object.keys(faces).forEach(function(f){
-        var ce=faces[f]; if(!ce) return;
-        var p=_a2s(ce.cx, ce.cy);
+        var bb=faces[f]; if(!bb) return;
+        /* atlas-y is flipped on screen: larger y = visual TOP. */
+        var pad=Math.min(bb.w,bb.h)*0.07, ax,ay;
+        if(_pos==='top'){ ax=bb.x+bb.w/2; ay=bb.y+bb.h-pad; ctx.textBaseline='top'; ctx.textAlign='center'; }
+        else if(_pos==='bottom'){ ax=bb.x+bb.w/2; ay=bb.y+pad; ctx.textBaseline='bottom'; ctx.textAlign='center'; }
+        else if(_pos==='topleft'){ ax=bb.x+pad; ay=bb.y+bb.h-pad; ctx.textBaseline='top'; ctx.textAlign='left'; }
+        else { ax=bb.x+bb.w/2; ay=bb.y+bb.h/2; ctx.textBaseline='middle'; ctx.textAlign='center'; }
+        var p=_a2s(ax, ay);
         _drawLabel(FN[f]||f, p.x, c.height - p.y);
       });
     });
