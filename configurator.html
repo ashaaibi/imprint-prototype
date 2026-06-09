@@ -1696,9 +1696,8 @@
           <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
           <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
           <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Rivets" data-ar="البرشام">Rivets</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(7)" data-cstep-pill="7"><span class="cstep-pill-num">7</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
     </div>
@@ -1725,7 +1724,7 @@
     </div>
 
     <!-- Bag Artwork ─────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="6">
+    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="5">
       <label class="cl"><span data-en="Artwork" data-ar="التصميم">Artwork</span></label>
       <!-- Layers panel -->
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
@@ -1939,16 +1938,6 @@
       </div>
     </div>
 
-    <!-- Rivets ──────────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-rivets-section" data-cstep="5">
-      <label class="cl"><span data-en="Rivets" data-ar="البرشام">Rivets</span></label>
-      <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Rivet Color" data-ar="لون البرشام">Rivet Color</span></div>
-      <div class="hue-slider-wrap">
-        <input type="range" class="hue-slider" id="bag-riv-hslider" min="0" max="360" value="175" oninput="onBagHue('rivet', this.value)">
-      </div>
-      <div class="mono-swatches" id="bag-riv-swatches"></div>
-      <div class="color-hex" id="bag-riv-chex">#00E6D2</div>
-    </div>
 
     <!-- Size ───────────────────────────── -->
 
@@ -2022,7 +2011,7 @@
 
     <!-- Pricing Summary ────────────────── -->
     <!-- Review step (7): full summary of choices; the price breakdown below is always shown -->
-    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="7">
+    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="6">
       <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
       <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
       <div id="review-summary"></div>
@@ -6508,6 +6497,14 @@ function addLayer(kind) {
     L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
+    /* A new pattern covers the WHOLE exterior by default (centered on the exterior island). */
+    if (kind === 'pattern' && typeof BAG_UV!=='undefined' && BAG_UV.exterior){
+      var _ex=BAG_UV.exterior, _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+      var _sref=(typeof _layerScaleRef==='function')?_layerScaleRef():_ex.w, _corr=(typeof getArtCorr==='function')?getArtCorr():{x:1,y:1};
+      L.posU=(_ex.x+_ex.w/2-_PAD)/2048*100; L.posV=(_ex.y+_ex.h/2-_PAD)/2048*100;
+      L.scale =Math.max(2,Math.min(400, _ex.w*1.06/(_sref*(_corr.x||1))*100));
+      L.scaleH=Math.max(2,Math.min(400, _ex.h*1.06/(_sref*(_corr.y||1))*100));
+    }
   } else {
     L = { id:id, kind:'ai', isDefault:false, visible:false, prompt:'', areas:allAreas };
   }
@@ -7426,13 +7423,16 @@ function renderBagSwatches(region, hue, activeHex) {
 }
 
 function applyRibbonColor() {
+  if (BAG.rivet) BAG.rivet.color = BAG.ribbon.color;   /* rivets share the handles colour */
   /* Atlas-sampling handles → colour lives in the canvas island; repaint instead. */
-  if (bagHandleClip) { if (typeof drawBagTexture === 'function') drawBagTexture(); return; }
-  if (!bagFrontRef && !bagBackRef) return;
-  var col = hexNum(BAG.ribbon.color);
-  [bagFrontRef, bagBackRef].forEach(function(m) {
-    if (m && m.material) { m.material.color.setHex(col); m.material.needsUpdate = true; }
-  });
+  if (bagHandleClip) { if (typeof drawBagTexture === 'function') drawBagTexture(); }
+  else if (bagFrontRef || bagBackRef) {
+    var col = hexNum(BAG.ribbon.color);
+    [bagFrontRef, bagBackRef].forEach(function(m) {
+      if (m && m.material) { m.material.color.setHex(col); m.material.needsUpdate = true; }
+    });
+  }
+  if (typeof applyRivetColor === 'function') applyRivetColor();
 }
 function applyRivetColor() {
   if (bagRivetClip) { if (typeof drawBagTexture === 'function') drawBagTexture(); return; }
@@ -7728,6 +7728,11 @@ function applyBagFinish(region, key, btn, instant) {
     onBagMetalness(region, p.metalness);
   } else {
     startFinishTween(region, targetR, targetM);
+  }
+  /* Rivets share the handles' finish (the Rivets step was removed). */
+  if (region === 'ribbon' && typeof bagRivetRef !== 'undefined' && bagRivetRef && bagRivetRef.material) {
+    if (BAG.rivet) BAG.rivet.finish = key;
+    bagRivetRef.material.roughness = targetR; bagRivetRef.material.metalness = targetM; bagRivetRef.material.needsUpdate = true;
   }
 
   /* Kraft paints a kraft-tan base color (#c49345) + a hidden kraft1.png overlay.
@@ -9984,17 +9989,16 @@ document.addEventListener('imprint:countrychange', function() {
 var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
 function applyStepCamera(n){
   /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Rivets, 6 Artwork */
-  var artwork = (n === 6);
+  var artwork = (n === 5);
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
   if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 5) startCamTween(viewThetaRad('front'), 0.52);   /* Rivets → elevated 3/4 top view */
   else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
-var CONFIG_STEP_COUNT = 7;
+var CONFIG_STEP_COUNT = 6;
 var currentConfigStep = 1;
 /* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
 var _uiSoundOn = true, _audioCtx = null;
@@ -10230,6 +10234,10 @@ function _layerBox(L){
   if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
   else if (L.tiled){ hw=sref*((L.scale||18)/100)/2; hh=sref*(((L.scaleH!=null?L.scaleH:L.scale)||18)/100)/2; }  /* pattern crop box (independent w/h → non-proportional) */
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
+  /* match the art-correction scale used when DRAWING (drawLayerContent scales by corr) so the
+     box hugs the actual content instead of leaving a gap. */
+  var corr=(typeof getArtCorr==='function')?getArtCorr():{x:1,y:1};
+  hw*=corr.x; hh*=corr.y;
   return { cx:cx, cy:cy, hw:hw, hh:hh, ang:(L.rotation||0)*Math.PI/180 };   /* match the artwork's net (mirrored) rotation so box + image turn together */
 }
 function _boxLocalToScreen(b,ux,uy){ var ca=Math.cos(b.ang), sa=Math.sin(b.ang), lx=ux*b.hw, ly=uy*b.hh; return _a2s(b.cx+lx*ca-ly*sa, b.cy+lx*sa+ly*ca); }
@@ -10271,6 +10279,10 @@ function _aDown(e){
   var hh=_hitHandle(sp);
   if (hh){ a2d.op=hh; _a2dDragging=true; a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:a2d.sel.scaleH, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) };
     if(a2d.canvas) a2d.canvas.style.cursor=(hh.indexOf('sc-')===0)?'nwse-resize':(hh.indexOf('cr-')===0)?'crosshair':'grabbing'; return; }
+  /* clicked a face/region/handles LABEL (stays on top of everything) → open its colour bar
+     instead of selecting whatever layer is underneath. */
+  var lt=(typeof _hitLabel==='function')?_hitLabel(sp):null;
+  if (lt){ a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=lt; _showFaceBar(lt, sp); return; }
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
   if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
   else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
@@ -10323,9 +10335,12 @@ function _aMove(e){
     var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982, minpx=srefp*0.02;
     var fullW=Math.max(minpx, projX*sx), fullH=Math.max(minpx, projY*sy);
     if (L.tiled){
-      L.scale  = Math.max(2, Math.min(400, fullW/srefp*100));
-      L.scaleH = Math.max(2, Math.min(400, fullH/srefp*100));
-      var nhw=srefp*L.scale/200, nhh=srefp*L.scaleH/200;
+      /* ratio-based (relative to the start box) so it stays consistent with the art-correction
+         scale baked into the box → handles hug the pattern exactly. */
+      var rW=fullW/(2*(b.hw||1)), rH=fullH/(2*(b.hh||1));
+      L.scale  = Math.max(2, Math.min(400, (a2d.start.scale!=null?a2d.start.scale:40) * rW));
+      L.scaleH = Math.max(2, Math.min(400, (a2d.start.scaleH!=null?a2d.start.scaleH:40) * rH));
+      var nhw=fullW/2, nhh=fullH/2;
       var ncx=anchX + sx*nhw*ca - sy*nhh*sa, ncy=anchY + sx*nhw*sa + sy*nhh*ca;
       L.posU=Math.max(-20,Math.min(120,(ncx-e_.x)/e_.w*100));
       L.posV=Math.max(-20,Math.min(120,(ncy-e_.y)/e_.h*100));
@@ -10445,32 +10460,45 @@ function ctxTint(hex){ var L=_ctxL(); if(!L) return; L.swatchName='Custom'; L.co
 /* ── Face contextual bar: click an exterior/interior face in the 2D editor → recolour that
    material with the same swatches as the Exterior / Interior step. ── */
 function _hideFaceBar(){ var b=document.getElementById('a2d-facebar'); if(b) b.style.display='none'; a2d.faceSel=null; }
+/* hit-test the on-canvas labels (they sit on top of everything, even a full-cover pattern) */
+function _hitLabel(sp){
+  if(!a2d._labelHits || !a2d.canvas) return null;
+  var hx=sp.x, hy=a2d.canvas.height - sp.y;   /* labels are drawn in normal (from-top) coords */
+  for(var i=0;i<a2d._labelHits.length;i++){ var lh=a2d._labelHits[i]; if(hx>=lh.x0&&hx<=lh.x1&&hy>=lh.y0&&hy<=lh.y1) return lh.target; }
+  return null;
+}
 function _faceClick(sp){
   _hideFaceBar();
   if(!bagTexCtx) return;
   var ap=_s2a(sp.x,sp.y), region=null;
   if(bagExtClip&&bagExtClip.path&&bagTexCtx.isPointInPath(bagExtClip.path,ap.x,ap.y)) region='exterior';
   else if(bagIntClip&&bagIntClip.path&&bagTexCtx.isPointInPath(bagIntClip.path,ap.x,ap.y)) region='interior';
-  else { var e=BAG_UV.exterior,i=BAG_UV.interior;
+  else { var e=BAG_UV.exterior,ii=BAG_UV.interior;
     if(e&&ap.x>=e.x&&ap.x<=e.x+e.w&&ap.y>=e.y&&ap.y<=e.y+e.h) region='exterior';
-    else if(i&&ap.x>=i.x&&ap.x<=i.x+i.w&&ap.y>=i.y&&ap.y<=i.y+i.h) region='interior'; }
+    else if(ii&&ap.x>=ii.x&&ap.x<=ii.x+ii.w&&ap.y>=ii.y&&ap.y<=ii.y+ii.h) region='interior'; }
   if(!region) return;
   var faceName='', faces=(typeof BAG_FACES!=='undefined'&&BAG_FACES[region])||{}, bestD=1e9;
   Object.keys(faces).forEach(function(f){ var bb=faces[f]; if(!bb)return; var d=Math.hypot(ap.x-(bb.x+bb.w/2),ap.y-(bb.y+bb.h/2)); if(d<bestD){bestD=d;faceName=f;} });
-  a2d.faceSel={region:region, face:faceName};
-  _showFaceBar(region, faceName, sp);
+  var t={kind:'face',region:region,face:faceName}; a2d.faceSel=t; _showFaceBar(t, sp);
 }
-function _showFaceBar(region, faceName, sp){
-  var bar=document.getElementById('a2d-facebar'); if(!bar) return;
-  var prefix={exterior:'ext',interior:'int'}[region];
+function _fbRegionKey(t){ return t.kind==='handles'?'ribbon':t.kind==='rivets'?'rivet':t.region; }
+function _fbLabel(t, ar){
+  if(t.kind==='handles') return ar?'المقابض':'Handles';
+  if(t.kind==='rivets')  return ar?'البرشام':'Rivets';
+  var rn=ar?(t.region==='exterior'?'الخارج':'الداخل'):(t.region==='exterior'?'Exterior':'Interior');
+  if(t.kind==='region') return rn;
+  var fm=ar?{front:'أمامي',back:'خلفي',left:'يسار',right:'يمين',base:'قاعدة'}:{front:'Front',back:'Back',left:'Left',right:'Right',base:'Base'};
+  return rn+' · '+(fm[t.face]||t.face);
+}
+function _showFaceBar(t, sp){
+  var bar=document.getElementById('a2d-facebar'); if(!bar||!t) return;
+  var rk=_fbRegionKey(t), prefix={exterior:'ext',interior:'int',ribbon:'rib',rivet:'riv'}[rk];
   var hueEl=document.getElementById('bag-'+prefix+'-hslider'), hue=hueEl?parseInt(hueEl.value):0;
   var sw=monoSwatchColors(hue), ar=(typeof getLang==='function'&&getLang()==='ar');
-  var regName=ar?(region==='exterior'?'الخارج':'الداخل'):(region==='exterior'?'Exterior':'Interior');
-  var fm=ar?{front:'أمامي',back:'خلفي',left:'يسار',right:'يمين',base:'قاعدة'}:{front:'Front',back:'Back',left:'Left',right:'Right',base:'Base'};
-  var lbl=regName+(faceName?(' · '+(fm[faceName]||faceName)):'');
-  var h='<span style="font-size:10px;font-weight:600;color:var(--imp-fg-2);padding:0 6px 0 4px;white-space:nowrap;">'+lbl+'</span><span class="a2dc-sep"></span>';
-  sw.forEach(function(hex,i){ h+='<button class="a2dc-btn" style="padding:4px;" title="'+SWATCH_NAMES[i]+'" onclick="_faceSwatch(\''+region+'\',\''+hex+'\',\''+SWATCH_NAMES[i]+'\')"><span style="display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--imp-border);background:'+hex+';"></span></button>'; });
-  h+='<span class="a2dc-sep"></span><label class="a2dc-btn" title="Custom colour" style="position:relative;overflow:hidden;display:inline-flex;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1.5a2 2 0 0 0 0 4z"/></svg><input type="color" value="'+(BAG[region].customHex||'#ffffff')+'" oninput="_faceCustomColor(\''+region+'\',this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>';
+  var cur=(BAG[rk]&&BAG[rk].customHex)||'#ffffff';
+  var h='<span style="font-size:10px;font-weight:600;color:var(--imp-fg-2);padding:0 6px 0 4px;white-space:nowrap;">'+_fbLabel(t,ar)+'</span><span class="a2dc-sep"></span>';
+  sw.forEach(function(hex,i){ h+='<button class="a2dc-btn" style="padding:4px;" title="'+SWATCH_NAMES[i]+'" onclick="_setFaceColor(\''+hex+'\')"><span style="display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--imp-border);background:'+hex+';"></span></button>'; });
+  h+='<span class="a2dc-sep"></span><label class="a2dc-btn" title="Custom colour" style="position:relative;overflow:hidden;display:inline-flex;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1.5a2 2 0 0 0 0 4z"/></svg><input type="color" value="'+cur+'" oninput="_setFaceColor(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>';
   bar.innerHTML=h;
   var stage=document.querySelector('.canvas-stage'); if(!stage) return;
   var crect=a2d.canvas.getBoundingClientRect(), srect=stage.getBoundingClientRect(), dpr=a2d.dpr||1;
@@ -10478,17 +10506,17 @@ function _showFaceBar(region, faceName, sp){
   bar.style.display='flex'; bar.style.transform='translateX(-50%)';
   bar.style.left=cssX+'px'; bar.style.top=(cssY+14)+'px';
 }
-/* Apply a colour to ONLY the clicked face (M_ext_<face> / M_int_<face>); other faces keep
-   the colour picked in the Exterior/Interior step. */
-function _setFaceColor(region, hex){
-  var face = a2d.faceSel && a2d.faceSel.face;
-  if(typeof _markTouched==='function') _markTouched(region);
-  if(!face){ /* no specific face → fall back to whole region */ BAG[region].swatchName='Custom'; BAG[region].customHex=hex; BAG[region].color=hex; if(typeof updateBagColorDisplay==='function') updateBagColorDisplay(region,hex); }
-  else { BAG[region].faceColors = BAG[region].faceColors || {}; BAG[region].faceColors[face]=hex; }
-  if(typeof drawBagTexture==='function') drawBagTexture();
+/* Apply a colour to the current face-bar target: a single face, a whole region (exterior/
+   interior step colour), or the handles/rivets. */
+function _setFaceColor(hex){
+  var t=a2d.faceSel; if(!t) return;
+  function _whole(r,applyFn){ if(typeof _markTouched==='function')_markTouched(r); BAG[r].swatchName='Custom'; BAG[r].customHex=hex; BAG[r].color=hex; if(typeof updateBagColorDisplay==='function')updateBagColorDisplay(r,hex);
+    var pre={exterior:'ext',interior:'int',ribbon:'rib',rivet:'riv'}[r], he=document.getElementById('bag-'+pre+'-hslider'); if(he&&typeof hexToHSV==='function'){var hh=hexToHSV(hex).h; he.value=hh; if(typeof renderBagSwatches==='function')renderBagSwatches(r,hh,hex);} if(applyFn) applyFn(); else if(typeof drawBagTexture==='function')drawBagTexture(); }
+  if(t.kind==='handles') _whole('ribbon', function(){ if(typeof applyRibbonColor==='function')applyRibbonColor(); });
+  else if(t.kind==='rivets') _whole('rivet', function(){ if(typeof applyRivetColor==='function')applyRivetColor(); });
+  else if(t.kind==='region') _whole(t.region, null);
+  else { var rg=t.region; if(typeof _markTouched==='function')_markTouched(rg); BAG[rg].faceColors=BAG[rg].faceColors||{}; BAG[rg].faceColors[t.face]=hex; if(typeof drawBagTexture==='function')drawBagTexture(); }
 }
-function _faceSwatch(region,hex,name){ _setFaceColor(region,hex); }
-function _faceCustomColor(region,hex){ _setFaceColor(region,hex); }
 
 function atlas2dRender(){
   var ctx=a2d.ctx, c=a2d.canvas; if(!ctx||!c) return; var D=a2d.dpr;
@@ -10597,22 +10625,26 @@ function atlas2dRender(){
   var _arL = (typeof getLang==='function' && getLang()==='ar');
   var GL = _arL ? {Exterior:'الخارج',Interior:'الداخل',Handles:'المقابض',Rivets:'البرشام'}
                 : {Exterior:'Exterior',Interior:'Interior',Handles:'Handles',Rivets:'Rivets'};
-  var labelDefs = [ {bb:uv.exterior,label:GL.Exterior}, {bb:uv.interior,label:GL.Interior} ];
-  if (bagUVGuideCanvas){
-    if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:GL.Handles});
-    if (A2D.showRivets2D)  labelDefs.push({bb:uv.rivets, label:GL.Rivets});
-  }
+  var labelDefs = [ {bb:uv.exterior,label:GL.Exterior,target:{kind:'region',region:'exterior'}}, {bb:uv.interior,label:GL.Interior,target:{kind:'region',region:'interior'}} ];
+  /* Handles label always shown so its colour is clickable (even if the island fill is off). */
+  labelDefs.push({bb:uv.handles,label:GL.Handles,target:{kind:'handles'}});
+  if (bagUVGuideCanvas && A2D.showRivets2D) labelDefs.push({bb:uv.rivets, label:GL.Rivets, target:{kind:'rivets'}});
+  a2d._labelHits=[];   /* clickable label regions, recorded each frame */
+  var _LD=D;
+  function _recLabelHit(txt, cx, dy, fontPx, target){ var w=ctx.measureText(txt).width, px=12*_LD, py=fontPx*0.85; a2d._labelHits.push({x0:cx-w/2-px,x1:cx+w/2+px,y0:dy-py,y1:dy+py,target:target}); }
   var _stroke=(A2D.labelStroke||0)*D, _strokeCol=_themeColorIf(A2D.labelStrokeColor||'#ffffff', A2D.invertLabelDark);
   function _drawLabel(txt,x,y){
     if (_stroke>0){ ctx.lineJoin='round'; ctx.lineWidth=_stroke; ctx.strokeStyle=_strokeCol; ctx.strokeText(txt,x,y); }
     ctx.fillText(txt,x,y);
   }
-  ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font=(A2D.labelWeight||600)+' '+(A2D.labelSize*D)+'px sans-serif';
+  var _mainFP=A2D.labelSize*D;
+  ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font=(A2D.labelWeight||600)+' '+_mainFP+'px sans-serif';
   ctx.textBaseline='bottom'; ctx.textAlign='center';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
     _drawLabel(it.label, p.x, ly-5*D);
+    _recLabelHit(it.label, p.x, ly-5*D, _mainFP, it.target);
   });
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB
      populated BAG_FACES. Centered (median UV) inside each face; size+color testing-tunable. */
@@ -10632,8 +10664,9 @@ function atlas2dRender(){
         else if(_pos==='bottom'){ ax=bb.x+bb.w/2; ay=bb.y+pad; ctx.textBaseline='bottom'; ctx.textAlign='center'; }
         else if(_pos==='topleft'){ ax=bb.x+pad; ay=bb.y+bb.h-pad; ctx.textBaseline='top'; ctx.textAlign='left'; }
         else { ax=bb.x+bb.w/2; ay=bb.y+bb.h/2; ctx.textBaseline='middle'; ctx.textAlign='center'; }
-        var p=_a2s(ax, ay);
-        _drawLabel(FN[f]||f, p.x, c.height - p.y);
+        var p=_a2s(ax, ay), dy=c.height - p.y;
+        _drawLabel(FN[f]||f, p.x, dy);
+        _recLabelHit(FN[f]||f, p.x, dy, Math.max(7,A2D.subLabelSize||13)*D, {kind:'face',region:grp,face:f});
       });
     });
   }
@@ -10685,7 +10718,7 @@ function goConfigStep(n) {
   if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
   applyStepCamera(n);
   if (typeof startHueGuide === 'function') startHueGuide(STEP_PART[n] || null);
-  if (n === 7 && typeof renderReviewSummary === 'function') renderReviewSummary();
+  if (n === 6 && typeof renderReviewSummary === 'function') renderReviewSummary();
 }
 function configStepNext() { goConfigStep(currentConfigStep + 1); }
 
