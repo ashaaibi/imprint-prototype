@@ -1053,7 +1053,7 @@
       display: none;
       position: absolute;
       left: 0; right: 0;
-      bottom: calc(100% + 6px);
+      top: calc(100% + 6px);
       background: var(--imp-surface);
       border: 1px solid var(--imp-border);
       border-radius: var(--imp-r-md);
@@ -1626,6 +1626,8 @@
       }
       .sheet-handle:active { cursor: grabbing; }
       .sheet-grip { width: 42px; height: 5px; border-radius: 3px; background: var(--imp-border-hover); }
+      /* minimized snap: only the handle + pager (Back · 1/3 · Next) stays visible */
+      .controls-panel.sheet-min .cstep-nav { display: none; }
     }
   </style>
 </head>
@@ -1669,7 +1671,7 @@
           <div class="cfg-loader-ring"></div>
           <div class="cfg-loader-dot"></div>
         </div>
-        <div class="cfg-loader-text" data-en="Preparing your studio…" data-ar="نُجهّز الاستوديو…">Preparing your studio…</div>
+        <div class="cfg-loader-text" id="cfg-loader-text" data-en="Preparing your studio…" data-ar="نُجهّز الاستوديو…">Preparing your studio…</div>
       </div>
       <div id="bag-switch-overlay" style="display:none;position:absolute;inset:0;z-index:5;background:var(--imp-surface);flex-direction:column;gap:16px;align-items:center;justify-content:center;border-radius:inherit;">
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
@@ -1715,8 +1717,8 @@
 
     <!-- == PAPER BAG SECTIONS == -->
 
-    <!-- Shuffle / Clear (below the sticky nav) -->
-    <div class="cs bag-section" style="padding:20px 0;">
+    <!-- Shuffle / Clear (below the sticky nav) — hidden by default; toggle in Testing -->
+    <div class="cs bag-section" id="shuffle-clear-row" style="padding:20px 0;display:none;">
       <div class="action-row">
         <button class="randomize-btn" onclick="randomizeBag()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1741,7 +1743,6 @@
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
       <div id="artwork-panel-layers">
         <div class="layers-wrap">
-          <div class="layers-list" id="layers-list"></div>
           <div class="add-layer-wrap">
             <button class="add-layer-btn" onclick="toggleAddLayerMenu(event)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1766,6 +1767,7 @@
               </button>
             </div>
           </div>
+          <div class="layers-list" id="layers-list" style="margin-top:12px;"></div>
         </div>
       </div>
     </div>
@@ -2032,8 +2034,8 @@
       </button>
     </div>
 
-    <!-- Price summary — ALWAYS visible (total stays present on every step) -->
-    <div class="cs" id="price-summary-block">
+    <!-- Price summary — Review step only -->
+    <div class="cs config-step" id="price-summary-block" data-cstep="3">
       <label class="cl" data-en="Summary" data-ar="الملخص">Summary</label>
 
       <!-- Base bag cost -->
@@ -2084,8 +2086,8 @@
       <div class="per-unit-note" id="pu-note">AED 6.20 per unit · 200 units</div>
     </div>
 
-    <!-- Add to Cart ────────────────────── -->
-    <div class="cta-area">
+    <!-- Add to Cart — Review step only ──── -->
+    <div class="cta-area config-step" data-cstep="3">
       <button class="btn-cart" id="atcbtn" disabled onclick="addCart()"
               data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
       <div class="cta-hint" id="cta-hint">Upload a logo and confirm rights to continue.</div>
@@ -2225,9 +2227,11 @@
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onA2Dtog('wireFull',this.checked); if(typeof buildUVGuide==='function') buildUVGuide();" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off = clean island outlines only. On = every triangle edge.</div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Show handles in 2D</span>
-        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onShowPart2D('handles',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onShowPart2D('handles',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--accent,#c8a96e);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Show rivets in 2D</span>
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onShowPart2D('rivets',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Show Shuffle / Clear buttons</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" onchange="onShowShuffleClear(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Triangle cleaning</span><span class="slider-val" id="a2d-triClean-val">0</span></div>
         <input type="range" class="test-slider" min="0" max="400" step="1" value="0" oninput="onA2Dnum('triClean',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Shell silhouette</span>
@@ -4312,14 +4316,19 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       var _stack = L.patStack || 'diagonal';
       for (var rr = -1; rr <= nR; rr++) {
         for (var cc = -1; cc <= nC; cc++) {
-          var px = cc * cw, py = rr * ch;
+          var px = cc * cw, py = rr * ch, _flip = 1, _rot = 0, _xf = false;
           if (_stack === 'diagonal') { if (rr & 1) px += cw / 2; }
           else if (_stack === 'brick') { if (cc & 1) py += ch / 2; }
-          if (_stack === 'mirror' || _stack === 'scatter') {
+          else if (_stack === 'wave') { px += Math.sin(rr * 0.9) * cw * 0.5; }
+          else if (_stack === 'mirror') { if ((rr + cc) & 1) { _flip = -1; _xf = true; } }
+          else if (_stack === 'scatter') { var _hs = Math.sin(rr * 12.9898 + cc * 78.233) * 43758.5453; _hs -= Math.floor(_hs); _rot = _hs * Math.PI * 2; _xf = true; }
+          else if (_stack === 'diamond') { _rot = Math.PI / 4; _xf = true; }
+          else if (_stack === 'spin') { if ((rr + cc) & 1) { _rot = Math.PI / 2; _xf = true; } }
+          if (_xf) {
             sx.save();
             sx.translate(px + tileW / 2, py + tileH / 2);
-            if (_stack === 'mirror') { if ((rr + cc) & 1) sx.scale(-1, 1); }
-            else { var _hs = Math.sin(rr * 12.9898 + cc * 78.233) * 43758.5453; _hs -= Math.floor(_hs); sx.rotate(_hs * Math.PI * 2); }
+            if (_flip !== 1) sx.scale(_flip, 1);
+            if (_rot) sx.rotate(_rot);
             sx.drawImage(cell, -tileW / 2, -tileH / 2, tileW, tileH);
             sx.restore();
           } else {
@@ -5179,8 +5188,8 @@ function buildPaperBagMesh() {
 /* ─── Animated loader copy — rotates through messages so the wait feels alive. Separate
    sets for the initial configurator load vs. a size switch; Arabic-aware. ─── */
 var _LOADER_MSGS = {
-  init: { en:['Preparing your studio…','Loading the 3D environment…','Warming up materials…','Calibrating studio lighting…','Smoothing the paper grain…','Mapping the print areas…','Almost ready…'],
-          ar:['نُجهّز الاستوديو…','نُحمّل بيئة الـ3D…','نُهيّئ الخامات…','نضبط إضاءة الاستوديو…','نُنعّم ملمس الورق…','نُحدّد مناطق الطباعة…','شارفنا على الانتهاء…'] },
+  init: { en:['Preparing your studio…','Loading the 3D environment…','Warming up materials…','Calibrating studio lighting…','Smoothing the paper grain…','Mapping the print areas…','Folding the corners…','Polishing the soft-touch finish…','Tightening the handles…','Steaming out the creases…','Lining up the dielines…','Almost ready…'],
+          ar:['نُجهّز الاستوديو…','نُحمّل بيئة الـ3D…','نُهيّئ الخامات…','نضبط إضاءة الاستوديو…','نُنعّم ملمس الورق…','نُحدّد مناطق الطباعة…','نطوي الزوايا…','نُلمّع التشطيب الناعم…','نُحكِم المقابض…','نُزيل التجاعيد…','نُحاذي القوالب…','شارفنا على الانتهاء…'] },
   size: { en:['Reshaping your bag…','Re-fitting the dieline…','Updating the dimensions…','Re-mapping your artwork…','Rebuilding the 3D model…','Finishing up…'],
           ar:['نُعيد تشكيل الكيس…','نُعيد ضبط القالب…','نُحدّث الأبعاد…','نُعيد توزيع التصميم…','نُعيد بناء المجسم…','نُنهي اللمسات…'] }
 };
@@ -6321,7 +6330,7 @@ function buildLayerBodyHTML(L) {
       /* Move/resize(=crop box)/rotate happen in the 2D editor. Here: tile spacing,
          repeat count, and edge feather. */
       h += sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×');
-      h += sliderRow(id, 'gap', 'Gap', 0, 200, 1, (L.gap != null ? L.gap : 0), '%');
+      h += sliderRow(id, 'gap', 'Gap', -1, 100, 0.5, (L.gap != null ? L.gap : 0), '%');
       h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
       /* Layout control — uploads only (library patterns are fixed to vertical). */
       if (!L.fromLibrary) {
@@ -6331,7 +6340,10 @@ function buildLayerBodyHTML(L) {
           { k:'diagonal', label:'Diagonal', ic:'<circle cx="3.5" cy="4.5" r="1.7"/><circle cx="10.5" cy="4.5" r="1.7"/><circle cx="7" cy="11.5" r="1.7"/><circle cx="14" cy="11.5" r="1.7"/>' },
           { k:'brick',    label:'Brick',    ic:'<circle cx="4.5" cy="3.5" r="1.7"/><circle cx="11.5" cy="7" r="1.7"/><circle cx="4.5" cy="10.5" r="1.7"/><circle cx="11.5" cy="14" r="1.7"/>' },
           { k:'mirror',   label:'Mirror',   ic:'<path d="M7 3 L3.5 8.5 L7 8.5 Z"/><path d="M9 3 L12.5 8.5 L9 8.5 Z"/><path d="M7 13 L3.5 9.5 L7 9.5 Z" opacity="0.55"/><path d="M9 13 L12.5 9.5 L9 9.5 Z" opacity="0.55"/>' },
-          { k:'scatter',  label:'Scatter',  ic:'<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M3.5 4 h3"/><path d="M11 3.5 l2 2.5"/><path d="M4 11.5 l2.5 -1.5"/><path d="M10 13 l3 -0.5"/></g>' }
+          { k:'scatter',  label:'Scatter',  ic:'<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M3.5 4 h3"/><path d="M11 3.5 l2 2.5"/><path d="M4 11.5 l2.5 -1.5"/><path d="M10 13 l3 -0.5"/></g>' },
+          { k:'diamond',  label:'Diamond',  ic:'<path d="M8 2.5 L13.5 8 L8 13.5 L2.5 8 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.5"/>' },
+          { k:'spin',     label:'Spin',     ic:'<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M12.5 5.5 A4.5 4.5 0 1 0 13 9.5"/><path d="M12.8 2.6 L12.8 5.6 L9.8 5.6"/></g>' },
+          { k:'wave',     label:'Wave',     ic:'<path d="M2 9 Q4.5 4.5 8 9 T14 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' }
         ];
         var _segB = 'flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:54px;padding:8px 4px;border-radius:9px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);font-size:9.5px;font-weight:600;';
         var _segOn = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.14));color:var(--imp-fg);';
@@ -6500,7 +6512,7 @@ function onLayerExtrude(id, val) {
 }
 function onLayerPatStack(id, mode) {
   var L = getLayer(id); if (!L) return;
-  var ok = { vertical:1, diagonal:1, brick:1, mirror:1, scatter:1 };
+  var ok = { vertical:1, diagonal:1, brick:1, mirror:1, scatter:1, diamond:1, spin:1, wave:1 };
   L.patStack = ok[mode] ? mode : 'diagonal';
   drawBagTexture();
   renderLayersList();   /* refresh the active layout button */
@@ -9152,15 +9164,23 @@ function setupOrbit() {
     if (!sheet || !handle) return;
     function isMobile() { return window.matchMedia('(max-width: 760px)').matches; }
     function vhpx() { return window.innerHeight / 100; }
-    function snaps() { return [52 * vhpx(), 28 * vhpx(), 0]; } /* peek, half, full (translateY px) */
+    /* lowest "minimized" snap: push the sheet down until only the handle + pager
+       (Back · 1/3 · Next) peeks, freeing the screen for the 3D bag. */
+    function minY() {
+      var pager = document.querySelector('.cstep-pager');
+      var visH = (handle ? handle.offsetHeight : 34) + (pager ? pager.offsetHeight : 54) + 10;
+      return Math.max(56 * vhpx(), 90 * vhpx() - visH);
+    }
+    function snaps() { return [52 * vhpx(), 28 * vhpx(), 0, minY()]; } /* peek, half, full, minimized (translateY px) */
     var idx = 0; /* start at peek */
     function setY(px) { sheet.style.setProperty('--sheet-y', px + 'px'); if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); }
     function applySnap(i, animate) {
-      idx = Math.max(0, Math.min(2, i));
+      idx = Math.max(0, Math.min(snaps().length - 1, i));
+      sheet.classList.toggle('sheet-min', idx === 3);   /* minimized → hide the step pills, show only the pager */
       sheet.style.transition = (animate === false) ? 'none' : '';
       setY(snaps()[idx]);
     }
-    function sync() { if (isMobile()) applySnap(idx, false); else sheet.style.removeProperty('--sheet-y'); }
+    function sync() { if (isMobile()) applySnap(idx, false); else { sheet.style.removeProperty('--sheet-y'); sheet.classList.remove('sheet-min'); } }
     sync();
     window.addEventListener('resize', sync);
 
@@ -9177,13 +9197,13 @@ function setupOrbit() {
       if (!dragging) return;
       var dy = e.clientY - startY;
       if (Math.abs(dy) > 4) moved = true;
-      setY(Math.max(0, Math.min(52 * vhpx(), startPx + dy)));
+      setY(Math.max(0, Math.min(minY(), startPx + dy)));
       e.preventDefault();
     });
     function end() {
       if (!dragging) return;
       dragging = false;
-      if (!moved) { applySnap((idx + 1) % 3, true); return; } /* tap → cycle Peek→Half→Full */
+      if (!moved) { applySnap((idx + 1) % 4, true); return; } /* tap → cycle Peek→Half→Full→Minimized */
       var y = parseFloat(sheet.style.getPropertyValue('--sheet-y')) || 0;
       var s = snaps(), best = 0, bd = 1e9;
       s.forEach(function(sp, i) { var d = Math.abs(sp - y); if (d < bd) { bd = d; best = i; } });
@@ -9226,6 +9246,7 @@ function onShowPart2D(part, on){
   if (typeof drawBagTexture === 'function') drawBagTexture();
   if (viewMode === '2d' && typeof atlas2dRender === 'function') atlas2dRender();
 }
+function onShowShuffleClear(on){ var el=document.getElementById('shuffle-clear-row'); if(el) el.style.display = on ? '' : 'none'; }
 function onA2Dpadding(val){ A2D.padding=parseFloat(val); var el=document.getElementById('a2d-padding-val'); if(el) el.textContent=parseFloat(val); if(typeof drawBagTexture==='function') drawBagTexture(); }
 function onAtlasPad(val){
   ATLAS_PAD = Math.max(0, parseInt(val)||0);
@@ -10231,7 +10252,7 @@ var A2D = {
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
-  showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
+  showHandles2D:true, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0, hoverL:null,
@@ -10365,7 +10386,7 @@ function _layerCropBox(b, L){
 }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerCropBox(_layerBox(L), L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
-  var L=a2d.sel; if(!L) return null; var b=_layerCropBox(_layerBox(L), L);  /* handles sit on the visual (cropped) box */
+  var L=a2d.sel; if(!L || L.locked) return null; var b=_layerCropBox(_layerBox(L), L);  /* locked layers expose no resize/rotate/crop handles */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
   /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
   var order=[ ['rotate',0,1.6],
@@ -10413,7 +10434,8 @@ function _aDown(e){
   }
   /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
-  if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
+  if (L && L.locked){ a2d.sel=L; a2d.op=null; _ctxBarFor=null; if(a2d.canvas) a2d.canvas.style.cursor='not-allowed'; }   /* locked → select but don't move */
+  else if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
   else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
 }
 function _aMove(e){
@@ -10426,8 +10448,8 @@ function _aMove(e){
     else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nwse-resize':'nesw-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
     else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
-    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ cur='move'; a2d.hoverL=_hL; } else a2d.hoverL=null; }
-    if (cur!=='move') a2d.hoverL=null;   /* only preview the box when actually hovering the layer body */
+    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ cur=_hL.locked?'not-allowed':'move'; a2d.hoverL=_hL; } else a2d.hoverL=null; }
+    if (cur!=='move' && cur!=='not-allowed') a2d.hoverL=null;   /* only preview the box when actually hovering the layer body */
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
   }
@@ -10598,7 +10620,7 @@ function ctxDel(){ var L=_ctxL(); if(L){ var id=L.id; a2d.sel=null; deleteLayer(
 function ctxLock(){ var L=_ctxL(); if(L){ toggleLayerLock(L.id); _ctxBarFor=null; } }
 function ctxFront(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.indexOf(L); if(i>0){ a.splice(i,1); a.unshift(L); drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); } }
 function ctxBack(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.indexOf(L); if(i>=0&&i<a.length-1){ a.splice(i,1); a.push(L); drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); } }
-function ctxStep(prop,d){ var L=_ctxL(); if(!L) return; var def=(prop==='density')?6:(prop==='fontSize')?100:0; var nv=(L[prop]!=null?L[prop]:def)+d; var mn=(prop==='density')?1:(prop==='fontSize')?20:0; nv=Math.max(mn,nv); if(prop==='gap')nv=Math.min(200,nv); if(prop==='feather')nv=Math.min(95,nv); L[prop]=nv; drawBagTexture(); }
+function ctxStep(prop,d){ var L=_ctxL(); if(!L) return; var def=(prop==='density')?6:(prop==='fontSize')?100:0; var nv=(L[prop]!=null?L[prop]:def)+d; var mn=(prop==='density')?1:(prop==='fontSize')?20:(prop==='gap')?-1:0; nv=Math.max(mn,nv); if(prop==='gap')nv=Math.min(100,nv); if(prop==='feather')nv=Math.min(95,nv); L[prop]=nv; drawBagTexture(); }
 function ctxFontCycle(){ var L=_ctxL(); if(!L||L.kind!=='text') return; var f=['cormorant','inter','barlow','playfair']; var i=f.indexOf(L.font); if(typeof onLayerFont==='function') onLayerFont(L.id, f[(i+1)%f.length]); }
 function ctxTint(hex){ var L=_ctxL(); if(!L) return; L.swatchName='Custom'; L.color=hex; L.customHex=hex; drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); }
 
@@ -10688,7 +10710,7 @@ function _setFaceFinish(region, key){ if(typeof applyBagFinish==='function') app
 function _showFinishBar(region, sp){
   var bar=document.getElementById('a2d-facebar'); if(!bar) return;
   var ar=(typeof getLang==='function'&&getLang()==='ar');
-  var rn=ar?(region==='exterior'?'خارج الكيس':'داخل الكيس'):(region==='exterior'?'Exterior':'Interior');
+  var rn=region==='ribbon'?(ar?'المقابض':'Handles'):(ar?(region==='exterior'?'خارج الكيس':'داخل الكيس'):(region==='exterior'?'Exterior':'Interior'));
   var cur=(BAG[region]&&BAG[region].finish)||'softtouch';
   var fins=ar?[['gloss','لامع'],['matte','مطفّأ'],['softtouch','ناعم'],['kraft','كرافت'],['foil','معدني']]
              :[['gloss','Gloss'],['matte','Matte'],['softtouch','Soft'],['kraft','Kraft'],['foil','Foil']];
@@ -10774,7 +10796,7 @@ function atlas2dRender(){
     ctx.setLineDash(sel?[6*D,5*D]:(hov?[5*D,4*D]:[]));
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
-    if (sel){
+    if (sel && !L.locked){   /* locked layers show only the box — no transform handles */
       /* rotate stick at the visual TOP, 4 corner resize dots, 4 edge crop BARS (lines) */
       var rh=_boxLocalToScreen(b,0,1.6), topMid={x:(bl.x+br.x)/2,y:(bl.y+br.y)/2};
       ctx.strokeStyle=HC; ctx.lineWidth=1.6*D;
@@ -10900,9 +10922,9 @@ function atlas2dRender(){
     if(!it.bb) return;
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
     var cyC=ly - 5*D - _mainFP*0.78;   /* pill sits just above the island top edge */
-    var _isReg=(it.target.kind==='region');
+    var _isReg=(it.target.kind==='region'), _isHandles=(it.target.kind==='handles');
     var _tog=(_isReg && _selL)?{type:'facetoggle', region:it.target.region}:null;
-    var _fin=_isReg?{type:'finish', region:it.target.region}:null;   /* global material-finish picker on Exterior/Interior */
+    var _fin=_isReg?{type:'finish', region:it.target.region}:(_isHandles?{type:'finish', region:'ribbon'}:null);   /* material-finish picker on Exterior/Interior/Handles */
     _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _isReg?_regionChecked(it.target.region):true, _fin);
   });
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB populated
