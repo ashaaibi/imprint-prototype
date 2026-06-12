@@ -4428,6 +4428,30 @@ function drawArtworkOnBag() {
     if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
+    /* per-face hide: if this layer is hidden on one or more faces, render it to a temp
+       canvas, punch the hidden faces' islands out (destination-out), then composite. */
+    var _fh = L.faceHide, _anyHide = false;
+    if (_fh) { for (var _k in _fh){ if (_fh[_k]){ _anyHide = true; break; } } }
+    if (_anyHide && typeof BAG_FACES !== 'undefined' && BAG_FACES){
+      var _FW = bagTexCanvas.width;
+      if (!_faceHideCv || _faceHideCv.width !== _FW){ _faceHideCv = document.createElement('canvas'); _faceHideCv.width = _faceHideCv.height = _FW; }
+      var _fhx = _faceHideCv.getContext('2d');
+      _fhx.setTransform(1,0,0,1,0,0); _fhx.clearRect(0,0,_FW,_FW);
+      _fhx.save(); _fhx.globalAlpha = (L.opacity != null ? L.opacity : 100) / 100;
+      drawLayerContent(_fhx, L, 1, corr, 'color');
+      _fhx.restore();
+      _fhx.save(); _fhx.globalCompositeOperation = 'destination-out';
+      for (var _hk in _fh){ if (!_fh[_hk]) continue; var _hp = _hk.split('_'), _hrg = _hp[0], _hfc = _hp[1];
+        var _fe = (BAG_FACES[_hrg]||{})[_hfc];
+        if (_fe && _fe.clip && _fe.clip.path){ var _mx=_fe.w*0.10, _my=_fe.h*0.10;
+          _fhx.save(); _fhx.beginPath(); _fhx.rect(_fe.x-_mx, _fe.y-_my, _fe.w+2*_mx, _fe.h+2*_my); _fhx.clip();
+          _fhx.fillStyle='#000'; _fhx.fill(_fe.clip.path);
+          if (A2D.padding>0){ _fhx.lineJoin='round'; _fhx.lineCap='round'; _fhx.lineWidth=A2D.padding*2; _fhx.strokeStyle='#000'; _fhx.stroke(_fe.clip.path); }
+          _fhx.restore(); } }
+      _fhx.restore();
+      bagTexCtx.save(); bagTexCtx.drawImage(_faceHideCv, 0, 0); bagTexCtx.restore();
+      continue;
+    }
     bagTexCtx.save();
     bagTexCtx.globalAlpha = (L.opacity != null ? L.opacity : 100) / 100;
     drawLayerContent(bagTexCtx, L, 1, corr, 'color');
@@ -10157,6 +10181,7 @@ var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dp
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
 var _offIslandCv = null;    /* cached canvas for the off-island fade overlay */
+var _faceHideCv = null;     /* cached canvas for per-face layer hide (destination-out) */
 /* After a graphic/pattern/font upload, auto-animate from 3D → the 2D editor after a short
    delay (so the user lands in the editor ready to place artwork). Delay is testing-tunable. */
 var _autoEdit2dDelay = 1.0;   /* seconds */
@@ -10252,7 +10277,7 @@ function _layerCropBox(b, L){
   return { cx:b.cx + cxOff*ca - cyOff*sa, cy:b.cy + cxOff*sa + cyOff*ca,
            hw:b.hw*(1-cl-cr), hh:b.hh*(1-ct-cb), ang:b.ang };
 }
-function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerBox(L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
+function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerCropBox(_layerBox(L), L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
   var L=a2d.sel; if(!L) return null; var b=_layerCropBox(_layerBox(L), L);  /* handles sit on the visual (cropped) box */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
@@ -10278,7 +10303,20 @@ function _aDown(e){
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
   var hh=_hitHandle(sp);
   if (hh){ a2d.op=hh; _a2dDragging=true; a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:a2d.sel.scaleH, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel) };
-    if(a2d.canvas) a2d.canvas.style.cursor=(hh.indexOf('sc-')===0)?'nwse-resize':(hh.indexOf('cr-')===0)?'crosshair':'grabbing'; return; }
+    if(a2d.canvas) a2d.canvas.style.cursor=(hh.indexOf('sc-')===0)?((hh==='sc-tr'||hh==='sc-bl')?'nesw-resize':'nwse-resize'):(hh.indexOf('cr-')===0)?'crosshair':'grabbing'; return; }
+  /* clicked a colour icon or a per-face hide toggle (these sit on top of everything) */
+  var ui=(typeof _hitUi==='function')?_hitUi(sp):null;
+  if (ui){
+    if (ui.type==='facetoggle'){
+      var _sel=a2d.sel;
+      if (_sel){ _sel.faceHide=_sel.faceHide||{}; var _fk=ui.region+'_'+ui.face;
+        if (_sel.faceHide[_fk]) delete _sel.faceHide[_fk]; else _sel.faceHide[_fk]=true;
+        if (typeof drawBagTexture==='function') drawBagTexture();
+        if (typeof scheduleHistory==='function') scheduleHistory(); }
+      return;
+    }
+    a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=ui.target; _showFaceBar(ui.target, sp); return;
+  }
   /* clicked a face/region/handles LABEL (stays on top of everything) → open its colour bar
      instead of selecting whatever layer is underneath. */
   var lt=(typeof _hitLabel==='function')?_hitLabel(sp):null;
@@ -10294,8 +10332,9 @@ function _aMove(e){
     var cur='grab';
     var hh0=_hitHandle(sp);
     if (hh0==='rotate') cur='pointer';
-    else if (hh0 && hh0.indexOf('sc-')===0) cur='nwse-resize';
+    else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nesw-resize':'nwse-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
+    else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
     else { var ap0=_s2a(sp.x,sp.y); if (_hitLayer(ap0.x,ap0.y)) cur='move'; }
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
@@ -10360,13 +10399,27 @@ function _aMove(e){
     var ap4=_s2a(sp.x,sp.y), cdx=ap4.x-b.cx, cdy=ap4.y-b.cy;
     var lx=cdx*cca+cdy*csa, ly=cdx*(-csa)+cdy*cca;   /* cursor in box-local coords */
     var hw=b.hw||1, hh=b.hh||1;
-    if (a2d.op==='cr-l') L.cropBoxL=Math.max(0,Math.min(0.45,(lx+hw)/(2*hw)));
-    else if (a2d.op==='cr-r') L.cropBoxR=Math.max(0,Math.min(0.45,(hw-lx)/(2*hw)));
-    else if (a2d.op==='cr-t') L.cropBoxT=Math.max(0,Math.min(0.45,(ly+hh)/(2*hh)));
-    else if (a2d.op==='cr-b') L.cropBoxB=Math.max(0,Math.min(0.45,(hh-ly)/(2*hh)));
+    if (a2d.op==='cr-l') L.cropBoxL=Math.max(0,Math.min(1-(L.cropBoxR||0)-0.05,(lx+hw)/(2*hw)));
+    else if (a2d.op==='cr-r') L.cropBoxR=Math.max(0,Math.min(1-(L.cropBoxL||0)-0.05,(hw-lx)/(2*hw)));
+    else if (a2d.op==='cr-t') L.cropBoxT=Math.max(0,Math.min(1-(L.cropBoxB||0)-0.05,(ly+hh)/(2*hh)));
+    else if (a2d.op==='cr-b') L.cropBoxB=Math.max(0,Math.min(1-(L.cropBoxT||0)-0.05,(hh-ly)/(2*hh)));
     _a2dApply();
   }
-  else if (a2d.op==='rotate'){ var ap2=_s2a(sp.x,sp.y), dx=ap2.x-b.cx, dy=ap2.y-b.cy; var deg=Math.atan2(-dx,dy)*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5; /* handle follows the cursor (5° snap) */ L.rotation=deg; _a2dApply(); }
+  else if (a2d.op==='rotate'){
+    /* rotate around the CROPPED box centre (the pivot re-centers after a crop) by orbiting
+       the layer's full centre (posU/posV) around the fixed cropped centre. */
+    var rcl=L.cropBoxL||0,rcr=L.cropBoxR||0,rct=L.cropBoxT||0,rcb=L.cropBoxB||0;
+    var rca=Math.cos(b.ang), rsa=Math.sin(b.ang), cxOff=(rcl-rcr)*b.hw, cyOff=(rct-rcb)*b.hh;
+    var pivX=b.cx + cxOff*rca - cyOff*rsa, pivY=b.cy + cxOff*rsa + cyOff*rca;   /* fixed pivot */
+    var ap2=_s2a(sp.x,sp.y), dx=ap2.x-pivX, dy=ap2.y-pivY;
+    var deg=Math.atan2(-dx,dy)*180/Math.PI; while(deg>180)deg-=360; while(deg<-180)deg+=360; deg=Math.round(deg/5)*5;
+    L.rotation=deg;
+    var th=deg*Math.PI/180, ca2=Math.cos(th), sa2=Math.sin(th);
+    var ncx=pivX + (-cxOff)*ca2 - (-cyOff)*sa2, ncy=pivY + (-cxOff)*sa2 + (-cyOff)*ca2;   /* full centre orbits pivot */
+    L.posU=Math.max(-20,Math.min(120,(ncx-e_.x)/e_.w*100));
+    L.posV=Math.max(-20,Math.min(120,(ncy-e_.y)/e_.h*100));
+    _a2dApply();
+  }
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
@@ -10466,6 +10519,17 @@ function _hitLabel(sp){
   var hx=sp.x, hy=a2d.canvas.height - sp.y;   /* labels are drawn in normal (from-top) coords */
   for(var i=0;i<a2d._labelHits.length;i++){ var lh=a2d._labelHits[i]; if(hx>=lh.x0&&hx<=lh.x1&&hy>=lh.y0&&hy<=lh.y1) return lh.target; }
   return null;
+}
+/* clickable label widgets: colour dots (recolour) + per-face hide toggles, recorded per frame */
+function _hitUi(sp){
+  if(!a2d._uiHits || !a2d.canvas) return null;
+  var hx=sp.x, hy=a2d.canvas.height - sp.y;
+  for(var i=0;i<a2d._uiHits.length;i++){ var u=a2d._uiHits[i]; if(hx>=u.x0&&hx<=u.x1&&hy>=u.y0&&hy<=u.y1) return u.hit; }
+  return null;
+}
+/* pointer-cursor test: hovering any label, colour icon or face toggle */
+function _hitLabelUI(sp){
+  return (typeof _hitLabel==='function' && _hitLabel(sp)) || (typeof _hitUi==='function' && _hitUi(sp)) || null;
 }
 function _faceClick(sp){
   _hideFaceBar();
@@ -10630,13 +10694,45 @@ function atlas2dRender(){
   labelDefs.push({bb:uv.handles,label:GL.Handles,target:{kind:'handles'}});
   if (bagUVGuideCanvas && A2D.showRivets2D) labelDefs.push({bb:uv.rivets, label:GL.Rivets, target:{kind:'rivets'}});
   a2d._labelHits=[];   /* clickable label regions, recorded each frame */
+  a2d._uiHits=[];      /* clickable colour dots + per-face hide toggles */
   var _LD=D;
   function _recLabelHit(txt, cx, dy, fontPx, target){ var w=ctx.measureText(txt).width, px=12*_LD, py=fontPx*0.85; a2d._labelHits.push({x0:cx-w/2-px,x1:cx+w/2+px,y0:dy-py,y1:dy+py,target:target}); }
+  function _recUiHit(cx,cy,r,hit){ a2d._uiHits.push({x0:cx-r,x1:cx+r,y0:cy-r,y1:cy+r,hit:hit}); }
+  /* current colour shown in a recolour dot, by target */
+  function _targetColor(t){
+    try{
+      if(t.kind==='handles') return (BAG.ribbon&&(BAG.ribbon.customHex||BAG.ribbon.color))||'#cccccc';
+      if(t.kind==='rivets')  return (BAG.rivet&&(BAG.rivet.customHex||BAG.rivet.color))||'#cccccc';
+      if(t.kind==='region')  return (BAG[t.region]&&BAG[t.region].color)||'#cccccc';
+      if(t.kind==='face'){ var fc=BAG[t.region]&&BAG[t.region].faceColors&&BAG[t.region].faceColors[t.face]; return fc||(BAG[t.region]&&BAG[t.region].color)||'#cccccc'; }
+    }catch(_){}
+    return '#cccccc';
+  }
+  function _drawColorDot(cx,cy,r,fill){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=fill||'#cccccc'; ctx.fill();
+    ctx.lineWidth=1.5*D; ctx.strokeStyle='rgba(0,0,0,0.40)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,Math.max(1,r-1.5*D),0,Math.PI*2); ctx.lineWidth=1*D; ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.stroke();
+    ctx.restore();
+  }
+  function _drawToggle(cx,cy,r,checked){
+    ctx.save();
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(cx-r,cy-r,2*r,2*r,3*D); else ctx.rect(cx-r,cy-r,2*r,2*r);
+    var hc=_themeColor(A2D.handleColor);
+    ctx.fillStyle=checked?hc:'rgba(255,255,255,0.92)'; ctx.fill();
+    ctx.lineWidth=1.5*D; ctx.strokeStyle=checked?hc:'rgba(0,0,0,0.45)'; ctx.stroke();
+    if(checked){ ctx.beginPath(); ctx.lineWidth=2*D; ctx.strokeStyle='#fff'; ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.moveTo(cx-r*0.5,cy+r*0.05); ctx.lineTo(cx-r*0.1,cy+r*0.45); ctx.lineTo(cx+r*0.55,cy-r*0.45); ctx.stroke(); }
+    ctx.restore();
+  }
   var _stroke=(A2D.labelStroke||0)*D, _strokeCol=_themeColorIf(A2D.labelStrokeColor||'#ffffff', A2D.invertLabelDark);
   function _drawLabel(txt,x,y){
     if (_stroke>0){ ctx.lineJoin='round'; ctx.lineWidth=_stroke; ctx.strokeStyle=_strokeCol; ctx.strokeText(txt,x,y); }
     ctx.fillText(txt,x,y);
   }
+  /* the currently-selected drawable layer (face toggles only show when a layer is selected) */
+  var _selL=(a2d.sel && (a2d.sel.kind==='text'||a2d.sel.kind==='sticker'||a2d.sel.kind==='logo')) ? a2d.sel : null;
   var _mainFP=A2D.labelSize*D;
   ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font=(A2D.labelWeight||600)+' '+_mainFP+'px sans-serif';
   ctx.textBaseline='bottom'; ctx.textAlign='center';
@@ -10645,14 +10741,21 @@ function atlas2dRender(){
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
     _drawLabel(it.label, p.x, ly-5*D);
     _recLabelHit(it.label, p.x, ly-5*D, _mainFP, it.target);
+    /* colour icon to the left of the label */
+    var _w=ctx.measureText(it.label).width, _rd=_mainFP*0.32, _gap=_mainFP*0.42, _my=(ly-5*D)-_mainFP*0.35;
+    var _dx=p.x - _w/2 - _gap - _rd;
+    _drawColorDot(_dx, _my, _rd, _targetColor(it.target));
+    _recUiHit(_dx, _my, _rd+3*D, {type:'recolor', target:it.target});
+    ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.textBaseline='bottom'; ctx.textAlign='center';
   });
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB
      populated BAG_FACES. Centered (median UV) inside each face; size+color testing-tunable. */
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
     var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
-    ctx.fillStyle=_themeColorIf(A2D.subLabelColor||'#333333', A2D.invertSubLabelDark);
-    ctx.font=(A2D.subLabelWeight||600)+' '+(Math.max(7,A2D.subLabelSize||13)*D)+'px sans-serif';
+    var _subFP=Math.max(7,A2D.subLabelSize||13)*D, _subCol=_themeColorIf(A2D.subLabelColor||'#333333', A2D.invertSubLabelDark);
+    ctx.fillStyle=_subCol;
+    ctx.font=(A2D.subLabelWeight||600)+' '+_subFP+'px sans-serif';
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
       var faces=BAG_FACES[grp]||{};
@@ -10664,9 +10767,24 @@ function atlas2dRender(){
         else if(_pos==='bottom'){ ax=bb.x+bb.w/2; ay=bb.y+pad; ctx.textBaseline='bottom'; ctx.textAlign='center'; }
         else if(_pos==='topleft'){ ax=bb.x+pad; ay=bb.y+bb.h-pad; ctx.textBaseline='top'; ctx.textAlign='left'; }
         else { ax=bb.x+bb.w/2; ay=bb.y+bb.h/2; ctx.textBaseline='middle'; ctx.textAlign='center'; }
-        var p=_a2s(ax, ay), dy=c.height - p.y;
-        _drawLabel(FN[f]||f, p.x, dy);
-        _recLabelHit(FN[f]||f, p.x, dy, Math.max(7,A2D.subLabelSize||13)*D, {kind:'face',region:grp,face:f});
+        var p=_a2s(ax, ay), dy=c.height - p.y, _txt=FN[f]||f;
+        _drawLabel(_txt, p.x, dy);
+        _recLabelHit(_txt, p.x, dy, _subFP, {kind:'face',region:grp,face:f});
+        /* widget row: colour dot (left) + per-face hide toggle (right, only when a layer is selected) */
+        var _w=ctx.measureText(_txt).width, _hw=_w/2;
+        var _cx=(ctx.textAlign==='left')?(p.x+_hw):p.x;
+        var _midY=(ctx.textBaseline==='bottom')?(dy-_subFP*0.35):(ctx.textBaseline==='top')?(dy+_subFP*0.35):dy;
+        var _rd=_subFP*0.34, _gap=_subFP*0.5;
+        var _dotX=_cx-_hw-_gap-_rd;
+        _drawColorDot(_dotX, _midY, _rd, _targetColor({kind:'face',region:grp,face:f}));
+        _recUiHit(_dotX, _midY, _rd+3*D, {type:'recolor', target:{kind:'face',region:grp,face:f}});
+        if(_selL){
+          var _rt=_subFP*0.38, _togX=_cx+_hw+_gap+_rt;
+          var _checked=!!(_selL.faceHide && _selL.faceHide[grp+'_'+f]);
+          _drawToggle(_togX, _midY, _rt, _checked);
+          _recUiHit(_togX, _midY, _rt+3*D, {type:'facetoggle', region:grp, face:f});
+        }
+        ctx.fillStyle=_subCol;   /* dot drawing changed fillStyle */
       });
     });
   }
