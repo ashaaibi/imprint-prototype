@@ -5670,7 +5670,7 @@ function renderLayersList() {
   BAG.artwork.layers.forEach(function(L) {
     var expanded = (expandedId != null && String(L.id) === expandedId);
     html += '<div class="layer-row' + (expanded ? ' expanded' : '') + (L.visible ? '' : ' hidden-layer') + '" data-layer-id="' + L.id + '">' +
-      '<div class="layer-head" draggable="' + (L.locked ? 'false' : 'true') + '" onclick="onLayerHeadClick(event,' + L.id + ')">' +
+      '<div class="layer-head" draggable="true" onclick="onLayerHeadClick(event,' + L.id + ')">' +
         '<span class="layer-handle" title="Drag to reorder"><span></span><span></span><span></span><span></span><span></span><span></span></span>' +
         '<span class="layer-thumb" id="lyr-' + L.id + '-thumb">' + layerThumbHTML(L) + '</span>' +
         '<span class="layer-name" id="lyr-' + L.id + '-name">' + escapeHTML(layerAutoName(L)) + '</span>' +
@@ -6310,7 +6310,22 @@ function buildLayerBodyHTML(L) {
       h += sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×');
       h += sliderRow(id, 'gap', 'Gap', 0, 200, 1, (L.gap != null ? L.gap : 0), '%');
       h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
-      h += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">Move, resize (crop) &amp; rotate the pattern in the 2D editor.</div>';
+      /* Stacking control — uploads only (library patterns are fixed to vertical). */
+      if (!L.fromLibrary) {
+        var _isVert = (L.patStack === 'vertical');
+        var _segB = 'flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:600;padding:8px 6px;border-radius:7px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);';
+        var _segOn = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.14));color:var(--imp-fg);';
+        h += '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Pattern Stacking') + '>Pattern Stacking</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button style="' + _segB + (!_isVert ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;diagonal&#39;)">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="6" cy="18" r="2.3"/><circle cx="18" cy="18" r="2.3"/></svg>' +
+              '<span' + _arAttr('Diagonal') + '>Diagonal</span></button>' +
+            '<button style="' + _segB + (_isVert ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;vertical&#39;)">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="12" r="2.3"/><circle cx="6" cy="18" r="2.3"/><circle cx="18" cy="18" r="2.3"/></svg>' +
+              '<span' + _arAttr('Vertical') + '>Vertical</span></button>' +
+          '</div>';
+      }
+      h += '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate the pattern in the 2D editor.</div>';
     }
   } else { /* text */
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="Text" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
@@ -6463,6 +6478,12 @@ function onLayerExtrude(id, val) {
   val = parseFloat(val); L.extrude = val;
   var lbl = document.getElementById('lyr-' + id + '-extrude-val'); if (lbl) lbl.textContent = val.toFixed(2);
   rebuildBumpMap(); updatePricing();
+}
+function onLayerPatStack(id, mode) {
+  var L = getLayer(id); if (!L) return;
+  L.patStack = (mode === 'vertical') ? 'vertical' : 'diagonal';
+  drawBagTexture();
+  renderLayersList();   /* refresh the segmented active state */
 }
 function onLayerFont(id, key, el) {
   var L = getLayer(id); if (!L) return;
@@ -6780,6 +6801,7 @@ function _prewarmLibrary() {
 function chooseLibraryPattern(file) {
   var L = getLayer(_addSrc.id); if (!L) { _closeAddSourceOverlay(); return; }
   L.patStack = 'vertical';   /* artist-library patterns stack vertically (uploads stay diagonal) */
+  L.fromLibrary = true;      /* library pattern → no stacking control (uploads get the toggle) */
   var folder = _libFolder();
   _closeAddSourceOverlay();
   var url = folder + '/' + encodeURIComponent(file);
@@ -6860,7 +6882,7 @@ function onLayerLogoLoad(input) {
   var isPdf = /pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
   var open = function(img) {
     if (!img) return;
-    L.srcImg = img; L.fileName = file.name;
+    L.srcImg = img; L.fileName = file.name; L.fromLibrary = false;   /* user upload → show the pattern-stacking toggle */
     /* Open the background-removal modal; it assigns L.img on Apply. */
     openCutoutModal(L.id, img, file.name, null, true);
   };
