@@ -1700,7 +1700,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           <span data-en="Back" data-ar="رجوع">Back</span>
         </button>
-        <span class="cstep-counter" id="cstep-counter">1 / 3</span>
+        <span class="cstep-counter" id="cstep-counter">1 / 6</span>
         <button class="cstep-btn cstep-next" id="cstep-next" onclick="configStepNext()">
           <span id="cstep-next-label" data-en="Next" data-ar="التالي">Next</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1709,8 +1709,11 @@
       <div class="cstep-nav" id="cstep-nav">
         <div class="cstep-pills" id="cstep-pills">
           <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Start" data-ar="ابدأ">Start</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Design" data-ar="التصميم">Design</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Design" data-ar="التصميم">Design</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
     </div>
@@ -1737,7 +1740,7 @@
     </div>
 
     <!-- Bag Artwork ─────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="2">
+    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="5">
       <label class="cl"><span data-en="Design" data-ar="التصميم">Design</span></label>
       <!-- Layers panel -->
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
@@ -1765,10 +1768,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                 <span data-en="Background" data-ar="خلفية">Background</span>
               </button>
-              <button class="add-layer-item" onclick="addLayer('ai')">
-                <svg class="ali-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6L12 2z"/></svg>
-                <span data-en="Create with AI" data-ar="إنشاء بالذكاء">Create with AI</span>
-              </button>
             </div>
           </div>
           <div class="layers-list" id="layers-list" style="margin-top:12px;"></div>
@@ -1777,7 +1776,7 @@
     </div>
 
     <!-- Bag Exterior -->
-    <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="0" style="display:none">
+    <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="2">
       <label class="cl"><span data-en="Exterior" data-ar="الخارج">Exterior</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -1838,7 +1837,7 @@
     </div>
 
     <!-- Bag Interior -->
-    <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="0" style="display:none">
+    <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="3">
       <label class="cl"><span data-en="Interior" data-ar="الداخل">Interior</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -1898,7 +1897,7 @@
     </div>
 
     <!-- Handles -->
-    <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="0" style="display:none">
+    <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="4">
       <label class="cl"><span data-en="Handles" data-ar="المقابض">Handles</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -2025,7 +2024,7 @@
 
     <!-- Pricing Summary ────────────────── -->
     <!-- Review step (7): full summary of choices; the price breakdown below is always shown -->
-    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="3">
+    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="6">
       <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
       <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
       <div id="review-summary"></div>
@@ -2036,7 +2035,7 @@
     </div>
 
     <!-- Price summary — Review step only -->
-    <div class="cs config-step" id="price-summary-block" data-cstep="3">
+    <div class="cs config-step" id="price-summary-block" data-cstep="6">
       <label class="cl" data-en="Summary" data-ar="الملخص">Summary</label>
 
       <!-- Base bag cost -->
@@ -2088,7 +2087,7 @@
     </div>
 
     <!-- Add to Cart — Review step only ──── -->
-    <div class="cta-area config-step" data-cstep="3">
+    <div class="cta-area config-step" data-cstep="6">
       <button class="btn-cart" id="atcbtn" disabled onclick="addCart()"
               data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
       <div class="cta-hint" id="cta-hint">Upload a logo and confirm rights to continue.</div>
@@ -6365,18 +6364,14 @@ function buildLayerBodyHTML(L) {
     } else {
       h += '<div onclick="pickLayerLogoFile(' + id + ')" style="border:1px dashed var(--imp-border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;margin:14px 0 12px;font-size:11px;color:var(--imp-fg-3);">Click to upload ' + kindLabel.toLowerCase() + '<br><span style="font-size:10px;opacity:0.7;">SVG, PNG, JPG, PDF — any size</span></div>';
     }
-    /* Layout (None + tile layouts) on every layer type; tiled controls appear when active. */
-    h += _layoutPickerHTML(id, L);
-    if (L.tiled) h += _tiledControlsHTML(id, L);
   } else { /* text */
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="Text" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
       layerFontRowHTML(L);
-    h += _layoutPickerHTML(id, L);
-    if (L.tiled) h += _tiledControlsHTML(id, L);
   }
-  /* Print Surface + Position & size sections removed — layers print on all surfaces
-     and are positioned/scaled/rotated directly in the 2D editor. */
-  h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+  /* Transform (Scale / Rotation / Opacity), Move, and Areas. */
+  h += _transformHTML(id, L);
+  h += _moveSectionHTML(id, L);
+  h += _areasSectionHTML(id, L);
 
   if (L.kind === 'sticker') {
     h += stickerColorSectionHTML(L);
@@ -6400,7 +6395,62 @@ function buildLayerBodyHTML(L) {
     '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
     _embossSegHTML(id, L) +
     '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>';
+  /* Layout (None + tile layouts) AFTER emboss; tiled controls appear when active. */
+  h += _layoutPickerHTML(id, L);
+  if (L.tiled) h += _tiledControlsHTML(id, L);
   return h;
+}
+/* Scale (font-size for text) / Rotation / Opacity. */
+function _transformHTML(id, L) {
+  var isText = (L.kind === 'text' && !L.tiled);
+  var sVal = Math.round(isText ? (L.fontSize || 130) : (L.scale || 18));
+  var sMin = isText ? 20 : 2, sMax = isText ? 500 : 200, sSuf = isText ? 'px' : '%';
+  var rVal = ((Math.round(L.rotation || 0) % 360) + 360) % 360;
+  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
+    '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '" oninput="onLayerScale(' + id + ',this.value)"></div>' +
+    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°') +
+    sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+}
+function onLayerScale(id, val) {
+  var L = getLayer(id); if (!L) return; val = parseFloat(val);
+  var isText = (L.kind === 'text' && !L.tiled);
+  if (isText) L.fontSize = val; else L.scale = val;
+  var lbl = document.getElementById('lyr-' + id + '-scaleui-val'); if (lbl) lbl.textContent = Math.round(val) + (isText ? 'px' : '%');
+  if (typeof drawBagTexture === 'function') drawBagTexture();
+}
+/* Move — opens the full 2D editor focused on this layer (in-panel mini editor coming soon). */
+function _moveSectionHTML(id, L) {
+  return '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:8px"' + _arAttr('Move') + '>Move</div>' +
+    '<button onclick="_editLayerIn2D(' + id + ')" style="width:100%;font-size:11px;font-weight:600;color:var(--imp-fg-2);background:var(--imp-surface);border:1px solid var(--imp-border);border-radius:8px;cursor:pointer;padding:10px;display:flex;align-items:center;justify-content:center;gap:7px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg> <span' + _arAttr('Move in 2D editor') + '>Move in 2D editor</span></button>';
+}
+function _editLayerIn2D(id) {
+  var L = getLayer(id); if (!L) return;
+  if (typeof a2d !== 'undefined') a2d.sel = L;
+  if (typeof setViewMode === 'function') setViewMode('2d');
+}
+/* Areas — toggle which exterior/interior faces the layer prints on (uses L.faceHide). */
+function _areasSectionHTML(id, L) {
+  if (typeof BAG_FACES === 'undefined' || !BAG_FACES.exterior) return '';
+  var FN = { front:'Front', back:'Back', left:'Left', right:'Right', base:'Base' };
+  var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:6px"' + _arAttr('Areas') + '>Areas</div>';
+  ['exterior', 'interior'].forEach(function(region) {
+    var faces = BAG_FACES[region] || {}, keys = Object.keys(faces); if (!keys.length) return;
+    h += '<div style="font-size:10px;font-weight:700;color:var(--imp-fg-2);margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.04em;">' + (region === 'exterior' ? 'Exterior' : 'Interior') + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;">';
+    keys.forEach(function(f) {
+      var on = !(L.faceHide && L.faceHide[region + '_' + f]);
+      h += '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--imp-fg);cursor:pointer;"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="onLayerArea(' + id + ',&#39;' + region + '&#39;,&#39;' + f + '&#39;,this.checked)" style="accent-color:var(--imp-accent,#c8a96e);width:14px;height:14px;"> ' + (FN[f] || f) + '</label>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+function onLayerArea(id, region, face, on) {
+  var L = getLayer(id); if (!L) return;
+  L.faceHide = L.faceHide || {};
+  var k = region + '_' + face;
+  if (on) delete L.faceHide[k]; else L.faceHide[k] = true;
+  if (typeof drawBagTexture === 'function') drawBagTexture();
 }
 
 /* ── Inline color swatches (mirror of renderArtworkSwatches, layer-keyed) ── */
@@ -6578,10 +6628,9 @@ function _layoutPickerHTML(id, L) {
 }
 function _tiledControlsHTML(id, L) {
   return sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×') +
-    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, ((Math.round(L.rotation || 0) % 360) + 360) % 360, '°') +
     sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 0), '%') +
     sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
-    '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate in the 2D editor.</div>';
+    '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize (crop) the tiled box in the 2D editor; Scale/Rotation above.</div>';
 }
 /* Pick a tile layout (or None = single instance) on any layer type. */
 function onLayerLayout(id, mode) {
@@ -6656,8 +6705,13 @@ function addLayer(kind) {
   var id = BAG.artwork.nextId++;
   var L;
   var allAreas = { front:true, back:true, left:true, right:true, bottom:true, interior:true };
-  /* New layers always drop at the front-center of the bag (U 0.3327, V 0.8109). */
+  /* New layers drop at the exterior FRONT-face centre (computed per size so it's correct for
+     every bag, not a hard-coded UV). Falls back to the wide-bag value if faces aren't ready. */
   var _fp = { posU:33.27, posV:81.09 };
+  if (typeof BAG_FACES !== 'undefined' && BAG_FACES.exterior && BAG_FACES.exterior.front) {
+    var _ff = BAG_FACES.exterior.front, _PADf = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
+    _fp = { posU: (_ff.x + _ff.w/2 - _PADf)/2048*100, posV: (_ff.y + _ff.h/2 - _PADf)/2048*100 };
+  }
   if (kind === 'logo') {
     /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
        the full Graphic recolor/finish/layout controls. isLogo only changes its name/label. */
@@ -6670,7 +6724,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new pattern covers the WHOLE exterior by default (centered on the exterior island). */
@@ -6685,7 +6739,15 @@ function addLayer(kind) {
     L = { id:id, kind:'ai', isDefault:false, visible:false, prompt:'', areas:allAreas };
   }
   L.opacity = (L.opacity != null ? L.opacity : 100);
-  BAG.artwork.layers.unshift(L); /* new layer on top of the stack */
+  if (kind === 'pattern') {
+    /* Backgrounds live at the BOTTOM of the stack; a new background goes above older
+       backgrounds but below every non-background layer. */
+    var _bgAt = BAG.artwork.layers.length;
+    for (var _bi = 0; _bi < BAG.artwork.layers.length; _bi++) { if (BAG.artwork.layers[_bi] && BAG.artwork.layers[_bi].isBackground) { _bgAt = _bi; break; } }
+    BAG.artwork.layers.splice(_bgAt, 0, L);
+  } else {
+    BAG.artwork.layers.unshift(L); /* new layer on top of the stack */
+  }
   /* keep the new layer collapsed by default — the user expands for more settings */
   if (typeof renderLayersList === 'function') renderLayersList();
   if (kind === 'logo') pickLayerLogoFile(id);
@@ -10221,15 +10283,17 @@ document.addEventListener('imprint:countrychange', function() {
 
 var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
 function applyStepCamera(n){
-  /* steps: 1 Start, 2 Design (all colour/finish/artwork in the 2D editor), 3 Review */
-  var artwork = (n === 2);
+  /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Design, 6 Review */
+  var artwork = (n === 5);
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
+  if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
+  else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
-var CONFIG_STEP_COUNT = 3;
+var CONFIG_STEP_COUNT = 6;
 var currentConfigStep = 1;
 /* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
 var _uiSoundOn = true, _audioCtx = null;
@@ -10289,7 +10353,7 @@ document.addEventListener('pointerout', function(e){
    When the user lands on a part's step, that part idle-cycles through the hue
    spectrum to signal what they're editing — until they pick a colour or leave
    the step. Purely visual; never writes to saved BAG state. */
-var STEP_PART = { };   /* colour/finish hue-guide steps removed — all done in the 2D editor */
+var STEP_PART = { 2:'exterior', 3:'interior', 4:'ribbon' };   /* hue-guide part per step */
 var _partTouched = {}, _suppressTouch = false;
 /* Wayfinding pulse: when you land on a part's step, that part fades the highlight
    colour (default red) in and out between an opacity min and max, to signal what
@@ -10397,9 +10461,8 @@ var _faceHideCv = null;     /* cached canvas for per-face layer hide (destinatio
 var _autoEdit2dDelay = 1.0;   /* seconds */
 var _autoEdit2dTimer = null;
 function _autoEdit2dAfterUpload(){
-  if (viewMode === '2d') return;                 /* only ever animate 3D → 2D */
-  if (_autoEdit2dTimer) clearTimeout(_autoEdit2dTimer);
-  _autoEdit2dTimer = setTimeout(function(){ _autoEdit2dTimer=null; if (viewMode!=='2d' && typeof setViewMode==='function') setViewMode('2d'); }, Math.max(0, _autoEdit2dDelay*1000));
+  /* disabled — adding/uploading a layer no longer auto-switches to the 2D editor. */
+  return;
 }
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : '3d';
@@ -11130,7 +11193,7 @@ function goConfigStep(n) {
   if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
   applyStepCamera(n);
   if (typeof startHueGuide === 'function') startHueGuide(STEP_PART[n] || null);
-  if (n === 3 && typeof renderReviewSummary === 'function') renderReviewSummary();
+  if (n === 6 && typeof renderReviewSummary === 'function') renderReviewSummary();
 }
 function configStepNext() { goConfigStep(currentConfigStep + 1); }
 
