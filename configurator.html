@@ -6643,8 +6643,10 @@ function _ensureAddSourceModal() {
   var st = document.createElement('style');
   st.textContent = '._as-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:13px 14px;margin-bottom:9px;border:1px solid var(--imp-border,#e5e5e5);border-radius:11px;background:var(--imp-surface-2,#f7f7f7);color:var(--imp-fg,#111);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}._as-btn:hover{border-color:var(--imp-accent,#c8a96e);background:var(--imp-surface,#fff);}'
     + '.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}.preset-grid-col{display:flex;flex-direction:column;}'
-    + '.preset-skel{background:linear-gradient(90deg,rgba(140,140,140,0.13),rgba(140,140,140,0.30),rgba(140,140,140,0.13));background-size:200% 100%;animation:presetShimmer 1.15s ease-in-out infinite;}'
-    + '@keyframes presetShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}'
+    + '.preset-spin{position:absolute;top:50%;left:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid rgba(140,140,140,0.30);border-top-color:var(--imp-accent,#c8a96e);border-radius:50%;animation:presetSpin 0.7s linear infinite;}'
+    + '@keyframes presetSpin{to{transform:rotate(360deg);}}'
+    + '.preset-thumb img{opacity:0;transition:opacity .25s ease;}.preset-thumb.preset-shown img{opacity:1;}.preset-thumb.preset-shown .preset-spin{display:none;}'
+    + '.preset-font .pf-content{opacity:0;transition:opacity .25s ease;}.preset-font.preset-shown .pf-content{opacity:1;}.preset-font.preset-shown .preset-spin{display:none;}'
     + '.preset-more-btn{width:100%;padding:8px;border:1px dashed var(--imp-border,#ccc);border-radius:8px;background:var(--imp-surface-2,#f5f5f5);color:var(--imp-fg-2,#666);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}.preset-more-btn:hover{border-color:var(--imp-accent,#c8a96e);color:var(--imp-fg,#111);}';
   document.head.appendChild(st);
   var ov = document.createElement('div');
@@ -6752,21 +6754,23 @@ function _fetchFontList(cb) {
    The picker shows 3 designs per collection, then "Show more" reveals 6 at a time.
    Thumbnails load left-to-right (row order) with a skeleton placeholder. */
 var _presets = { type:null, cols:[], shown:[] };
-var _presetGen = 0, _presetLoading = false;
-/* Load preset thumbnails STRICTLY one at a time, in document order (collection 1 design 1,
-   then design 2, …) — the next image only starts once the previous finishes, so all the
-   bandwidth goes to a single thumbnail at a time. */
-function _pumpPresetThumbs(){
-  if(_presetLoading) return;
-  var box=document.getElementById('add-source-library'); if(!box) return;
-  var next=box.querySelector('img[data-src]'); if(!next) return;
-  _presetLoading=true; var gen=_presetGen;
-  next.onload=next.onerror=function(){
-    this.style.opacity='1';
-    var sk=this.parentNode && this.parentNode.querySelector('.preset-skel'); if(sk) sk.style.display='none';
-    if(gen===_presetGen){ _presetLoading=false; _pumpPresetThumbs(); }   /* chain to the next thumbnail */
+var _presetGen = 0, _revealing = false;
+/* Thumbnails all download in parallel (in the background) the moment they're built; they
+   are then REVEALED one at a time in document (Z-grid) order with a 0.5s gap, each waiting
+   for its own load. A rotating spinner shows on each tile until it's revealed. */
+function _ensurePresetReveal(){ if(_revealing) return; _revealing=true; _revealNextPreset(_presetGen); }
+function _revealNextPreset(gen){
+  if(gen!==_presetGen){ _revealing=false; return; }
+  var box=document.getElementById('add-source-library');
+  var el=box && box.querySelector('.preset-pending');
+  if(!el){ _revealing=false; return; }
+  el.classList.remove('preset-pending');
+  var show=function(){
+    if(gen!==_presetGen){ _revealing=false; return; }
+    el.classList.add('preset-shown');                 /* CSS fades the content in + hides the spinner */
+    setTimeout(function(){ _revealNextPreset(gen); }, 500);   /* 0.5s gap to the next thumbnail */
   };
-  next.src=next.getAttribute('data-src'); next.removeAttribute('data-src');
+  (el._whenReady || function(cb){ cb(); })(show);
 }
 function _presetTypeFolder(){ var k=_addSrc&&_addSrc.kind; return k==='font'?'text':k==='pattern'?'background':'graphic'; }
 function _collDisplayName(folder){ return String(folder||'').replace(/_/g,' '); }
@@ -6781,7 +6785,7 @@ function _fetchCollections(type, cb){
 function renderPresets(){
   var box=document.getElementById('add-source-library'); if(!box) return;
   var type=_presetTypeFolder(); _presets.type=type;
-  _presetGen++; _presetLoading=false;   /* invalidate any in-flight thumbnail chain from a previous render */
+  _presetGen++; _revealing=false;   /* invalidate any in-flight reveal from a previous render */
   box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading presets…</div>';
   _fetchCollections(type, function(cols){
     _presets.cols=cols||[];
@@ -6805,31 +6809,36 @@ function _renderPresetGrid(i){
   if(type==='text'){
     var have=grid.querySelectorAll('.preset-font').length;
     for(var k=have;k<n;k++){ (function(f){
-      var card=document.createElement('button'); card.className='preset-font';
-      card.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:var(--imp-surface,#fff);cursor:default;text-align:left;min-height:46px;box-sizing:border-box;';
-      card.innerHTML='<span class="preset-skel" style="height:22px;width:55%;border-radius:5px;"></span>';
+      var card=document.createElement('button'); card.className='preset-font preset-pending';
+      card.style.cssText='position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:var(--imp-surface,#fff);cursor:default;text-align:left;min-height:46px;box-sizing:border-box;';
+      card.innerHTML='<span class="preset-spin"></span><span class="pf-content" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;"></span>';
       grid.appendChild(card);
-      var url=_presetUrl('text',c.name,f), name=f.replace(/\.[^.]+$/,'');
-      _loadFontFromUrl(url, name, function(key){
-        if(!key){ card.style.display='none'; return; }
-        card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
-        card.innerHTML='<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>';
+      card._whenReady=function(cb){ if(card._ready) cb(); else card._readyCb=cb; };
+      var content=card.querySelector('.pf-content'), url=_presetUrl('text',c.name,f), name=f.replace(/\.[^.]+$/,'');
+      _loadFontFromUrl(url, name, function(key){          /* downloads start immediately, in parallel */
+        if(!key){ card.style.display='none'; }
+        else { card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
+          content.innerHTML='<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
+        card._ready=true; if(card._readyCb) card._readyCb();
       });
     })(c.files[k]); }
   } else {
     var have2=grid.querySelectorAll('.preset-thumb').length;
     for(var k2=have2;k2<n;k2++){ (function(f){
       var url=_presetUrl(type,c.name,f), safe=(''+f).replace(/'/g,"\\'"), cn=(''+c.name).replace(/'/g,"\\'");
-      var btn=document.createElement('button'); btn.className='preset-thumb'; btn.title=f;
+      var btn=document.createElement('button'); btn.className='preset-thumb preset-pending'; btn.title=f;
       btn.style.cssText='aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:var(--imp-surface,#fff);cursor:pointer;padding:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;';
       btn.setAttribute('onclick',"choosePreset('"+cn+"','"+safe+"')");
-      btn.innerHTML='<span class="preset-skel" style="position:absolute;inset:6px;border-radius:5px;"></span><img data-src="'+url+'" decoding="async" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .2s;position:relative;">';
+      btn.innerHTML='<span class="preset-spin"></span><img decoding="async" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;position:relative;">';
+      var img=btn.querySelector('img');
+      img.src=url;   /* start the download NOW, in parallel/background */
+      btn._whenReady=function(cb){ if(img.complete) cb(); else img.onload=img.onerror=cb; };
       grid.appendChild(btn);
     })(c.files[k2]); }
-    _pumpPresetThumbs();   /* sequential, one thumbnail at a time across the whole picker */
   }
   var more=document.getElementById('pm-'+i);
   if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore('+i+')">Show '+Math.min(6,rem)+' more</button>' : ''; }
+  _ensurePresetReveal();   /* reveal new tiles one-by-one in Z order, 0.5s apart */
 }
 function choosePreset(col, file){
   var L=getLayer(_addSrc.id); if(!L){ _closeAddSourceOverlay(); return; }
