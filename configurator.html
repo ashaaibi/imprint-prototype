@@ -2275,6 +2275,10 @@
         </select></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">2.5</span></div>
         <input type="range" class="test-slider" min="0" max="10" step="0.5" value="2.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MIN (at 0%)</span><span class="slider-val" id="a2d-gapMin-val">-1</span></div>
+        <input type="range" class="test-slider" min="-20" max="20" step="0.5" value="-1" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MAX (at 100%)</span><span class="slider-val" id="a2d-gapMax-val">100</span></div>
+        <input type="range" class="test-slider" min="0" max="300" step="5" value="100" oninput="onA2Dnum('gapMax',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.1</span></div>
         <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.1" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
@@ -4304,7 +4308,12 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       var boxH = Math.max(8, sref * ((L.scaleH != null ? L.scaleH : L.scale) / 100) * ms);  /* crop box height (independent → non-proportional) */
       var density = Math.max(1, L.density || 6);
       var tileW = (sref / density), tileH = tileW / cAsp;   /* tile size fixed → resizing the box CROPS the tiling (density = tile size) */
-      var gpx = ((L.gap != null ? L.gap : 0) / 100) * tileW;
+      /* user Gap slider is 0–100; remap it onto the testing-defined [gapMin, gapMax] real range
+         (lets the real gap dip slightly negative to close hairline seams without showing it). */
+      var _gMin = (typeof A2D!=='undefined' && A2D.gapMin!=null) ? A2D.gapMin : -1;
+      var _gMax = (typeof A2D!=='undefined' && A2D.gapMax!=null) ? A2D.gapMax : 100;
+      var _gReal = _gMin + ((L.gap != null ? L.gap : 0) / 100) * (_gMax - _gMin);
+      var gpx = (_gReal / 100) * tileW;
       var cw = tileW + gpx, ch = tileH + gpx;
       var SW = Math.max(1, Math.ceil(boxW)), SH = Math.max(1, Math.ceil(boxH));
       var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
@@ -6330,7 +6339,7 @@ function buildLayerBodyHTML(L) {
       /* Move/resize(=crop box)/rotate happen in the 2D editor. Here: tile spacing,
          repeat count, and edge feather. */
       h += sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×');
-      h += sliderRow(id, 'gap', 'Gap', -1, 100, 0.5, (L.gap != null ? L.gap : 0), '%');
+      h += sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 0), '%');
       h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
       /* Layout control — uploads only (library patterns are fixed to vertical). */
       if (!L.fromLibrary) {
@@ -7185,9 +7194,9 @@ function _positionCropOverlay() {
   if (cutout.eyedropping || !cutout.crop) { box.style.display = 'none'; return; }   /* hide so eyedropper clicks reach the canvas */
   var r = _cropCanvasRect(), c = cutout.crop;
   box.style.display = 'block';
-  /* outset the box so its stroke + handles sit OUTSIDE the crop edge (Photoshop "outside" stroke),
-     not on the image pixels. Purely cosmetic — the crop rect (cutout.crop) is unchanged. */
-  var M = 4;
+  /* centre the 1.5px stroke on the crop edge (Photoshop "center" stroke) — half the border
+     width of outset. Purely cosmetic — the crop rect (cutout.crop) is unchanged. */
+  var M = 0.75;
   box.style.left = (r.l + c.x * r.w - M) + 'px'; box.style.top = (r.t + c.y * r.h - M) + 'px';
   box.style.width = (c.w * r.w + 2 * M) + 'px'; box.style.height = (c.h * r.h + 2 * M) + 'px';
 }
@@ -10253,6 +10262,7 @@ var A2D = {
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:2,                /* dilate each island's colour fill to cover gaps (px) */
+  gapMin:-1, gapMax:100,    /* real pattern-gap range that the 0–100 Gap slider maps onto */
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
@@ -10626,7 +10636,7 @@ function ctxDel(){ var L=_ctxL(); if(L){ var id=L.id; a2d.sel=null; deleteLayer(
 function ctxLock(){ var L=_ctxL(); if(L){ toggleLayerLock(L.id); _ctxBarFor=null; } }
 function ctxFront(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.indexOf(L); if(i>0){ a.splice(i,1); a.unshift(L); drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); } }
 function ctxBack(){ var L=_ctxL(); if(!L) return; var a=BAG.artwork.layers, i=a.indexOf(L); if(i>=0&&i<a.length-1){ a.splice(i,1); a.push(L); drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); } }
-function ctxStep(prop,d){ var L=_ctxL(); if(!L) return; var def=(prop==='density')?6:(prop==='fontSize')?100:0; var nv=(L[prop]!=null?L[prop]:def)+d; var mn=(prop==='density')?1:(prop==='fontSize')?20:(prop==='gap')?-1:0; nv=Math.max(mn,nv); if(prop==='gap')nv=Math.min(100,nv); if(prop==='feather')nv=Math.min(95,nv); L[prop]=nv; drawBagTexture(); }
+function ctxStep(prop,d){ var L=_ctxL(); if(!L) return; var def=(prop==='density')?6:(prop==='fontSize')?100:0; var nv=(L[prop]!=null?L[prop]:def)+d; var mn=(prop==='density')?1:(prop==='fontSize')?20:0; nv=Math.max(mn,nv); if(prop==='gap')nv=Math.min(100,nv); if(prop==='feather')nv=Math.min(95,nv); L[prop]=nv; drawBagTexture(); }
 function ctxFontCycle(){ var L=_ctxL(); if(!L||L.kind!=='text') return; var f=['cormorant','inter','barlow','playfair']; var i=f.indexOf(L.font); if(typeof onLayerFont==='function') onLayerFont(L.id, f[(i+1)%f.length]); }
 function ctxTint(hex){ var L=_ctxL(); if(!L) return; L.swatchName='Custom'; L.color=hex; L.customHex=hex; drawBagTexture(); if(typeof renderLayersList==='function')renderLayersList(); }
 
