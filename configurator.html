@@ -1671,7 +1671,7 @@
           <div class="cfg-loader-ring"></div>
           <div class="cfg-loader-dot"></div>
         </div>
-        <div class="cfg-loader-text" id="cfg-loader-text" data-en="Preparing your studio…" data-ar="نُجهّز الاستوديو…">Preparing your studio…</div>
+        <div class="cfg-loader-text" id="cfg-loader-text">Preparing your studio…</div>
       </div>
       <div id="bag-switch-overlay" style="display:none;position:absolute;inset:0;z-index:5;background:var(--imp-surface);flex-direction:column;gap:16px;align-items:center;justify-content:center;border-radius:inherit;">
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
@@ -6755,6 +6755,7 @@ function _fetchFontList(cb) {
    Thumbnails load left-to-right (row order) with a skeleton placeholder. */
 var _presets = { type:null, cols:[], shown:[] };
 var _presetGen = 0, _revealing = false;
+var _presetSeen = {};   /* urls already loaded once → show instantly (no spinner/stagger) next time */
 /* Thumbnails all download in parallel (in the background) the moment they're built; they
    are then REVEALED one at a time in document (Z-grid) order with a 0.5s gap, each waiting
    for its own load. A rotating spinner shows on each tile until it's revealed. */
@@ -6809,15 +6810,16 @@ function _renderPresetGrid(i){
   if(type==='text'){
     var have=grid.querySelectorAll('.preset-font').length;
     for(var k=have;k<n;k++){ (function(f){
-      var card=document.createElement('button'); card.className='preset-font preset-pending';
+      var url=_presetUrl('text',c.name,f), seen=!!_presetSeen[url];
+      var card=document.createElement('button'); card.className='preset-font '+(seen?'preset-shown':'preset-pending');
       card.style.cssText='position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:var(--imp-surface,#fff);cursor:default;text-align:left;min-height:46px;box-sizing:border-box;';
       card.innerHTML='<span class="preset-spin"></span><span class="pf-content" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;"></span>';
       grid.appendChild(card);
       card._whenReady=function(cb){ if(card._ready) cb(); else card._readyCb=cb; };
-      var content=card.querySelector('.pf-content'), url=_presetUrl('text',c.name,f), name=f.replace(/\.[^.]+$/,'');
+      var content=card.querySelector('.pf-content'), name=f.replace(/\.[^.]+$/,'');
       _loadFontFromUrl(url, name, function(key){          /* downloads start immediately, in parallel */
         if(!key){ card.style.display='none'; }
-        else { card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
+        else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
           content.innerHTML='<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
         card._ready=true; if(card._readyCb) card._readyCb();
       });
@@ -6825,19 +6827,20 @@ function _renderPresetGrid(i){
   } else {
     var have2=grid.querySelectorAll('.preset-thumb').length;
     for(var k2=have2;k2<n;k2++){ (function(f){
-      var url=_presetUrl(type,c.name,f), safe=(''+f).replace(/'/g,"\\'"), cn=(''+c.name).replace(/'/g,"\\'");
-      var btn=document.createElement('button'); btn.className='preset-thumb preset-pending'; btn.title=f;
+      var url=_presetUrl(type,c.name,f), safe=(''+f).replace(/'/g,"\\'"), cn=(''+c.name).replace(/'/g,"\\'"), seen=!!_presetSeen[url];
+      var btn=document.createElement('button'); btn.className='preset-thumb '+(seen?'preset-shown':'preset-pending'); btn.title=f;
       btn.style.cssText='aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:var(--imp-surface,#fff);cursor:pointer;padding:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;';
       btn.setAttribute('onclick',"choosePreset('"+cn+"','"+safe+"')");
       btn.innerHTML='<span class="preset-spin"></span><img decoding="async" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;position:relative;">';
       var img=btn.querySelector('img');
-      img.src=url;   /* start the download NOW, in parallel/background */
+      img.addEventListener('load', function(){ _presetSeen[url]=true; });   /* remember it for instant show next visit */
+      img.src=url;   /* start the download NOW, in parallel/background (cached → instant) */
       btn._whenReady=function(cb){ if(img.complete) cb(); else img.onload=img.onerror=cb; };
       grid.appendChild(btn);
     })(c.files[k2]); }
   }
   var more=document.getElementById('pm-'+i);
-  if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore('+i+')">Show '+Math.min(6,rem)+' more</button>' : ''; }
+  if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore('+i+')">Show more</button>' : ''; }
   _ensurePresetReveal();   /* reveal new tiles one-by-one in Z order, 0.5s apart */
 }
 function choosePreset(col, file){
@@ -8409,6 +8412,7 @@ function onBagSize(key, btn) {
   if (_bagLoading) return;            /* a model is still loading — ignore (buttons are locked) */
   _exitCustomSize(key);               /* leaving custom → restore this model's real dims */
   if (currentBagModel === key) return;
+  if (typeof viewMode !== 'undefined' && viewMode === '2d' && typeof setViewMode === 'function') setViewMode('3d');   /* changing size → show the new bag in 3D */
   currentBagModel = key;
   /* single-select: clear every other size, mark only this one */
   document.querySelectorAll('.bag-sopt').forEach(function(b) { b.classList.remove('on'); });
@@ -11156,7 +11160,10 @@ function _updateMobileFraming(){
   /* Keep the loading spinner / model-switch overlay centered in the visible band (mobile:
      shrink from the bottom by `covered`; desktop: full canvas → perfectly centered). Run
      EVERY frame (not gated by the sig guard) so a stale offset can never linger. */
-  var _lb = (active && covered > 2) ? (covered + 'px') : '';
+  /* '0' (not '') for the inactive case: the model-switch overlay sets inset:0 INLINE, and
+     clearing style.bottom would fall back to `auto` (collapsing it to a small box at the top
+     of the canvas). Pinning bottom:0 keeps it full-cover + centered. */
+  var _lb = (active && covered > 2) ? (covered + 'px') : '0';
   var _ld = document.getElementById('cfg-loader'); if (_ld) _ld.style.bottom = _lb;
   var _sw = document.getElementById('bag-switch-overlay'); if (_sw) _sw.style.bottom = _lb;
   /* Key the camera-offset guard on the FULL inputs to setViewOffset (stage w/h + covered),
