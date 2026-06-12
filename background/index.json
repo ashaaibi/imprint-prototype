@@ -13,7 +13,7 @@
 ]
 },
 {
-"name": "Linda_Spring_Collection",
+"name": "Spring_Collection",
 "files": [
 "Layer 10background.svg",
 "Layer 11background.svg",
@@ -24,6 +24,18 @@
 "Layer 7background.svg",
 "Layer 8background.svg",
 "Layer 9background.svg"
+]
+},
+{
+"name": "Summer_Collection",
+"files": [
+"Asset 1summer.svg",
+"Asset 1summer2.svg",
+"Asset 2summer.svg",
+"Asset 2summer2.svg",
+"Asset 3summer.svg",
+"Asset 3summer2.svg",
+"Asset 4summer.svg"
 ]
 }
 ]
