@@ -6752,6 +6752,22 @@ function _fetchFontList(cb) {
    The picker shows 3 designs per collection, then "Show more" reveals 6 at a time.
    Thumbnails load left-to-right (row order) with a skeleton placeholder. */
 var _presets = { type:null, cols:[], shown:[] };
+var _presetGen = 0, _presetLoading = false;
+/* Load preset thumbnails STRICTLY one at a time, in document order (collection 1 design 1,
+   then design 2, …) — the next image only starts once the previous finishes, so all the
+   bandwidth goes to a single thumbnail at a time. */
+function _pumpPresetThumbs(){
+  if(_presetLoading) return;
+  var box=document.getElementById('add-source-library'); if(!box) return;
+  var next=box.querySelector('img[data-src]'); if(!next) return;
+  _presetLoading=true; var gen=_presetGen;
+  next.onload=next.onerror=function(){
+    this.style.opacity='1';
+    var sk=this.parentNode && this.parentNode.querySelector('.preset-skel'); if(sk) sk.style.display='none';
+    if(gen===_presetGen){ _presetLoading=false; _pumpPresetThumbs(); }   /* chain to the next thumbnail */
+  };
+  next.src=next.getAttribute('data-src'); next.removeAttribute('data-src');
+}
 function _presetTypeFolder(){ var k=_addSrc&&_addSrc.kind; return k==='font'?'text':k==='pattern'?'background':'graphic'; }
 function _collDisplayName(folder){ return String(folder||'').replace(/_/g,' '); }
 function _presetUrl(type,col,file){ return type+'/'+encodeURIComponent(col)+'/'+encodeURIComponent(file); }
@@ -6765,6 +6781,7 @@ function _fetchCollections(type, cb){
 function renderPresets(){
   var box=document.getElementById('add-source-library'); if(!box) return;
   var type=_presetTypeFolder(); _presets.type=type;
+  _presetGen++; _presetLoading=false;   /* invalidate any in-flight thumbnail chain from a previous render */
   box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading presets…</div>';
   _fetchCollections(type, function(cols){
     _presets.cols=cols||[];
@@ -6809,7 +6826,7 @@ function _renderPresetGrid(i){
       btn.innerHTML='<span class="preset-skel" style="position:absolute;inset:6px;border-radius:5px;"></span><img data-src="'+url+'" decoding="async" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .2s;position:relative;">';
       grid.appendChild(btn);
     })(c.files[k2]); }
-    _loadThumbsInOrder(grid, 4);
+    _pumpPresetThumbs();   /* sequential, one thumbnail at a time across the whole picker */
   }
   var more=document.getElementById('pm-'+i);
   if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore('+i+')">Show '+Math.min(6,rem)+' more</button>' : ''; }
