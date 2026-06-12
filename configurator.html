@@ -2250,6 +2250,12 @@
         <input type="range" class="test-slider" min="512" max="4096" step="256" value="2048" oninput="onA2Dnum('guideRes',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Island padding (gap fill)</span><span class="slider-val" id="a2d-padding-val">2</span></div>
         <input type="range" class="test-slider" min="0" max="40" step="1" value="2" oninput="onA2Dpadding(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Min layer size</span><span class="slider-val" id="min-layer-scale-val">0.50%</span></div>
+        <input type="range" class="test-slider" min="0.1" max="5" step="0.1" value="0.5" oninput="onMinLayerScale(this.value)"></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Smallest size a graphic can be shrunk to with the resize handles.</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview update</span><span class="slider-val" id="a2d-previewInterval-val">0.5s</span></div>
+        <input type="range" class="test-slider" min="0" max="5" step="0.1" value="0.5" oninput="onPreviewInterval(this.value)"></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">How often the 3D live preview re-renders while you edit in 2D. Higher = smoother 2D editing (lower FPS cost); 0 = real-time.</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle size</span><span class="slider-val" id="a2d-handleSize-val">10</span></div>
         <input type="range" class="test-slider" min="4" max="20" step="1" value="10" oninput="onA2Dnum('handleSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle color</span><span class="slider-val" id="a2d-handleColor-val">#000000</span></div>
@@ -6379,10 +6385,8 @@ function buildLayerBodyHTML(L) {
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
       layerFontRowHTML(L);
   }
-  /* Transform (Scale / Rotation / Opacity), Move, and Areas. */
+  /* Transform (Scale / Rotation / Opacity) → Colour/Recolor → Move → Areas. */
   h += _transformHTML(id, L);
-  h += _moveSectionHTML(id, L);
-  h += _areasSectionHTML(id, L);
 
   if (L.kind === 'sticker') {
     h += stickerColorSectionHTML(L);
@@ -6394,6 +6398,9 @@ function buildLayerBodyHTML(L) {
       '<div class="color-hex" id="lyr-' + id + '-chex"></div>';
     if (L.kind === 'logo') h += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
   }
+
+  h += _moveSectionHTML(id, L);
+  h += _areasSectionHTML(id, L);
 
   /* Material finish, Emboss/Deboss and Layout are only offered on Logo and Text layers.
      Graphic and Background layers omit them (per spec). */
@@ -9376,9 +9383,16 @@ function animate(now) {
 
   sphericalToCamera();
   if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
-  /* Don't render the hidden 3D scene (incl. post-FX) while the 2D editor is open — the 2D
-     editor runs its own canvas loop. The pending texture upload happens on the next 3D frame. */
-  if (viewMode !== '2d') {
+  /* In the 2D editor the 3D scene is only a small "Live preview". Rendering it (incl. post-FX)
+     every frame is what tanked drag FPS, so throttle it to once every A2D.previewInterval
+     seconds (0 = real-time). Outside 2D it renders every frame as normal. */
+  var _doRender = true;
+  if (viewMode === '2d') {
+    var _iv = (A2D.previewInterval != null ? A2D.previewInterval : 0.5) * 1000;
+    if (_iv > 0 && ((now||0) - _lastPreviewRender) < _iv) _doRender = false;
+    else _lastPreviewRender = now || 0;
+  }
+  if (_doRender) {
     if (typeof realismRender === 'function') realismRender();
     else T.renderer.render(T.scene, T.camera);
   }
@@ -10122,6 +10136,8 @@ function onSceneLightsSlider(v) {
   T.rimLight.intensity    = SCENE_LIGHTS_BASE.rim    * mul;
   T.hemiLight.intensity   = SCENE_LIGHTS_BASE.hemi   * mul;
 }
+function onMinLayerScale(v){ MIN_LAYER_SCALE = Math.max(0.05, parseFloat(v)||0.5); var el=document.getElementById('min-layer-scale-val'); if(el) el.textContent=MIN_LAYER_SCALE.toFixed(2)+'%'; }
+function onPreviewInterval(v){ A2D.previewInterval = Math.max(0, parseFloat(v)||0); var el=document.getElementById('a2d-previewInterval-val'); if(el) el.textContent=(A2D.previewInterval<=0?'real-time':A2D.previewInterval.toFixed(1)+'s'); }
 function onLayerBrightnessSlider(v) {
   LAYER_BRIGHTNESS = parseFloat(v);
   var lbl = document.getElementById('layer-brightness-val');
@@ -10578,7 +10594,7 @@ var A2D = {
   gapMin:0, gapMax:100,     /* real pattern-gap range that the 0–100 Gap slider maps onto */
   editorRes:1,              /* 2D-editor supersampling multiplier (× devicePixelRatio) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
+  previewOn:true, previewInterval:0.5, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
@@ -10589,6 +10605,8 @@ var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dp
             _subReveal:{} };   /* region → true once its colour/finish is changed (reveals the per-face sub-labels) */
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
 var _filteredBag = null, _filteredBagKey = '', _filteredBagDirty = true;   /* cached pre-filtered 2D backdrop */
+var MIN_LAYER_SCALE = 0.5;   /* smallest layer size % a resize handle allows (tunable in Testing) */
+var _lastPreviewRender = 0;  /* timestamp of the last 3D live-preview render while in 2D mode */
 var _offIslandCv = null;    /* cached canvas for the off-island fade overlay */
 var _faceHideCv = null;     /* cached canvas for per-face layer hide (destination-out) */
 /* After a graphic/pattern/font upload, auto-animate from 3D → the 2D editor after a short
@@ -10829,23 +10847,24 @@ function _aMove(e){
     var anchX=vb.cx - sx*vb.hw*ca + sy*vb.hh*sa, anchY=vb.cy - sx*vb.hw*sa - sy*vb.hh*ca;  /* opposite cropped corner */
     var ap3=_s2a(sp.x,sp.y), vx=ap3.x-anchX, vy=ap3.y-anchY;
     var projX=vx*ca+vy*sa, projY=vx*(-sa)+vy*ca;
-    var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982, minpx=srefp*0.02;
+    var _MIN=(typeof MIN_LAYER_SCALE!=='undefined')?MIN_LAYER_SCALE:0.5;   /* min layer size %, tunable in Testing */
+    var srefp=(typeof _layerScaleRef==='function')?_layerScaleRef():982, minpx=srefp*(_MIN/100);
     var fullW=Math.max(minpx, projX*sx), fullH=Math.max(minpx, projY*sy);   /* new cropped-box extent */
     if (L.tiled){
       /* ratio-based (relative to the cropped start box) so handles hug the pattern exactly. */
       var rW=fullW/(2*(vb.hw||1)), rH=fullH/(2*(vb.hh||1));
-      L.scale  = Math.max(2, Math.min(400, (a2d.start.scale!=null?a2d.start.scale:40) * rW));
-      L.scaleH = Math.max(2, Math.min(400, (a2d.start.scaleH!=null?a2d.start.scaleH:40) * rH));
+      L.scale  = Math.max(_MIN, Math.min(400, (a2d.start.scale!=null?a2d.start.scale:40) * rW));
+      L.scaleH = Math.max(_MIN, Math.min(400, (a2d.start.scaleH!=null?a2d.start.scaleH:40) * rH));
     } else if (L.kind!=='text' && e.shiftKey){
       /* Shift = free (non-proportional) resize of a graphic: width & height move independently. */
       L.freeAspect=true;
       var rWf=fullW/(2*(vb.hw||1)), rHf=fullH/(2*(vb.hh||1));
-      L.scale  = Math.max(2, Math.min(200, (a2d.start.scale||18) * rWf));
-      L.scaleH = Math.max(2, Math.min(200, (a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18)) * rHf));
+      L.scale  = Math.max(_MIN, Math.min(200, (a2d.start.scale||18) * rWf));
+      L.scaleH = Math.max(_MIN, Math.min(200, (a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18)) * rHf));
     } else {
-      var f=Math.max(0.05, fullW/(2*(vb.hw||1)));   /* uniform factor from cropped width */
+      var f=Math.max(0.01, fullW/(2*(vb.hw||1)));   /* uniform factor from cropped width */
       if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f));
-      else { L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); if (L.freeAspect) L.scaleH=Math.max(2,Math.min(200,(a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18))*f)); }
+      else { L.scale=Math.max(_MIN,Math.min(200,(a2d.start.scale||18)*f)); if (L.freeAspect) L.scaleH=Math.max(_MIN,Math.min(200,(a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18))*f)); }
     }
     /* re-derive the full box (scale now applied) → exact hw/hh incl. aspect + art-correction */
     var cl=L.cropBoxL||0,cr=L.cropBoxR||0,ct=L.cropBoxT||0,cb=L.cropBoxB||0, fwC=(1-cl-cr)||1, fhC=(1-ct-cb)||1;
@@ -10887,15 +10906,11 @@ function _aMove(e){
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
-  var spUp=_evPos(e);
   delete a2d.pointers[e.pointerId];
   var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
   var endedOp=a2d.op;
-  /* Plain click on a locked layer (pan that barely moved) → unlock + keep selected. */
-  if (endedOp==='pan' && a2d.start && a2d.start.lockedLayer){
-    var _mv=Math.hypot(spUp.x-a2d.start.sp.x, spUp.y-a2d.start.sp.y);
-    if (_mv < 6*(a2d.dpr||1)){ a2d.start.lockedLayer.locked=false; a2d.sel=a2d.start.lockedLayer; if(typeof renderLayersList==='function') renderLayersList(); }
-  }
+  /* A click on a locked layer just SELECTS it (so its toolbar — incl. the lock toggle — shows);
+     it stays locked. Unlock only via the lock button. (Drag still pans.) */
   var wasEdit=(a2d.op==='move'||a2d.op==='rotate'||(a2d.op&&(a2d.op.indexOf('sc-')===0||a2d.op.indexOf('cr-')===0)));
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
@@ -11308,17 +11323,15 @@ function atlas2dRender(){
     ['exterior','interior'].forEach(function(grp){
       var _showWheel=true;   /* per-face recolour wheel always available (no longer gated on the parent colour) */
       var faces=BAG_FACES[grp]||{};
-      var keys=Object.keys(faces).filter(function(f){ return faces[f]; });
-      if(!keys.length) return;
-      /* Put every sub-label in the region on ONE common atlas-y line (faces sit at slightly
-         different heights). Use the average of each face's natural label-y, then vary only x. */
-      var ays=keys.map(function(f){ var bb=faces[f], pad=Math.min(bb.w,bb.h)*0.10;
-        return (_pos==='top') ? (bb.y+bb.h-pad) : (_pos==='bottom') ? (bb.y+pad) : (bb.y+bb.h/2); });
-      var ayCommon=ays.reduce(function(a,b){return a+b;},0)/ays.length;
-      var off=(_pos==='top') ? +_subFP*0.86 : (_pos==='bottom') ? -_subFP*0.86 : 0;
-      keys.forEach(function(f){
-        var bb=faces[f], ax=bb.x+bb.w/2;
-        var p=_a2s(ax, ayCommon), dy=c.height - p.y + off, _txt=FN[f]||f;
+      Object.keys(faces).forEach(function(f){
+        var bb=faces[f]; if(!bb) return;
+        /* atlas-y is flipped on screen: larger y = visual TOP. Each sub-label sits at the
+           BOTTOM-CENTRE of its own face. */
+        var pad=Math.min(bb.w,bb.h)*0.10, ax,ay, off;
+        if(_pos==='top'){ ax=bb.x+bb.w/2; ay=bb.y+bb.h-pad; off=+_subFP*0.86; }
+        else if(_pos==='bottom'){ ax=bb.x+bb.w/2; ay=bb.y+pad; off=-_subFP*0.86; }
+        else { ax=bb.x+bb.w/2; ay=bb.y+bb.h/2; off=0; }
+        var p=_a2s(ax, ay), dy=c.height - p.y + off, _txt=FN[f]||f;
         var _tog=_selL?{type:'facetoggle', region:grp, face:f}:null;
         var _checked=!(_selL && _selL.faceHide && _selL.faceHide[grp+'_'+f]);   /* default: shown */
         _drawLabelPill(p.x, dy, _txt, _subFP, {kind:'face',region:grp,face:f}, _tog, _checked, null, _showWheel);
