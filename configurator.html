@@ -2229,9 +2229,6 @@
         <input type="range" class="test-slider" min="-1" max="1" step="0.01" value="0" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MAX (at 100%)</span><span class="slider-val" id="a2d-gapMax-val">100</span></div>
         <input type="range" class="test-slider" min="0" max="300" step="5" value="100" oninput="onA2Dnum('gapMax',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">2D editor resolution</span><span class="slider-val" id="a2d-editorRes-val">1.00×</span></div>
-        <input type="range" class="test-slider" min="0.5" max="4" step="0.25" value="1" oninput="onEditorRes(this.value)"></div>
-        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Supersampling for the flat 2D editor (× device pixel ratio). Higher = crisper labels &amp; artwork, heavier to render.</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Emboss depth</span><span class="slider-val" id="emboss-emboss-val">1.0</span></div>
         <input type="range" class="test-slider" min="0" max="3" step="0.1" value="1" oninput="onEmbossDepth('emboss',this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Deboss depth</span><span class="slider-val" id="emboss-deboss-val">1.0</span></div>
@@ -2253,9 +2250,6 @@
         <input type="range" class="test-slider" min="512" max="4096" step="256" value="2048" oninput="onA2Dnum('guideRes',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Island padding (gap fill)</span><span class="slider-val" id="a2d-padding-val">2</span></div>
         <input type="range" class="test-slider" min="0" max="40" step="1" value="2" oninput="onA2Dpadding(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Atlas edge padding</span><span class="slider-val" id="atlas-pad-val">0</span></div>
-        <input type="range" class="test-slider" min="0" max="512" step="32" value="0" onchange="onAtlasPad(this.value)"></div>
-        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Adds a margin around the printable area so artwork at a UV edge isn't clipped (rebuilds the bag).</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle size</span><span class="slider-val" id="a2d-handleSize-val">10</span></div>
         <input type="range" class="test-slider" min="4" max="20" step="1" value="10" oninput="onA2Dnum('handleSize',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle color</span><span class="slider-val" id="a2d-handleColor-val">#000000</span></div>
@@ -4051,6 +4045,7 @@ function drawBagTexture() {
     var _erase = function(clip){ if (!clip || !clip.path) return; bagCleanCtx.save(); bagCleanCtx.globalCompositeOperation='destination-out'; bagCleanCtx.fillStyle='#000'; bagCleanCtx.fill(clip.path); bagCleanCtx.lineJoin='round'; bagCleanCtx.lineWidth=Math.max(2,(A2D.padding||0)*2); bagCleanCtx.strokeStyle='#000'; bagCleanCtx.stroke(clip.path); bagCleanCtx.restore(); };
     if (!A2D.showHandles2D) _erase(bagHandleClip);
     if (!A2D.showRivets2D)  _erase(bagRivetClip);
+    _filteredBagDirty = true;   /* clean bag changed → idle backdrop cache must rebuild */
   }
   // Finish (paper) overlay — applied to the 3D colour map AFTER the clean snapshot, so
   // it never appears in the 2D editor. Skipped mid-drag for speed.
@@ -4368,7 +4363,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
     }
     var maxW = sref * (L.scale / 100) * ms;
     var aspect = L.img.naturalWidth / L.img.naturalHeight;
-    var dw = maxW, dh = maxW / aspect;
+    var dw = maxW, dh = L.freeAspect ? sref * ((L.scaleH != null ? L.scaleH : L.scale) / 100) * ms : maxW / aspect;
     var cx = (ue.x + ue.w * (L.posU / 100)) * ms;
     var cy = (ue.y + ue.h * (L.posV / 100)) * ms;
     ctx.save();
@@ -6789,6 +6784,7 @@ function addLayer(kind) {
     L = { id:id, kind:'ai', isDefault:false, visible:false, prompt:'', areas:allAreas };
   }
   L.opacity = (L.opacity != null ? L.opacity : 100);
+  if (kind === 'pattern') L.locked = true;   /* backgrounds start locked so you can pan without grabbing them */
   if (kind === 'pattern') {
     /* Backgrounds live at the BOTTOM of the stack; a new background goes above older
        backgrounds but below every non-background layer. */
@@ -9363,8 +9359,12 @@ function animate(now) {
 
   sphericalToCamera();
   if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
-  if (typeof realismRender === 'function') realismRender();
-  else T.renderer.render(T.scene, T.camera);
+  /* Don't render the hidden 3D scene (incl. post-FX) while the 2D editor is open — the 2D
+     editor runs its own canvas loop. The pending texture upload happens on the next 3D frame. */
+  if (viewMode !== '2d') {
+    if (typeof realismRender === 'function') realismRender();
+    else T.renderer.render(T.scene, T.camera);
+  }
 }
 
 function setupOrbit() {
@@ -10571,6 +10571,7 @@ var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dp
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0, hoverL:null,
             _subReveal:{} };   /* region → true once its colour/finish is changed (reveals the per-face sub-labels) */
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
+var _filteredBag = null, _filteredBagKey = '', _filteredBagDirty = true;   /* cached pre-filtered 2D backdrop */
 var _offIslandCv = null;    /* cached canvas for the off-island fade overlay */
 var _faceHideCv = null;     /* cached canvas for per-face layer hide (destination-out) */
 /* After a graphic/pattern/font upload, auto-animate from 3D → the 2D editor after a short
@@ -10670,14 +10671,14 @@ function _allUVBounds(){ var uv=typeof BAG_UV!=='undefined'?BAG_UV:{}; var regio
 function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.10; a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
 function _a2s(ax,ay){ return { x:ax*a2d.zoom+a2d.panX, y:ay*a2d.zoom+a2d.panY }; }
 function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoom }; }
-function _evPos(e){ var r=a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:a2d.canvas.height - (e.clientY-r.top)*a2d.dpr }; }  /* y flipped to match the vertically-flipped render */
+function _evPos(e){ var r=a2d._rect||a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:a2d.canvas.height - (e.clientY-r.top)*a2d.dpr }; }  /* y flipped to match the vertically-flipped render; rect cached during a drag */
 function _drawableLayers(){ return BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='text'||L.kind==='sticker'||L.kind==='logo'); }); }
 function _layerBox(L){
   var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
   var sref=(typeof _layerScaleRef==='function')?_layerScaleRef():e.w;
   if (L.tiled){ hw=sref*((L.scale||40)/100)/2; hh=sref*(((L.scaleH!=null?L.scaleH:L.scale)||40)/100)/2; }  /* tiled box (incl. tiled text) — independent w/h */
   else if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); if (L.social && L.social.platform) hw += fs*0.7; }
-  else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
+  else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=L.freeAspect?sref*(((L.scaleH!=null?L.scaleH:L.scale)||18)/100)/2:(w/asp)/2; }   /* freeAspect = Shift-resized independently */
   /* match the art-correction scale used when DRAWING (drawLayerContent scales by corr) so the
      box hugs the actual content instead of leaving a gap. */
   var corr=(typeof getArtCorr==='function')?getArtCorr():{x:1,y:1};
@@ -10717,12 +10718,16 @@ function _atlasBind(c){
 }
 function _aDown(e){
   try { a2d.canvas.setPointerCapture(e.pointerId); } catch(_){}
+  a2d._rect = a2d.canvas.getBoundingClientRect();   /* cache for the drag (avoids per-move layout reads) */
   var sp=_evPos(e); a2d.pointers[e.pointerId]={x:sp.x,y:sp.y};
   if (typeof _hideFaceBar==='function') _hideFaceBar();   /* any new press closes the face bar */
   var ids=Object.keys(a2d.pointers);
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
   var hh=_hitHandle(sp);
-  if (hh){ a2d.op=hh; _a2dDragging=true; a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:a2d.sel.scaleH, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel), vbox:_layerCropBox(_layerBox(a2d.sel), a2d.sel) };
+  if (hh){ a2d.op=hh; _a2dDragging=true;
+    var _selR=a2d.sel, _aspR=(_selR.img&&_selR.img.naturalWidth)?_selR.img.naturalWidth/_selR.img.naturalHeight:1;
+    var _startScaleH=(_selR.kind!=='text'&&!_selR.tiled&&!_selR.freeAspect)?((_selR.scale||18)/_aspR):_selR.scaleH;   /* seed from visual height for seamless first Shift-resize */
+    a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:_startScaleH, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel), vbox:_layerCropBox(_layerBox(a2d.sel), a2d.sel) };
     if(a2d.canvas) a2d.canvas.style.cursor=(hh.indexOf('sc-')===0)?((hh==='sc-tr'||hh==='sc-bl')?'nwse-resize':'nesw-resize'):(hh.indexOf('cr-')===0)?'crosshair':'grabbing'; return; }
   /* clicked a colour icon or a per-face hide toggle (these sit on top of everything) */
   var ui=(typeof _hitUi==='function')?_hitUi(sp):null;
@@ -10746,7 +10751,14 @@ function _aDown(e){
   }
   /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
-  if (L && L.locked){ a2d.sel=L; a2d.op=null; _ctxBarFor=null; if(a2d.canvas) a2d.canvas.style.cursor='not-allowed'; }   /* locked → select but don't move */
+  if (L && L.locked){
+    /* Locked (e.g. a background): a click-DRAG pans the canvas (the layer is ignored), and a
+       plain click selects + unlocks it. Lets you pan freely without grabbing the pattern. */
+    a2d.sel=L; _ctxBarFor=null;
+    a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY, lockedLayer:L };
+    if(a2d.canvas) a2d.canvas.style.cursor='grabbing';
+    var ovl=document.getElementById('atlas2d'); if(ovl) ovl.classList.add('dragging');
+  }
   else if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
   else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
 }
@@ -10760,8 +10772,8 @@ function _aMove(e){
     else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nwse-resize':'nesw-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
     else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
-    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ cur=_hL.locked?'not-allowed':'move'; a2d.hoverL=_hL; } else a2d.hoverL=null; }
-    if (cur!=='move' && cur!=='not-allowed') a2d.hoverL=null;   /* only preview the box when actually hovering the layer body */
+    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ cur=_hL.locked?'grab':'move'; a2d.hoverL=(_hL.locked?null:_hL); } else a2d.hoverL=null; }
+    if (cur!=='move') a2d.hoverL=null;   /* only preview the box when actually hovering an unlocked layer body */
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
   }
@@ -10807,10 +10819,16 @@ function _aMove(e){
       var rW=fullW/(2*(vb.hw||1)), rH=fullH/(2*(vb.hh||1));
       L.scale  = Math.max(2, Math.min(400, (a2d.start.scale!=null?a2d.start.scale:40) * rW));
       L.scaleH = Math.max(2, Math.min(400, (a2d.start.scaleH!=null?a2d.start.scaleH:40) * rH));
+    } else if (L.kind!=='text' && e.shiftKey){
+      /* Shift = free (non-proportional) resize of a graphic: width & height move independently. */
+      L.freeAspect=true;
+      var rWf=fullW/(2*(vb.hw||1)), rHf=fullH/(2*(vb.hh||1));
+      L.scale  = Math.max(2, Math.min(200, (a2d.start.scale||18) * rWf));
+      L.scaleH = Math.max(2, Math.min(200, (a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18)) * rHf));
     } else {
       var f=Math.max(0.05, fullW/(2*(vb.hw||1)));   /* uniform factor from cropped width */
       if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f));
-      else L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f));
+      else { L.scale=Math.max(2,Math.min(200,(a2d.start.scale||18)*f)); if (L.freeAspect) L.scaleH=Math.max(2,Math.min(200,(a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18))*f)); }
     }
     /* re-derive the full box (scale now applied) → exact hw/hh incl. aspect + art-correction */
     var cl=L.cropBoxL||0,cr=L.cropBoxR||0,ct=L.cropBoxT||0,cb=L.cropBoxB||0, fwC=(1-cl-cr)||1, fhC=(1-ct-cb)||1;
@@ -10852,14 +10870,20 @@ function _aMove(e){
 }
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
+  var spUp=_evPos(e);
   delete a2d.pointers[e.pointerId];
   var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
   var endedOp=a2d.op;
+  /* Plain click on a locked layer (pan that barely moved) → unlock + keep selected. */
+  if (endedOp==='pan' && a2d.start && a2d.start.lockedLayer){
+    var _mv=Math.hypot(spUp.x-a2d.start.sp.x, spUp.y-a2d.start.sp.y);
+    if (_mv < 6*(a2d.dpr||1)){ a2d.start.lockedLayer.locked=false; a2d.sel=a2d.start.lockedLayer; if(typeof renderLayersList==='function') renderLayersList(); }
+  }
   var wasEdit=(a2d.op==='move'||a2d.op==='rotate'||(a2d.op&&(a2d.op.indexOf('sc-')===0||a2d.op.indexOf('cr-')===0)));
   var n=Object.keys(a2d.pointers).length;
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
-  if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; }   /* exit fast-drag → next redraw is full quality */
+  if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; a2d._rect=null; }   /* exit fast-drag → next redraw is full quality */
   /* NOTE: crop is kept live (reversible) — drag the crop handles back out to un-crop / Ctrl-Z undoes it. */
   /* (clicking an empty face no longer opens a colour bar — recolour is only via a label's colour wheel) */
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
@@ -10891,8 +10915,10 @@ function _bakeCrop(L){
   L.cropBoxL=L.cropBoxR=L.cropBoxT=L.cropBoxB=0;
 }
 function _aWheel(e){ e.preventDefault(); var sp=_evPos(e), aPt=_s2a(sp.x,sp.y), f=Math.exp(-e.deltaY*0.0015), nz=Math.max(0.05,Math.min(20,a2d.zoom*f)); a2d.zoom=nz; a2d.panX=sp.x-aPt.x*nz; a2d.panY=sp.y-aPt.y*nz; }
-function _a2dApply(){ var now=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now(); if (now-a2d.lastDraw>33){ a2d.lastDraw=now; if (typeof drawBagTexture==='function') drawBagTexture(); } }
-function atlas2dStartLoop(){ if (a2d.raf) return; var loop=function(){ if (viewMode!=='2d'){ a2d.raf=0; return; } atlas2dRender(); a2d.raf=requestAnimationFrame(loop); }; a2d.raf=requestAnimationFrame(loop); }
+/* Mark the atlas dirty; the actual re-bake is coalesced to one per animation frame in the
+   2D render loop (so a burst of pointermoves causes at most one bake per displayed frame). */
+function _a2dApply(){ a2d._bakeDirty = true; }
+function atlas2dStartLoop(){ if (a2d.raf) return; var loop=function(){ if (viewMode!=='2d'){ a2d.raf=0; return; } if (a2d._bakeDirty){ a2d._bakeDirty=false; if (typeof drawBagTexture==='function') drawBagTexture(); } atlas2dRender(); a2d.raf=requestAnimationFrame(loop); }; a2d.raf=requestAnimationFrame(loop); }
 function atlas2dStopLoop(){ if (a2d.raf) cancelAnimationFrame(a2d.raf); a2d.raf=0; }
 /* ── Contextual layer toolbar (floats under the selected layer in the 2D editor) ── */
 var _ctxBarFor = null;
@@ -11061,9 +11087,26 @@ function atlas2dRender(){
   var _bd = (bagCleanCanvas && bagCleanCanvas.width) ? bagCleanCanvas : bagTexCanvas;   /* clean (no finish) for the editor */
   if (typeof _bd!=='undefined' && _bd){
     ctx.imageSmoothingEnabled=true;
-    ctx.filter = 'brightness(' + A2D.previewBrightness + ') saturate(' + A2D.previewSaturate + ') contrast(' + A2D.previewContrast + ')';
-    try{ var _w=_bd.width; var o0=_a2s(0,0),o1=_a2s(_w,_w); ctx.drawImage(_bd,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); }catch(_){}
-    ctx.filter = 'none';
+    var _fstr = 'brightness(' + A2D.previewBrightness + ') saturate(' + A2D.previewSaturate + ') contrast(' + A2D.previewContrast + ')';
+    try{
+      var _w=_bd.width, o0=_a2s(0,0), o1=_a2s(_w,_w);
+      if (_a2dDragging){
+        /* mid-drag: the bag changes every frame, so filter the scaled blit directly (caching
+           would add an extra full-size pass). */
+        ctx.filter=_fstr; ctx.drawImage(_bd,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y); ctx.filter='none';
+      } else {
+        /* idle: pre-bake the filtered bag once and blit it filter-free each frame (a CSS
+           filter on a 2048² drawImage every frame is expensive). */
+        if (!_filteredBag) _filteredBag=document.createElement('canvas');
+        if (_filteredBag.width!==_w){ _filteredBag.width=_filteredBag.height=_w; _filteredBagKey=''; }
+        if (_filteredBagDirty || _filteredBagKey!==_fstr){
+          var fctx=_filteredBag.getContext('2d'); fctx.setTransform(1,0,0,1,0,0); fctx.clearRect(0,0,_w,_w);
+          fctx.filter=_fstr; fctx.drawImage(_bd,0,0); fctx.filter='none';
+          _filteredBagKey=_fstr; _filteredBagDirty=false;
+        }
+        ctx.drawImage(_filteredBag,0,0,_w,_w,o0.x,o0.y,o1.x-o0.x,o1.y-o0.y);
+      }
+    }catch(_){}
   }
   /* off-island overlay: re-cover everything OUTSIDE the UV islands with the editor
      background (white+grid shows through) at (1 - offIslandOpacity), so any layer dragged
