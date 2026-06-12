@@ -1698,7 +1698,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           <span data-en="Back" data-ar="رجوع">Back</span>
         </button>
-        <span class="cstep-counter" id="cstep-counter">1 / 6</span>
+        <span class="cstep-counter" id="cstep-counter">1 / 3</span>
         <button class="cstep-btn cstep-next" id="cstep-next" onclick="configStepNext()">
           <span id="cstep-next-label" data-en="Next" data-ar="التالي">Next</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1707,11 +1707,8 @@
       <div class="cstep-nav" id="cstep-nav">
         <div class="cstep-pills" id="cstep-pills">
           <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Start" data-ar="ابدأ">Start</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Artwork" data-ar="التصميم">Artwork</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Design" data-ar="التصميم">Design</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
     </div>
@@ -1738,8 +1735,8 @@
     </div>
 
     <!-- Bag Artwork ─────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="5">
-      <label class="cl"><span data-en="Artwork" data-ar="التصميم">Artwork</span></label>
+    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="2">
+      <label class="cl"><span data-en="Design" data-ar="التصميم">Design</span></label>
       <!-- Layers panel -->
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
       <div id="artwork-panel-layers">
@@ -1774,7 +1771,7 @@
     </div>
 
     <!-- Bag Exterior -->
-    <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="2">
+    <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="0" style="display:none">
       <label class="cl"><span data-en="Exterior" data-ar="الخارج">Exterior</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -1835,7 +1832,7 @@
     </div>
 
     <!-- Bag Interior -->
-    <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="3">
+    <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="0" style="display:none">
       <label class="cl"><span data-en="Interior" data-ar="الداخل">Interior</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -1895,7 +1892,7 @@
     </div>
 
     <!-- Handles -->
-    <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="4">
+    <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="0" style="display:none">
       <label class="cl"><span data-en="Handles" data-ar="المقابض">Handles</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -2025,7 +2022,7 @@
 
     <!-- Pricing Summary ────────────────── -->
     <!-- Review step (7): full summary of choices; the price breakdown below is always shown -->
-    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="6">
+    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="3">
       <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
       <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
       <div id="review-summary"></div>
@@ -10073,17 +10070,15 @@ document.addEventListener('imprint:countrychange', function() {
 
 var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
 function applyStepCamera(n){
-  /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Rivets, 6 Artwork */
-  var artwork = (n === 5);
+  /* steps: 1 Start, 2 Design (all colour/finish/artwork in the 2D editor), 3 Review */
+  var artwork = (n === 2);
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
-  if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
-var CONFIG_STEP_COUNT = 6;
+var CONFIG_STEP_COUNT = 3;
 var currentConfigStep = 1;
 /* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
 var _uiSoundOn = true, _audioCtx = null;
@@ -10143,7 +10138,7 @@ document.addEventListener('pointerout', function(e){
    When the user lands on a part's step, that part idle-cycles through the hue
    spectrum to signal what they're editing — until they pick a colour or leave
    the step. Purely visual; never writes to saved BAG state. */
-var STEP_PART = { 2:'exterior', 3:'interior', 4:'ribbon' };
+var STEP_PART = { };   /* colour/finish hue-guide steps removed — all done in the 2D editor */
 var _partTouched = {}, _suppressTouch = false;
 /* Wayfinding pulse: when you land on a part's step, that part fades the highlight
    colour (default red) in and out between an opacity min and max, to signal what
@@ -10239,7 +10234,8 @@ var A2D = {
   showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
-            pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0, hoverL:null };
+            pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0, hoverL:null,
+            _subReveal:{} };   /* region → true once its colour/finish is changed (reveals the per-face sub-labels) */
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
 var _offIslandCv = null;    /* cached canvas for the off-island fade overlay */
 var _faceHideCv = null;     /* cached canvas for per-face layer hide (destination-out) */
@@ -10415,10 +10411,7 @@ function _aDown(e){
     if (ui.type==='finish'){ a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=null; if(typeof _showFinishBar==='function') _showFinishBar(ui.region, sp); return; }
     a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=ui.target; _showFaceBar(ui.target, sp); return;
   }
-  /* clicked a face/region/handles LABEL (stays on top of everything) → open its colour bar
-     instead of selecting whatever layer is underneath. */
-  var lt=(typeof _hitLabel==='function')?_hitLabel(sp):null;
-  if (lt){ a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=lt; _showFaceBar(lt, sp); return; }
+  /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
   if (L){ a2d.sel=L; a2d.op='move'; _a2dDragging=true; a2d.start={ sp:sp, posU:L.posU, posV:L.posV }; if(a2d.canvas) a2d.canvas.style.cursor='grabbing'; }
   else { a2d.sel=null; a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY }; var ov=document.getElementById('atlas2d'); if(ov) ov.classList.add('dragging'); }
@@ -10534,10 +10527,7 @@ function _aUp(e){
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
   if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; }   /* exit fast-drag → next redraw is full quality */
   /* NOTE: crop is kept live (reversible) — drag the crop handles back out to un-crop / Ctrl-Z undoes it. */
-  /* a CLICK (not a drag) on empty canvas inside a face → show the face colour bar */
-  if (a2d.op===null && endedOp==='pan' && a2d.start && a2d.start.sp){
-    var _up=_evPos(e); if (Math.hypot(_up.x-a2d.start.sp.x,_up.y-a2d.start.sp.y) < 5*(a2d.dpr||1)) _faceClick(_up);
-  }
+  /* (clicking an empty face no longer opens a colour bar — recolour is only via a label's colour wheel) */
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
 }
 /* Bake a finished crop INTO the layer: move the pivot (posU/posV) to the cropped box center
@@ -10651,9 +10641,9 @@ function _fbRegionKey(t){ return t.kind==='handles'?'ribbon':t.kind==='rivets'?'
 function _fbLabel(t, ar){
   if(t.kind==='handles') return ar?'المقابض':'Handles';
   if(t.kind==='rivets')  return ar?'البرشام':'Rivets';
-  var rn=ar?(t.region==='exterior'?'الخارج':'الداخل'):(t.region==='exterior'?'Exterior':'Interior');
+  var rn=ar?(t.region==='exterior'?'خارج الكيس':'داخل الكيس'):(t.region==='exterior'?'Exterior':'Interior');
   if(t.kind==='region') return rn;
-  var fm=ar?{front:'أمامي',back:'خلفي',left:'يسار',right:'يمين',base:'قاعدة'}:{front:'Front',back:'Back',left:'Left',right:'Right',base:'Base'};
+  var fm=ar?{front:'أمام',back:'خلف',left:'يسار',right:'يمين',base:'تحت'}:{front:'Front',back:'Back',left:'Left',right:'Right',base:'Base'};
   return rn+' · '+(fm[t.face]||t.face);
 }
 function _showFaceBar(t, sp){
@@ -10680,7 +10670,7 @@ function _setFaceColor(hex){
     var pre={exterior:'ext',interior:'int',ribbon:'rib',rivet:'riv'}[r], he=document.getElementById('bag-'+pre+'-hslider'); if(he&&typeof hexToHSV==='function'){var hh=hexToHSV(hex).h; he.value=hh; if(typeof renderBagSwatches==='function')renderBagSwatches(r,hh,hex);} if(applyFn) applyFn(); else if(typeof drawBagTexture==='function')drawBagTexture(); }
   if(t.kind==='handles') _whole('ribbon', function(){ if(typeof applyRibbonColor==='function')applyRibbonColor(); });
   else if(t.kind==='rivets') _whole('rivet', function(){ if(typeof applyRivetColor==='function')applyRivetColor(); });
-  else if(t.kind==='region'){ BAG[t.region].faceColors={}; _whole(t.region, null); }   /* global recolour overwrites every face */
+  else if(t.kind==='region'){ BAG[t.region].faceColors={}; a2d._subReveal[t.region]=true; _whole(t.region, null); }   /* global recolour overwrites every face + reveals its sub-labels */
   else { var rg=t.region; if(typeof _markTouched==='function')_markTouched(rg); BAG[rg].faceColors=BAG[rg].faceColors||{}; BAG[rg].faceColors[t.face]=hex; if(typeof drawBagTexture==='function')drawBagTexture(); }
 }
 /* Finish picker bar for the Exterior/Interior labels — applies a global material finish. */
@@ -10694,11 +10684,11 @@ function _finishSwatchSVG(key){
   }[key] || '#9a9aa0';
   return '<span style="width:18px;height:18px;border-radius:50%;background:'+bg+';border:1px solid var(--imp-border);display:block;"></span>';
 }
-function _setFaceFinish(region, key){ if(typeof applyBagFinish==='function') applyBagFinish(region, key); _hideFaceBar(); }
+function _setFaceFinish(region, key){ if(typeof applyBagFinish==='function') applyBagFinish(region, key); a2d._subReveal[region]=true; _hideFaceBar(); }
 function _showFinishBar(region, sp){
   var bar=document.getElementById('a2d-facebar'); if(!bar) return;
   var ar=(typeof getLang==='function'&&getLang()==='ar');
-  var rn=ar?(region==='exterior'?'الخارج':'الداخل'):(region==='exterior'?'Exterior':'Interior');
+  var rn=ar?(region==='exterior'?'خارج الكيس':'داخل الكيس'):(region==='exterior'?'Exterior':'Interior');
   var cur=(BAG[region]&&BAG[region].finish)||'softtouch';
   var fins=ar?[['gloss','لامع'],['matte','مطفّأ'],['softtouch','ناعم'],['kraft','كرافت'],['foil','معدني']]
              :[['gloss','Gloss'],['matte','Matte'],['softtouch','Soft'],['kraft','Kraft'],['foil','Foil']];
@@ -10819,7 +10809,7 @@ function atlas2dRender(){
   /* 8. upright labels (normal screen space). Arabic when the site language is Arabic.
      A stroke (outline) is drawn under the fill for contrast (testing-tunable). */
   var _arL = (typeof getLang==='function' && getLang()==='ar');
-  var GL = _arL ? {Exterior:'الخارج',Interior:'الداخل',Handles:'المقابض',Rivets:'البرشام'}
+  var GL = _arL ? {Exterior:'خارج الكيس',Interior:'داخل الكيس',Handles:'المقابض',Rivets:'البرشام'}
                 : {Exterior:'Exterior',Interior:'Interior',Handles:'Handles',Rivets:'Rivets'};
   var labelDefs = [ {bb:uv.exterior,label:GL.Exterior,target:{kind:'region',region:'exterior'}}, {bb:uv.interior,label:GL.Interior,target:{kind:'region',region:'interior'}} ];
   /* Handles label only when the handle islands are shown in the 2D editor. */
@@ -10895,7 +10885,7 @@ function atlas2dRender(){
     var lx=px+padX;
     ctx.fillStyle=_dark?'#f2f2f5':'#1c1c1e';
     ctx.fillText(up, lx, cy+fp*0.02);
-    a2d._labelHits.push({x0:px, x1:lx+tw+gTW*0.45, y0:py, y1:py+ph, target:recolorTarget});   /* tap the text → recolour */
+    /* NOTE: tapping the label text no longer recolours — recolour is only via the colour wheel. */
     lx += tw + gTW + rW;
     _drawRecolorBtn(lx, cy, rW);
     _recUiHit(lx, cy, rW+2*D, {type:'recolor', target:recolorTarget});
@@ -10918,11 +10908,12 @@ function atlas2dRender(){
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB populated
      BAG_FACES. Pill centred inside each face; position (top/bottom/center) testing-tunable. */
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
-    var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
+    var FN = _arL ? {front:'أمام', back:'خلف', left:'يسار', right:'يمين', base:'تحت'}
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
     var _subFP=Math.max(7,A2D.subLabelSize||13)*D;
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
+      if(!(a2d._subReveal && a2d._subReveal[grp])) return;   /* sub-labels hidden until the parent's colour/finish is changed */
       var faces=BAG_FACES[grp]||{};
       Object.keys(faces).forEach(function(f){
         var bb=faces[f]; if(!bb) return;
@@ -10986,7 +10977,7 @@ function goConfigStep(n) {
   if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
   applyStepCamera(n);
   if (typeof startHueGuide === 'function') startHueGuide(STEP_PART[n] || null);
-  if (n === 6 && typeof renderReviewSummary === 'function') renderReviewSummary();
+  if (n === 3 && typeof renderReviewSummary === 'function') renderReviewSummary();
 }
 function configStepNext() { goConfigStep(currentConfigStep + 1); }
 
