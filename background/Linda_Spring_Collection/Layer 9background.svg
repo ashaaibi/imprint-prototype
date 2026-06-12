@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 357.03 357.03">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #b4b6da;
+      }
+
+      .cls-3 {
+        fill: #fdcb11;
+      }
+
+      .cls-4 {
+        fill: url(#New_Pattern_2);
+      }
+
+      .cls-5 {
+        fill: #facee2;
+      }
+
+      .cls-6 {
+        fill: #fff;
+      }
+
+      .cls-7 {
+        fill: #ffe8ed;
+      }
+
+      .cls-8 {
+        fill: #b9d5ea;
+      }
+
+      .cls-9 {
+        fill: #cd9eca;
+      }
+
+      .cls-10 {
+        fill: #ff7d9a;
+      }
+
+      .cls-11 {
+        fill: #ffaeae;
+      }
+
+      .cls-12 {
+        fill: #a8d6d0;
+      }
+
+      .cls-13 {
+        fill: #ffe280;
+      }
+
+      .cls-14 {
+        fill: #f9a77a;
+      }
+
+      .cls-15 {
+        fill: #ffd4cb;
+      }
+    </style>
+    <pattern id="New_Pattern_2" data-name="New Pattern 2" x="0" y="0" width="1200" height="1200" patternTransform="translate(-6405.8 -4438.8) scale(.15)" patternUnits="userSpaceOnUse" viewBox="0 0 1200 1200">
+      <g>
+        <rect class="cls-1" x="0" width="1200" height="1200"/>
+        <circle class="cls-11" cx="351.51" cy="1249.98" r="70.79" transform="translate(-780.91 614.66) rotate(-45)"/>
+        <g>
+          <circle class="cls-10" cx="1172.04" cy="496.11" r="70.79"/>
+          <circle class="cls-9" cx="1242.82" cy="153.43" r="70.79" transform="translate(255.52 923.75) rotate(-45)"/>
+          <circle class="cls-12" cx="1222.82" cy="751.54" r="70.79" transform="translate(439.14 1954.02) rotate(-88.48)"/>
+        </g>
+        <g>
+          <circle class="cls-6" cx="550.12" cy="1102.47" r="70.79" transform="translate(-618.44 711.9) rotate(-45)"/>
+          <circle class="cls-6" cx="1146.83" cy="1012.8" r="70.79" transform="translate(-202.61 291.7) rotate(-13.33)"/>
+          <circle class="cls-6" cx="911.2" cy="496.11" r="70.79"/>
+          <circle class="cls-10" cx="806.6" cy="822.33" r="70.79"/>
+          <circle class="cls-10" cx="-27.96" cy="496.11" r="70.79"/>
+          <circle class="cls-15" cx="823.38" cy="1049.31" r="70.79" transform="translate(-500.81 889.55) rotate(-45)"/>
+          <circle class="cls-3" cx="1019" cy="733.65" r="70.79"/>
+          <circle class="cls-13" cx="159.32" cy="1154.38" r="70.79"/>
+          <circle class="cls-9" cx="42.82" cy="153.43" r="70.79" transform="translate(-95.95 75.22) rotate(-45)"/>
+          <circle class="cls-2" cx="190.96" cy="893.12" r="70.79"/>
+          <circle class="cls-5" cx="724.25" cy="98.39" r="70.79"/>
+          <circle class="cls-12" cx="22.82" cy="751.54" r="70.79" transform="translate(-729.06 754.79) rotate(-88.51)"/>
+          <circle class="cls-11" cx="351.51" cy="49.98" r="70.79" transform="translate(171.99 356.29) rotate(-67.72)"/>
+          <circle class="cls-12" cx="964.97" cy="1259.44" r="70.79" transform="translate(-236.54 223.24) rotate(-11.77)"/>
+          <circle class="cls-8" cx="1052.77" cy="269.84" r="70.79"/>
+          <circle class="cls-14" cx="448.39" cy="874.1" r="70.79"/>
+          <circle class="cls-9" cx="724.25" cy="609.97" r="70.79"/>
+          <circle class="cls-6" cx="108.58" cy="249.73" r="70.79" transform="translate(-144.78 149.92) rotate(-45)"/>
+          <circle class="cls-5" cx="529.21" cy="804.44" r="70.79"/>
+          <circle class="cls-15" cx="249.68" cy="600" r="70.79" transform="translate(-351.13 352.29) rotate(-45)"/>
+          <circle class="cls-11" cx="735.81" cy="320.51" r="70.79" transform="translate(-40.27 115.95) rotate(-8.77)"/>
+          <circle class="cls-8" cx="493.08" cy="539.18" r="70.79"/>
+          <circle class="cls-12" cx="529.21" cy="249.73" r="70.79"/>
+          <circle class="cls-3" cx="300.89" cy="340.62" r="70.79"/>
+        </g>
+        <circle class="cls-6" cx="-53.17" cy="1012.8" r="70.79" transform="translate(-731.73 259.05) rotate(-45)"/>
+        <g>
+          <circle class="cls-13" cx="159.32" cy="-45.62" r="70.79"/>
+          <circle class="cls-12" cx="964.97" cy="59.44" r="70.79" transform="translate(5.59 179.01) rotate(-10.63)"/>
+        </g>
+      </g>
+    </pattern>
+  </defs>
+  <g id="Layer_9" data-name="Layer 9">
+    <g>
+      <rect class="cls-7" width="357.03" height="357.03"/>
+      <rect class="cls-4" width="357.03" height="357.03"/>
+    </g>
+  </g>
+</svg>
