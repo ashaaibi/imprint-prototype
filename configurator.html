@@ -4334,7 +4334,7 @@ var SOCIAL_ICONS = {
 var SOCIAL_PLACEHOLDER = {
   instagram:'@username', x:'@username', tiktok:'@username', snapchat:'@username',
   telegram:'@username', youtube:'@yourchannel',
-  whatsapp:'+968 9123 4567', phone:'+968 9123 4567',
+  whatsapp:'9123 4567', phone:'9123 4567',
   email:'hello@brand.com', website:'www.brand.com',
   facebook:'fb.com/yourpage', linkedin:'in/yourname'
 };
@@ -6246,7 +6246,7 @@ function updateLayerEditorItem(L){
 function resetLayerTransform(id){
   var L = getLayer(id); if (!L) return;
   L.posU = ED_U0; L.posV = ED_V0; L.rotation = 0;
-  if (L.kind === 'text') L.fontSize = 130; else L.scale = (L.tiled ? 12 : 18);
+  if (L.kind === 'text') L.fontSize = 45; else L.scale = (L.tiled ? 12 : 18);
   renderLayersList(); drawBagTexture();
 }
 var _lyrEdDrag = null;
@@ -6769,7 +6769,7 @@ function addLayer(kind) {
           color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else if (kind === 'text') {
-    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:130, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
+    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:45, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
           color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
@@ -11246,7 +11246,7 @@ function atlas2dRender(){
     var _subFP=Math.max(7,A2D.subLabelSize||13)*D;
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
-      var _showWheel=!!(a2d._subReveal && a2d._subReveal[grp]);   /* sub-label recolour wheel appears once the parent's colour is picked */
+      var _showWheel=true;   /* per-face recolour wheel always available (no longer gated on the parent colour) */
       var faces=BAG_FACES[grp]||{};
       Object.keys(faces).forEach(function(f){
         var bb=faces[f]; if(!bb) return;
