@@ -4319,7 +4319,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
           var px = cc * cw, py = rr * ch, _flip = 1, _rot = 0, _xf = false;
           if (_stack === 'diagonal') { if (rr & 1) px += cw / 2; }
           else if (_stack === 'brick') { if (cc & 1) py += ch / 2; }
-          else if (_stack === 'wave') { px += Math.sin(rr * 0.9) * cw * 0.5; }
+          else if (_stack === 'wave') { py += Math.sin(cc * 0.7) * ch * 0.55; }
           else if (_stack === 'mirror') { if ((rr + cc) & 1) { _flip = -1; _xf = true; } }
           else if (_stack === 'scatter') { var _hs = Math.sin(rr * 12.9898 + cc * 78.233) * 43758.5453; _hs -= Math.floor(_hs); _rot = _hs * Math.PI * 2; _xf = true; }
           else if (_stack === 'diamond') { _rot = Math.PI / 4; _xf = true; }
@@ -7184,8 +7184,11 @@ function _positionCropOverlay() {
   if (cutout.eyedropping || !cutout.crop) { box.style.display = 'none'; return; }   /* hide so eyedropper clicks reach the canvas */
   var r = _cropCanvasRect(), c = cutout.crop;
   box.style.display = 'block';
-  box.style.left = (r.l + c.x * r.w) + 'px'; box.style.top = (r.t + c.y * r.h) + 'px';
-  box.style.width = (c.w * r.w) + 'px'; box.style.height = (c.h * r.h) + 'px';
+  /* outset the box so its stroke + handles sit OUTSIDE the crop edge (Photoshop "outside" stroke),
+     not on the image pixels. Purely cosmetic — the crop rect (cutout.crop) is unchanged. */
+  var M = 4;
+  box.style.left = (r.l + c.x * r.w - M) + 'px'; box.style.top = (r.t + c.y * r.h - M) + 'px';
+  box.style.width = (c.w * r.w + 2 * M) + 'px'; box.style.height = (c.h * r.h + 2 * M) + 'px';
 }
 var _cropDrag = null;
 function _initCropBox() {
@@ -10706,7 +10709,7 @@ function _finishSwatchSVG(key){
   }[key] || '#9a9aa0';
   return '<span style="width:18px;height:18px;border-radius:50%;background:'+bg+';border:1px solid var(--imp-border);display:block;"></span>';
 }
-function _setFaceFinish(region, key){ if(typeof applyBagFinish==='function') applyBagFinish(region, key); a2d._subReveal[region]=true; _hideFaceBar(); }
+function _setFaceFinish(region, key){ if(typeof applyBagFinish==='function') applyBagFinish(region, key); _hideFaceBar(); }
 function _showFinishBar(region, sp){
   var bar=document.getElementById('a2d-facebar'); if(!bar) return;
   var ar=(typeof getLang==='function'&&getLang()==='ar');
@@ -10885,7 +10888,8 @@ function atlas2dRender(){
   }
   /* draw a "Live Preview"-style pill containing: LABEL · recolour wheel · (optional) visibility
      toggle — centred at (cx,cy). Records the text as a label hit and the wheel/toggle as UI hits. */
-  function _drawLabelPill(cx, cy, text, fp, recolorTarget, toggleHit, checked, finishHit){
+  function _drawLabelPill(cx, cy, text, fp, recolorTarget, toggleHit, checked, finishHit, showRecolor){
+    if(showRecolor==null) showRecolor=true;
     var up=(''+text).toUpperCase();
     ctx.save();
     if('letterSpacing' in ctx) ctx.letterSpacing=(fp*0.045)+'px';
@@ -10893,8 +10897,8 @@ function atlas2dRender(){
     ctx.textAlign='left'; ctx.textBaseline='middle';
     var tw=ctx.measureText(up).width;
     var rW=fp*0.46, rT=fp*0.44, rF=fp*0.46, gTW=fp*0.46, gWT=fp*0.46, padX=fp*0.6, padY=fp*0.34;
-    var contentH=Math.max(fp*0.74, 2*rW, toggleHit?2*rT:0, finishHit?2*rF:0), ph=contentH+2*padY;
-    var pw=padX*2 + tw + gTW + 2*rW + (toggleHit?(gWT+2*rT):0) + (finishHit?(gWT+2*rF):0);
+    var contentH=Math.max(fp*0.74, showRecolor?2*rW:0, toggleHit?2*rT:0, finishHit?2*rF:0), ph=contentH+2*padY;
+    var pw=padX*2 + tw + (showRecolor?(gTW+2*rW):0) + (toggleHit?(gWT+2*rT):0) + (finishHit?(gWT+2*rF):0);
     var px=cx-pw/2, py=cy-ph/2, rr=ph/2;
     ctx.beginPath();
     if(ctx.roundRect) ctx.roundRect(px,py,pw,ph,rr);
@@ -10908,10 +10912,8 @@ function atlas2dRender(){
     ctx.fillStyle=_dark?'#f2f2f5':'#1c1c1e';
     ctx.fillText(up, lx, cy+fp*0.02);
     /* NOTE: tapping the label text no longer recolours — recolour is only via the colour wheel. */
-    lx += tw + gTW + rW;
-    _drawRecolorBtn(lx, cy, rW);
-    _recUiHit(lx, cy, rW+2*D, {type:'recolor', target:recolorTarget});
-    lx += rW;
+    lx += tw;
+    if(showRecolor){ lx += gTW + rW; _drawRecolorBtn(lx, cy, rW); _recUiHit(lx, cy, rW+2*D, {type:'recolor', target:recolorTarget}); lx += rW; }
     if(toggleHit){ lx += gWT + rT; _drawToggle(lx, cy, rT, checked); _recUiHit(lx, cy, rT+2*D, toggleHit); lx += rT; }
     if(finishHit){ lx += gWT + rF; _drawFinishIcon(lx, cy, rF); _recUiHit(lx, cy, rF+2*D, finishHit); lx += rF; }
     if('letterSpacing' in ctx) ctx.letterSpacing='0px';
@@ -10935,7 +10937,7 @@ function atlas2dRender(){
     var _subFP=Math.max(7,A2D.subLabelSize||13)*D;
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
-      if(!(a2d._subReveal && a2d._subReveal[grp])) return;   /* sub-labels hidden until the parent's colour/finish is changed */
+      var _showWheel=!!(a2d._subReveal && a2d._subReveal[grp]);   /* sub-label recolour wheel appears once the parent's colour is picked */
       var faces=BAG_FACES[grp]||{};
       Object.keys(faces).forEach(function(f){
         var bb=faces[f]; if(!bb) return;
@@ -10947,7 +10949,7 @@ function atlas2dRender(){
         var p=_a2s(ax, ay), dy=c.height - p.y + off, _txt=FN[f]||f;
         var _tog=_selL?{type:'facetoggle', region:grp, face:f}:null;
         var _checked=!(_selL && _selL.faceHide && _selL.faceHide[grp+'_'+f]);   /* default: shown */
-        _drawLabelPill(p.x, dy, _txt, _subFP, {kind:'face',region:grp,face:f}, _tog, _checked);
+        _drawLabelPill(p.x, dy, _txt, _subFP, {kind:'face',region:grp,face:f}, _tog, _checked, null, _showWheel);
       });
     });
   }
