@@ -1753,6 +1753,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
                 <span data-en="Text" data-ar="نص">Text</span>
               </button>
+              <button class="add-layer-item" onclick="addLayer('logo')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span data-en="Logo" data-ar="شعار">Logo</span>
+              </button>
               <button class="add-layer-item" onclick="addLayer('sticker')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 <span data-en="Graphic" data-ar="رسم">Graphic</span>
@@ -2017,9 +2021,6 @@
         </button>
       </div>
       <label style="display:block;margin-top:10px;font-size:11px;color:var(--imp-fg-2);"><span data-en="Custom quantity" data-ar="كمية مخصصة">Custom quantity</span><br><input id="cs-qty" type="number" min="1" step="1" placeholder="e.g. 750" oninput="applyCustomQty()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
-      <div class="vol-msg" id="vmsg-bag">
-        Order <strong>1,000</strong> and pay <strong>AED 3.50 / unit</strong> — save <strong>41%</strong> vs. 200 units.
-      </div>
     </div>
 
     <!-- Pricing Summary ────────────────── -->
@@ -2282,6 +2283,11 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">2D editor resolution</span><span class="slider-val" id="a2d-editorRes-val">1.00×</span></div>
         <input type="range" class="test-slider" min="0.5" max="4" step="0.25" value="1" oninput="onEditorRes(this.value)"></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Supersampling for the flat 2D editor (× device pixel ratio). Higher = crisper labels &amp; artwork, heavier to render.</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Emboss depth</span><span class="slider-val" id="emboss-emboss-val">2.0</span></div>
+        <input type="range" class="test-slider" min="0" max="3" step="0.1" value="2" oninput="onEmbossDepth('emboss',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Deboss depth</span><span class="slider-val" id="emboss-deboss-val">2.0</span></div>
+        <input type="range" class="test-slider" min="0" max="3" step="0.1" value="2" oninput="onEmbossDepth('deboss',this.value)"></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Depth used by each layer's Emboss / Deboss buttons (applies live to layers already set).</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.1</span></div>
         <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.1" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
@@ -4592,7 +4598,8 @@ function buildArtworkMaskCanvas(L) {
   return mc;
 }
 
-var EXTRUDE_MAX = 3.0; /* emboss/deboss slider range is -3..3 */
+var EXTRUDE_MAX = 3.0; /* emboss/deboss extrude clamp range is -3..3 */
+var EMBOSS_DEPTH = 2.0, DEBOSS_DEPTH = 2.0; /* magnitudes used by the Emboss/Deboss buttons (tunable in Testing) */
 
 function overlayArtworkBump() {
   if (!bagBumpCanvas || !bagBumpTex || !bagMeshRef) return;
@@ -5662,7 +5669,7 @@ function escapeHTML(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function layerAutoName(L) {
-  if (L.kind === 'logo') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : (L.isDefault ? 'Logo' : 'Graphic');
+  if (L.kind === 'logo') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : 'Logo';
   if (L.kind === 'sticker') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : (L.tiled ? 'Background' : 'Graphic');
   if (L.kind === 'text') {
     var c = (L.content || '').replace(/\n/g, ' ').trim();
@@ -6328,7 +6335,7 @@ function buildLayerBodyHTML(L) {
 
   var btnStyle = 'font-size:10px;color:var(--secondary);background:none;border:1px solid var(--imp-border);border-radius:5px;cursor:pointer;padding:4px 8px;';
   var imageKind = (L.kind === 'logo' || L.kind === 'sticker');
-  var kindLabel = L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Graphic') : (L.kind === 'text' ? 'Text' : 'Graphic');
+  var kindLabel = L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Graphic') : (L.kind === 'text' ? 'Text' : L.kind === 'logo' ? 'Logo' : 'Graphic');
   if (imageKind) {
     if (L.img) {
       h += '<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--imp-border);border-radius:8px;padding:10px;margin:14px 0 12px;">' +
@@ -6385,7 +6392,7 @@ function buildLayerBodyHTML(L) {
   if (L.kind === 'sticker') {
     h += stickerColorSectionHTML(L);
   } else {
-    var _ccl = (L.kind === 'logo' ? 'Graphic Color' : 'Text Color');
+    var _ccl = (L.kind === 'logo' ? 'Logo Color' : 'Text Color');
     h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px"' + _arAttr(_ccl) + '>' + _ccl + '</div>' +
       '<div class="hue-slider-wrap"><input type="range" class="hue-slider" id="lyr-' + id + '-hslider" min="0" max="360" value="' + (L.hue || 0) + '" oninput="onLayerHue(' + id + ',this.value)"></div>' +
       '<div class="mono-swatches" id="lyr-' + id + '-swatches"></div>' +
@@ -6402,9 +6409,8 @@ function buildLayerBodyHTML(L) {
       sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
     '</div>' +
     '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
-    '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Extrude') + '>Extrude</span><span class="ctrl-slider-val" id="lyr-' + id + '-extrude-val">' + L.extrude.toFixed(2) + '</span></div>' +
-    '<input type="range" class="test-slider" id="lyr-' + id + '-extrude" min="-3.0" max="3.0" step="0.01" value="' + L.extrude + '" oninput="onLayerExtrude(' + id + ',this.value)"></div>' +
-    '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">Positive = emboss (raised) · Negative = deboss (indented)</div>';
+    _embossSegHTML(id, L) +
+    '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>';
   return h;
 }
 
@@ -6525,6 +6531,30 @@ function onLayerExtrude(id, val) {
   val = parseFloat(val); L.extrude = val;
   var lbl = document.getElementById('lyr-' + id + '-extrude-val'); if (lbl) lbl.textContent = val.toFixed(2);
   rebuildBumpMap(); updatePricing();
+}
+/* Emboss / Deboss as 3 states (none / emboss / deboss) — magnitude comes from the Testing values. */
+function _embossSegHTML(id, L) {
+  var st = (L.extrude > 0) ? 'emboss' : (L.extrude < 0) ? 'deboss' : 'none';
+  var b = 'flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:600;padding:9px 6px;border-radius:7px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);';
+  var on = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.16));color:var(--imp-fg);';
+  function seg(mode, label, ar) {
+    return '<button style="' + b + (st === mode ? on : '') + '" onclick="onLayerEmboss(' + id + ',&#39;' + mode + '&#39;)"><span' + _arAttr(label) + '>' + label + '</span></button>';
+  }
+  return '<div style="display:flex;gap:8px;">' + seg('none', 'None') + seg('emboss', 'Emboss') + seg('deboss', 'Deboss') + '</div>';
+}
+function onLayerEmboss(id, mode) {
+  var L = getLayer(id); if (!L) return;
+  L.extrude = (mode === 'emboss') ? EMBOSS_DEPTH : (mode === 'deboss') ? -DEBOSS_DEPTH : 0;
+  rebuildBumpMap(); updatePricing();
+  if (typeof renderLayersList === 'function') renderLayersList();   /* refresh the active button */
+}
+function onEmbossDepth(which, val) {
+  val = Math.max(0, Math.min(EXTRUDE_MAX, parseFloat(val) || 0));
+  if (which === 'deboss') DEBOSS_DEPTH = val; else EMBOSS_DEPTH = val;
+  var lbl = document.getElementById('emboss-' + which + '-val'); if (lbl) lbl.textContent = val.toFixed(1);
+  /* re-apply to every layer currently using that mode so the change is live */
+  (BAG.artwork.layers || []).forEach(function(L) { if (!L) return; if (L.extrude > 0) L.extrude = EMBOSS_DEPTH; else if (L.extrude < 0) L.extrude = -DEBOSS_DEPTH; });
+  rebuildBumpMap();
 }
 function onLayerPatStack(id, mode) {
   var L = getLayer(id); if (!L) return;
