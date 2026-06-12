@@ -7045,7 +7045,7 @@ function editLayerCutout(id) {
    tolerance threshold and a soft-edge feather. Lives only on graphic layers.
    ════════════════════════════════════════════════════════════════════ */
 var cutout = { layerId: null, fileName: '', srcCanvas: null, previewSrc: null,
-               scale: 1, dispW: 0, dispH: 0, eyedropping: false, isNewUpload: false,
+               scale: 1, dispW: 0, dispH: 0, eyedropping: false, isNewUpload: false, cropActive: false,
                bg: { enabled: false, color: null, tolerance: 15, softness: 15 } };
 
 function _imgToCanvas(img) {
@@ -7141,6 +7141,7 @@ function openCutoutModal(layerId, srcImg, fileName, existingBg, isNew, fromLibra
   /* Crop box — restore the layer's saved crop (or full frame) */
   var _Lc = getLayer(layerId);
   cutout.crop = (_Lc && _Lc.imgCrop) ? { x: _Lc.imgCrop.x, y: _Lc.imgCrop.y, w: _Lc.imgCrop.w, h: _Lc.imgCrop.h } : { x: 0, y: 0, w: 1, h: 1 };
+  cutout.cropActive = !!(_Lc && _Lc.imgCrop);   /* crop only counts once the user drags the box (or a saved crop exists) */
   _initCropBox();
   renderCutoutPreview();
   _positionCropOverlay();
@@ -7204,6 +7205,7 @@ function _initCropBox() {
 }
 function _cropStart(ev, dir) {
   ev.preventDefault(); ev.stopPropagation();
+  cutout.cropActive = true;   /* interacting with the box activates the crop */
   _cropDrag = { dir: dir, sx: ev.clientX, sy: ev.clientY, crop: { x:cutout.crop.x, y:cutout.crop.y, w:cutout.crop.w, h:cutout.crop.h }, r: _cropCanvasRect() };
   window.addEventListener('pointermove', _cropMove);
   window.addEventListener('pointerup', _cropEnd);
@@ -7225,7 +7227,7 @@ function _cropMove(ev) {
   cutout.crop = c; _positionCropOverlay();
 }
 function _cropEnd() { _cropDrag = null; window.removeEventListener('pointermove', _cropMove); window.removeEventListener('pointerup', _cropEnd); }
-function resetCutoutCrop() { cutout.crop = { x: 0, y: 0, w: 1, h: 1 }; _positionCropOverlay(); }
+function resetCutoutCrop() { cutout.crop = { x: 0, y: 0, w: 1, h: 1 }; cutout.cropActive = false; _positionCropOverlay(); }
 function _applyCropToCanvas(src, crop) {
   if (!crop || (crop.x <= 0.0001 && crop.y <= 0.0001 && crop.w >= 0.9999 && crop.h >= 0.9999)) return src;
   var W = src.width, H = src.height;
@@ -7284,11 +7286,12 @@ function applyCutout() {
   var L = getLayer(cutout.layerId);
   if (!L) { cancelCutout(); return; }
   var idForCb = L.id, isNew = cutout.isNewUpload, fileName = cutout.fileName;
-  var srcForCut = _applyCropToCanvas(cutout.srcCanvas, cutout.crop);
+  /* crop only applies if the user actually engaged the crop box (else use the full image) */
+  var srcForCut = cutout.cropActive ? _applyCropToCanvas(cutout.srcCanvas, cutout.crop) : cutout.srcCanvas;
   var processed = processCutoutCanvas(srcForCut, cutout.bg);
   L.bg = { enabled: cutout.bg.enabled, color: cutout.bg.color ? cutout.bg.color.slice() : null,
            tolerance: cutout.bg.tolerance, softness: cutout.bg.softness };
-  L.imgCrop = cutout.crop ? { x: cutout.crop.x, y: cutout.crop.y, w: cutout.crop.w, h: cutout.crop.h } : null;
+  L.imgCrop = (cutout.cropActive && cutout.crop) ? { x: cutout.crop.x, y: cutout.crop.y, w: cutout.crop.w, h: cutout.crop.h } : null;
   if (fileName) L.fileName = fileName;
   document.getElementById('cutout-overlay').classList.remove('open');
   cutout.eyedropping = false; cutout.layerId = null; cutout.srcCanvas = null; cutout.previewSrc = null;
