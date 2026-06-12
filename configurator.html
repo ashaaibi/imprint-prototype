@@ -2283,10 +2283,10 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">2D editor resolution</span><span class="slider-val" id="a2d-editorRes-val">1.00×</span></div>
         <input type="range" class="test-slider" min="0.5" max="4" step="0.25" value="1" oninput="onEditorRes(this.value)"></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Supersampling for the flat 2D editor (× device pixel ratio). Higher = crisper labels &amp; artwork, heavier to render.</div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Emboss depth</span><span class="slider-val" id="emboss-emboss-val">2.0</span></div>
-        <input type="range" class="test-slider" min="0" max="3" step="0.1" value="2" oninput="onEmbossDepth('emboss',this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Deboss depth</span><span class="slider-val" id="emboss-deboss-val">2.0</span></div>
-        <input type="range" class="test-slider" min="0" max="3" step="0.1" value="2" oninput="onEmbossDepth('deboss',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Emboss depth</span><span class="slider-val" id="emboss-emboss-val">1.0</span></div>
+        <input type="range" class="test-slider" min="0" max="3" step="0.1" value="1" oninput="onEmbossDepth('emboss',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Deboss depth</span><span class="slider-val" id="emboss-deboss-val">1.0</span></div>
+        <input type="range" class="test-slider" min="0" max="3" step="0.1" value="1" oninput="onEmbossDepth('deboss',this.value)"></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Depth used by each layer's Emboss / Deboss buttons (applies live to layers already set).</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.1</span></div>
         <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.1" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
@@ -4294,17 +4294,83 @@ function _applyBoxCrop(ctx, L, w, h){
   var cl=L.cropBoxL||0, cr=L.cropBoxR||0, ct=L.cropBoxT||0, cb=L.cropBoxB||0;
   if (cl||cr||ct||cb){ ctx.beginPath(); ctx.rect(-w/2+cl*w, -h/2+cb*h, w*(1-cl-cr), h*(1-ct-cb)); ctx.clip(); }
 }
+/* Tile a ready (already-coloured) cell canvas into the layer's box using L.patStack layout,
+   Density, Gap, Feather, then draw it with the box crop + rotation. Shared by image + text. */
+function _drawTiledCell(ctx, L, cell, cAsp, sref, ms, ue, corr, mode) {
+  var boxW = Math.max(8, sref * (L.scale / 100) * ms);
+  var boxH = Math.max(8, sref * ((L.scaleH != null ? L.scaleH : L.scale) / 100) * ms);
+  var density = Math.max(1, L.density || 6);
+  var tileW = (sref / density), tileH = tileW / cAsp;
+  var _gMin = (typeof A2D !== 'undefined' && A2D.gapMin != null) ? A2D.gapMin : 0;
+  var _gMax = (typeof A2D !== 'undefined' && A2D.gapMax != null) ? A2D.gapMax : 100;
+  var _gReal = _gMin + ((L.gap != null ? L.gap : 0) / 100) * (_gMax - _gMin);
+  var gpx = (_gReal / 100) * tileW;
+  var cw = tileW + gpx, ch = tileH + gpx;
+  var SW = Math.max(1, Math.ceil(boxW)), SH = Math.max(1, Math.ceil(boxH));
+  var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
+  var sx = sc.getContext('2d');
+  if (mode !== 'mask') sx.filter = _layerFilter();
+  var nR = Math.min(400, Math.ceil(SH / ch) + 2), nC = Math.min(400, Math.ceil(SW / cw) + 2);
+  var _stack = L.patStack || 'vertical';
+  for (var rr = -1; rr <= nR; rr++) {
+    for (var cc = -1; cc <= nC; cc++) {
+      var px = cc * cw, py = rr * ch, _flip = 1, _rot = 0, _xf = false;
+      if (_stack === 'diagonal') { if (rr & 1) px += cw / 2; }
+      else if (_stack === 'brick') { if (cc & 1) py += ch / 2; }
+      else if (_stack === 'wave') { py += Math.sin(cc * 0.7) * ch * 0.55; }
+      else if (_stack === 'mirror') { if ((rr + cc) & 1) { _flip = -1; _xf = true; } }
+      else if (_stack === 'scatter') { var _hs = Math.sin(rr * 12.9898 + cc * 78.233) * 43758.5453; _hs -= Math.floor(_hs); _rot = _hs * Math.PI * 2; _xf = true; }
+      else if (_stack === 'diamond') { _rot = Math.PI / 4; _xf = true; }
+      else if (_stack === 'spin') { if ((rr + cc) & 1) { _rot = Math.PI / 2; _xf = true; } }
+      if (_xf) {
+        sx.save();
+        sx.translate(Math.round(px + tileW / 2), Math.round(py + tileH / 2));
+        if (_flip !== 1) sx.scale(_flip, 1);
+        if (_rot) sx.rotate(_rot);
+        sx.drawImage(cell, -tileW / 2, -tileH / 2, tileW, tileH);
+        sx.restore();
+      } else {
+        var _x0 = Math.round(px), _x1 = Math.round(px + tileW);
+        var _y0 = Math.round(py), _y1 = Math.round(py + tileH);
+        sx.drawImage(cell, _x0, _y0, Math.max(1, _x1 - _x0), Math.max(1, _y1 - _y0));
+      }
+    }
+  }
+  sx.filter = 'none';
+  var fpx = ((L.feather || 0) / 100) * (Math.min(SW, SH) * 0.5);
+  if (fpx > 0.5) _featherCanvasEdges(sx, SW, SH, fpx);
+  ctx.save();
+  ctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
+  ctx.rotate(L.rotation * Math.PI / 180);
+  ctx.scale(corr.x, -corr.y);
+  _applyBoxCrop(ctx, L, boxW, boxH);
+  ctx.drawImage(sc, -boxW / 2, -boxH / 2, boxW, boxH);
+  ctx.restore();
+}
+/* Render the layer's text to a standalone cell canvas (colour baked in) so it can be tiled. */
+function _makeTextCell(L, mode) {
+  var lines = (L.content || '').split('\n'); if (!lines.length || !L.content) return null;
+  var fs = 96, c = document.createElement('canvas'), cx = c.getContext('2d');
+  cx.font = layerFontString(L, fs);
+  var maxW = 1; lines.forEach(function (ln) { maxW = Math.max(maxW, cx.measureText(ln).width); });
+  var lineH = fs * 1.25, pad = fs * 0.22;
+  var W = Math.max(1, Math.ceil(maxW + pad * 2)), H = Math.max(1, Math.ceil(lineH * lines.length + pad * 2));
+  c.width = W; c.height = H; cx = c.getContext('2d');
+  cx.font = layerFontString(L, fs);
+  cx.fillStyle = (mode === 'mask') ? '#ffffff' : (L.color || '#111111');
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  var totalH = lineH * (lines.length - 1);
+  lines.forEach(function (ln, i) { cx.fillText(ln, W / 2, H / 2 + i * lineH - totalH / 2); });
+  return { cell: c, cAsp: W / H };
+}
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
   var ue = layerBBox(L);
   var sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : ue.w;  /* scale base: exterior width */
   if (L.kind === 'logo' || L.kind === 'sticker') {
     if (!L.img || !L.img.naturalWidth) return;
-    if (L.kind === 'sticker' && L.tiled) {
-      /* PATTERN: tile the (recolored) image inside a rectangular CROP BOX (the layer's
-         bounding box — moved/resized/rotated in the 2D editor). Density = how many times
-         it repeats across the box; Gap = spacing; Feather softens the box edges. Library
-         patterns stack vertically; uploads use the diagonal half-drop. */
+    if (L.tiled) {
+      /* TILED (any layout): tile the (recolored) image inside the layer's box. */
       var box = _patTrimBox(L); if (!box) return;
       var cell = document.createElement('canvas'); cell.width = box.sw; cell.height = box.sh;
       var cctx = cell.getContext('2d');
@@ -4312,62 +4378,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       if (mode !== 'mask' && L.swatchName !== 'Original' && L.color && L.color.toLowerCase() !== '#ffffff') {
         cctx.globalCompositeOperation = 'source-atop'; cctx.fillStyle = L.color; cctx.fillRect(0, 0, box.sw, box.sh);
       }
-      var cAsp = cell.width / cell.height;
-      var boxW = Math.max(8, sref * (L.scale / 100) * ms);                         /* crop box width  */
-      var boxH = Math.max(8, sref * ((L.scaleH != null ? L.scaleH : L.scale) / 100) * ms);  /* crop box height (independent → non-proportional) */
-      var density = Math.max(1, L.density || 6);
-      var tileW = (sref / density), tileH = tileW / cAsp;   /* tile size fixed → resizing the box CROPS the tiling (density = tile size) */
-      /* user Gap slider is 0–100; remap it onto the testing-defined [gapMin, gapMax] real range
-         (lets the real gap dip slightly negative to close hairline seams without showing it). */
-      var _gMin = (typeof A2D!=='undefined' && A2D.gapMin!=null) ? A2D.gapMin : 0;
-      var _gMax = (typeof A2D!=='undefined' && A2D.gapMax!=null) ? A2D.gapMax : 100;
-      var _gReal = _gMin + ((L.gap != null ? L.gap : 0) / 100) * (_gMax - _gMin);
-      var gpx = (_gReal / 100) * tileW;
-      var cw = tileW + gpx, ch = tileH + gpx;
-      var SW = Math.max(1, Math.ceil(boxW)), SH = Math.max(1, Math.ceil(boxH));
-      var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
-      var sx = sc.getContext('2d');
-      if (mode !== 'mask') sx.filter = _layerFilter();
-      var nR = Math.min(400, Math.ceil(SH / ch) + 2), nC = Math.min(400, Math.ceil(SW / cw) + 2);
-      /* tiling layout: vertical (grid) · diagonal (½-drop rows) · brick (½-drop columns) ·
-         mirror (alternate flip) · scatter (deterministic random rotation, like a tossed motif) */
-      var _stack = L.patStack || 'vertical';
-      for (var rr = -1; rr <= nR; rr++) {
-        for (var cc = -1; cc <= nC; cc++) {
-          var px = cc * cw, py = rr * ch, _flip = 1, _rot = 0, _xf = false;
-          if (_stack === 'diagonal') { if (rr & 1) px += cw / 2; }
-          else if (_stack === 'brick') { if (cc & 1) py += ch / 2; }
-          else if (_stack === 'wave') { py += Math.sin(cc * 0.7) * ch * 0.55; }
-          else if (_stack === 'mirror') { if ((rr + cc) & 1) { _flip = -1; _xf = true; } }
-          else if (_stack === 'scatter') { var _hs = Math.sin(rr * 12.9898 + cc * 78.233) * 43758.5453; _hs -= Math.floor(_hs); _rot = _hs * Math.PI * 2; _xf = true; }
-          else if (_stack === 'diamond') { _rot = Math.PI / 4; _xf = true; }
-          else if (_stack === 'spin') { if ((rr + cc) & 1) { _rot = Math.PI / 2; _xf = true; } }
-          if (_xf) {
-            sx.save();
-            sx.translate(Math.round(px + tileW / 2), Math.round(py + tileH / 2));
-            if (_flip !== 1) sx.scale(_flip, 1);
-            if (_rot) sx.rotate(_rot);
-            sx.drawImage(cell, -tileW / 2, -tileH / 2, tileW, tileH);
-            sx.restore();
-          } else {
-            /* integer-align each tile's edges so neighbours share an exact pixel boundary —
-               kills the sub-pixel anti-aliasing seam seen at gap 0 with fractional tile sizes. */
-            var _x0 = Math.round(px), _x1 = Math.round(px + tileW);
-            var _y0 = Math.round(py), _y1 = Math.round(py + tileH);
-            sx.drawImage(cell, _x0, _y0, Math.max(1, _x1 - _x0), Math.max(1, _y1 - _y0));
-          }
-        }
-      }
-      sx.filter = 'none';
-      var fpx = ((L.feather || 0) / 100) * (Math.min(SW,SH) * 0.5);
-      if (fpx > 0.5) _featherCanvasEdges(sx, SW, SH, fpx);   /* soften the crop edges */
-      ctx.save();
-      ctx.translate((ue.x + ue.w * (L.posU / 100)) * ms, (ue.y + ue.h * (L.posV / 100)) * ms);
-      ctx.rotate(L.rotation * Math.PI / 180);
-      ctx.scale(corr.x, -corr.y);
-      _applyBoxCrop(ctx, L, boxW, boxH);
-      ctx.drawImage(sc, -boxW / 2, -boxH / 2, boxW, boxH);
-      ctx.restore();
+      _drawTiledCell(ctx, L, cell, cell.width / cell.height, sref, ms, ue, corr, mode);
       return;
     }
     var maxW = sref * (L.scale / 100) * ms;
@@ -4397,6 +4408,11 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
     ctx.restore();
   } else if (L.kind === 'text') {
     if (!L.content) return;
+    if (L.tiled) {
+      var _tc = _makeTextCell(L, mode); if (!_tc) return;
+      _drawTiledCell(ctx, L, _tc.cell, _tc.cAsp, sref, ms, ue, corr, mode);
+      return;
+    }
     var cx2 = (ue.x + ue.w * (L.posU / 100)) * ms;
     var cy2 = (ue.y + ue.h * (L.posV / 100)) * ms;
     ctx.save();
@@ -4599,7 +4615,7 @@ function buildArtworkMaskCanvas(L) {
 }
 
 var EXTRUDE_MAX = 3.0; /* emboss/deboss extrude clamp range is -3..3 */
-var EMBOSS_DEPTH = 2.0, DEBOSS_DEPTH = 2.0; /* magnitudes used by the Emboss/Deboss buttons (tunable in Testing) */
+var EMBOSS_DEPTH = 1.0, DEBOSS_DEPTH = 1.0; /* magnitudes used by the Emboss/Deboss buttons (tunable in Testing) */
 
 function overlayArtworkBump() {
   if (!bagBumpCanvas || !bagBumpTex || !bagMeshRef) return;
@@ -5669,6 +5685,7 @@ function escapeHTML(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function layerAutoName(L) {
+  if (L.isLogo) return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : 'Logo';
   if (L.kind === 'logo') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : 'Logo';
   if (L.kind === 'sticker') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : (L.tiled ? 'Background' : 'Graphic');
   if (L.kind === 'text') {
@@ -6335,55 +6352,27 @@ function buildLayerBodyHTML(L) {
 
   var btnStyle = 'font-size:10px;color:var(--secondary);background:none;border:1px solid var(--imp-border);border-radius:5px;cursor:pointer;padding:4px 8px;';
   var imageKind = (L.kind === 'logo' || L.kind === 'sticker');
-  var kindLabel = L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Graphic') : (L.kind === 'text' ? 'Text' : L.kind === 'logo' ? 'Logo' : 'Graphic');
+  var kindLabel = L.isLogo ? 'Logo' : L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Graphic') : (L.kind === 'text' ? 'Text' : L.kind === 'logo' ? 'Logo' : 'Graphic');
   if (imageKind) {
     if (L.img) {
       h += '<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--imp-border);border-radius:8px;padding:10px;margin:14px 0 12px;">' +
         '<img src="' + (L.img.src || '') + '" style="max-width:60px;max-height:42px;object-fit:contain;border-radius:4px;">' +
         '<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--imp-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(L.fileName || 'Image') + '</div>' +
-        '<button style="' + btnStyle + '" onclick="' + (L.kind === 'sticker' ? ('openAddSourcePrompt(' + id + ',&#39;' + (L.tiled ? 'pattern' : 'sticker') + '&#39;)') : ('pickLayerLogoFile(' + id + ')')) + '">Replace</button>' +
+        '<button style="' + btnStyle + '" onclick="' + (L.isLogo ? ('pickLayerLogoFile(' + id + ')') : L.kind === 'sticker' ? ('openAddSourcePrompt(' + id + ',&#39;' + (L.tiled ? 'pattern' : 'sticker') + '&#39;)') : ('pickLayerLogoFile(' + id + ')')) + '">Replace</button>' +
         (L.isDefault ? '' : '<button style="' + btnStyle + '" onclick="removeLayerLogo(' + id + ')">Remove</button>') +
         '</div>';
       h += '<button style="width:100%;margin:0 0 12px;font-size:11px;font-weight:500;color:var(--imp-fg-2);background:var(--imp-surface);border:1px solid var(--imp-border);border-radius:7px;cursor:pointer;padding:9px;display:flex;align-items:center;justify-content:center;gap:7px;" onclick="editLayerCutout(' + id + ')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8-3 3-2.3-2.3"/></svg> Remove background…</button>';
     } else {
       h += '<div onclick="pickLayerLogoFile(' + id + ')" style="border:1px dashed var(--imp-border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;margin:14px 0 12px;font-size:11px;color:var(--imp-fg-3);">Click to upload ' + kindLabel.toLowerCase() + '<br><span style="font-size:10px;opacity:0.7;">SVG, PNG, JPG, PDF — any size</span></div>';
     }
-    /* size now lives in the flat editor (after Show on) */
-    if (L.tiled) {
-      /* Move/resize(=crop box)/rotate happen in the 2D editor. Here: tile spacing,
-         repeat count, and edge feather. */
-      h += sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×');
-      h += sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 0), '%');
-      h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
-      /* Layout control — uploads only (library patterns are fixed to vertical). */
-      if (!L.fromLibrary) {
-        var _cur = L.patStack || 'vertical';
-        var _opts = [
-          { k:'vertical', label:'Grid',     ic:'<circle cx="4.5" cy="4.5" r="1.7"/><circle cx="11.5" cy="4.5" r="1.7"/><circle cx="4.5" cy="11.5" r="1.7"/><circle cx="11.5" cy="11.5" r="1.7"/>' },
-          { k:'diagonal', label:'Diagonal', ic:'<circle cx="3.5" cy="4.5" r="1.7"/><circle cx="10.5" cy="4.5" r="1.7"/><circle cx="7" cy="11.5" r="1.7"/><circle cx="14" cy="11.5" r="1.7"/>' },
-          { k:'brick',    label:'Brick',    ic:'<circle cx="4.5" cy="3.5" r="1.7"/><circle cx="11.5" cy="7" r="1.7"/><circle cx="4.5" cy="10.5" r="1.7"/><circle cx="11.5" cy="14" r="1.7"/>' },
-          { k:'mirror',   label:'Mirror',   ic:'<path d="M7 3 L3.5 8.5 L7 8.5 Z"/><path d="M9 3 L12.5 8.5 L9 8.5 Z"/><path d="M7 13 L3.5 9.5 L7 9.5 Z" opacity="0.55"/><path d="M9 13 L12.5 9.5 L9 9.5 Z" opacity="0.55"/>' },
-          { k:'scatter',  label:'Scatter',  ic:'<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M3.5 4 h3"/><path d="M11 3.5 l2 2.5"/><path d="M4 11.5 l2.5 -1.5"/><path d="M10 13 l3 -0.5"/></g>' },
-          { k:'diamond',  label:'Diamond',  ic:'<path d="M8 2.5 L13.5 8 L8 13.5 L2.5 8 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.5"/>' },
-          { k:'spin',     label:'Spin',     ic:'<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M12.5 5.5 A4.5 4.5 0 1 0 13 9.5"/><path d="M12.8 2.6 L12.8 5.6 L9.8 5.6"/></g>' },
-          { k:'wave',     label:'Wave',     ic:'<path d="M2 9 Q4.5 4.5 8 9 T14 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' }
-        ];
-        var _segB = 'flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:54px;padding:8px 4px;border-radius:9px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);font-size:9.5px;font-weight:600;';
-        var _segOn = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.14));color:var(--imp-fg);';
-        h += '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Background Layout') + '>Background Layout</div>' +
-          '<div style="display:flex;flex-wrap:wrap;gap:7px;">';
-        _opts.forEach(function(o){
-          h += '<button style="' + _segB + (_cur === o.k ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;' + o.k + '&#39;)" title="' + o.label + '">' +
-               '<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor">' + o.ic + '</svg>' +
-               '<span' + _arAttr(o.label) + '>' + o.label + '</span></button>';
-        });
-        h += '</div>';
-      }
-      h += '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate the background in the 2D editor.</div>';
-    }
+    /* Layout (None + tile layouts) on every layer type; tiled controls appear when active. */
+    h += _layoutPickerHTML(id, L);
+    if (L.tiled) h += _tiledControlsHTML(id, L);
   } else { /* text */
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="Text" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
       layerFontRowHTML(L);
+    h += _layoutPickerHTML(id, L);
+    if (L.tiled) h += _tiledControlsHTML(id, L);
   }
   /* Print Surface + Position & size sections removed — layers print on all surfaces
      and are positioned/scaled/rotated directly in the 2D editor. */
@@ -6563,6 +6552,53 @@ function onLayerPatStack(id, mode) {
   drawBagTexture();
   renderLayersList();   /* refresh the active layout button */
 }
+/* Layout picker (None + the 8 tile layouts) — shown on every layer type. */
+function _layoutPickerHTML(id, L) {
+  var cur = L.tiled ? (L.patStack || 'vertical') : 'none';
+  var opts = [
+    { k:'none',     label:'None',     ic:'<rect x="5.2" y="5.2" width="5.6" height="5.6" rx="1.4"/>' },
+    { k:'vertical', label:'Grid',     ic:'<circle cx="4.5" cy="4.5" r="1.7"/><circle cx="11.5" cy="4.5" r="1.7"/><circle cx="4.5" cy="11.5" r="1.7"/><circle cx="11.5" cy="11.5" r="1.7"/>' },
+    { k:'diagonal', label:'Diagonal', ic:'<circle cx="3.5" cy="4.5" r="1.7"/><circle cx="10.5" cy="4.5" r="1.7"/><circle cx="7" cy="11.5" r="1.7"/><circle cx="14" cy="11.5" r="1.7"/>' },
+    { k:'brick',    label:'Brick',    ic:'<circle cx="4.5" cy="3.5" r="1.7"/><circle cx="11.5" cy="7" r="1.7"/><circle cx="4.5" cy="10.5" r="1.7"/><circle cx="11.5" cy="14" r="1.7"/>' },
+    { k:'mirror',   label:'Mirror',   ic:'<path d="M7 3 L3.5 8.5 L7 8.5 Z"/><path d="M9 3 L12.5 8.5 L9 8.5 Z"/><path d="M7 13 L3.5 9.5 L7 9.5 Z" opacity="0.55"/><path d="M9 13 L12.5 9.5 L9 9.5 Z" opacity="0.55"/>' },
+    { k:'scatter',  label:'Scatter',  ic:'<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M3.5 4 h3"/><path d="M11 3.5 l2 2.5"/><path d="M4 11.5 l2.5 -1.5"/><path d="M10 13 l3 -0.5"/></g>' },
+    { k:'diamond',  label:'Diamond',  ic:'<path d="M8 2.5 L13.5 8 L8 13.5 L2.5 8 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.5"/>' },
+    { k:'spin',     label:'Spin',     ic:'<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M12.5 5.5 A4.5 4.5 0 1 0 13 9.5"/><path d="M12.8 2.6 L12.8 5.6 L9.8 5.6"/></g>' },
+    { k:'wave',     label:'Wave',     ic:'<path d="M2 9 Q4.5 4.5 8 9 T14 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' }
+  ];
+  var segB = 'flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:54px;padding:8px 4px;border-radius:9px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);font-size:9.5px;font-weight:600;';
+  var segOn = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.14));color:var(--imp-fg);';
+  var h = '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Layout') + '>Layout</div><div style="display:flex;flex-wrap:wrap;gap:7px;">';
+  opts.forEach(function(o){
+    h += '<button style="' + segB + (cur === o.k ? segOn : '') + '" onclick="onLayerLayout(' + id + ',&#39;' + o.k + '&#39;)" title="' + o.label + '">' +
+         '<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor">' + o.ic + '</svg>' +
+         '<span' + _arAttr(o.label) + '>' + o.label + '</span></button>';
+  });
+  return h + '</div>';
+}
+function _tiledControlsHTML(id, L) {
+  return sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×') +
+    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, ((Math.round(L.rotation || 0) % 360) + 360) % 360, '°') +
+    sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 0), '%') +
+    sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
+    '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate in the 2D editor.</div>';
+}
+/* Pick a tile layout (or None = single instance) on any layer type. */
+function onLayerLayout(id, mode) {
+  var L = getLayer(id); if (!L) return;
+  if (mode === 'none') { L.tiled = false; }
+  else {
+    if (!L.tiled) {   /* converting single → tiled: seed defaults + a box big enough to repeat visibly */
+      L.scale = 50; L.scaleH = 50;
+      if (L.density == null) L.density = 6;
+      if (L.gap == null) L.gap = 0;
+      if (L.feather == null) L.feather = 0;
+    }
+    L.tiled = true; L.patStack = mode;
+  }
+  if (typeof drawBagTexture === 'function') drawBagTexture();
+  if (typeof renderLayersList === 'function') renderLayersList();
+}
 function onLayerFont(id, key, el) {
   var L = getLayer(id); if (!L) return;
   L.font = key;
@@ -6623,8 +6659,11 @@ function addLayer(kind) {
   /* New layers always drop at the front-center of the bag (U 0.3327, V 0.8109). */
   var _fp = { posU:33.27, posV:81.09 };
   if (kind === 'logo') {
-    L = { id:id, kind:'logo', isDefault:false, visible:true, img:null, fileName:'', scale:18, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0,
-          color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
+    /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
+       the full Graphic recolor/finish/layout controls. isLogo only changes its name/label. */
+    L = { id:id, kind:'sticker', isLogo:true, tiled:false, patStack:'vertical', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:18, scaleH:18, posU:_fp.posU, posV:_fp.posV, rotation:0,
+          color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+          recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else if (kind === 'text') {
     L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:130, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
           color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
@@ -10456,8 +10495,8 @@ function _drawableLayers(){ return BAG.artwork.layers.filter(function(L){ return
 function _layerBox(L){
   var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
   var sref=(typeof _layerScaleRef==='function')?_layerScaleRef():e.w;
-  if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
-  else if (L.tiled){ hw=sref*((L.scale||18)/100)/2; hh=sref*(((L.scaleH!=null?L.scaleH:L.scale)||18)/100)/2; }  /* pattern crop box (independent w/h → non-proportional) */
+  if (L.tiled){ hw=sref*((L.scale||40)/100)/2; hh=sref*(((L.scaleH!=null?L.scaleH:L.scale)||40)/100)/2; }  /* tiled box (incl. tiled text) — independent w/h */
+  else if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); }
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=(w/asp)/2; }
   /* match the art-correction scale used when DRAWING (drawLayerContent scales by corr) so the
      box hugs the actual content instead of leaving a gap. */
