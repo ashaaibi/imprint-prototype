@@ -4310,9 +4310,25 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       var sx = sc.getContext('2d');
       if (mode !== 'mask') sx.filter = _layerFilter();
       var nR = Math.min(400, Math.ceil(SH / ch) + 2), nC = Math.min(400, Math.ceil(SW / cw) + 2);
+      /* tiling layout: vertical (grid) · diagonal (½-drop rows) · brick (½-drop columns) ·
+         mirror (alternate flip) · scatter (deterministic random rotation, like a tossed motif) */
+      var _stack = L.patStack || 'diagonal';
       for (var rr = -1; rr <= nR; rr++) {
-        var xo = (L.patStack !== 'vertical' && (rr & 1)) ? cw / 2 : 0;  /* diagonal (upload) vs vertical (library) */
-        for (var cc = -1; cc <= nC; cc++) { sx.drawImage(cell, cc * cw + xo, rr * ch, tileW, tileH); }
+        for (var cc = -1; cc <= nC; cc++) {
+          var px = cc * cw, py = rr * ch;
+          if (_stack === 'diagonal') { if (rr & 1) px += cw / 2; }
+          else if (_stack === 'brick') { if (cc & 1) py += ch / 2; }
+          if (_stack === 'mirror' || _stack === 'scatter') {
+            sx.save();
+            sx.translate(px + tileW / 2, py + tileH / 2);
+            if (_stack === 'mirror') { if ((rr + cc) & 1) sx.scale(-1, 1); }
+            else { var _hs = Math.sin(rr * 12.9898 + cc * 78.233) * 43758.5453; _hs -= Math.floor(_hs); sx.rotate(_hs * Math.PI * 2); }
+            sx.drawImage(cell, -tileW / 2, -tileH / 2, tileW, tileH);
+            sx.restore();
+          } else {
+            sx.drawImage(cell, px, py, tileW, tileH);
+          }
+        }
       }
       sx.filter = 'none';
       var fpx = ((L.feather || 0) / 100) * (Math.min(SW,SH) * 0.5);
@@ -6310,20 +6326,26 @@ function buildLayerBodyHTML(L) {
       h += sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×');
       h += sliderRow(id, 'gap', 'Gap', 0, 200, 1, (L.gap != null ? L.gap : 0), '%');
       h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
-      /* Stacking control — uploads only (library patterns are fixed to vertical). */
+      /* Layout control — uploads only (library patterns are fixed to vertical). */
       if (!L.fromLibrary) {
-        var _isVert = (L.patStack === 'vertical');
-        var _segB = 'flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:600;padding:8px 6px;border-radius:7px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);';
+        var _cur = L.patStack || 'diagonal';
+        var _opts = [
+          { k:'vertical', label:'Grid',     ic:'<circle cx="4.5" cy="4.5" r="1.7"/><circle cx="11.5" cy="4.5" r="1.7"/><circle cx="4.5" cy="11.5" r="1.7"/><circle cx="11.5" cy="11.5" r="1.7"/>' },
+          { k:'diagonal', label:'Diagonal', ic:'<circle cx="3.5" cy="4.5" r="1.7"/><circle cx="10.5" cy="4.5" r="1.7"/><circle cx="7" cy="11.5" r="1.7"/><circle cx="14" cy="11.5" r="1.7"/>' },
+          { k:'brick',    label:'Brick',    ic:'<circle cx="4.5" cy="3.5" r="1.7"/><circle cx="11.5" cy="7" r="1.7"/><circle cx="4.5" cy="10.5" r="1.7"/><circle cx="11.5" cy="14" r="1.7"/>' },
+          { k:'mirror',   label:'Mirror',   ic:'<path d="M7 3 L3.5 8.5 L7 8.5 Z"/><path d="M9 3 L12.5 8.5 L9 8.5 Z"/><path d="M7 13 L3.5 9.5 L7 9.5 Z" opacity="0.55"/><path d="M9 13 L12.5 9.5 L9 9.5 Z" opacity="0.55"/>' },
+          { k:'scatter',  label:'Scatter',  ic:'<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M3.5 4 h3"/><path d="M11 3.5 l2 2.5"/><path d="M4 11.5 l2.5 -1.5"/><path d="M10 13 l3 -0.5"/></g>' }
+        ];
+        var _segB = 'flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:54px;padding:8px 4px;border-radius:9px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);font-size:9.5px;font-weight:600;';
         var _segOn = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.14));color:var(--imp-fg);';
-        h += '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Pattern Stacking') + '>Pattern Stacking</div>' +
-          '<div style="display:flex;gap:8px;">' +
-            '<button style="' + _segB + (!_isVert ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;diagonal&#39;)">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="6" cy="18" r="2.3"/><circle cx="18" cy="18" r="2.3"/></svg>' +
-              '<span' + _arAttr('Diagonal') + '>Diagonal</span></button>' +
-            '<button style="' + _segB + (_isVert ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;vertical&#39;)">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="12" r="2.3"/><circle cx="6" cy="18" r="2.3"/><circle cx="18" cy="18" r="2.3"/></svg>' +
-              '<span' + _arAttr('Vertical') + '>Vertical</span></button>' +
-          '</div>';
+        h += '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Pattern Layout') + '>Pattern Layout</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:7px;">';
+        _opts.forEach(function(o){
+          h += '<button style="' + _segB + (_cur === o.k ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;' + o.k + '&#39;)" title="' + o.label + '">' +
+               '<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor">' + o.ic + '</svg>' +
+               '<span' + _arAttr(o.label) + '>' + o.label + '</span></button>';
+        });
+        h += '</div>';
       }
       h += '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate the pattern in the 2D editor.</div>';
     }
@@ -6481,9 +6503,10 @@ function onLayerExtrude(id, val) {
 }
 function onLayerPatStack(id, mode) {
   var L = getLayer(id); if (!L) return;
-  L.patStack = (mode === 'vertical') ? 'vertical' : 'diagonal';
+  var ok = { vertical:1, diagonal:1, brick:1, mirror:1, scatter:1 };
+  L.patStack = ok[mode] ? mode : 'diagonal';
   drawBagTexture();
-  renderLayersList();   /* refresh the segmented active state */
+  renderLayersList();   /* refresh the active layout button */
 }
 function onLayerFont(id, key, el) {
   var L = getLayer(id); if (!L) return;
@@ -8689,6 +8712,7 @@ var introDurationMs = 1000;       /* default 1.00s, controllable in testing */
 var idleDelaySec = 6;             /* resume auto-rotate after N seconds idle */
 var idleResumeEnabled = true;
 var spinAllowed = true;            /* false on the Artwork step -> no auto-rotate */
+var previewSpinLocked = false;     /* set when the user rotates the live (2D) preview → spin stays 0 until 3D view */
 var lastInteractT = 0;            /* timestamp (performance.now) of last user interaction */
 
 /* Per-view camera angles (degrees), tunable in testing */
@@ -8788,6 +8812,7 @@ function playIntro() {
 function markInteraction() {
   lastInteractT = (typeof performance !== 'undefined') ? performance.now() : Date.now();
   orbit.autoSpin = false;
+  if (typeof viewMode !== 'undefined' && viewMode === '2d') previewSpinLocked = true;   /* rotating the live preview disables auto-spin until 3D */
   if (intro.active) intro.active = false; /* user can interrupt the intro */
   camTween = null;                        /* interrupt any view transition (view/artwork clicks re-create it) */
   /* Ease the auto-rotation OUT to a stop */
@@ -8955,7 +8980,7 @@ function animate(now) {
       /* Auto-rotation (ramped) */
       if (spinFactor > 0.0001) orbit.theta += SPIN_SPEED * spinFactor;
       /* Idle detection: once settled and idle long enough, ease the spin back IN */
-      if (idleResumeEnabled && spinAllowed && now && spinTarget !== 1 &&
+      if (idleResumeEnabled && spinAllowed && !previewSpinLocked && now && spinTarget !== 1 &&
           velocity.theta === 0 && velocity.phi === 0 && Math.abs(zoomVelocity) < 0.0001 &&
           (now - lastInteractT) > idleDelaySec * 1000) {
         startSpinRamp(1, spinRampInMs, easeInCubic);
@@ -10252,6 +10277,7 @@ function setViewMode(mode){
     var _cv=document.getElementById('three-canvas'); if(_cv){ _cv.style.removeProperty('width'); _cv.style.removeProperty('height'); }  /* clear mini-preview sizing so 3D fills the stage */
     /* restore the 3D view the user had */
     try { camTween=null; } catch(e){}
+    previewSpinLocked = false;   /* back in 3D → default auto-rotate behaviour resumes */
     if (_saved3DView && typeof orbit !== 'undefined' && orbit){ orbit.theta=_saved3DView.theta; orbit.phi=_saved3DView.phi; orbit.radius=_saved3DView.radius; _saved3DView=null; }
   }
 }
@@ -10386,6 +10412,7 @@ function _aDown(e){
         if (typeof scheduleHistory==='function') scheduleHistory(); }
       return;
     }
+    if (ui.type==='finish'){ a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=null; if(typeof _showFinishBar==='function') _showFinishBar(ui.region, sp); return; }
     a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=ui.target; _showFaceBar(ui.target, sp); return;
   }
   /* clicked a face/region/handles LABEL (stays on top of everything) → open its colour bar
@@ -10637,7 +10664,7 @@ function _showFaceBar(t, sp){
   var cur=(BAG[rk]&&BAG[rk].customHex)||'#ffffff';
   var h='<span style="font-size:10px;font-weight:600;color:var(--imp-fg-2);padding:0 6px 0 4px;white-space:nowrap;">'+_fbLabel(t,ar)+'</span><span class="a2dc-sep"></span>';
   sw.forEach(function(hex,i){ h+='<button class="a2dc-btn" style="padding:4px;" title="'+SWATCH_NAMES[i]+'" onclick="_setFaceColor(\''+hex+'\')"><span style="display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--imp-border);background:'+hex+';"></span></button>'; });
-  h+='<span class="a2dc-sep"></span><label class="a2dc-btn" title="Custom colour" style="position:relative;overflow:hidden;display:inline-flex;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1.5a2 2 0 0 0 0 4z"/></svg><input type="color" value="'+cur+'" oninput="_setFaceColor(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>';
+  h+='<span class="a2dc-sep"></span><label class="a2dc-btn" title="Custom colour" style="position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;"><span style="width:21px;height:21px;border-radius:50%;background:conic-gradient(from 0deg,#ff3b30,#ff9500,#ffcc00,#34c759,#00c7be,#007aff,#5856d6,#ff2d92,#ff3b30);box-shadow:inset 0 0 0 2.5px #fff, 0 0 0 1px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;"><span style="width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,0.06);"></span></span><input type="color" value="'+cur+'" oninput="_setFaceColor(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>';
   bar.innerHTML=h;
   var stage=document.querySelector('.canvas-stage'); if(!stage) return;
   var crect=a2d.canvas.getBoundingClientRect(), srect=stage.getBoundingClientRect(), dpr=a2d.dpr||1;
@@ -10653,8 +10680,37 @@ function _setFaceColor(hex){
     var pre={exterior:'ext',interior:'int',ribbon:'rib',rivet:'riv'}[r], he=document.getElementById('bag-'+pre+'-hslider'); if(he&&typeof hexToHSV==='function'){var hh=hexToHSV(hex).h; he.value=hh; if(typeof renderBagSwatches==='function')renderBagSwatches(r,hh,hex);} if(applyFn) applyFn(); else if(typeof drawBagTexture==='function')drawBagTexture(); }
   if(t.kind==='handles') _whole('ribbon', function(){ if(typeof applyRibbonColor==='function')applyRibbonColor(); });
   else if(t.kind==='rivets') _whole('rivet', function(){ if(typeof applyRivetColor==='function')applyRivetColor(); });
-  else if(t.kind==='region') _whole(t.region, null);
+  else if(t.kind==='region'){ BAG[t.region].faceColors={}; _whole(t.region, null); }   /* global recolour overwrites every face */
   else { var rg=t.region; if(typeof _markTouched==='function')_markTouched(rg); BAG[rg].faceColors=BAG[rg].faceColors||{}; BAG[rg].faceColors[t.face]=hex; if(typeof drawBagTexture==='function')drawBagTexture(); }
+}
+/* Finish picker bar for the Exterior/Interior labels — applies a global material finish. */
+function _finishSwatchSVG(key){
+  var bg = {
+    gloss:'radial-gradient(circle at 33% 30%, #ffffff 0%, #8a8a90 46%, #1f1f24 100%)',
+    matte:'radial-gradient(circle at 38% 34%, #b9b9bf 0%, #9a9aa0 70%, #86868c 100%)',
+    softtouch:'radial-gradient(circle at 35% 32%, #ececf0 0%, #b2b2b8 70%, #8f8f95 100%)',
+    kraft:'radial-gradient(circle at 35% 32%, #ddb787 0%, #bb8b5c 68%, #8b5f37 100%)',
+    foil:'linear-gradient(135deg, #f3f3f5 0%, #b6b6bc 34%, #ffffff 50%, #9a9aa0 66%, #d9d9df 100%)'
+  }[key] || '#9a9aa0';
+  return '<span style="width:18px;height:18px;border-radius:50%;background:'+bg+';border:1px solid var(--imp-border);display:block;"></span>';
+}
+function _setFaceFinish(region, key){ if(typeof applyBagFinish==='function') applyBagFinish(region, key); _hideFaceBar(); }
+function _showFinishBar(region, sp){
+  var bar=document.getElementById('a2d-facebar'); if(!bar) return;
+  var ar=(typeof getLang==='function'&&getLang()==='ar');
+  var rn=ar?(region==='exterior'?'الخارج':'الداخل'):(region==='exterior'?'Exterior':'Interior');
+  var cur=(BAG[region]&&BAG[region].finish)||'softtouch';
+  var fins=ar?[['gloss','لامع'],['matte','مطفّأ'],['softtouch','ناعم'],['kraft','كرافت'],['foil','معدني']]
+             :[['gloss','Gloss'],['matte','Matte'],['softtouch','Soft'],['kraft','Kraft'],['foil','Foil']];
+  var h='<span style="font-size:10px;font-weight:600;color:var(--imp-fg-2);padding:0 6px 0 4px;white-space:nowrap;">'+rn+' · '+(ar?'تشطيب':'Finish')+'</span><span class="a2dc-sep"></span>';
+  fins.forEach(function(f){ var on=(cur===f[0]);
+    h+='<button class="a2dc-btn" title="'+f[1]+'" onclick="_setFaceFinish(\''+region+'\',\''+f[0]+'\')" style="flex-direction:column;gap:3px;padding:4px 5px;border-radius:8px;'+(on?'background:var(--imp-accent-weak,rgba(200,169,110,0.18));':'')+'">'+_finishSwatchSVG(f[0])+'<span style="font-size:8px;font-weight:700;letter-spacing:0.02em;color:var(--imp-fg-2);">'+f[1]+'</span></button>'; });
+  bar.innerHTML=h;
+  var stage=document.querySelector('.canvas-stage'); if(!stage) return;
+  var crect=a2d.canvas.getBoundingClientRect(), srect=stage.getBoundingClientRect(), dpr=a2d.dpr||1;
+  var cssX=(crect.left-srect.left)+sp.x/dpr, cssY=(crect.top-srect.top)+(a2d.canvas.height-sp.y)/dpr;
+  bar.style.display='flex'; bar.style.transform='translateX(-50%)';
+  bar.style.left=cssX+'px'; bar.style.top=(cssY+14)+'px';
 }
 
 function atlas2dRender(){
@@ -10795,6 +10851,16 @@ function atlas2dRender(){
       ctx.moveTo(cx-r*0.44,cy+r*0.02); ctx.lineTo(cx-r*0.08,cy+r*0.40); ctx.lineTo(cx+r*0.50,cy-r*0.42); ctx.stroke(); }
     ctx.restore();
   }
+  /* global material-finish icon — a glossy sphere (opens the finish picker for that region) */
+  function _drawFinishIcon(cx,cy,r){
+    ctx.save();
+    var g=ctx.createRadialGradient(cx-r*0.35,cy-r*0.38,r*0.1,cx,cy,r);
+    g.addColorStop(0,'#ffffff'); g.addColorStop(0.45,'#c7c7cf'); g.addColorStop(1,'#65656d');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=1*D; ctx.strokeStyle='rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.beginPath(); ctx.arc(cx-r*0.30,cy-r*0.32,r*0.20,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
   /* the currently-selected drawable layer (visibility toggles only show when a layer is selected) */
   var _selL=(a2d.sel && (a2d.sel.kind==='text'||a2d.sel.kind==='sticker'||a2d.sel.kind==='logo')) ? a2d.sel : null;
   /* a region is "shown" (checked) if the selected layer is visible on at least one of its faces */
@@ -10807,16 +10873,16 @@ function atlas2dRender(){
   }
   /* draw a "Live Preview"-style pill containing: LABEL · recolour wheel · (optional) visibility
      toggle — centred at (cx,cy). Records the text as a label hit and the wheel/toggle as UI hits. */
-  function _drawLabelPill(cx, cy, text, fp, recolorTarget, toggleHit, checked){
+  function _drawLabelPill(cx, cy, text, fp, recolorTarget, toggleHit, checked, finishHit){
     var up=(''+text).toUpperCase();
     ctx.save();
     if('letterSpacing' in ctx) ctx.letterSpacing=(fp*0.045)+'px';
     ctx.font='700 '+fp+'px -apple-system, "SF Pro Text", system-ui, sans-serif';
     ctx.textAlign='left'; ctx.textBaseline='middle';
     var tw=ctx.measureText(up).width;
-    var rW=fp*0.46, rT=fp*0.44, gTW=fp*0.46, gWT=fp*0.46, padX=fp*0.6, padY=fp*0.34;
-    var contentH=Math.max(fp*0.74, 2*rW, toggleHit?2*rT:0), ph=contentH+2*padY;
-    var pw=padX*2 + tw + gTW + 2*rW + (toggleHit?(gWT+2*rT):0);
+    var rW=fp*0.46, rT=fp*0.44, rF=fp*0.46, gTW=fp*0.46, gWT=fp*0.46, padX=fp*0.6, padY=fp*0.34;
+    var contentH=Math.max(fp*0.74, 2*rW, toggleHit?2*rT:0, finishHit?2*rF:0), ph=contentH+2*padY;
+    var pw=padX*2 + tw + gTW + 2*rW + (toggleHit?(gWT+2*rT):0) + (finishHit?(gWT+2*rF):0);
     var px=cx-pw/2, py=cy-ph/2, rr=ph/2;
     ctx.beginPath();
     if(ctx.roundRect) ctx.roundRect(px,py,pw,ph,rr);
@@ -10834,7 +10900,8 @@ function atlas2dRender(){
     _drawRecolorBtn(lx, cy, rW);
     _recUiHit(lx, cy, rW+2*D, {type:'recolor', target:recolorTarget});
     lx += rW;
-    if(toggleHit){ lx += gWT + rT; _drawToggle(lx, cy, rT, checked); _recUiHit(lx, cy, rT+2*D, toggleHit); }
+    if(toggleHit){ lx += gWT + rT; _drawToggle(lx, cy, rT, checked); _recUiHit(lx, cy, rT+2*D, toggleHit); lx += rT; }
+    if(finishHit){ lx += gWT + rF; _drawFinishIcon(lx, cy, rF); _recUiHit(lx, cy, rF+2*D, finishHit); lx += rF; }
     if('letterSpacing' in ctx) ctx.letterSpacing='0px';
     ctx.restore();
   }
@@ -10845,7 +10912,8 @@ function atlas2dRender(){
     var cyC=ly - 5*D - _mainFP*0.78;   /* pill sits just above the island top edge */
     var _isReg=(it.target.kind==='region');
     var _tog=(_isReg && _selL)?{type:'facetoggle', region:it.target.region}:null;
-    _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _isReg?_regionChecked(it.target.region):true);
+    var _fin=_isReg?{type:'finish', region:it.target.region}:null;   /* global material-finish picker on Exterior/Interior */
+    _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _isReg?_regionChecked(it.target.region):true, _fin);
   });
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB populated
      BAG_FACES. Pill centred inside each face; position (top/bottom/center) testing-tunable. */
