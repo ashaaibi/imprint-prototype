@@ -4362,6 +4362,14 @@ var SOCIAL_ICONS = {
   phone:{ label:'Phone', stroke:['M6.2 3.2 9 4l1 3.9-2 1.9a12.4 12.4 0 0 0 5.2 5.2l1.9-2 3.9 1 .8 2.8a1.9 1.9 0 0 1-2 2.1A17 17 0 0 1 4.1 5.2a1.9 1.9 0 0 1 2.1-2z'] },
   website:{ label:'Website', stroke:['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z','M3 12h18','M12 3c2.8 2.8 2.8 15.2 0 18','M12 3c-2.8 2.8-2.8 15.2 0 18'] }
 };
+/* Per-platform starter text / placeholder for a social layer. */
+var SOCIAL_PLACEHOLDER = {
+  instagram:'@username', x:'@username', tiktok:'@username', snapchat:'@username',
+  telegram:'@username', youtube:'@yourchannel',
+  whatsapp:'+968 9123 4567', phone:'+968 9123 4567',
+  email:'hello@brand.com', website:'www.brand.com',
+  facebook:'fb.com/yourpage', linkedin:'in/yourname'
+};
 function _drawSocialIcon(ctx, platform, size, color, cx) {
   var ic = SOCIAL_ICONS[platform]; if (!ic) return;
   ctx.save();
@@ -6392,7 +6400,7 @@ function buildLayerBodyHTML(L) {
         '<span style="font-size:12px;font-weight:600;color:var(--imp-fg);flex:1;">' + _sp.label + '</span>' +
         '<button onclick="clearLayerSocial(' + id + ')" title="Remove icon" style="border:none;background:none;color:var(--imp-fg-3,#999);cursor:pointer;font-size:15px;line-height:1;padding:2px;">&times;</button></div>';
     }
-    h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? 'Username / handle' : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
+    h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
       layerFontRowHTML(L);
   }
   /* Transform (Scale / Rotation / Opacity), Move, and Areas. */
@@ -6702,7 +6710,8 @@ function onLayerLayout(id, mode) {
       /* single → tiled: remember the box, seed defaults, and fit the WHOLE exterior so the
          pattern fills the bag in the 2D editor. None later restores the saved box. */
       var snap = {}; _PRELAYOUT_KEYS.forEach(function(k){ snap[k] = L[k]; }); L._preLayoutBox = snap;
-      L.density = 40; L.gap = 60;   /* logo/text/graphic tile default */
+      if (L.isBackground) { L.density = 3; L.gap = 0; }   /* background tile default */
+      else { L.density = 40; L.gap = 60; }                /* logo/text/graphic tile default */
       if (L.feather == null) L.feather = 0;
       if (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) {
         var _ex = BAG_UV.exterior, _PAD = (typeof ATLAS_PAD !== 'undefined') ? ATLAS_PAD : 0;
@@ -6727,6 +6736,7 @@ function onLayerFont(id, key, el) {
 function onLayerTextChange(id, val) {
   var L = getLayer(id); if (!L) return;
   L.content = val;
+  L._isSocialPlaceholder = false;   /* user typed their own handle → stop auto-filling examples */
   updateLayerThumb(L); drawBagTexture();
 }
 function onLayerAIPrompt(id, val) { var L = getLayer(id); if (L) L.prompt = val; }
@@ -6794,7 +6804,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'diagonal', gap:60, density:20, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:3, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new pattern covers the WHOLE exterior by default (centered on the exterior island). */
@@ -7116,7 +7126,9 @@ function chooseSocial(platform) {
   _closeAddSourceOverlay(); _addSrc.id = null;
   if (!L || !SOCIAL_ICONS[platform]) return;
   L.social = { platform: platform };
-  if (!L.content || L.content === 'Your text') L.content = '@yourhandle';
+  var ph = SOCIAL_PLACEHOLDER[platform] || '@username';
+  /* fill the platform-appropriate example while the user hasn't typed their own. */
+  if (!L.content || L.content === 'Your text' || L._isSocialPlaceholder) { L.content = ph; L._isSocialPlaceholder = true; }
   updateLayerThumb(L); renderLayersList(); drawBagTexture();
 }
 function clearLayerSocial(id) {
