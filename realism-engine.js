@@ -706,8 +706,11 @@
     // AO
     if (fm.ao.img) { _ensureUV2(); m.aoMap = _bakeTiled(fm.ao.img, fm.tile, null, 1, fm.ao.invert); m.aoMapIntensity = fm.ao.strength; }
     else { m.aoMap = null; }
-    // BUMP (overrides the emboss bump slot while present)
-    if (fm.bump.img) { m.bumpMap = _bakeTiled(fm.bump.img, fm.tile, null, 1, fm.bump.invert); m.bumpScale = fm.bump.strength; }
+    // BUMP — a layer emboss (extrude) owns the single bump slot when present; otherwise use the
+    // finish's own bump grain, falling back to the (neutral) emboss canvas.
+    if (typeof window !== 'undefined' && window._embossActive && typeof bagBumpTex !== 'undefined' && bagBumpTex) {
+      m.bumpMap = bagBumpTex; m.bumpScale = (typeof EXTRUDE_MAX !== 'undefined' ? EXTRUDE_MAX * 0.04 : 0.12);
+    } else if (fm.bump.img) { m.bumpMap = _bakeTiled(fm.bump.img, fm.tile, null, 1, fm.bump.invert); m.bumpScale = fm.bump.strength; }
     else if (typeof bagBumpTex !== 'undefined' && bagBumpTex) { m.bumpMap = bagBumpTex; }
     // DISPLACEMENT (subtle on this low-poly mesh, but supported)
     if (fm.displacement.img) { m.displacementMap = _bakeTiled(fm.displacement.img, fm.tile, null, 1, fm.displacement.invert); m.displacementScale = fm.displacement.strength; }
