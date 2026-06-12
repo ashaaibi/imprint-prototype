@@ -44,28 +44,42 @@ mangling files/folders.
 - **Recolor** is an optional toggle in the layer body (default OFF = keep original colors); up to **10** detected colors; neutral-snap default **0**.
 - Pattern crop/fade masks the **whole pattern region across all enabled faces as one** (union bbox), not per tile.
 
-## Artist asset folders + manifests  ⚠️ IMPORTANT
-`fonts/` (5), `graphics/` (15), `patterns/` (8). The library pickers list these folders.
+## Presets folders + manifests  ⚠️ IMPORTANT
+The "Presets" picker reads three TYPE folders, each holding COLLECTION sub-folders:
+```
+text/        graphic/        background/      ← layer types
+  System_Presets/   …          …             ← collections (UI name = folder, "_"→" ")
+  Artists_Collection_1/        …
+  index.json                                  ← manifest (REQUIRED on Pages)
+```
+- Collection UI name = folder name with `_`→` `. **Underscores only, no apostrophes/spaces.**
+- File types: `text/`=fonts (.ttf/.otf/.woff/.woff2); `graphic/` & `background/`=images
+  (.svg/.png/.jpg/.webp/.gif). Keep image files small (faster thumbnails).
+- Picker shows **3 designs per collection**, then "Show more" reveals **+6** each time,
+  loading thumbnails left-to-right with a skeleton placeholder.
+- Collection order: `System_Presets` first, then the rest A→Z.
+- Each TYPE folder has a `README.txt` with the same instructions.
 
-GitHub Pages serves **no directory listing**, so each folder has a committed
-**`index.json`** manifest (an array of filenames). Loaders try the dir-listing first
-(local autoindex) then fall back to `index.json` (Pages).
-
-**When you add, rename, or delete files in `fonts/ graphics/ patterns/`, regenerate the
-manifests or the new files WON'T appear on the live site** (they'll still work locally):
+**When you add/rename/delete any file or collection, regenerate the manifests** (Pages has
+no directory listing, so the picker reads `text|graphic|background/index.json`):
 ```bash
 python3 - <<'PY'
 import json, os
-for folder, exts in [('graphics',('.svg','.png','.jpg','.jpeg','.webp','.gif')),
-                     ('fonts',('.ttf','.otf','.woff','.woff2')),
-                     ('patterns',('.svg','.png','.jpg','.jpeg','.webp','.gif'))]:
-    files = sorted(f for f in os.listdir(folder)
-                   if f.lower().endswith(exts) and not f.startswith('.'))
-    json.dump(files, open(f'{folder}/index.json','w',encoding='utf-8'),
-              ensure_ascii=False, indent=0)
-    print(folder, len(files))
+TYPES={'text':('.ttf','.otf','.woff','.woff2'),
+       'graphic':('.svg','.png','.jpg','.jpeg','.webp','.gif'),
+       'background':('.svg','.png','.jpg','.jpeg','.webp','.gif')}
+key=lambda n:(0,'') if n=='System_Presets' else (1,n.lower())
+for typ,exts in TYPES.items():
+    if not os.path.isdir(typ): continue
+    cols=[]
+    for col in sorted([d for d in os.listdir(typ) if os.path.isdir(typ+'/'+d) and not d.startswith('.')], key=key):
+        files=sorted(f for f in os.listdir(typ+'/'+col) if f.lower().endswith(exts) and not f.startswith('.'))
+        if files: cols.append({'name':col,'files':files})
+    json.dump(cols, open(typ+'/index.json','w',encoding='utf-8'), ensure_ascii=False, indent=0)
+    print(typ,[(c['name'],len(c['files'])) for c in cols])
 PY
 ```
+(The legacy region-pattern feature still reads `background/System_Presets/pattern_N.svg`.)
 
 ## Testing / admin defaults (current)
 - Finishes default to **soft-touch** (ext/int/handles). HDRI env = **studio3**, intensity ~1.10.

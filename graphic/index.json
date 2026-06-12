@@ -1,4 +1,7 @@
 [
+{
+"name": "System_Presets",
+"files": [
 "Asset 1Graphic.svg",
 "Asset 2Graphic.svg",
 "Asset 3Graphic.svg",
@@ -14,4 +17,6 @@
 "Layer 6Graphic.svg",
 "Layer 8Graphic.svg",
 "Layer 9Graphic.svg"
+]
+}
 ]

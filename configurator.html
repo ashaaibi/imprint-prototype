@@ -3732,7 +3732,7 @@ function loadPatternsFromFolder() {
   }
   for (var i = 1; i <= MAX; i++) {
     (function(n) {
-      fetch('patterns/pattern_' + n + '.svg', { cache: 'no-store' })
+      fetch('background/System_Presets/pattern_' + n + '.svg', { cache: 'no-store' })
         .then(function(r) { if (!r.ok) throw 0; return r.text(); })
         .then(function(txt) {
           results[n] = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
@@ -6641,7 +6641,11 @@ var ARTIST_PATTERNS = ['pattern_1.svg','pattern_2.svg','pattern_3.svg','pattern_
 function _ensureAddSourceModal() {
   if (document.getElementById('add-source-overlay')) return;
   var st = document.createElement('style');
-  st.textContent = '._as-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:13px 14px;margin-bottom:9px;border:1px solid var(--imp-border,#e5e5e5);border-radius:11px;background:var(--imp-surface-2,#f7f7f7);color:var(--imp-fg,#111);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}._as-btn:hover{border-color:var(--imp-accent,#c8a96e);background:var(--imp-surface,#fff);}';
+  st.textContent = '._as-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:13px 14px;margin-bottom:9px;border:1px solid var(--imp-border,#e5e5e5);border-radius:11px;background:var(--imp-surface-2,#f7f7f7);color:var(--imp-fg,#111);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}._as-btn:hover{border-color:var(--imp-accent,#c8a96e);background:var(--imp-surface,#fff);}'
+    + '.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}.preset-grid-col{display:flex;flex-direction:column;}'
+    + '.preset-skel{background:linear-gradient(90deg,rgba(140,140,140,0.13),rgba(140,140,140,0.30),rgba(140,140,140,0.13));background-size:200% 100%;animation:presetShimmer 1.15s ease-in-out infinite;}'
+    + '@keyframes presetShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}'
+    + '.preset-more-btn{width:100%;padding:8px;border:1px dashed var(--imp-border,#ccc);border-radius:8px;background:var(--imp-surface-2,#f5f5f5);color:var(--imp-fg-2,#666);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}.preset-more-btn:hover{border-color:var(--imp-accent,#c8a96e);color:var(--imp-fg,#111);}';
   document.head.appendChild(st);
   var ov = document.createElement('div');
   ov.id = 'add-source-overlay';
@@ -6652,7 +6656,7 @@ function _ensureAddSourceModal() {
       '<div style="font-size:12px;color:var(--imp-fg-2,#777);margin-bottom:16px;" data-en="How do you want to add it?" data-ar="كيف تريد إضافته؟">How do you want to add it?</div>' +
       '<button class="_as-btn" id="add-source-upload-btn" onclick="addSourceChoose(\'upload\')"><span>⬆</span> <span class="_as-label" data-en="Upload your own" data-ar="ارفع ملفك">Upload your own</span></button>' +
       '<button class="_as-btn" id="add-source-ai-btn" onclick="addSourceChoose(\'ai\')"><span>✦</span> <span class="_as-label" data-en="Create with AI" data-ar="أنشئ بالذكاء الاصطناعي">Create with AI</span></button>' +
-      '<button class="_as-btn" id="add-source-library-btn" onclick="addSourceChoose(\'library\')"><span>▦</span> <span class="_as-label" data-en="Choose from artist library" data-ar="اختر من مكتبة الفنانين">Choose from artist library</span></button>' +
+      '<button class="_as-btn" id="add-source-library-btn" onclick="addSourceChoose(\'library\')"><span>▦</span> <span class="_as-label" data-en="Presets" data-ar="القوالب الجاهزة">Presets</span></button>' +
       '<div id="add-source-ai" style="display:none;margin-top:6px;">' +
         '<textarea id="add-source-ai-prompt" rows="2" placeholder="Describe your design…" data-en="Describe your design…" data-ar="صف تصميمك…" style="width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--imp-border,#ddd);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>' +
         '<button class="_as-btn" style="margin-top:8px;justify-content:center;" onclick="addSourceAiGenerate()" data-en="Generate" data-ar="إنشاء">Generate</button>' +
@@ -6704,7 +6708,7 @@ function addSourceChoose(src) {
   } else if (src === 'library') {
     document.getElementById('add-source-library').style.display = 'block';
     document.getElementById('add-source-ai').style.display = 'none';
-    if (isFont) renderFontLibrary(); else renderArtistLibrary();
+    renderPresets();
   }
 }
 function addSourceAiGenerate() {
@@ -6743,35 +6747,87 @@ function _fetchFontList(cb) {
     _fetchJsonList('fonts/index.json', function(mf) { cb((mf && mf.length) ? mf : []); });
   }).catch(function() { _fetchJsonList('fonts/index.json', function(mf) { cb((mf && mf.length) ? mf : []); }); });
 }
-function renderFontLibrary() {
-  var box = document.getElementById('add-source-library'); if (!box) return;
-  box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading fonts…</div>';
-  _fetchFontList(function(files) {
-    if (!files.length) { box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No fonts in <b>/fonts</b> yet — drop <b>.ttf / .otf / .woff</b> files in that folder and they\'ll appear here.</div>'; return; }
-    box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Pick a font from the artist library:</div><div id="_fontgrid" style="display:flex;flex-direction:column;gap:8px;"></div>';
-    var grid = document.getElementById('_fontgrid');
-    /* load fonts in row order with a small concurrency cap; append each card as it loads
-       (progressive) so the first fonts show up immediately instead of waiting for all. */
-    var idx = 0, active = 0, CONC = 3;
-    function pump() {
-      while (active < CONC && idx < files.length) {
-        var f = files[idx++]; active++;
-        _loadFontFromUrl('fonts/' + encodeURIComponent(f), f.replace(/\.[^.]+$/, ''), function (fn) { return function (key) {
-          active--;
-          if (key) {
-            var name = fn.replace(/\.[^.]+$/, ''), b = document.createElement('button');
-            b.title = name; b.setAttribute('onclick', "chooseLibraryFont('" + key + "')");
-            b.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:#fff;cursor:pointer;text-align:left;';
-            b.innerHTML = '<span style="' + _fontPreviewStyle(key) + 'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHTML(name) + '</span>' +
-              '<span style="' + _fontPreviewStyle(key) + 'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>';
-            if (grid) grid.appendChild(b);
-          }
-          pump();
-        }; }(f));
-      }
-    }
-    pump();
+/* ── Presets picker (text / graphic / background → collection sub-folders) ───────
+   Each type folder ships an index.json: [{name:"System_Presets", files:[...]}, …].
+   The picker shows 3 designs per collection, then "Show more" reveals 6 at a time.
+   Thumbnails load left-to-right (row order) with a skeleton placeholder. */
+var _presets = { type:null, cols:[], shown:[] };
+function _presetTypeFolder(){ var k=_addSrc&&_addSrc.kind; return k==='font'?'text':k==='pattern'?'background':'graphic'; }
+function _collDisplayName(folder){ return String(folder||'').replace(/_/g,' '); }
+function _presetUrl(type,col,file){ return type+'/'+encodeURIComponent(col)+'/'+encodeURIComponent(file); }
+function _fetchCollections(type, cb){
+  _fetchJsonList(type+'/index.json', function(arr){
+    if (Array.isArray(arr) && arr.length && arr[0] && typeof arr[0]==='object' && arr[0].name){ cb(arr.filter(function(c){ return c && c.files && c.files.length; })); return; }
+    if (Array.isArray(arr) && arr.length){ cb([{ name:'System_Presets', files:arr }]); return; }   /* legacy flat manifest → single collection */
+    cb([]);
   });
+}
+function renderPresets(){
+  var box=document.getElementById('add-source-library'); if(!box) return;
+  var type=_presetTypeFolder(); _presets.type=type;
+  box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading presets…</div>';
+  _fetchCollections(type, function(cols){
+    _presets.cols=cols||[];
+    if(!_presets.cols.length){ box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No presets in <b>/'+type+'</b> yet — add files under a collection folder (e.g. <b>'+type+'/System_Presets/</b>) and regenerate the manifest.</div>'; return; }
+    _presets.shown=_presets.cols.map(function(){ return 3; });
+    box.innerHTML=_presets.cols.map(function(c,i){
+      return '<div class="preset-col">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--imp-fg,#111);margin:'+(i?16:2)+'px 0 7px;letter-spacing:0.02em;">'+escapeHTML(_collDisplayName(c.name))+'</div>'+
+        '<div class="preset-grid'+(type==='text'?' preset-grid-col':'')+'" id="pg-'+i+'"></div>'+
+        '<div id="pm-'+i+'" style="margin-top:8px;"></div>'+
+      '</div>';
+    }).join('');
+    _presets.cols.forEach(function(c,i){ _renderPresetGrid(i); });
+  });
+}
+function _presetShowMore(i){ _presets.shown[i]=(_presets.shown[i]||3)+6; _renderPresetGrid(i); }
+function _renderPresetGrid(i){
+  var c=_presets.cols[i]; if(!c) return;
+  var grid=document.getElementById('pg-'+i); if(!grid) return;
+  var type=_presets.type, n=Math.min(_presets.shown[i]||3, c.files.length);
+  if(type==='text'){
+    var have=grid.querySelectorAll('.preset-font').length;
+    for(var k=have;k<n;k++){ (function(f){
+      var card=document.createElement('button'); card.className='preset-font';
+      card.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:var(--imp-surface,#fff);cursor:default;text-align:left;min-height:46px;box-sizing:border-box;';
+      card.innerHTML='<span class="preset-skel" style="height:22px;width:55%;border-radius:5px;"></span>';
+      grid.appendChild(card);
+      var url=_presetUrl('text',c.name,f), name=f.replace(/\.[^.]+$/,'');
+      _loadFontFromUrl(url, name, function(key){
+        if(!key){ card.style.display='none'; return; }
+        card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
+        card.innerHTML='<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>';
+      });
+    })(c.files[k]); }
+  } else {
+    var have2=grid.querySelectorAll('.preset-thumb').length;
+    for(var k2=have2;k2<n;k2++){ (function(f){
+      var url=_presetUrl(type,c.name,f), safe=(''+f).replace(/'/g,"\\'"), cn=(''+c.name).replace(/'/g,"\\'");
+      var btn=document.createElement('button'); btn.className='preset-thumb'; btn.title=f;
+      btn.style.cssText='aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:var(--imp-surface,#fff);cursor:pointer;padding:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;';
+      btn.setAttribute('onclick',"choosePreset('"+cn+"','"+safe+"')");
+      btn.innerHTML='<span class="preset-skel" style="position:absolute;inset:6px;border-radius:5px;"></span><img data-src="'+url+'" decoding="async" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .2s;position:relative;">';
+      grid.appendChild(btn);
+    })(c.files[k2]); }
+    _loadThumbsInOrder(grid, 4);
+  }
+  var more=document.getElementById('pm-'+i);
+  if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore('+i+')">Show '+Math.min(6,rem)+' more</button>' : ''; }
+}
+function choosePreset(col, file){
+  var L=getLayer(_addSrc.id); if(!L){ _closeAddSourceOverlay(); return; }
+  var type=_presetTypeFolder(), url=_presetUrl(type,col,file), base=file.replace(/\.[^.]+$/,'');
+  if(_addSrc.kind==='pattern'){ L.patStack='vertical'; L.fromLibrary=true; }
+  _closeAddSourceOverlay();
+  if(/\.svg$/i.test(file)){
+    fetch(url).then(function(r){ return r.text(); }).then(function(svgText){
+      L.isSvg=true; L.svgText=svgText; L.fileName=base;
+      loadSvgHiRes(svgText, function(img){ if(!img) return; L.srcImg=img; openCutoutModal(L.id,img,base,null,true,true); }, stickerQuality);
+    }).catch(function(){});
+  } else {
+    L.isSvg=false; L.svgText=null; L.fileName=base;
+    var im=new Image(); im.onload=function(){ L.srcImg=im; openCutoutModal(L.id,im,base,null,true,true); }; im.onerror=function(){}; im.src=url;
+  }
 }
 function chooseLibraryFont(key) {
   var id = _addSrc.id, L = getLayer(id);
@@ -6780,47 +6836,12 @@ function chooseLibraryFont(key) {
   L.font = key; updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
   _autoEdit2dAfterUpload();   /* font chosen for the text layer → animate into the 2D editor */
 }
-/* Pattern → patterns/ , Graphic (internal kind 'sticker') → graphics/ */
-function _libFolder() { return (_addSrc && _addSrc.kind === 'pattern') ? 'patterns' : 'graphics'; }
-/* List image files in a library folder by parsing the dev-server's directory index,
-   so artist-added files appear automatically. Falls back to ARTIST_PATTERNS for patterns/. */
 function _fetchJsonList(url, cb) {
   fetch(url).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ cb(Array.isArray(j) ? j : null); }).catch(function(){ cb(null); });
 }
-function _fetchLibraryList(folder, cb) {
-  /* 1) directory listing — works on a dev server with autoindex (live auto-discovery) */
-  fetch(folder + '/').then(function(r){ return r.ok ? r.text() : ''; }).then(function(html) {
-    var files = [], re = /href="([^"?#:][^"]*?\.(?:svg|png|jpe?g|webp|gif))"/gi, m;
-    while ((m = re.exec(html))) { var f = decodeURIComponent(m[1].replace(/^\.?\//, '')); if (f.indexOf('/') < 0 && files.indexOf(f) < 0) files.push(f); }
-    if (files.length) { cb(files); return; }
-    /* 2) committed manifest — GitHub Pages serves no directory listing */
-    _fetchJsonList(folder + '/index.json', function(mf) {
-      cb((mf && mf.length) ? mf : (folder === 'patterns' ? ARTIST_PATTERNS.slice() : []));
-    });
-  }).catch(function() {
-    _fetchJsonList(folder + '/index.json', function(mf) {
-      cb((mf && mf.length) ? mf : (folder === 'patterns' ? ARTIST_PATTERNS.slice() : []));
-    });
-  });
-}
-function renderArtistLibrary() {
-  var box = document.getElementById('add-source-library'); if (!box) return;
-  var folder = _libFolder(), label = (folder === 'graphics') ? 'graphic' : 'background';
-  box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading ' + label + 's…</div>';
-  _fetchLibraryList(folder, function(files) {
-    if (!files.length) { box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No ' + label + 's in <b>/' + folder + '</b> yet — drop SVG or PNG files in that folder and they\'ll appear here.</div>'; return; }
-    box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Pick a ' + label + ' from the artist library:</div>' +
-      '<div id="_artgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
-      files.map(function(f) {
-        var safe = f.replace(/'/g, "\\'");
-        return '<button onclick="chooseLibraryPattern(\'' + safe + '\')" title="' + f + '" style="aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:#fff;cursor:pointer;padding:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">' +
-          '<img data-src="' + folder + '/' + encodeURIComponent(f) + '" decoding="async" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .18s;"></button>';
-      }).join('') + '</div>';
-    _loadThumbsInOrder(document.getElementById('_artgrid'), 6);
-  });
-}
 /* Load grid thumbnails in DOM (row) order with a small concurrency cap → top rows get
-   priority, fewer simultaneous decodes = faster perceived load. Fades each in. */
+   priority, fewer simultaneous decodes = faster perceived load. Fades each in and hides
+   its skeleton placeholder on load. */
 function _loadThumbsInOrder(grid, conc) {
   if (!grid) return;
   var imgs = Array.prototype.slice.call(grid.querySelectorAll('img[data-src]'));
@@ -6828,7 +6849,7 @@ function _loadThumbsInOrder(grid, conc) {
   function pump() {
     while (active < conc && idx < imgs.length) {
       var im = imgs[idx++]; active++;
-      im.onload = im.onerror = function () { this.style.opacity = '1'; active--; pump(); };
+      im.onload = im.onerror = function () { this.style.opacity = '1'; var sk = this.parentNode && this.parentNode.querySelector('.preset-skel'); if (sk) sk.style.display = 'none'; active--; pump(); };
       im.src = im.getAttribute('data-src'); im.removeAttribute('data-src');
     }
   }
@@ -6840,36 +6861,11 @@ var _libWarmed = false;
 function _prewarmLibrary() {
   if (_libWarmed) return; _libWarmed = true;
   var go = function () {
-    try { ['graphics', 'patterns'].forEach(function (folder) {
-      _fetchLibraryList(folder, function (files) { (files || []).slice(0, 9).forEach(function (f) { var im = new Image(); im.decoding = 'async'; im.src = folder + '/' + encodeURIComponent(f); }); });
+    try { ['graphic', 'background'].forEach(function (type) {
+      _fetchCollections(type, function (cols) { var c = cols && cols[0]; if (!c) return; (c.files || []).slice(0, 6).forEach(function (f) { var im = new Image(); im.decoding = 'async'; im.src = _presetUrl(type, c.name, f); }); });
     }); } catch (e) {}
   };
   if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 3500 }); else setTimeout(go, 2200);
-}
-function chooseLibraryPattern(file) {
-  var L = getLayer(_addSrc.id); if (!L) { _closeAddSourceOverlay(); return; }
-  L.patStack = 'vertical';   /* artist-library patterns stack vertically (uploads stay diagonal) */
-  L.fromLibrary = true;      /* library pattern → no stacking control (uploads get the toggle) */
-  var folder = _libFolder();
-  _closeAddSourceOverlay();
-  var url = folder + '/' + encodeURIComponent(file);
-  var base = file.replace(/\.[^.]+$/, '');
-  if (/\.svg$/i.test(file)) {
-    fetch(url).then(function(r){ return r.text(); }).then(function(svgText) {
-      L.isSvg = true; L.svgText = svgText; L.fileName = base;
-      loadSvgHiRes(svgText, function(img) {
-        if (!img) return;
-        L.srcImg = img;
-        openCutoutModal(L.id, img, base, null, true, true);   /* library pick → bg removal OFF by default */
-      }, stickerQuality);
-    }).catch(function(){ /* if fetch fails, leave the layer empty */ });
-  } else {
-    L.isSvg = false; L.svgText = null; L.fileName = base;
-    var im = new Image();
-    im.onload = function() { L.srcImg = im; openCutoutModal(L.id, im, base, null, true, true); };   /* library pick → bg removal OFF by default */
-    im.onerror = function() { /* leave empty */ };
-    im.src = url;
-  }
 }
 
 /* ── Per-layer graphic upload (shared hidden input) ──────────────── */
