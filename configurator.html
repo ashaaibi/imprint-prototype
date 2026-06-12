@@ -2279,6 +2279,9 @@
         <input type="range" class="test-slider" min="-1" max="1" step="0.01" value="0" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MAX (at 100%)</span><span class="slider-val" id="a2d-gapMax-val">100</span></div>
         <input type="range" class="test-slider" min="0" max="300" step="5" value="100" oninput="onA2Dnum('gapMax',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">2D editor resolution</span><span class="slider-val" id="a2d-editorRes-val">1.00×</span></div>
+        <input type="range" class="test-slider" min="0.5" max="4" step="0.25" value="1" oninput="onEditorRes(this.value)"></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Supersampling for the flat 2D editor (× device pixel ratio). Higher = crisper labels &amp; artwork, heavier to render.</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.1</span></div>
         <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.1" oninput="onA2Dnum('offIslandOpacity',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Auto-edit (3D→2D) delay</span><span class="slider-val" id="auto-edit-delay-val">1.0s</span></div>
@@ -6927,7 +6930,8 @@ function onLayerLogoLoad(input) {
   var isPdf = /pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
   var open = function(img) {
     if (!img) return;
-    L.srcImg = img; L.fileName = file.name; L.fromLibrary = false;   /* user upload → show the pattern-stacking toggle */
+    L.srcImg = img; L.fileName = file.name; L.fromLibrary = false;   /* user upload → show the Background Layout control */
+    if (L.tiled && !L.patStack) L.patStack = 'vertical';   /* custom background uploads default to Grid */
     /* Open the background-removal modal; it assigns L.img on Apply. */
     openCutoutModal(L.id, img, file.name, null, true);
   };
@@ -9266,6 +9270,18 @@ function onShowPart2D(part, on){
   if (viewMode === '2d' && typeof atlas2dRender === 'function') atlas2dRender();
 }
 function onShowShuffleClear(on){ var el=document.getElementById('shuffle-clear-row'); if(el) el.style.display = on ? '' : 'none'; }
+/* 2D-editor render resolution (supersampling × devicePixelRatio). Higher = crisper, heavier. */
+function onEditorRes(v){
+  A2D.editorRes = Math.max(0.5, Math.min(4, parseFloat(v) || 1));
+  var lbl = document.getElementById('a2d-editorRes-val'); if (lbl) lbl.textContent = A2D.editorRes.toFixed(2) + '×';
+  if (viewMode === '2d' && typeof atlas2dResize === 'function' && a2d.canvas){
+    var old = a2d.dpr || 1;
+    atlas2dResize();
+    var ratio = (a2d.dpr || 1) / old;
+    a2d.zoom *= ratio; a2d.panX *= ratio; a2d.panY *= ratio;   /* keep the same view at the new pixel density */
+    if (typeof atlas2dRender === 'function') atlas2dRender();
+  }
+}
 function onA2Dpadding(val){ A2D.padding=parseFloat(val); var el=document.getElementById('a2d-padding-val'); if(el) el.textContent=parseFloat(val); if(typeof drawBagTexture==='function') drawBagTexture(); }
 function onAtlasPad(val){
   ATLAS_PAD = Math.max(0, parseInt(val)||0);
@@ -10267,6 +10283,7 @@ var A2D = {
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:2,                /* dilate each island's colour fill to cover gaps (px) */
   gapMin:0, gapMax:100,     /* real pattern-gap range that the 0–100 Gap slider maps onto */
+  editorRes:1,              /* 2D-editor supersampling multiplier (× devicePixelRatio) */
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
@@ -10372,7 +10389,7 @@ function atlas2dInit(){
   if (!a2d.bound){ _atlasBind(a2d.canvas); window.addEventListener('resize', function(){ if (viewMode==='2d'){ atlas2dResize(); _fitMiniPreview(); } }); a2d.bound = true; }
   _bindMiniResize();
 }
-function atlas2dResize(){ var c=a2d.canvas; if(!c) return; var r=c.getBoundingClientRect(); a2d.dpr=window.devicePixelRatio||1; c.width=Math.max(1,Math.round(r.width*a2d.dpr)); c.height=Math.max(1,Math.round(r.height*a2d.dpr)); }
+function atlas2dResize(){ var c=a2d.canvas; if(!c) return; var r=c.getBoundingClientRect(); a2d.dpr=(window.devicePixelRatio||1)*((typeof A2D!=='undefined'&&A2D.editorRes)?A2D.editorRes:1); c.width=Math.max(1,Math.round(r.width*a2d.dpr)); c.height=Math.max(1,Math.round(r.height*a2d.dpr)); }
 function _exuv(){ return (typeof BAG_UV!=='undefined'&&BAG_UV.exterior)?BAG_UV.exterior:{x:0,y:0,w:2048,h:2048}; }
 function _allUVBounds(){ var uv=typeof BAG_UV!=='undefined'?BAG_UV:{}; var regions=[uv.exterior,uv.interior].filter(Boolean); if(!regions.length) return _exuv(); var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; regions.forEach(function(r){ x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w); y1=Math.max(y1,r.y+r.h); }); return {x:x0,y:y0,w:x1-x0,h:y1-y0}; }
 function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.10; a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
