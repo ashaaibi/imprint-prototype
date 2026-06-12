@@ -1759,7 +1759,7 @@
               </button>
               <button class="add-layer-item" onclick="addLayer('pattern')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                <span data-en="Pattern" data-ar="نمط">Pattern</span>
+                <span data-en="Background" data-ar="خلفية">Background</span>
               </button>
               <button class="add-layer-item" onclick="addLayer('ai')">
                 <svg class="ali-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6L12 2z"/></svg>
@@ -2275,8 +2275,8 @@
         </select></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">2.5</span></div>
         <input type="range" class="test-slider" min="0" max="10" step="0.5" value="2.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MIN (at 0%)</span><span class="slider-val" id="a2d-gapMin-val">-1</span></div>
-        <input type="range" class="test-slider" min="-1" max="1" step="0.01" value="-1" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MIN (at 0%)</span><span class="slider-val" id="a2d-gapMin-val">0</span></div>
+        <input type="range" class="test-slider" min="-1" max="1" step="0.01" value="0" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MAX (at 100%)</span><span class="slider-val" id="a2d-gapMax-val">100</span></div>
         <input type="range" class="test-slider" min="0" max="300" step="5" value="100" oninput="onA2Dnum('gapMax',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Off-island opacity</span><span class="slider-val" id="a2d-offIslandOpacity-val">0.1</span></div>
@@ -4310,7 +4310,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       var tileW = (sref / density), tileH = tileW / cAsp;   /* tile size fixed → resizing the box CROPS the tiling (density = tile size) */
       /* user Gap slider is 0–100; remap it onto the testing-defined [gapMin, gapMax] real range
          (lets the real gap dip slightly negative to close hairline seams without showing it). */
-      var _gMin = (typeof A2D!=='undefined' && A2D.gapMin!=null) ? A2D.gapMin : -1;
+      var _gMin = (typeof A2D!=='undefined' && A2D.gapMin!=null) ? A2D.gapMin : 0;
       var _gMax = (typeof A2D!=='undefined' && A2D.gapMax!=null) ? A2D.gapMax : 100;
       var _gReal = _gMin + ((L.gap != null ? L.gap : 0) / 100) * (_gMax - _gMin);
       var gpx = (_gReal / 100) * tileW;
@@ -4322,7 +4322,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       var nR = Math.min(400, Math.ceil(SH / ch) + 2), nC = Math.min(400, Math.ceil(SW / cw) + 2);
       /* tiling layout: vertical (grid) · diagonal (½-drop rows) · brick (½-drop columns) ·
          mirror (alternate flip) · scatter (deterministic random rotation, like a tossed motif) */
-      var _stack = L.patStack || 'diagonal';
+      var _stack = L.patStack || 'vertical';
       for (var rr = -1; rr <= nR; rr++) {
         for (var cc = -1; cc <= nC; cc++) {
           var px = cc * cw, py = rr * ch, _flip = 1, _rot = 0, _xf = false;
@@ -4335,13 +4335,17 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
           else if (_stack === 'spin') { if ((rr + cc) & 1) { _rot = Math.PI / 2; _xf = true; } }
           if (_xf) {
             sx.save();
-            sx.translate(px + tileW / 2, py + tileH / 2);
+            sx.translate(Math.round(px + tileW / 2), Math.round(py + tileH / 2));
             if (_flip !== 1) sx.scale(_flip, 1);
             if (_rot) sx.rotate(_rot);
             sx.drawImage(cell, -tileW / 2, -tileH / 2, tileW, tileH);
             sx.restore();
           } else {
-            sx.drawImage(cell, px, py, tileW, tileH);
+            /* integer-align each tile's edges so neighbours share an exact pixel boundary —
+               kills the sub-pixel anti-aliasing seam seen at gap 0 with fractional tile sizes. */
+            var _x0 = Math.round(px), _x1 = Math.round(px + tileW);
+            var _y0 = Math.round(py), _y1 = Math.round(py + tileH);
+            sx.drawImage(cell, _x0, _y0, Math.max(1, _x1 - _x0), Math.max(1, _y1 - _y0));
           }
         }
       }
@@ -5656,7 +5660,7 @@ function escapeHTML(s) {
 }
 function layerAutoName(L) {
   if (L.kind === 'logo') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : (L.isDefault ? 'Logo' : 'Graphic');
-  if (L.kind === 'sticker') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : (L.tiled ? 'Pattern' : 'Graphic');
+  if (L.kind === 'sticker') return L.fileName ? L.fileName.replace(/\.[^.]+$/, '') : (L.tiled ? 'Background' : 'Graphic');
   if (L.kind === 'text') {
     var c = (L.content || '').replace(/\n/g, ' ').trim();
     if (!c) return 'Text';
@@ -6321,7 +6325,7 @@ function buildLayerBodyHTML(L) {
 
   var btnStyle = 'font-size:10px;color:var(--secondary);background:none;border:1px solid var(--imp-border);border-radius:5px;cursor:pointer;padding:4px 8px;';
   var imageKind = (L.kind === 'logo' || L.kind === 'sticker');
-  var kindLabel = L.kind === 'sticker' ? (L.tiled ? 'Pattern' : 'Graphic') : (L.kind === 'text' ? 'Text' : 'Graphic');
+  var kindLabel = L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Graphic') : (L.kind === 'text' ? 'Text' : 'Graphic');
   if (imageKind) {
     if (L.img) {
       h += '<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--imp-border);border-radius:8px;padding:10px;margin:14px 0 12px;">' +
@@ -6343,7 +6347,7 @@ function buildLayerBodyHTML(L) {
       h += sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%');
       /* Layout control — uploads only (library patterns are fixed to vertical). */
       if (!L.fromLibrary) {
-        var _cur = L.patStack || 'diagonal';
+        var _cur = L.patStack || 'vertical';
         var _opts = [
           { k:'vertical', label:'Grid',     ic:'<circle cx="4.5" cy="4.5" r="1.7"/><circle cx="11.5" cy="4.5" r="1.7"/><circle cx="4.5" cy="11.5" r="1.7"/><circle cx="11.5" cy="11.5" r="1.7"/>' },
           { k:'diagonal', label:'Diagonal', ic:'<circle cx="3.5" cy="4.5" r="1.7"/><circle cx="10.5" cy="4.5" r="1.7"/><circle cx="7" cy="11.5" r="1.7"/><circle cx="14" cy="11.5" r="1.7"/>' },
@@ -6356,7 +6360,7 @@ function buildLayerBodyHTML(L) {
         ];
         var _segB = 'flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:54px;padding:8px 4px;border-radius:9px;cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-surface);color:var(--imp-fg-2);font-size:9.5px;font-weight:600;';
         var _segOn = 'border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.14));color:var(--imp-fg);';
-        h += '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Pattern Layout') + '>Pattern Layout</div>' +
+        h += '<div class="ctrl-color-label" style="margin-top:14px;margin-bottom:8px"' + _arAttr('Background Layout') + '>Background Layout</div>' +
           '<div style="display:flex;flex-wrap:wrap;gap:7px;">';
         _opts.forEach(function(o){
           h += '<button style="' + _segB + (_cur === o.k ? _segOn : '') + '" onclick="onLayerPatStack(' + id + ',&#39;' + o.k + '&#39;)" title="' + o.label + '">' +
@@ -6365,7 +6369,7 @@ function buildLayerBodyHTML(L) {
         });
         h += '</div>';
       }
-      h += '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate the pattern in the 2D editor.</div>';
+      h += '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Move, resize (crop) &amp; rotate the background in the 2D editor.</div>';
     }
   } else { /* text */
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="Text" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
@@ -6522,7 +6526,7 @@ function onLayerExtrude(id, val) {
 function onLayerPatStack(id, mode) {
   var L = getLayer(id); if (!L) return;
   var ok = { vertical:1, diagonal:1, brick:1, mirror:1, scatter:1, diamond:1, spin:1, wave:1 };
-  L.patStack = ok[mode] ? mode : 'diagonal';
+  L.patStack = ok[mode] ? mode : 'vertical';
   drawBagTexture();
   renderLayersList();   /* refresh the active layout button */
 }
@@ -6663,8 +6667,8 @@ function openAddSourcePrompt(id, kind) {
   _addSrc.id = id; _addSrc.kind = kind;
   var isFont = (kind === 'font');
   var _ar = (typeof getLang==='function' && getLang()==='ar');
-  var _kindName = _ar ? (kind === 'pattern' ? 'نمط' : isFont ? 'خط' : 'رسمة')
-                      : (kind === 'pattern' ? 'Pattern' : isFont ? 'Font' : 'Graphic');
+  var _kindName = _ar ? (kind === 'pattern' ? 'خلفية' : isFont ? 'خط' : 'رسمة')
+                      : (kind === 'pattern' ? 'Background' : isFont ? 'Font' : 'Graphic');
   document.getElementById('add-source-title').textContent = (_ar ? 'إضافة ' : 'Add ') + _kindName;
   var aiBtn = document.getElementById('add-source-ai-btn'); if (aiBtn) aiBtn.style.display = isFont ? 'none' : 'flex';
   var upLbl = document.querySelector('#add-source-upload-btn ._as-label');
@@ -6798,7 +6802,7 @@ function _fetchLibraryList(folder, cb) {
 }
 function renderArtistLibrary() {
   var box = document.getElementById('add-source-library'); if (!box) return;
-  var folder = _libFolder(), label = (folder === 'graphics') ? 'graphic' : 'pattern';
+  var folder = _libFolder(), label = (folder === 'graphics') ? 'graphic' : 'background';
   box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading ' + label + 's…</div>';
   _fetchLibraryList(folder, function(files) {
     if (!files.length) { box.innerHTML = '<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No ' + label + 's in <b>/' + folder + '</b> yet — drop SVG or PNG files in that folder and they\'ll appear here.</div>'; return; }
@@ -10262,7 +10266,7 @@ var A2D = {
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
   padding:2,                /* dilate each island's colour fill to cover gaps (px) */
-  gapMin:-1, gapMax:100,    /* real pattern-gap range that the 0–100 Gap slider maps onto */
+  gapMin:0, gapMax:100,     /* real pattern-gap range that the 0–100 Gap slider maps onto */
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
@@ -11026,8 +11030,8 @@ function renderReviewSummary() {
   function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
   function row(label, valHTML){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--imp-border);font-size:13px;"><span style="color:var(--imp-fg-3);">'+label+'</span><span style="color:var(--imp-fg);font-weight:600;text-align:right;">'+valHTML+'</span></div>'; }
   var ar = (typeof getLang==='function' && getLang()==='ar');
-  var T = ar ? { Size:'الحجم', Quantity:'الكمية', units:'وحدة', Exterior:'الخارج', Interior:'الداخل', Handles:'المقابض', Rivets:'البرشام', Artwork:'التصميم', None:'لا يوجد', Pattern:'نمط', Graphic:'رسمة' }
-             : { Size:'Size', Quantity:'Quantity', units:'units', Exterior:'Exterior', Interior:'Interior', Handles:'Handles', Rivets:'Rivets', Artwork:'Artwork', None:'None', Pattern:'Pattern', Graphic:'Graphic' };
+  var T = ar ? { Size:'الحجم', Quantity:'الكمية', units:'وحدة', Exterior:'الخارج', Interior:'الداخل', Handles:'المقابض', Rivets:'البرشام', Artwork:'التصميم', None:'لا يوجد', Pattern:'خلفية', Graphic:'رسمة' }
+             : { Size:'Size', Quantity:'Quantity', units:'units', Exterior:'Exterior', Interior:'Interior', Handles:'Handles', Rivets:'Rivets', Artwork:'Artwork', None:'None', Pattern:'Background', Graphic:'Graphic' };
   function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
   var model = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
   var layers = (BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='logo'||L.kind==='sticker'||L.kind==='text'); }) : [];
