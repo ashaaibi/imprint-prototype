@@ -309,14 +309,17 @@
       pointer-events: none; display: none;
     }
     .canvas-stage.mode-2d .mini3d-label { display: block; }
-    /* drag-to-resize grip on the top-left corner of the live-preview box (macOS-style curve) */
+    /* iPad-style resize wedge tucked INSIDE the top-left corner of the live-preview box */
     #mini3d-resize {
-      position: absolute; z-index: 6; width: 22px; height: 22px; display: none;
-      align-items: center; justify-content: center; cursor: nwse-resize; touch-action: none;
-      color: var(--imp-fg-3); background: var(--imp-surface); border: 1px solid var(--imp-border);
-      border-radius: 50%; box-shadow: var(--imp-shadow-xs); transition: color .15s, background .15s;
+      position: absolute; z-index: 6; width: 26px; height: 26px; display: none;
+      align-items: flex-start; justify-content: flex-start; cursor: nwse-resize; touch-action: none;
+      color: rgba(0,0,0,0.45);
+      filter: drop-shadow(0 0 1.2px rgba(255,255,255,0.9));
+      transition: color .15s ease;
     }
-    #mini3d-resize:hover { color: var(--imp-fg); background: var(--imp-surface-2, #f2f2f5); }
+    #mini3d-resize:hover { color: rgba(0,0,0,0.75); }
+    html[data-theme="dark"] #mini3d-resize { color: rgba(255,255,255,0.55); filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.7)); }
+    html[data-theme="dark"] #mini3d-resize:hover { color: rgba(255,255,255,0.9); }
     .canvas-stage.mode-2d #mini3d-resize { display: flex; }
     .canvas-stage.mode-2d.no-preview #three-canvas { display: none !important; }
     .canvas-stage.mode-2d.no-preview .mini3d-label,
@@ -1678,7 +1681,7 @@
         <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
-      <div id="mini3d-resize" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13 A10.5 10.5 0 0 1 13 2.5"/><path d="M4.4 8.6 8.6 4.4"/></svg></div>
+      <div id="mini3d-resize" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 26 26" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 13 A7 7 0 0 1 13 6"/></svg></div>
       <div class="a2d-ctxbar" id="a2d-ctxbar"></div>
       <div class="a2d-ctxbar" id="a2d-facebar" style="display:none;"></div>
     </div>
@@ -2285,8 +2288,8 @@
         <input type="range" class="test-slider" min="0" max="0.5" step="0.01" value="0" oninput="onA2Dnum('tintOpacity',this.value,true)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Outline resolution (raster)</span><span class="slider-val" id="a2d-guideRes-val">2048</span></div>
         <input type="range" class="test-slider" min="512" max="4096" step="256" value="2048" oninput="onA2Dnum('guideRes',this.value,true)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Island padding (gap fill)</span><span class="slider-val" id="a2d-padding-val">0</span></div>
-        <input type="range" class="test-slider" min="0" max="40" step="1" value="0" oninput="onA2Dpadding(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Island padding (gap fill)</span><span class="slider-val" id="a2d-padding-val">2</span></div>
+        <input type="range" class="test-slider" min="0" max="40" step="1" value="2" oninput="onA2Dpadding(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Atlas edge padding</span><span class="slider-val" id="atlas-pad-val">0</span></div>
         <input type="range" class="test-slider" min="0" max="512" step="32" value="0" onchange="onAtlasPad(this.value)"></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Adds a margin around the printable area so artwork at a UV edge isn't clipped (rebuilds the bag).</div>
@@ -10170,7 +10173,7 @@ var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
   labelSize:21, labelColor:'#000000',
   labelWeight:1000, subLabelWeight:1000,         /* font-weight for labels / sub-labels */
-  showUnselectedBox:true,                      /* draw the faint bounding box on UNSELECTED layers */
+  showUnselectedBox:false,                     /* draw the faint bounding box on ALL unselected layers (else only the hovered one) */
   labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
   subLabelSize:15, subLabelColor:'#333333',    /* per-face sub-label size + colour */
@@ -10180,7 +10183,7 @@ var A2D = {
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
   guideRes:2048,            /* triangle-rasterisation resolution for the baked outline */
-  padding:0,                /* dilate each island's colour fill to cover gaps (px) */
+  padding:2,                /* dilate each island's colour fill to cover gaps (px) */
   handleSize:10, handleColor:'#000000',
   previewOn:true, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
@@ -10189,7 +10192,7 @@ var A2D = {
   showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
-            pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0 };
+            pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0, hoverL:null };
 var _a2dDragging = false;   /* true while move/scale/rotate — enables the fast (light) redraw path */
 var _offIslandCv = null;    /* cached canvas for the off-island fade overlay */
 var _faceHideCv = null;     /* cached canvas for per-face layer hide (destination-out) */
@@ -10256,7 +10259,7 @@ function _fitMiniPreview(){
   cv.style.setProperty('width', wid+'px', 'important');
   cv.style.setProperty('height', hgt+'px', 'important');
   var lbl=document.querySelector('.mini3d-label'); if(lbl){ lbl.style.bottom=(16+hgt-14)+'px'; lbl.style.right='16px'; }   /* overlap the top edge of the box, sitting on the viewer */
-  var grip=document.getElementById('mini3d-resize'); if(grip){ grip.style.right=(16+wid-11)+'px'; grip.style.bottom=(16+hgt-11)+'px'; }   /* centre on the box's top-left corner */
+  var grip=document.getElementById('mini3d-resize'); if(grip){ grip.style.right=(16+wid-26)+'px'; grip.style.bottom=(16+hgt-26)+'px'; }   /* tuck inside the box's top-left corner */
 }
 /* drag the top-left grip to resize the live-preview box (width drives height via stage aspect) */
 var _miniResizeBound = false;
@@ -10332,6 +10335,7 @@ function _atlasBind(c){
   c.addEventListener('pointermove', _aMove);
   c.addEventListener('pointerup', _aUp);
   c.addEventListener('pointercancel', _aUp);
+  c.addEventListener('pointerleave', function(){ a2d.hoverL=null; });   /* drop the hover box when the cursor leaves */
   c.addEventListener('wheel', _aWheel, { passive:false });
 }
 function _aDown(e){
@@ -10380,7 +10384,8 @@ function _aMove(e){
     else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nwse-resize':'nesw-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
     else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
-    else { var ap0=_s2a(sp.x,sp.y); if (_hitLayer(ap0.x,ap0.y)) cur='move'; }
+    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ cur='move'; a2d.hoverL=_hL; } else a2d.hoverL=null; }
+    if (cur!=='move') a2d.hoverL=null;   /* only preview the box when actually hovering the layer body */
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
   }
@@ -10693,11 +10698,12 @@ function atlas2dRender(){
   var HS=A2D.handleSize*D, HC=_themeColor(A2D.handleColor);
   _drawableLayers().forEach(function(L){
     var sel=(L===a2d.sel);
-    if (!sel && !A2D.showUnselectedBox) return;   /* deselected layers: no bounding box (toggle in Testing) */
+    var hov=(L===a2d.hoverL);   /* hovered (not selected) → preview its box so the user can confirm before clicking */
+    if (!sel && !hov && !A2D.showUnselectedBox) return;   /* otherwise deselected layers show no bounding box */
     var b=_layerCropBox(_layerBox(L), L);   /* the visual (cropped) box — shrinks/shifts as you crop */
     var tl=_boxLocalToScreen(b,-1,-1), tr=_boxLocalToScreen(b,1,-1), br=_boxLocalToScreen(b,1,1), bl=_boxLocalToScreen(b,-1,1);
-    ctx.strokeStyle=sel?HC:'rgba(0,0,0,0.28)'; ctx.lineWidth=(sel?2:1)*D;
-    ctx.setLineDash(sel?[6*D,5*D]:[]);
+    ctx.strokeStyle=sel?HC:(hov?'rgba(0,0,0,0.42)':'rgba(0,0,0,0.28)'); ctx.lineWidth=(sel?2:(hov?1.5:1))*D;
+    ctx.setLineDash(sel?[6*D,5*D]:(hov?[5*D,4*D]:[]));
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
     if (sel){
@@ -10742,20 +10748,18 @@ function atlas2dRender(){
   if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:GL.Handles,target:{kind:'handles'}});
   if (bagUVGuideCanvas && A2D.showRivets2D) labelDefs.push({bb:uv.rivets, label:GL.Rivets, target:{kind:'rivets'}});
   a2d._labelHits=[];   /* clickable label regions, recorded each frame */
-  a2d._uiHits=[];      /* clickable colour dots + per-face hide toggles */
-  var _LD=D;
-  function _recLabelHit(txt, cx, dy, fontPx, target){ var w=ctx.measureText(txt).width, px=12*_LD, py=fontPx*0.85; a2d._labelHits.push({x0:cx-w/2-px,x1:cx+w/2+px,y0:dy-py,y1:dy+py,target:target}); }
+  a2d._uiHits=[];      /* clickable recolour wheels + per-face visibility toggles */
   function _recUiHit(cx,cy,r,hit){ a2d._uiHits.push({x0:cx-r,x1:cx+r,y0:cy-r,y1:cy+r,hit:hit}); }
-  /* recolour button — a rainbow "custom colour" ring (matches the Exterior step custom-colour button) */
+  /* recolour button — a solid rainbow "custom colour" disc (matches the Exterior custom-colour button) */
   function _drawRecolorBtn(cx,cy,r){
     ctx.save();
-    var stroke='#8a8a8a';
     if(ctx.createConicGradient){ var g=ctx.createConicGradient(-Math.PI/2,cx,cy);
       g.addColorStop(0.00,'#ff3b30'); g.addColorStop(0.14,'#ff9500'); g.addColorStop(0.28,'#ffcc00');
       g.addColorStop(0.42,'#34c759'); g.addColorStop(0.57,'#00c7be'); g.addColorStop(0.71,'#007aff');
-      g.addColorStop(0.85,'#5856d6'); g.addColorStop(1.00,'#ff3b30'); stroke=g; }
-    ctx.lineWidth=r*0.85; ctx.strokeStyle=stroke; ctx.beginPath(); ctx.arc(cx,cy,r*0.62,0,Math.PI*2); ctx.stroke();
-    ctx.lineWidth=1*D; ctx.strokeStyle='rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+      g.addColorStop(0.85,'#5856d6'); g.addColorStop(1.00,'#ff3b30'); ctx.fillStyle=g; }
+    else ctx.fillStyle='#8a8a8a';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=1*D; ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
     ctx.restore();
   }
   /* per-face visibility toggle — a CIRCLE. Checked (default) = layer SHOWN on that face. */
@@ -10763,26 +10767,11 @@ function atlas2dRender(){
     ctx.save();
     var hc=_themeColor(A2D.handleColor);
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-    ctx.fillStyle=checked?hc:'rgba(255,255,255,0.92)'; ctx.fill();
-    ctx.lineWidth=1.5*D; ctx.strokeStyle=checked?hc:'rgba(0,0,0,0.45)'; ctx.stroke();
+    ctx.fillStyle=checked?hc:(_dark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.06)'); ctx.fill();
+    ctx.lineWidth=1.4*D; ctx.strokeStyle=checked?hc:(_dark?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.40)'); ctx.stroke();
     if(checked){ ctx.beginPath(); ctx.lineWidth=2*D; ctx.strokeStyle='#fff'; ctx.lineCap='round'; ctx.lineJoin='round';
-      ctx.moveTo(cx-r*0.45,cy+r*0.02); ctx.lineTo(cx-r*0.08,cy+r*0.40); ctx.lineTo(cx+r*0.50,cy-r*0.42); ctx.stroke(); }
+      ctx.moveTo(cx-r*0.44,cy+r*0.02); ctx.lineTo(cx-r*0.08,cy+r*0.40); ctx.lineTo(cx+r*0.50,cy-r*0.42); ctx.stroke(); }
     ctx.restore();
-  }
-  /* place the recolour button then the visibility toggle to the RIGHT of a label, vertically
-     aligned to the text. toggleHit=null → no toggle. */
-  function _drawLabelWidgets(rightX, midY, fp, recolorTarget, toggleHit, checked){
-    var rR=fp*0.36, gap=fp*0.42, rcx=rightX+gap+rR;
-    _drawRecolorBtn(rcx, midY, rR);
-    _recUiHit(rcx, midY, rR+3*D, {type:'recolor', target:recolorTarget});
-    if(toggleHit){ var rT=fp*0.34, gap2=fp*0.5, tcx=rcx+rR+gap2+rT;
-      _drawToggle(tcx, midY, rT, checked);
-      _recUiHit(tcx, midY, rT+3*D, toggleHit); }
-  }
-  var _stroke=(A2D.labelStroke||0)*D, _strokeCol=_themeColorIf(A2D.labelStrokeColor||'#ffffff', A2D.invertLabelDark);
-  function _drawLabel(txt,x,y){
-    if (_stroke>0){ ctx.lineJoin='round'; ctx.lineWidth=_stroke; ctx.strokeStyle=_strokeCol; ctx.strokeText(txt,x,y); }
-    ctx.fillText(txt,x,y);
   }
   /* the currently-selected drawable layer (visibility toggles only show when a layer is selected) */
   var _selL=(a2d.sel && (a2d.sel.kind==='text'||a2d.sel.kind==='sticker'||a2d.sel.kind==='logo')) ? a2d.sel : null;
@@ -10794,52 +10783,68 @@ function atlas2dRender(){
     for(var i=0;i<keys.length;i++){ if(!(_selL.faceHide && _selL.faceHide[region+'_'+keys[i]])) return true; }
     return false;
   }
+  /* draw a "Live Preview"-style pill containing: LABEL · recolour wheel · (optional) visibility
+     toggle — centred at (cx,cy). Records the text as a label hit and the wheel/toggle as UI hits. */
+  function _drawLabelPill(cx, cy, text, fp, recolorTarget, toggleHit, checked){
+    var up=(''+text).toUpperCase();
+    ctx.save();
+    if('letterSpacing' in ctx) ctx.letterSpacing=(fp*0.045)+'px';
+    ctx.font='700 '+fp+'px -apple-system, "SF Pro Text", system-ui, sans-serif';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    var tw=ctx.measureText(up).width;
+    var rW=fp*0.46, rT=fp*0.44, gTW=fp*0.46, gWT=fp*0.46, padX=fp*0.6, padY=fp*0.34;
+    var contentH=Math.max(fp*0.74, 2*rW, toggleHit?2*rT:0), ph=contentH+2*padY;
+    var pw=padX*2 + tw + gTW + 2*rW + (toggleHit?(gWT+2*rT):0);
+    var px=cx-pw/2, py=cy-ph/2, rr=ph/2;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(px,py,pw,ph,rr);
+    else { ctx.moveTo(px+rr,py); ctx.arcTo(px+pw,py,px+pw,py+ph,rr); ctx.arcTo(px+pw,py+ph,px,py+ph,rr); ctx.arcTo(px,py+ph,px,py,rr); ctx.arcTo(px,py,px+pw,py,rr); ctx.closePath(); }
+    ctx.save();
+    ctx.shadowColor=_dark?'rgba(0,0,0,0.55)':'rgba(0,0,0,0.18)'; ctx.shadowBlur=5*D; ctx.shadowOffsetY=1.5*D;
+    ctx.fillStyle=_dark?'rgba(38,38,44,0.97)':'rgba(255,255,255,0.97)'; ctx.fill();
+    ctx.restore();
+    ctx.lineWidth=1*D; ctx.strokeStyle=_dark?'rgba(255,255,255,0.14)':'rgba(0,0,0,0.10)'; ctx.stroke();
+    var lx=px+padX;
+    ctx.fillStyle=_dark?'#f2f2f5':'#1c1c1e';
+    ctx.fillText(up, lx, cy+fp*0.02);
+    a2d._labelHits.push({x0:px, x1:lx+tw+gTW*0.45, y0:py, y1:py+ph, target:recolorTarget});   /* tap the text → recolour */
+    lx += tw + gTW + rW;
+    _drawRecolorBtn(lx, cy, rW);
+    _recUiHit(lx, cy, rW+2*D, {type:'recolor', target:recolorTarget});
+    lx += rW;
+    if(toggleHit){ lx += gWT + rT; _drawToggle(lx, cy, rT, checked); _recUiHit(lx, cy, rT+2*D, toggleHit); }
+    if('letterSpacing' in ctx) ctx.letterSpacing='0px';
+    ctx.restore();
+  }
   var _mainFP=A2D.labelSize*D;
-  ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.font=(A2D.labelWeight||600)+' '+_mainFP+'px sans-serif';
-  ctx.textBaseline='bottom'; ctx.textAlign='center';
   labelDefs.forEach(function(it){
     if(!it.bb) return;
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
-    var by=ly-5*D;
-    _drawLabel(it.label, p.x, by);
-    _recLabelHit(it.label, p.x, by, _mainFP, it.target);
-    /* widgets to the right: recolour, then (for exterior/interior regions) a visibility toggle */
-    var _w=ctx.measureText(it.label).width, _rightX=p.x+_w/2, _my=by-_mainFP*0.42;
+    var cyC=ly - 5*D - _mainFP*0.78;   /* pill sits just above the island top edge */
     var _isReg=(it.target.kind==='region');
     var _tog=(_isReg && _selL)?{type:'facetoggle', region:it.target.region}:null;
-    _drawLabelWidgets(_rightX, _my, _mainFP, it.target, _tog, _isReg?_regionChecked(it.target.region):true);
-    ctx.fillStyle=_themeColorIf(A2D.labelColor, A2D.invertLabelDark); ctx.textBaseline='bottom'; ctx.textAlign='center';
+    _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _isReg?_regionChecked(it.target.region):true);
   });
-  /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB
-     populated BAG_FACES. Centered (median UV) inside each face; size+color testing-tunable. */
+  /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB populated
+     BAG_FACES. Pill centred inside each face; position (top/bottom/center) testing-tunable. */
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
     var FN = _arL ? {front:'أمامي', back:'خلفي', left:'يسار', right:'يمين', base:'قاعدة'}
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
-    var _subFP=Math.max(7,A2D.subLabelSize||13)*D, _subCol=_themeColorIf(A2D.subLabelColor||'#333333', A2D.invertSubLabelDark);
-    ctx.fillStyle=_subCol;
-    ctx.font=(A2D.subLabelWeight||600)+' '+_subFP+'px sans-serif';
+    var _subFP=Math.max(7,A2D.subLabelSize||13)*D;
     var _pos=A2D.subLabelPos||'center';
     ['exterior','interior'].forEach(function(grp){
       var faces=BAG_FACES[grp]||{};
       Object.keys(faces).forEach(function(f){
         var bb=faces[f]; if(!bb) return;
         /* atlas-y is flipped on screen: larger y = visual TOP. */
-        var pad=Math.min(bb.w,bb.h)*0.07, ax,ay;
-        if(_pos==='top'){ ax=bb.x+bb.w/2; ay=bb.y+bb.h-pad; ctx.textBaseline='top'; ctx.textAlign='center'; }
-        else if(_pos==='bottom'){ ax=bb.x+bb.w/2; ay=bb.y+pad; ctx.textBaseline='bottom'; ctx.textAlign='center'; }
-        else if(_pos==='topleft'){ ax=bb.x+pad; ay=bb.y+bb.h-pad; ctx.textBaseline='top'; ctx.textAlign='left'; }
-        else { ax=bb.x+bb.w/2; ay=bb.y+bb.h/2; ctx.textBaseline='middle'; ctx.textAlign='center'; }
-        var p=_a2s(ax, ay), dy=c.height - p.y, _txt=FN[f]||f;
-        _drawLabel(_txt, p.x, dy);
-        _recLabelHit(_txt, p.x, dy, _subFP, {kind:'face',region:grp,face:f});
-        /* widget row: recolour then per-face visibility toggle, to the RIGHT of the label text */
-        var _w=ctx.measureText(_txt).width, _hw=_w/2;
-        var _rightX=(ctx.textAlign==='left')?(p.x+_w):(p.x+_hw);
-        var _midY=(ctx.textBaseline==='bottom')?(dy-_subFP*0.42):(ctx.textBaseline==='top')?(dy+_subFP*0.42):(dy-_subFP*0.06);
+        var pad=Math.min(bb.w,bb.h)*0.10, ax,ay, off;
+        if(_pos==='top'){ ax=bb.x+bb.w/2; ay=bb.y+bb.h-pad; off=+_subFP*0.86; }
+        else if(_pos==='bottom'){ ax=bb.x+bb.w/2; ay=bb.y+pad; off=-_subFP*0.86; }
+        else { ax=bb.x+bb.w/2; ay=bb.y+bb.h/2; off=0; }
+        var p=_a2s(ax, ay), dy=c.height - p.y + off, _txt=FN[f]||f;
         var _tog=_selL?{type:'facetoggle', region:grp, face:f}:null;
         var _checked=!(_selL && _selL.faceHide && _selL.faceHide[grp+'_'+f]);   /* default: shown */
-        _drawLabelWidgets(_rightX, _midY, _subFP, {kind:'face',region:grp,face:f}, _tog, _checked);
-        ctx.fillStyle=_subCol;   /* widget drawing changed fillStyle */
+        _drawLabelPill(p.x, dy, _txt, _subFP, {kind:'face',region:grp,face:f}, _tog, _checked);
       });
     });
   }
