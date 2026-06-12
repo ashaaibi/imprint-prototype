@@ -36,3 +36,14 @@ After adding/renaming/removing ANY file or collection, REGENERATE the manifests
       json.dump(cols, open(typ+'/index.json','w',encoding='utf-8'), ensure_ascii=False, indent=0)
       print(typ, [(c['name'],len(c['files'])) for c in cols])
   PY
+
+------------------------------------------------------------------------
+TEXT-SPECIFIC NOTES
+------------------------------------------------------------------------
+* System_Presets here holds BASIC, general-purpose fonts (Inter, Roboto,
+  Montserrat, Lora, Playfair Display, Oswald, Poppins, Merriweather,
+  Dancing Script). Display / artist fonts live in Artists_Collection_1.
+* "Social Media" is a BUILT-IN, synthetic collection injected by the
+  configurator (it is NOT a folder here). Its icons + platform list live in
+  the SOCIAL_ICONS map in configurator.html. To change platforms or swap in
+  exact brand SVGs, edit SOCIAL_ICONS — do not add a Social_Media folder.
