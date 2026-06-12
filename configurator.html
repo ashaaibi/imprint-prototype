@@ -5749,6 +5749,7 @@ function renderLayersList() {
     var L = getLayer(expandedId);
     if (L && (L.kind === 'logo' || L.kind === 'text')) renderLayerSwatches(L);
     else if (L && L.kind === 'sticker') renderRecolorWheel(L);
+    if (L && typeof _syncAreaParent === 'function') { _syncAreaParent(L.id, 'exterior'); _syncAreaParent(L.id, 'interior'); }
   }
   attachLayerDnD();
   if (typeof applyTranslations === 'function') applyTranslations();   /* translate dynamic layer UI */
@@ -6428,28 +6429,56 @@ function _editLayerIn2D(id) {
   if (typeof a2d !== 'undefined') a2d.sel = L;
   if (typeof setViewMode === 'function') setViewMode('2d');
 }
-/* Areas — toggle which exterior/interior faces the layer prints on (uses L.faceHide). */
+/* Areas — toggle which exterior/interior faces the layer prints on (uses L.faceHide).
+   Each region has a parent checkbox that toggles all its faces at once. */
 function _areasSectionHTML(id, L) {
   if (typeof BAG_FACES === 'undefined' || !BAG_FACES.exterior) return '';
   var FN = { front:'Front', back:'Back', left:'Left', right:'Right', base:'Base' };
-  var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:6px"' + _arAttr('Areas') + '>Areas</div>';
+  var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:6px"' + _arAttr('Areas') + '>Areas</div>' +
+    '<div id="lyr-' + id + '-areas">';
   ['exterior', 'interior'].forEach(function(region) {
     var faces = BAG_FACES[region] || {}, keys = Object.keys(faces); if (!keys.length) return;
-    h += '<div style="font-size:10px;font-weight:700;color:var(--imp-fg-2);margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.04em;">' + (region === 'exterior' ? 'Exterior' : 'Interior') + '</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;">';
+    var onCount = keys.filter(function(f){ return !(L.faceHide && L.faceHide[region + '_' + f]); }).length;
+    var allOn = onCount === keys.length, noneOn = onCount === 0;
+    h += '<label style="display:inline-flex;align-items:center;gap:6px;margin:8px 0 4px;cursor:pointer;font-size:10px;font-weight:700;color:var(--imp-fg-2);text-transform:uppercase;letter-spacing:0.04em;">' +
+      '<input type="checkbox" data-region="' + region + '" ' + (allOn ? 'checked' : '') + ' onchange="onLayerAreaGroup(' + id + ',&#39;' + region + '&#39;,this.checked)" style="accent-color:var(--imp-accent,#c8a96e);width:15px;height:15px;"> ' +
+      (region === 'exterior' ? 'Exterior' : 'Interior') + '</label>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;padding-left:4px;">';
     keys.forEach(function(f) {
       var on = !(L.faceHide && L.faceHide[region + '_' + f]);
-      h += '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--imp-fg);cursor:pointer;"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="onLayerArea(' + id + ',&#39;' + region + '&#39;,&#39;' + f + '&#39;,this.checked)" style="accent-color:var(--imp-accent,#c8a96e);width:14px;height:14px;"> ' + (FN[f] || f) + '</label>';
+      h += '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--imp-fg);cursor:pointer;"><input type="checkbox" data-region="' + region + '" data-face="' + f + '" ' + (on ? 'checked' : '') + ' onchange="onLayerArea(' + id + ',&#39;' + region + '&#39;,&#39;' + f + '&#39;,this.checked)" style="accent-color:var(--imp-accent,#c8a96e);width:14px;height:14px;"> ' + (FN[f] || f) + '</label>';
     });
     h += '</div>';
   });
-  return h;
+  return h + '</div>';
+}
+/* Reflect child face state onto the region's parent checkbox (checked / indeterminate). */
+function _syncAreaParent(id, region) {
+  var box = document.getElementById('lyr-' + id + '-areas'); if (!box) return;
+  var parent = box.querySelector('input[data-region="' + region + '"]:not([data-face])');
+  var kids = box.querySelectorAll('input[data-region="' + region + '"][data-face]');
+  if (!parent || !kids.length) return;
+  var on = 0; kids.forEach(function(cb){ if (cb.checked) on++; });
+  parent.checked = on === kids.length;
+  parent.indeterminate = on > 0 && on < kids.length;
 }
 function onLayerArea(id, region, face, on) {
   var L = getLayer(id); if (!L) return;
   L.faceHide = L.faceHide || {};
   var k = region + '_' + face;
   if (on) delete L.faceHide[k]; else L.faceHide[k] = true;
+  _syncAreaParent(id, region);
+  if (typeof drawBagTexture === 'function') drawBagTexture();
+}
+function onLayerAreaGroup(id, region, on) {
+  var L = getLayer(id); if (!L) return;
+  L.faceHide = L.faceHide || {};
+  Object.keys(BAG_FACES[region] || {}).forEach(function(f) {
+    var k = region + '_' + f; if (on) delete L.faceHide[k]; else L.faceHide[k] = true;
+  });
+  var box = document.getElementById('lyr-' + id + '-areas');
+  if (box) box.querySelectorAll('input[data-region="' + region + '"][data-face]').forEach(function(cb){ cb.checked = on; });
+  _syncAreaParent(id, region);
   if (typeof drawBagTexture === 'function') drawBagTexture();
 }
 
@@ -6607,9 +6636,9 @@ function _layoutPickerHTML(id, L) {
   var cur = L.tiled ? (L.patStack || 'vertical') : 'none';
   var opts = [
     { k:'none',     label:'None',     ic:'<rect x="5.2" y="5.2" width="5.6" height="5.6" rx="1.4"/>' },
-    { k:'vertical', label:'Grid',     ic:'<circle cx="4.5" cy="4.5" r="1.7"/><circle cx="11.5" cy="4.5" r="1.7"/><circle cx="4.5" cy="11.5" r="1.7"/><circle cx="11.5" cy="11.5" r="1.7"/>' },
     { k:'diagonal', label:'Diagonal', ic:'<circle cx="3.5" cy="4.5" r="1.7"/><circle cx="10.5" cy="4.5" r="1.7"/><circle cx="7" cy="11.5" r="1.7"/><circle cx="14" cy="11.5" r="1.7"/>' },
     { k:'brick',    label:'Brick',    ic:'<circle cx="4.5" cy="3.5" r="1.7"/><circle cx="11.5" cy="7" r="1.7"/><circle cx="4.5" cy="10.5" r="1.7"/><circle cx="11.5" cy="14" r="1.7"/>' },
+    { k:'vertical', label:'Grid',     ic:'<circle cx="4.5" cy="4.5" r="1.7"/><circle cx="11.5" cy="4.5" r="1.7"/><circle cx="4.5" cy="11.5" r="1.7"/><circle cx="11.5" cy="11.5" r="1.7"/>' },
     { k:'mirror',   label:'Mirror',   ic:'<path d="M7 3 L3.5 8.5 L7 8.5 Z"/><path d="M9 3 L12.5 8.5 L9 8.5 Z"/><path d="M7 13 L3.5 9.5 L7 9.5 Z" opacity="0.55"/><path d="M9 13 L12.5 9.5 L9 9.5 Z" opacity="0.55"/>' },
     { k:'scatter',  label:'Scatter',  ic:'<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M3.5 4 h3"/><path d="M11 3.5 l2 2.5"/><path d="M4 11.5 l2.5 -1.5"/><path d="M10 13 l3 -0.5"/></g>' },
     { k:'diamond',  label:'Diamond',  ic:'<path d="M8 2.5 L13.5 8 L8 13.5 L2.5 8 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.5"/>' },
@@ -6627,21 +6656,36 @@ function _layoutPickerHTML(id, L) {
   return h + '</div>';
 }
 function _tiledControlsHTML(id, L) {
-  return sliderRow(id, 'density', 'Density', 1, 24, 1, (L.density != null ? L.density : 6), '×') +
-    sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 0), '%') +
+  return sliderRow(id, 'density', 'Density', 1, 40, 1, (L.density != null ? L.density : 20), '×') +
+    sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 60), '%') +
     sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
     '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize (crop) the tiled box in the 2D editor; Scale/Rotation above.</div>';
 }
 /* Pick a tile layout (or None = single instance) on any layer type. */
+var _PRELAYOUT_KEYS = ['posU','posV','scale','scaleH','rotation','cropT','cropB','cropL','cropR','cropBoxL','cropBoxR','cropBoxT','cropBoxB'];
 function onLayerLayout(id, mode) {
   var L = getLayer(id); if (!L) return;
-  if (mode === 'none') { L.tiled = false; }
-  else {
-    if (!L.tiled) {   /* converting single → tiled: seed defaults + a box big enough to repeat visibly */
-      L.scale = 50; L.scaleH = 50;
-      if (L.density == null) L.density = 6;
-      if (L.gap == null) L.gap = 0;
+  if (mode === 'none') {
+    L.tiled = false;
+    if (L._preLayoutBox) {   /* restore the pre-layout box & size */
+      _PRELAYOUT_KEYS.forEach(function(k){ if (L._preLayoutBox[k] != null) L[k] = L._preLayoutBox[k]; });
+      L._preLayoutBox = null;
+    }
+  } else {
+    if (!L.tiled) {
+      /* single → tiled: remember the box, seed defaults, and fit the WHOLE exterior so the
+         pattern fills the bag in the 2D editor. None later restores the saved box. */
+      var snap = {}; _PRELAYOUT_KEYS.forEach(function(k){ snap[k] = L[k]; }); L._preLayoutBox = snap;
+      L.density = 20; L.gap = 60;
       if (L.feather == null) L.feather = 0;
+      if (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) {
+        var _ex = BAG_UV.exterior, _PAD = (typeof ATLAS_PAD !== 'undefined') ? ATLAS_PAD : 0;
+        var _sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : _ex.w, _corr = (typeof getArtCorr === 'function') ? getArtCorr() : {x:1,y:1};
+        L.posU = (_ex.x + _ex.w/2 - _PAD)/2048*100; L.posV = (_ex.y + _ex.h/2 - _PAD)/2048*100;
+        L.scale  = Math.max(2, Math.min(400, _ex.w*1.06/(_sref*(_corr.x||1))*100));
+        L.scaleH = Math.max(2, Math.min(400, _ex.h*1.06/(_sref*(_corr.y||1))*100));
+        L.rotation = 0; L.cropBoxL = L.cropBoxR = L.cropBoxT = L.cropBoxB = 0;
+      } else { L.scale = 50; L.scaleH = 50; }
     }
     L.tiled = true; L.patStack = mode;
   }
@@ -6724,7 +6768,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'diagonal', gap:60, density:20, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new pattern covers the WHOLE exterior by default (centered on the exterior island). */
@@ -6947,7 +6991,7 @@ function _renderPresetGrid(i){
       card.innerHTML='<span class="preset-spin"></span><span class="pf-content" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;"></span>';
       grid.appendChild(card);
       card._whenReady=function(cb){ if(card._ready) cb(); else card._readyCb=cb; };
-      var content=card.querySelector('.pf-content'), name=f.replace(/\.[^.]+$/,'');
+      var content=card.querySelector('.pf-content'), name=f.replace(/\.[^.]+$/,'').replace(/_/g,' ');
       _loadFontFromUrl(url, name, function(key){          /* downloads start immediately, in parallel */
         if(!key){ card.style.display='none'; }
         else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
@@ -11180,6 +11224,13 @@ function goConfigStep(n) {
     p.classList.toggle('on', s === n);
     p.classList.toggle('done', s < n);
   });
+  /* Centre the active pill in the (horizontally scrollable) pills row. */
+  var pills = document.getElementById('cstep-pills');
+  var activePill = pills && pills.querySelector('[data-cstep-pill="' + n + '"]');
+  if (pills && activePill) {
+    var pr = pills.getBoundingClientRect(), ar = activePill.getBoundingClientRect();
+    pills.scrollBy({ left: (ar.left + ar.width/2) - (pr.left + pr.width/2), behavior: 'smooth' });
+  }
   /* Counter */
   var counter = document.getElementById('cstep-counter');
   if (counter) counter.textContent = n + ' / ' + CONFIG_STEP_COUNT;
