@@ -21,14 +21,17 @@
 
     /* ── Gallery ── */
     .pdp-gallery { position: sticky; top: 84px; }
-    .pdp-stage { position: relative; aspect-ratio: 4/3.2; border-radius: var(--imp-r-lg); overflow: hidden; border: 1px solid var(--imp-border); display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+    .pdp-stage { position: relative; aspect-ratio: 5/3; border-radius: var(--imp-r-lg); overflow: hidden; border: 1px solid var(--imp-border); display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
     .pdp-stage .pdp-bag { width: 58%; height: auto; filter: drop-shadow(0 24px 40px rgba(20,16,10,0.28)); }
-    .pdp-stage-tag { position: absolute; left: 14px; bottom: 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--imp-fg-2); background: var(--imp-surface); border: 1px solid var(--imp-border); border-radius: var(--imp-r-pill); padding: 5px 11px; box-shadow: var(--imp-shadow-xs); }
+    .pdp-stage img.pdp-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pdp-stage-tag { position: absolute; left: 14px; bottom: 14px; z-index: 2; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--imp-fg-2); background: var(--imp-surface); border: 1px solid var(--imp-border); border-radius: var(--imp-r-pill); padding: 5px 11px; box-shadow: var(--imp-shadow-xs); }
     .pdp-thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 12px; }
     .pdp-thumb { aspect-ratio: 1; border-radius: var(--imp-r-md); overflow: hidden; border: 1px solid var(--imp-border); background: var(--imp-surface-2); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px; transition: border-color 0.15s, transform 0.15s; }
     .pdp-thumb:hover { border-color: var(--imp-border-hover); }
     .pdp-thumb.on { border-color: var(--imp-fg); }
     .pdp-thumb .pdp-bag { width: 70%; }
+    .pdp-thumb.photo { padding: 0; }
+    .pdp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .pdp-thumb .pdp-spec-mini { font-size: 8px; line-height: 1.3; color: var(--imp-fg-3); text-align: center; }
 
     /* ── Info column ── */
@@ -351,28 +354,37 @@ function bagSVG(body, side, handle){
     '<rect x="71" y="143" width="30" height="6" rx="3" fill="'+handle+'" opacity="0.35"/>' +
   '</svg>';
 }
+/* Real product renders (designer-captured) lead the gallery in order; spec sheet last.
+   Each keeps an SVG mockup as a fallback if its render ever fails to load. */
 var VIEWS = [
-  { tag:'Kraft · Soft-touch', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#c79a63','#a87f4c','#6b4f2e') },
-  { tag:'Coated white',       bg:'linear-gradient(160deg,#f4f4f5,#e7e7ea)', svg:bagSVG('#f3f0ec','#dcd7cf','#b9b2a7') },
-  { tag:'Brand colour',       bg:'linear-gradient(160deg,#d7f0ec,#bfe6df)', svg:bagSVG('#16b8a6','#0f9488','#0b6b62') },
-  { tag:'Studio · dark',      bg:'linear-gradient(160deg,#2a2a2e,#171719)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
+  { tag:'Lifestyle',         img:'templates/renders/honey-gift-bag-1.jpg', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
+  { tag:'Detail · flat-lay', img:'templates/renders/honey-gift-bag-2.jpg', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
+  { tag:'Studio',            img:'templates/renders/honey-gift-bag-3.jpg', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
   { tag:'Spec sheet', bg:'var(--imp-surface-2)', spec:true }
 ];
 
+function _pdpImgErr(img,i){ var v=VIEWS[i]; if (v && v.svg) img.parentNode.innerHTML = v.svg; }
 function renderGallery(){
   var stage=document.getElementById('pdp-stage'), tag=document.getElementById('pdp-stage-tag'), thumbs=document.getElementById('pdp-thumbs');
   function show(i){
     var v=VIEWS[i];
-    stage.style.background = v.bg;
-    document.getElementById('pdp-stage-bag').innerHTML = v.spec ? specCardSVG() : v.svg;
+    stage.style.background = v.bg || 'var(--imp-surface-2)';
+    document.getElementById('pdp-stage-bag').innerHTML =
+      v.spec ? specCardSVG() :
+      v.img  ? '<img class="pdp-photo" src="'+v.img+'" alt="Honeyloom Gift Bag — '+v.tag+'" onerror="_pdpImgErr(this,'+i+')">' :
+      v.svg;
     tag.textContent = v.tag;
     thumbs.querySelectorAll('.pdp-thumb').forEach(function(t,k){ t.classList.toggle('on', k===i); });
   }
   var h='';
   VIEWS.forEach(function(v,i){
-    h += '<div class="pdp-thumb'+(i===0?' on':'')+'" data-i="'+i+'" style="background:'+(v.spec?'var(--imp-surface-2)':v.bg)+'">' + (v.spec? '<div class="pdp-spec-mini">SPEC<br>SHEET</div>' : v.svg) + '</div>';
+    var inner = v.spec ? '<div class="pdp-spec-mini">SPEC<br>SHEET</div>'
+              : v.img  ? '<img src="'+v.img+'" alt="" onerror="_pdpImgErr(this,'+i+')">'
+              : v.svg;
+    h += '<div class="pdp-thumb'+(v.img?' photo':'')+(i===0?' on':'')+'" data-i="'+i+'" style="background:'+(v.spec?'var(--imp-surface-2)':(v.bg||'var(--imp-surface-2)'))+'">' + inner + '</div>';
   });
   thumbs.innerHTML=h;
+  thumbs.style.gridTemplateColumns = 'repeat('+VIEWS.length+',minmax(0,1fr))';
   thumbs.querySelectorAll('.pdp-thumb').forEach(function(t){ t.addEventListener('click', function(){ show(parseInt(t.getAttribute('data-i'),10)); }); });
   show(0);
 }
