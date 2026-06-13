@@ -5743,8 +5743,8 @@ function renderLayersList() {
         '<span class="layer-name" id="lyr-' + L.id + '-name">' + escapeHTML(layerAutoName(L)) + '</span>' +
         '<button class="layer-icon-btn' + (L.visible ? '' : ' off') + '" title="Show / hide" onclick="event.stopPropagation();toggleLayerVisible(' + L.id + ')">' + (L.visible ? eyeOpenSVG() : eyeClosedSVG()) + '</button>' +
         '<button class="layer-icon-btn' + (L.locked ? ' on' : '') + '" title="' + (L.locked ? 'Unlock layer' : 'Lock layer') + '" onclick="event.stopPropagation();toggleLayerLock(' + L.id + ')">' + lockSVG(L.locked) + '</button>' +
-        '<button class="layer-icon-btn" ' + (L.locked ? 'disabled title="Unlock to duplicate"' : 'title="Duplicate layer"') + ' onclick="event.stopPropagation();duplicateLayer(' + L.id + ')">' + duplicateSVG() + '</button>' +
-        '<button class="layer-icon-btn danger" ' + ((L.isDefault || L.locked) ? ('disabled title="' + (L.locked ? 'Unlock to delete' : 'Default layers can&#39;t be deleted') + '"') : 'title="Delete layer"') + ' onclick="event.stopPropagation();deleteLayer(' + L.id + ')">' + trashSVG() + '</button>' +
+        '<button class="layer-icon-btn" ' + ((L.locked && !L.isBackground) ? 'disabled title="Unlock to duplicate"' : 'title="Duplicate layer"') + ' onclick="event.stopPropagation();duplicateLayer(' + L.id + ')">' + duplicateSVG() + '</button>' +
+        '<button class="layer-icon-btn danger" ' + ((L.isDefault || (L.locked && !L.isBackground)) ? ('disabled title="' + (L.locked ? 'Unlock to delete' : 'Default layers can&#39;t be deleted') + '"') : 'title="Delete layer"') + ' onclick="event.stopPropagation();deleteLayer(' + L.id + ')">' + trashSVG() + '</button>' +
         '<span class="layer-chevron">&#9658;</span>' +
       '</div>' +
       '<div class="layer-body" id="lyr-' + L.id + '-body"' + ((L.locked && !L.isBackground) ? ' style="pointer-events:none;opacity:0.6;"' : '') + '>' + (expanded ? buildLayerBodyHTML(L) : '') + '</div>' +
@@ -6384,8 +6384,14 @@ function buildLayerBodyHTML(L) {
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
       layerFontRowHTML(L);
   }
-  /* Transform (Scale / Rotation / Opacity) → Colour/Recolor → Move → Areas. */
-  h += _transformHTML(id, L);
+  /* Backgrounds: Opacity + tile controls (density/gap/feather), no scale/rotation/move.
+     Everything else: Scale / Rotation / Opacity. Then Colour/Recolor → Move → Areas. */
+  if (L.isBackground) {
+    h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+    h += _tiledControlsHTML(id, L);
+  } else {
+    h += _transformHTML(id, L);
+  }
 
   if (L.kind === 'sticker') {
     h += stickerColorSectionHTML(L);
@@ -6398,7 +6404,7 @@ function buildLayerBodyHTML(L) {
     if (L.kind === 'logo') h += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
   }
 
-  h += _moveSectionHTML(id, L);
+  if (!L.isBackground) h += _moveSectionHTML(id, L);   /* backgrounds can't be moved → no Move section */
   h += _areasSectionHTML(id, L);
 
   /* Material finish, Emboss/Deboss and Layout are only offered on Logo and Text layers.
@@ -6494,7 +6500,7 @@ function _areasSectionHTML(id, L) {
     var region = rg[0], title = rg[1];
     var faces = BAG_FACES[region] || {}, keys = Object.keys(faces); if (!keys.length) return;
     var allOn = keys.every(function(f){ return !(L.faceHide && L.faceHide[region + '_' + f]); });
-    h += '<div class="area-region" data-region="' + region + '">' +
+    h += '<div class="area-region collapsed" data-region="' + region + '">' +
       '<div class="area-region-head" onclick="toggleAreaCollapse(this)">' +
         '<span class="area-all' + (allOn ? ' on' : '') + '" data-region="' + region + '" onclick="event.stopPropagation();onLayerAreaGroup(' + id + ',&#39;' + region + '&#39;)" title="Toggle all"><span class="knob"></span></span>' +
         '<span class="arh-title"' + _arAttr(title) + '>' + title + '</span>' + chev +
@@ -6720,7 +6726,7 @@ function _tiledControlsHTML(id, L) {
   return sliderRow(id, 'density', 'Density', 1, 100, 1, (L.density != null ? L.density : 40), '×') +
     sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 60), '%') +
     sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
-    '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize (crop) the tiled box in the 2D editor; Scale/Rotation above.</div>';
+    '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize / crop the tiled box in the 2D editor.</div>';
 }
 /* Pick a tile layout (or None = single instance) on any layer type. */
 var _PRELAYOUT_KEYS = ['posU','posV','scale','scaleH','rotation','cropT','cropB','cropL','cropR','cropBoxL','cropBoxR','cropBoxT','cropBoxB'];
@@ -6834,13 +6840,19 @@ function addLayer(kind) {
     L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:3, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
-    /* A new pattern covers the WHOLE exterior by default (centered on the exterior island). */
+    /* A new background's box covers BOTH the exterior AND interior islands (union), so toggling
+       Inside on later needs no resize. Only the Outside faces are shown by default. */
     if (kind === 'pattern' && typeof BAG_UV!=='undefined' && BAG_UV.exterior){
-      var _ex=BAG_UV.exterior, _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+      var _ex=BAG_UV.exterior, _in=BAG_UV.interior, _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
       var _sref=(typeof _layerScaleRef==='function')?_layerScaleRef():_ex.w, _corr=(typeof getArtCorr==='function')?getArtCorr():{x:1,y:1};
-      L.posU=(_ex.x+_ex.w/2-_PAD)/2048*100; L.posV=(_ex.y+_ex.h/2-_PAD)/2048*100;
-      L.scale =Math.max(2,Math.min(400, _ex.w*1.06/(_sref*(_corr.x||1))*100));
-      L.scaleH=Math.max(2,Math.min(400, _ex.h*1.06/(_sref*(_corr.y||1))*100));
+      var _minx=_ex.x,_miny=_ex.y,_maxx=_ex.x+_ex.w,_maxy=_ex.y+_ex.h;
+      if(_in){ _minx=Math.min(_minx,_in.x); _miny=Math.min(_miny,_in.y); _maxx=Math.max(_maxx,_in.x+_in.w); _maxy=Math.max(_maxy,_in.y+_in.h); }
+      var _uw=_maxx-_minx, _uh=_maxy-_miny;
+      L.posU=(_minx+_uw/2-_PAD)/2048*100; L.posV=(_miny+_uh/2-_PAD)/2048*100;
+      L.scale =Math.max(2,Math.min(400, _uw*1.04/(_sref*(_corr.x||1))*100));
+      L.scaleH=Math.max(2,Math.min(400, _uh*1.04/(_sref*(_corr.y||1))*100));
+      /* Inside (interior) faces OFF by default. */
+      if (typeof BAG_FACES!=='undefined' && BAG_FACES.interior){ L.faceHide=L.faceHide||{}; Object.keys(BAG_FACES.interior).forEach(function(f){ L.faceHide['interior_'+f]=true; }); }
     }
   } else {
     L = { id:id, kind:'ai', isDefault:false, visible:false, prompt:'', areas:allAreas };
