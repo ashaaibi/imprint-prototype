@@ -3,6 +3,15 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 6)
+- **Slider FPS overhaul** — a new `PERF` system (Testing → "Performance") cuts the per-`oninput` bake cost
+  while a range slider is dragged; `_sliderDragging` is detected globally and `_endSliderDrag` does one
+  full-quality bake on release. Toggles (each in Testing): coalesce bakes to 1/frame (#1, default on),
+  skip finish/bump/emboss while dragging (#2, on), Opacity/Hue/Saturation skip finish&bump (#3, on),
+  throttle 3D render rate while dragging (#4, on, `PERF.dragFps`), debounce recolor (#5, on), reduce
+  post-FX SSAO/DOF/Bloom while dragging (#9, on), cache static bag base (#6, experimental off),
+  event throttle ~16ms (#10, off). `_lightBake()` gates only the heavy passes; face/handle-hide stays correct.
+
 ## 2026-06-13 (batch 5)
 - **Background preset thumbnails square-cropped** (`object-fit:cover`, full-bleed) so a rectangular
   background doesn't look rectangular in the picker. Graphic/text thumbs stay `contain`.

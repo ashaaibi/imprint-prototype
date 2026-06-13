@@ -153,6 +153,17 @@ The 2D editor shows the flat bag; the 3D view shrinks to a small **"Live preview
   finishes/bump/history are skipped (`_a2dDragging`), the filtered backdrop is cached when idle, and the canvas
   rect is cached (`a2d._rect`).
 
+### Slider performance (`PERF`, Testing → "Performance")
+Every slider `oninput` triggers a full `drawBagTexture()`. The **`PERF`** config (defined just above
+`drawBagTexture`) cuts the cost while a range `<input>` is dragged — `_sliderDragging` is set by a global
+pointerdown/up on range inputs, and `_endSliderDrag` does one full-quality bake on release. Toggles:
+- **coalesce** (#1) — `drawBagTexture` self-coalesces to one bake per rAF while dragging (also one GPU upload).
+- **skipHeavy** (#2) — finish/bump/emboss/history skipped while dragging, via `_lightBake()`.
+- **colorOnly** (#3) — Opacity/Hue/Saturation handlers set `_colorOnlyEdit` → skip finish/bump (shape unchanged).
+- **throttleRender** (#4) — `animate()` caps the 3D render to `PERF.dragFps` while dragging.
+- **debounceRecolor** (#5) · **reducePostFX** (#9, saves/restores SSAO/DOF/Bloom) · **cacheBase** (#6, experimental,
+  off) · **eventThrottle** (#10, off). `_lightBake()` gates ONLY the heavy passes — face/handle-hide stays correct.
+
 ## Testing / admin defaults (current)
 - Finishes default to **soft-touch** (ext/int/handles). HDRI env = **studio3**, intensity ~1.10.
 - Floor: roughness **1.00**, reflectivity (env) **0.00**. **Bloom OFF, FXAA OFF.**

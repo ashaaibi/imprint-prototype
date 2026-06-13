@@ -2652,6 +2652,22 @@
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Colors below this saturation (near the color-wheel core) snap to pure white or black, per layer type. 0% = off.</div>
 
+      <!-- Performance (slider FPS) sub-section -->
+      <div style="margin-top:18px;margin-bottom:8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:600;">Performance — slider FPS</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--imp-fg-2);margin-bottom:8px;">
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" checked onchange="PERF.coalesce=this.checked"> Coalesce bakes to 1/frame while dragging (+GPU upload)</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" checked onchange="PERF.skipHeavy=this.checked"> Skip finish/bump/emboss while dragging</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" checked onchange="PERF.colorOnly=this.checked"> Opacity/Hue/Saturation skip finish &amp; bump</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" checked onchange="PERF.throttleRender=this.checked"> Throttle 3D render rate while dragging</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" checked onchange="PERF.debounceRecolor=this.checked"> Debounce recolor image rebuild</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" checked onchange="PERF.reducePostFX=this.checked"> Reduce post-FX (SSAO/DOF/Bloom) while dragging</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" onchange="PERF.cacheBase=this.checked"> Cache static bag base while dragging (experimental)</label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;"><input type="checkbox" onchange="PERF.eventThrottle=this.checked"> Throttle slider events ~16ms (alt. to coalesce)</label>
+      </div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Drag render FPS cap</span><span class="slider-val" id="perf-dragfps-val">30</span></div>
+        <input type="range" class="test-slider" min="10" max="60" step="5" value="30" oninput="PERF.dragFps=parseInt(this.value)||30;var e=document.getElementById('perf-dragfps-val');if(e)e.textContent=this.value"></div>
+      <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Every slider re-bakes the 2048&sup2; atlas; these cut the work while dragging (full-quality bake on release). Top 6 are safe defaults; the last two are opt-in.</div>
+
       <!-- HDRI Lighting sub-section -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">HDRI Environments</div>
 
@@ -4057,22 +4073,89 @@ function _drawBodyRegion(region, uv, clip, kraftRender){
   if (bagPatternsLoaded) drawPatternOnRegion(bagTexCtx, region, uv);
   bagTexCtx.restore();
 }
+/* ════════════════════════════════════════════════════════════════════
+   SLIDER PERFORMANCE — each slider oninput triggers a full atlas bake; these
+   (all toggleable in Testing → "Performance") cut the cost while dragging.
+   ════════════════════════════════════════════════════════════════════ */
+var PERF = {
+  coalesce:        true,  /* #1 run at most one bake per animation frame while a slider drags (+GPU upload) */
+  skipHeavy:       true,  /* #2 skip finish/bump/emboss/history while dragging; settle on release */
+  colorOnly:       true,  /* #3 Opacity/Hue/Saturation edits never rebuild finish/bump (shape unchanged) */
+  throttleRender:  true,  /* #4 cap the 3D render rate while dragging */
+  debounceRecolor: true,  /* #5 debounce the recolor image rebuild */
+  cacheBase:       false, /* #6 reuse a snapshot of the static bag base while dragging — experimental */
+  reducePostFX:    true,  /* #9 disable SSAO/DOF/Bloom while dragging */
+  eventThrottle:   false, /* #10 drop bakes <16 ms apart (alternative to coalesce) */
+  dragFps:         30     /* render-rate cap for #4 */
+};
+var _sliderDragging = false, _colorOnlyEdit = false;
+var _bakeRaf = 0, _bakeDirty = false, _bakeNow = false;
+var _baseCacheCv = null, _baseCacheValid = false;
+var _lastSliderBake = 0, _perfFXSaved = null;
+/* A "light" bake skips the heavy passes (finish/bump/emboss/history). NOTE: face/handle-hide is NOT
+   gated by this — it's part of the correct colour bake. */
+function _lightBake(){ return _a2dDragging || (_sliderDragging && PERF.skipHeavy) || (_colorOnlyEdit && PERF.colorOnly); }
+function _perfPostFXDown(){
+  if (_perfFXSaved || typeof REALISM === 'undefined') return;
+  _perfFXSaved = { ssao:!!(REALISM.ssao&&REALISM.ssao.on), dof:!!(REALISM.dof&&REALISM.dof.on), bloom:!!(REALISM.bloom&&REALISM.bloom.on) };
+  if (_perfFXSaved.ssao  && window.onSsaoToggle)  window.onSsaoToggle(false);
+  if (_perfFXSaved.dof   && window.onDofToggle)   window.onDofToggle(false);
+  if (_perfFXSaved.bloom && window.onBloomToggle) window.onBloomToggle(false);
+}
+function _perfPostFXUp(){
+  if (!_perfFXSaved) return; var s = _perfFXSaved; _perfFXSaved = null;
+  if (s.ssao  && window.onSsaoToggle)  window.onSsaoToggle(true);
+  if (s.dof   && window.onDofToggle)   window.onDofToggle(true);
+  if (s.bloom && window.onBloomToggle) window.onBloomToggle(true);
+}
+function _beginSliderDrag(){ if (_sliderDragging) return; _sliderDragging = true; if (PERF.reducePostFX) _perfPostFXDown(); }
+function _endSliderDrag(){
+  if (!_sliderDragging) return;
+  _sliderDragging = false; _colorOnlyEdit = false; _baseCacheValid = false;
+  if (_bakeRaf){ cancelAnimationFrame(_bakeRaf); _bakeRaf = 0; } _bakeDirty = false;
+  if (PERF.reducePostFX) _perfPostFXUp();
+  if (typeof drawBagTexture === 'function'){ _bakeNow = true; try { drawBagTexture(); } finally { _bakeNow = false; } }   /* one full-quality bake on release */
+}
+document.addEventListener('pointerdown', function(e){ var t=e.target; if (t && t.tagName==='INPUT' && t.type==='range') _beginSliderDrag(); }, true);
+document.addEventListener('pointerup', _endSliderDrag, true);
+document.addEventListener('pointercancel', _endSliderDrag, true);
+
 function drawBagTexture() {
   if (!bagTexCtx) return;
+  /* #1 Coalesce bakes (and GPU uploads) to one per animation frame while dragging. */
+  if (PERF.coalesce && _sliderDragging && !_bakeNow) {
+    _bakeDirty = true;
+    if (!_bakeRaf) _bakeRaf = requestAnimationFrame(function(){ _bakeRaf = 0; if (_bakeDirty){ _bakeDirty = false; _bakeNow = true; try { drawBagTexture(); } finally { _bakeNow = false; } } });
+    return;
+  }
+  /* #10 Event throttle (only when coalesce is off): drop bakes closer than 16 ms. */
+  if (!_bakeNow && PERF.eventThrottle && _sliderDragging) {
+    var _tn = (typeof performance!=='undefined'?performance.now():Date.now());
+    if (_tn - _lastSliderBake < 16) return;
+    _lastSliderBake = _tn;
+  }
   var W = bagTexCanvas.width, H = bagTexCanvas.height;
   bagTexCtx.clearRect(0, 0, W, H);
 
-  // 1. Background. Material-named models → leave gaps TRANSPARENT so the 2D editor's
-  //    white+grid shows through (3D only samples the opaque shells). Legacy single-mesh
-  //    models → fill exterior colour edge-to-edge as before (avoids white gaps).
-  if (!bagExtClip) { bagTexCtx.fillStyle = BAG.exterior.color; bagTexCtx.fillRect(0, 0, W, H); }
-
-  // 2. Exterior colour/kraft/pattern, clipped to its island.
-  _drawBodyRegion('exterior', BAG_UV.exterior, bagExtClip, kraftOverlayRender.exterior);
-  // 3. Interior colour/kraft/pattern, clipped to its island.
-  _drawBodyRegion('interior', BAG_UV.interior, bagIntClip, kraftOverlayRender.interior);
-  // 4. Handle + rivet base colours (island-clipped).
-  drawPartsOverlay();
+  /* #6 Base cache: the bag base (colour/kraft/pattern + handle/rivet) doesn't change while an
+     artwork slider drags, so reuse a snapshot instead of recomputing it each bake. */
+  var _baseFromCache = (PERF.cacheBase && _sliderDragging && _baseCacheValid && _baseCacheCv && _baseCacheCv.width === W);
+  if (_baseFromCache) {
+    bagTexCtx.drawImage(_baseCacheCv, 0, 0);
+  } else {
+    // 1. Background (legacy single-mesh fills edge-to-edge; material models leave gaps transparent).
+    if (!bagExtClip) { bagTexCtx.fillStyle = BAG.exterior.color; bagTexCtx.fillRect(0, 0, W, H); }
+    // 2. Exterior colour/kraft/pattern, clipped to its island.
+    _drawBodyRegion('exterior', BAG_UV.exterior, bagExtClip, kraftOverlayRender.exterior);
+    // 3. Interior colour/kraft/pattern, clipped to its island.
+    _drawBodyRegion('interior', BAG_UV.interior, bagIntClip, kraftOverlayRender.interior);
+    // 4. Handle + rivet base colours (island-clipped).
+    drawPartsOverlay();
+    if (PERF.cacheBase && _sliderDragging) {   /* snapshot the freshly-drawn base for reuse */
+      if (!_baseCacheCv || _baseCacheCv.width !== W){ _baseCacheCv = document.createElement('canvas'); _baseCacheCv.width = _baseCacheCv.height = W; }
+      var _bcx = _baseCacheCv.getContext('2d'); _bcx.clearRect(0,0,W,W); _bcx.drawImage(bagTexCanvas, 0, 0); _baseCacheValid = true;
+    }
+  }
   // 5. Artwork — freeform across the whole atlas, on top of every base colour.
   drawArtworkOnBag();
 
@@ -4090,14 +4173,15 @@ function drawBagTexture() {
   }
   // Finish (paper) overlay — applied to the 3D colour map AFTER the clean snapshot, so
   // it never appears in the 2D editor. Skipped mid-drag for speed.
-  if (!_a2dDragging && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
-  if (!_a2dDragging && typeof overlayArtworkEmboss === 'function') overlayArtworkEmboss();   /* visible emboss/deboss bevel (3D only) */
+  if (!_lightBake() && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
+  if (!_lightBake() && typeof overlayArtworkEmboss === 'function') overlayArtworkEmboss();   /* visible emboss/deboss bevel (3D only) */
 
   if (bagTexture) bagTexture.needsUpdate = true;
-  if (!_a2dDragging) {            /* skip heavy passes mid-drag → smooth FPS; full redraw on release */
+  if (!_lightBake()) {            /* skip heavy passes while dragging → smooth FPS; full redraw on release */
     rebuildBumpMap();
     if (typeof scheduleHistory === 'function') scheduleHistory();
   }
+  _colorOnlyEdit = false;   /* consumed for this bake (#3) */
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -4580,8 +4664,8 @@ function drawArtworkOnBag() {
     drawLayerContent(bagTexCtx, L, 1, corr, 'color');
     bagTexCtx.restore();
   }
-  /* Rebuild PBR maps from scratch then overlay artwork finish (skipped mid-drag) */
-  if (!_a2dDragging) rebuildPBRMaps();
+  /* Rebuild PBR maps from scratch then overlay artwork finish (skipped while dragging / colour-only) */
+  if (!_lightBake()) rebuildPBRMaps();
 }
 
 /* Artwork is now freeform across the whole atlas — layers position against the full
@@ -6179,7 +6263,7 @@ function applyStickerRecolor(L, cb) {
   img.src = out.toDataURL('image/png');
 }
 var _recolorTimer = null;
-function _recolorApplyDebounced(L) { clearTimeout(_recolorTimer); _recolorTimer = setTimeout(function(){ applyStickerRecolor(L); }, 70); }
+function _recolorApplyDebounced(L) { clearTimeout(_recolorTimer); _recolorTimer = setTimeout(function(){ applyStickerRecolor(L); }, (typeof PERF !== 'undefined' && PERF.debounceRecolor) ? 70 : 0); }
 
 /* ── Recolor wheel rendering + interaction ── */
 function drawWheelBg(canvas) {
@@ -6320,12 +6404,14 @@ function onLayerImgHue(id, v) {
   L.imgHue = parseInt(v) || 0;
   var lbl = document.getElementById('lyr-' + id + '-imghue-val'); if (lbl) lbl.textContent = L.imgHue + '°';
   var ss = document.getElementById('lyr-' + id + '-imgsat'); if (ss) ss.style.background = 'linear-gradient(to right,hsl(' + L.imgHue + ',0%,62%),hsl(' + L.imgHue + ',92%,50%))';
+  _colorOnlyEdit = true;   /* hue is a colour filter — no finish/bump rebuild needed (#3) */
   drawBagTexture();
 }
 function onLayerImgSat(id, v) {
   var L = getLayer(id); if (!L) return;
   L.imgSat = parseInt(v); if (isNaN(L.imgSat)) L.imgSat = 100;
   var lbl = document.getElementById('lyr-' + id + '-imgsat-val'); if (lbl) lbl.textContent = L.imgSat + '%';
+  _colorOnlyEdit = true;   /* saturation is a colour filter — no finish/bump rebuild needed (#3) */
   drawBagTexture();
 }
 function stickerColorSectionHTML(L) {
@@ -6844,12 +6930,14 @@ function onLayerProp(id, prop, val) {
     var _o2 = document.getElementById('lyr-' + id + '-opacity2'); if (_o2 && parseFloat(_o2.value) !== val) _o2.value = val;
     var _o2l = document.getElementById('lyr-' + id + '-opacity2-val'); if (_o2l) _o2l.textContent = Math.round(val) + '%';
   }
+  _colorOnlyEdit = (prop === 'opacity');   /* opacity doesn't change shape → skip finish/bump (#3) */
   drawBagTexture();
 }
 function onLayerHue(id, hue) {
   var L = getLayer(id); if (!L) return;
   hue = parseInt(hue); L.hue = hue;
   if (L.swatchName !== 'Custom') L.color = resolveSwatchColor(monoSwatchColors(hue), L.swatchName);
+  _colorOnlyEdit = true;   /* text colour change — no finish/bump rebuild needed (#3) */
   renderLayerSwatches(L); updateLayerThumb(L); drawBagTexture();
 }
 function pickLayerSwatch(id, hex, name) {
@@ -9695,6 +9783,11 @@ function animate(now) {
   if (viewMode === '2d') {
     var _iv = (A2D.previewInterval != null ? A2D.previewInterval : 0.5) * 1000;
     if (_iv > 0 && ((now||0) - _lastPreviewRender) < _iv) _doRender = false;
+    else _lastPreviewRender = now || 0;
+  } else if (_sliderDragging && PERF.throttleRender) {
+    /* #4 cap the 3D render rate while a slider drags so the bake keeps the CPU */
+    var _siv = 1000 / Math.max(1, PERF.dragFps || 30);
+    if (((now||0) - _lastPreviewRender) < _siv) _doRender = false;
     else _lastPreviewRender = now || 0;
   }
   if (_doRender) {
