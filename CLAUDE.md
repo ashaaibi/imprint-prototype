@@ -93,8 +93,9 @@ left of the handle. Icons + example placeholders live in `SOCIAL_ICONS` / `SOCIA
 `configurator.html` (trademark-safe marks — swap in real brand SVGs there). WhatsApp/Phone placeholder = `9123 4567`.
 
 ### Config steps (left panel)
-6 steps: **Start · Exterior · Interior · Handles · Design · Review** (`CONFIG_STEP_COUNT=6`, `goConfigStep`,
-`applyStepCamera`, `STEP_PART`). The active pill auto-centers in the scrollable pill row.
+6 steps: **Start · Design · Exterior · Interior · Handles · Review** (`CONFIG_STEP_COUNT=6`, `goConfigStep`,
+`applyStepCamera`, `STEP_PART`). Step number is the source of truth — pills (`data-cstep-pill`), sections
+(`data-cstep`), `STEP_PART` and `applyStepCamera` must all agree. The active pill auto-centers in the row.
 
 ## Presets folders + manifests  ⚠️ IMPORTANT
 The "Presets" picker reads three TYPE folders, each holding COLLECTION sub-folders:

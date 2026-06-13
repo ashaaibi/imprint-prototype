@@ -374,11 +374,11 @@
     }
     /* 3D / 2D mode toggle (top-left) */
     .mode-toggle {
-      position: absolute; top: 16px; left: 16px; display: inline-flex; z-index: 3;
+      position: absolute; top: 16px; right: 16px; display: inline-flex; z-index: 3;
       background: var(--imp-surface); border: 1px solid var(--imp-border);
       border-radius: var(--imp-r-pill); padding: 3px; gap: 2px; box-shadow: var(--imp-shadow-xs);
     }
-    html[dir="rtl"] .mode-toggle { left: auto; right: 16px; }
+    html[dir="rtl"] .mode-toggle { right: auto; left: 16px; }
     .mode-toggle button {
       font-family: var(--imp-font); font-size: 12px; font-weight: 600; background: transparent;
       border: none; color: var(--imp-fg-2); padding: 5px 14px; border-radius: var(--imp-r-pill);
@@ -426,10 +426,10 @@
     html[dir="rtl"] .dim-pill { left: auto; right: 24px; }
 
     .vp-history {
-      position: absolute; top: 16px; right: 16px; z-index: 3;
+      position: absolute; top: 16px; left: 16px; z-index: 3;
       display: flex; gap: 6px;
     }
-    html[dir="rtl"] .vp-history { right: auto; left: 16px; }
+    html[dir="rtl"] .vp-history { left: auto; right: 16px; }
     .vp-hist-btn {
       width: 34px; height: 34px;
       display: flex; align-items: center; justify-content: center;
@@ -1588,10 +1588,10 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
-      .mode-toggle { top: 12px; left: 12px; }
-      html[dir="rtl"] .mode-toggle { left: auto; right: 12px; }
-      .vp-history { top: 12px; right: 12px; }
-      html[dir="rtl"] .vp-history { right: auto; left: 12px; }
+      .mode-toggle { top: 12px; right: 12px; }
+      html[dir="rtl"] .mode-toggle { right: auto; left: 12px; }
+      .vp-history { top: 12px; left: 12px; }
+      html[dir="rtl"] .vp-history { left: auto; right: 12px; }
 
       .controls-panel {
         position: fixed; left: 0; right: 0; bottom: 0;
@@ -1650,7 +1650,7 @@
         <canvas id="atlas2d-canvas"></canvas>
         <div class="atlas2d-hint"></div>
       </div>
-      <div class="vp-history">
+      <div class="vp-history" id="vp-history" style="display:none;">
         <button id="vp-undo" class="vp-hist-btn" title="Undo (⌘Z)" onclick="undoConfig()" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
         </button>
@@ -1701,10 +1701,10 @@
       <div class="cstep-nav" id="cstep-nav">
         <div class="cstep-pills" id="cstep-pills">
           <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Start" data-ar="ابدأ">Start</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Design" data-ar="التصميم">Design</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Design" data-ar="التصميم">Design</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
           <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
@@ -1732,7 +1732,7 @@
     </div>
 
     <!-- Bag Artwork ─────────────────────── -->
-    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="5">
+    <div class="cs bag-section config-step" id="bag-artwork-section" data-cstep="2">
       <label class="cl"><span data-en="Design" data-ar="التصميم">Design</span></label>
       <!-- Layers panel -->
       <input type="file" id="layer-logo-input" accept="image/*,application/pdf,.pdf" style="display:none" onchange="onLayerLogoLoad(this)">
@@ -1750,7 +1750,7 @@
     </div>
 
     <!-- Bag Exterior -->
-    <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="2">
+    <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="3">
       <label class="cl"><span data-en="Exterior" data-ar="الخارج">Exterior</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -1811,7 +1811,7 @@
     </div>
 
     <!-- Bag Interior -->
-    <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="3">
+    <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="4">
       <label class="cl"><span data-en="Interior" data-ar="الداخل">Interior</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -1871,7 +1871,7 @@
     </div>
 
     <!-- Handles -->
-    <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="4">
+    <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="5">
       <label class="cl"><span data-en="Handles" data-ar="المقابض">Handles</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
@@ -2667,6 +2667,11 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Drag render FPS cap</span><span class="slider-val" id="perf-dragfps-val">30</span></div>
         <input type="range" class="test-slider" min="10" max="60" step="5" value="30" oninput="PERF.dragFps=parseInt(this.value)||30;var e=document.getElementById('perf-dragfps-val');if(e)e.textContent=this.value"></div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Every slider re-bakes the 2048&sup2; atlas; these cut the work while dragging (full-quality bake on release). Top 6 are safe defaults; the last two are opt-in.</div>
+
+      <!-- UI sub-section -->
+      <div style="margin-top:18px;margin-bottom:8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:600;">UI</div>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:12px;color:var(--imp-fg-2);margin-bottom:6px;"><input type="checkbox" onchange="var e=document.getElementById('vp-history');if(e)e.style.display=this.checked?'flex':'none'"> Show undo/redo buttons</label>
+      <div style="font-size:10px;color:var(--secondary);margin:-2px 0 8px;line-height:1.4;">Undo/redo buttons are removed from the viewport by default (⌘Z / ⇧⌘Z still work). The 3D/2D toggle now sits top-right; undo/redo, when shown, sits top-left.</div>
 
       <!-- HDRI Lighting sub-section -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">HDRI Environments</div>
@@ -4385,7 +4390,13 @@ function _drawTiledCell(ctx, L, cell, cAsp, sref, ms, ue, corr, mode) {
   var _gReal = _gMin + ((L.gap != null ? L.gap : 0) / 100) * (_gMax - _gMin);
   var gpx = (_gReal / 100) * tileW;
   var cw = tileW + gpx, ch = tileH + gpx;
-  var SW = Math.max(1, Math.ceil(boxW)), SH = Math.max(1, Math.ceil(boxH));
+  /* Cap the staging-canvas AREA (~2048²). A whole-bag-fit tile at ms=1 makes boxW/boxH ~4k+, and a
+     >16.7M-px canvas renders BLANK on Safari/iPad (this is why the tiled logo's COLOUR vanished while
+     the half-size finish mask still drew). Scale the tile geometry by the same factor so the tile
+     COUNT and layout are identical — just lower staging resolution, blitted back up to the full box. */
+  var _dn = Math.min(1, Math.sqrt(4194304 / Math.max(1, boxW * boxH)));
+  var SW = Math.max(1, Math.ceil(boxW * _dn)), SH = Math.max(1, Math.ceil(boxH * _dn));
+  tileW *= _dn; tileH *= _dn; cw *= _dn; ch *= _dn;
   var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
   var sx = sc.getContext('2d');
   if (mode !== 'mask') sx.filter = _layerColorFilter(L);
@@ -7156,10 +7167,12 @@ function addLayer(kind) {
   var allAreas = { front:true, back:true, left:true, right:true, bottom:true, interior:true };
   /* New layers drop at the exterior FRONT-face centre (computed per size so it's correct for
      every bag, not a hard-coded UV). Falls back to the wide-bag value if faces aren't ready. */
-  var _fp = { posU:33.27, posV:81.09 };
+  var _fp = { posU:33.27, posV:72.00 };
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES.exterior && BAG_FACES.exterior.front) {
     var _ff = BAG_FACES.exterior.front, _PADf = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
-    _fp = { posU: (_ff.x + _ff.w/2 - _PADf)/2048*100, posV: (_ff.y + _ff.h/2 - _PADf)/2048*100 };
+    /* Drop new Text/Graphic/Logo in the LOWER HALF of the front (28% up from the base edge), centred
+       horizontally — per size, since BAG_FACES.exterior.front is the active model's front island. */
+    _fp = { posU: (_ff.x + _ff.w/2 - _PADf)/2048*100, posV: (_ff.y + _ff.h*0.28 - _PADf)/2048*100 };
   }
   if (kind === 'logo') {
     /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
@@ -10832,13 +10845,13 @@ document.addEventListener('imprint:countrychange', function() {
 
 var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
 function applyStepCamera(n){
-  /* steps: 1 Start, 2 Exterior, 3 Interior, 4 Handles, 5 Design, 6 Review */
-  var artwork = (n === 5);
+  /* steps: 1 Start, 2 Design, 3 Exterior, 4 Interior, 5 Handles, 6 Review */
+  var artwork = (n === 2);
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
-  if (n === 3) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 2 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);
+  if (n === 4) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
+  else if (n === 3 || n === 5) startCamTween(viewThetaRad('front'), VIEW_PHI);
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
@@ -10902,7 +10915,7 @@ document.addEventListener('pointerout', function(e){
    When the user lands on a part's step, that part idle-cycles through the hue
    spectrum to signal what they're editing — until they pick a colour or leave
    the step. Purely visual; never writes to saved BAG state. */
-var STEP_PART = { 2:'exterior', 3:'interior', 4:'ribbon' };   /* hue-guide part per step */
+var STEP_PART = { 3:'exterior', 4:'interior', 5:'ribbon' };   /* hue-guide part per step (Design is now step 2) */
 var _partTouched = {}, _suppressTouch = false;
 /* Wayfinding pulse: when you land on a part's step, that part fades the highlight
    colour (default red) in and out between an opacity min and max, to signal what

@@ -3,6 +3,17 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 7)
+- **Tiled-layer colour fix**: `_drawTiledCell` now caps the staging-canvas area (~2048²). A whole-bag-fit
+  tile at full scale made it ~4k²+, which renders BLANK past Safari/iPad's canvas limit — the tiled
+  logo/text colour vanished while the half-size finish mask still drew. Tile count/layout unchanged.
+- **Default drop position**: new Text/Graphic/Logo layers land in the **lower half of the front** (≈28% up
+  from the base edge), centred horizontally, per size (`addLayer` `_fp`, from `BAG_FACES.exterior.front`).
+- **Step order**: **Design is now 2nd** (Start · Design · Exterior · Interior · Handles · Review) — pills,
+  section `data-cstep`, `STEP_PART`, and `applyStepCamera` remapped.
+- **Undo/redo**: removed from the viewport by default (⌘Z/⇧⌘Z still work) with a Testing → UI toggle to
+  show it; swapped places with the 3D/2D toggle — **3D/2D now top-right, undo/redo (when shown) top-left**.
+
 ## 2026-06-13 (batch 6)
 - **Slider FPS overhaul** — a new `PERF` system (Testing → "Performance") cuts the per-`oninput` bake cost
   while a range slider is dragged; `_sliderDragging` is detected globally and `_endSliderDrag` does one
