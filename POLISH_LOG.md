@@ -3,6 +3,18 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 12)
+- **Fixed super-slow template loading.** A sticker-heavy client template (e.g. Honeyloom Gift Bag — logo +
+  two foil graphics) was baking the bag **4–5×** on load: `_restoreState` baked once, then every recolored
+  sticker re-baked async, then a final bake — and batch 11 had quadrupled each bake's cost by defaulting the
+  finish/PBR maps to 2048. Two changes:
+  - **Coalesced the load to one bake.** `_finishTpl` now sets `window._tplRestoring` while it restores +
+    rebuilds each sticker (threading a completion callback through `_rebuildStickerCutAndRecolor` →
+    `applyStickerRecolor`); `drawBagTexture` swallows the intermediate bakes and does a single full bake once
+    all stickers settle (with a 4 s safety net).
+  - **Reverted the finish/emboss default to 1024** (`PBR_SIZE`/`BUMP_SIZE`) for fast loads. The Testing
+    "Finish & emboss quality" slider still reaches 2048/4096 for crisp foil on hero render captures.
+
 ## 2026-06-13 (batch 11)
 - **Foil / finish quality fix + Testing controls.** The material-finish maps (roughness / metalness /
   finish-mask + emboss) were baked at **1024²**, half the 2048² colour atlas — so **foil & gloss looked

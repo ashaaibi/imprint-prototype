@@ -2636,8 +2636,8 @@
       <!-- 3D Quality sub-section -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">3D Quality</div>
       <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Finish &amp; emboss quality</span><span class="slider-val" id="finish-quality-val">2048px</span></div>
-        <input type="range" class="test-slider" id="finish-quality" min="9" max="12" step="1" value="11" oninput="onFinishQuality(this.value)">
+        <div class="slider-top"><span class="slider-name">Finish &amp; emboss quality</span><span class="slider-val" id="finish-quality-val">1024px</span></div>
+        <input type="range" class="test-slider" id="finish-quality" min="9" max="12" step="1" value="10" oninput="onFinishQuality(this.value)">
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Resolution of the material-finish maps (gloss / matte / soft-touch / <strong>foil</strong>) + emboss. Higher = crisper foil &amp; finishes (2048 = 1:1 with the colour atlas). 4096 is heavy. Re-bakes live.</div>
       <div class="slider-row">
@@ -4173,6 +4173,10 @@ document.addEventListener('pointercancel', _endSliderDrag, true);
 
 function drawBagTexture() {
   if (!bagTexCtx) return;
+  /* During template load we trigger several bakes (state restore + one per recolored
+     sticker, all async); swallow the intermediate ones so _finishTpl can do ONE full
+     bake once everything settles — otherwise a sticker-heavy template bakes 4–5×. */
+  if (window._tplRestoring && !_bakeNow) return;
   /* #1 Coalesce bakes (and GPU uploads) to one per animation frame while dragging. */
   if (PERF.coalesce && _sliderDragging && !_bakeNow) {
     _bakeDirty = true;
@@ -4748,8 +4752,8 @@ var artworkOriginalBlur = 8; /* px — controls Original Color swatch blur; also
 var bagBumpCanvas = null;
 var bagBumpTex    = null;
 var _embossActive = false;   /* true while a layer has a non-zero extrude — emboss then owns the single bumpMap slot (vs. the finish grain) */
-var BUMP_SIZE     = 2048; /* emboss / normal-map resolution — matches the 2048 colour atlas (Testing → "Finish & emboss quality") */
-var PBR_SIZE      = 2048; /* roughness/metalness + finish-mask resolution. Half-res (1024) made foil/gloss look low-q vs the 2048 colour map; now 1:1. Adjustable in Testing → "Finish & emboss quality". */
+var BUMP_SIZE     = 1024; /* emboss / normal-map resolution. Default 1024 for snappy loads; Testing → "Finish & emboss quality" raises it to 2048 (1:1 with the colour atlas) / 4096 for crisp foil on render captures. */
+var PBR_SIZE      = 1024; /* roughness/metalness + finish-mask resolution. 2048 is 1:1 with the colour atlas (crisper foil) but 4× the bake cost; kept at 1024 by default so templates/clients load fast. Adjustable in Testing. */
 
 function getLogoDominantColor(img) {
   var tc = document.createElement('canvas');
@@ -7743,8 +7747,8 @@ function layerPdfPageRowHTML(L) {
     '</div>';
 }
 /* Rebuild a sticker's working canvas (and recolor) at the current stickerQuality. */
-function _rebuildStickerCutAndRecolor(L) {
-  if (!L || !L.srcImg) return;
+function _rebuildStickerCutAndRecolor(L, cb) {
+  if (!L || !L.srcImg) { if (cb) cb(); return; }
   var src = _imgToCanvas(L.srcImg);
   var processed = processCutoutCanvas(src, L.bg || { enabled: false });
   L.cutCanvas = _capCanvas(processed, stickerQuality);
@@ -7754,7 +7758,7 @@ function _rebuildStickerCutAndRecolor(L) {
     L.recolor.extracted = _extractLayerColors(L, L.cutCanvas, fc);
     L.recolor.targets = applyNeutralSnap(L.recolor.extracted, L);
   }
-  applyStickerRecolor(L); /* keeps existing recolor edits, re-renders at new resolution */
+  applyStickerRecolor(L, cb); /* keeps existing recolor edits, re-renders at new resolution */
 }
 function reprocessStickerQuality(L) {
   if (!L || L.kind !== 'sticker') return;
@@ -12172,19 +12176,32 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     });
   };
   function _finishTpl(snap, tpl){
+    window._tplRestoring = true;   /* swallow the restore + per-sticker recolor bakes; one bake at the end */
     try { _restoreState(snap); } catch(e){ console.warn('template restore', e); }
-    (BAG.artwork.layers||[]).forEach(function(L){
+    var stickers = (BAG.artwork.layers||[]).filter(function(L){
       L._tplLock = true;
-      if (L.kind==='sticker' && L.srcImg && typeof _rebuildStickerCutAndRecolor==='function'){ try{ _rebuildStickerCutAndRecolor(L); }catch(e){} }
+      return L.kind==='sticker' && L.srcImg && typeof _rebuildStickerCutAndRecolor==='function';
     });
-    if (typeof renderLayersList==='function') renderLayersList();
-    if (typeof drawBagTexture==='function') drawBagTexture();
-    _applyLocks();
-    if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
-    var b=document.createElement('div'); b.id='imp-tplbar';
-    b.textContent = 'Editing template: ' + ((tpl.meta&&tpl.meta.name)||'') + ' — change the text, colours & handles; the layout is set by the designer.';
-    document.body.appendChild(b);
-    try { document.querySelector('.canvas-stage').style.marginTop='28px'; }catch(e){}
+    var settled = false;
+    function done(){
+      if (settled) return; settled = true;
+      window._tplRestoring = false;
+      if (typeof renderLayersList==='function') renderLayersList();
+      if (typeof drawBagTexture==='function') drawBagTexture();   /* single full-quality bake now everything has settled */
+      _applyLocks();
+      if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
+      var b=document.createElement('div'); b.id='imp-tplbar';
+      b.textContent = 'Editing template: ' + ((tpl.meta&&tpl.meta.name)||'') + ' — change the text, colours & handles; the layout is set by the designer.';
+      document.body.appendChild(b);
+      try { document.querySelector('.canvas-stage').style.marginTop='28px'; }catch(e){}
+    }
+    if (!stickers.length){ done(); return; }
+    var pending = stickers.length;
+    setTimeout(done, 4000);   /* safety net: settle even if a recolor image never fires onload */
+    stickers.forEach(function(L){
+      try { _rebuildStickerCutAndRecolor(L, function(){ if (--pending<=0) done(); }); }
+      catch(e){ if (--pending<=0) done(); }
+    });
   }
 
   function _applyLocks(){
