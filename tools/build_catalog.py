@@ -497,7 +497,7 @@ def main():
             '<title>{title} — IMPRINT®</title>'
             '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
             '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">'
-            '<link rel="stylesheet" href="shared.css"><link rel="stylesheet" href="catalog.css"></head>'
+            '<link rel="stylesheet" href="shared.css"><link rel="stylesheet" href="catalog.css"><link rel="stylesheet" href="pdp.css"></head>'
             '<body><div id="site-header"></div><div id="site-nav"></div>'
             '<main id="pdp-root" data-product="{slug}"></main><div id="site-footer"></div>'
             '<script src="shared.js"></script><script src="catalog.js"></script>'
