@@ -3,6 +3,16 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 2)
+- Text/Logo tile layouts: when a Layout other than None is active, **Scale & Rotation lock**
+  (disabled + not-allowed cursor) and the Layout section gains an **Opacity** slider synced to the
+  transform Opacity (`opacity2` ↔ `onLayerProp`).
+- Tiled-layout defaults split by type: **text** density 20× / gap 40, **logo** density 20× / gap 50.
+- **Adding a layer now auto-expands it** and collapses the others (accordion via `data-expanded`).
+- **Per-layer accent colours**: each layer row gets a distinct colour (`layerAccent`/`_LAYER_ACCENTS`)
+  — a left strip, a tinted expanded header, and a scoped `--imp-accent` so its controls are colour-coded,
+  making it obvious which layer you're editing.
+
 ## 2026-06-13
 - Layer panel control order changed to **Scale → Opacity → Rotation → Move → Areas → Colour/Recolor**
   (Finish/Emboss/Layout still last, Logo & Text only). `_transformHTML` now outputs Scale/Opacity/Rotation.

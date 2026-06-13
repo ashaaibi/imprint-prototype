@@ -38,6 +38,10 @@ mangling files/folders.
 ### Artwork layer system
 `BAG.artwork.layers[]`. **Add Layer** opens a centered **popup modal** (`openAddLayerModal`) — Text /
 Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (all `kind` plus flags):
+> The layer list (`renderLayersList`) is an **accordion** — `data-expanded` on `#layers-list` holds the
+> single open layer id. **Adding a layer auto-expands it** (and collapses the rest). Each row gets a
+> **per-layer accent colour** keyed by id (`layerAccent`/`_LAYER_ACCENTS`): a left strip, a tinted expanded
+> header, and a scoped `--imp-accent`/`--imp-accent-weak` so that layer's controls are colour-coded.
 - **Text** (`kind:'text'`) — per-layer fonts via FontFace API. Default fontSize **45**, font **inter**.
 - **Logo** (`kind:'sticker', isLogo:true`) — single upload, keeps full Finish/Emboss/Layout.
 - **Graphic** (`kind:'sticker'`) — upload or shape presets.
@@ -50,6 +54,9 @@ Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (al
 
 **Per-layer transform & per-face visibility**
 - `_transformHTML` = Scale (font-size for text) / Opacity / Rotation sliders. `onLayerScale` maps Scale.
+  When a tile **Layout** is active (`L.tiled`), Scale & Rotation **lock** (disabled + not-allowed cursor)
+  and the Layout/tiled section adds an **Opacity** slider (id `…-opacity2`) synced to the transform
+  Opacity via `onLayerProp`. Tiled defaults: **text** density 20×/gap 40, **logo** 20×/50 (set in `onLayerLayout`).
 - **Move** section = a button that opens the full 2D editor focused on the layer (no embedded mini-editor).
 - **Areas** = per-face show/hide via `L.faceHide` (`{region}_{face}`, region=exterior|interior, faces from
   `BAG_FACES`). UI = collapsible **Outside/Inside** sections with **isometric cube icons** (`_faceCubeSVG`)

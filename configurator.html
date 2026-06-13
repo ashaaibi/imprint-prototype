@@ -930,12 +930,21 @@
     .layers-wrap { margin-top: 16px; }
     .layers-list { display: flex; flex-direction: column; gap: 8px; }
     .layer-row {
+      position: relative;
       background: var(--imp-surface);
       border: 1px solid var(--imp-border);
       border-radius: var(--imp-r-md);
       overflow: hidden;
       transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
     }
+    /* per-layer colour strip down the left edge (scoped --imp-accent set inline per row) */
+    .layer-row::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--imp-accent, #c8a96e); opacity: 0.55; transition: opacity 0.15s;
+      pointer-events: none; z-index: 1;
+    }
+    .layer-row.expanded::before { opacity: 1; }
+    .layer-row.expanded .layer-head { background: var(--imp-accent-weak, rgba(200,169,110,0.14)); }
     .layer-row.expanded { border-color: var(--imp-border-hover); box-shadow: var(--imp-shadow-xs); }
     .layer-row.dragging { opacity: 0.4; }
     .layer-row.drag-over { border-color: var(--imp-fg); }
@@ -5736,6 +5745,23 @@ function lockSVG(locked) { return locked
   ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
   : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'; }
 
+/* Per-layer accent palette — each layer's controls (and a left strip + expanded-header tint)
+   take a distinct colour so it's easy to tell which layer you're editing. Keyed by id so the
+   colour is stable when layers are reordered. Independent of the layer's own artwork colour. */
+var _LAYER_ACCENTS = [
+  { a:'#c8a96e', w:'rgba(200,169,110,0.14)' },  /* gold (brand) */
+  { a:'#3f8f83', w:'rgba(63,143,131,0.14)' },   /* teal */
+  { a:'#4a6fa5', w:'rgba(74,111,165,0.14)' },   /* blue */
+  { a:'#9a5ba6', w:'rgba(154,91,166,0.14)' },   /* plum */
+  { a:'#c2703a', w:'rgba(194,112,58,0.14)' },   /* terracotta */
+  { a:'#6f8a3f', w:'rgba(111,138,63,0.14)' },   /* olive */
+  { a:'#bf6a86', w:'rgba(191,106,134,0.14)' },  /* rose */
+  { a:'#5f7a8a', w:'rgba(95,122,138,0.14)' }    /* steel */
+];
+function layerAccent(L) {
+  var n = _LAYER_ACCENTS.length, i = (((L && L.id) || 0) % n + n) % n;
+  return _LAYER_ACCENTS[i];
+}
 /* ── List rendering ──────────────────────────────────────────────── */
 function renderLayersList() {
   var list = document.getElementById('layers-list');
@@ -5744,7 +5770,8 @@ function renderLayersList() {
   var html = '';
   BAG.artwork.layers.forEach(function(L) {
     var expanded = (expandedId != null && String(L.id) === expandedId);
-    html += '<div class="layer-row' + (expanded ? ' expanded' : '') + (L.visible ? '' : ' hidden-layer') + '" data-layer-id="' + L.id + '">' +
+    var _acc = layerAccent(L);
+    html += '<div class="layer-row' + (expanded ? ' expanded' : '') + (L.visible ? '' : ' hidden-layer') + '" data-layer-id="' + L.id + '" style="--imp-accent:' + _acc.a + ';--imp-accent-weak:' + _acc.w + ';">' +
       '<div class="layer-head" draggable="true" onclick="onLayerHeadClick(event,' + L.id + ')">' +
         '<span class="layer-handle" title="Drag to reorder"><span></span><span></span><span></span><span></span><span></span><span></span></span>' +
         '<span class="layer-thumb" id="lyr-' + L.id + '-thumb">' + layerThumbHTML(L) + '</span>' +
@@ -5793,12 +5820,14 @@ var _LBL_AR = { 'Opacity':'الشفافية','Gap':'الفجوة','Density':'ا�
   'Scale':'الحجم','Layout':'التخطيط','Areas':'المناطق','Move':'تحريك','Move in 2D editor':'التحريك في المحرر ثنائي الأبعاد',
   'Logo Color':'لون الشعار','Logo Finish':'تشطيب الشعار' };
 function _arAttr(en){ var ar=_LBL_AR[en]; return ar ? (' data-en="'+en+'" data-ar="'+ar+'"') : ''; }
-function sliderRow(id, prop, label, min, max, step, value, suffix) {
+function sliderRow(id, prop, label, min, max, step, value, suffix, disabled) {
   var key = layerCtrlKey(prop);
   var disp = (suffix ? (Math.round(value) + suffix) : value);
-  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr(label) + '>' + label + '</span>' +
+  var rowSty = disabled ? ' style="opacity:0.5;cursor:not-allowed;"' : '';
+  var inSty = disabled ? ' style="pointer-events:none;cursor:not-allowed;"' : '';
+  return '<div class="ctrl-slider-row"' + rowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr(label) + '>' + label + '</span>' +
     '<span class="ctrl-slider-val" id="lyr-' + id + '-' + key + '-val">' + disp + '</span></div>' +
-    '<input type="range" class="test-slider" id="lyr-' + id + '-' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '" oninput="onLayerProp(' + id + ',\'' + prop + '\',this.value)"></div>';
+    '<input type="range" class="test-slider" id="lyr-' + id + '-' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"' + inSty + ' oninput="onLayerProp(' + id + ',\'' + prop + '\',this.value)"' + (disabled ? ' disabled' : '') + '></div>';
 }
 function sliderRowPBR(id, prop, label, value) {
   var key = prop === 'roughness' ? 'rough' : prop === 'metalness' ? 'metal' : 'trans';
@@ -6440,16 +6469,20 @@ function buildLayerBodyHTML(L) {
   }
   return h;
 }
-/* Scale (font-size for text) / Opacity / Rotation. */
+/* Scale (font-size for text) / Opacity / Rotation. When a tile Layout is active, Scale &
+   Rotation are driven by the tile box, so they're locked (disabled, not-allowed cursor). */
 function _transformHTML(id, L) {
   var isText = (L.kind === 'text' && !L.tiled);
   var sVal = Math.round(isText ? (L.fontSize || 130) : (L.scale || 18));
   var sMin = isText ? 20 : 2, sMax = isText ? 500 : 200, sSuf = isText ? 'px' : '%';
   var rVal = ((Math.round(L.rotation || 0) % 360) + 360) % 360;
-  return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
-    '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '" oninput="onLayerScale(' + id + ',this.value)"></div>' +
+  var lock = !!L.tiled;
+  var sRowSty = lock ? ' style="opacity:0.5;cursor:not-allowed;"' : '';
+  var sInSty = lock ? ' style="pointer-events:none;cursor:not-allowed;"' : '';
+  return '<div class="ctrl-slider-row"' + sRowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
+    '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '"' + sInSty + ' oninput="onLayerScale(' + id + ',this.value)"' + (lock ? ' disabled' : '') + '></div>' +
     sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%') +
-    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°');
+    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°', lock);
 }
 function onLayerScale(id, val) {
   var L = getLayer(id); if (!L) return; val = parseFloat(val);
@@ -6634,6 +6667,11 @@ function onLayerProp(id, prop, val) {
   var suffix = prop === 'fontSize' ? 'px' : prop === 'rotation' ? '°' : prop === 'density' ? '×' : '%';
   var lbl = document.getElementById('lyr-' + id + '-' + layerCtrlKey(prop) + '-val');
   if (lbl) lbl.textContent = Math.round(val) + suffix;
+  if (prop === 'opacity') {   /* keep the transform-section & layout-section Opacity sliders in sync */
+    var _o1 = document.getElementById('lyr-' + id + '-opacity'); if (_o1 && parseFloat(_o1.value) !== val) _o1.value = val;
+    var _o2 = document.getElementById('lyr-' + id + '-opacity2'); if (_o2 && parseFloat(_o2.value) !== val) _o2.value = val;
+    var _o2l = document.getElementById('lyr-' + id + '-opacity2-val'); if (_o2l) _o2l.textContent = Math.round(val) + '%';
+  }
   drawBagTexture();
 }
 function onLayerHue(id, hue) {
@@ -6751,9 +6789,14 @@ function _layoutPickerHTML(id, L) {
   return h + '</div>';
 }
 function _tiledControlsHTML(id, L) {
+  var _op = (L.opacity != null ? L.opacity : 100);
   return sliderRow(id, 'density', 'Density', 1, 100, 1, (L.density != null ? L.density : 40), '×') +
     sliderRow(id, 'gap', 'Gap', 0, 100, 1, (L.gap != null ? L.gap : 60), '%') +
     sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
+    /* Opacity here mirrors the transform-section Opacity (kept in sync by onLayerProp). */
+    '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Opacity') + '>Opacity</span>' +
+      '<span class="ctrl-slider-val" id="lyr-' + id + '-opacity2-val">' + Math.round(_op) + '%</span></div>' +
+      '<input type="range" class="test-slider" id="lyr-' + id + '-opacity2" min="0" max="100" step="1" value="' + _op + '" oninput="onLayerProp(' + id + ',\'opacity\',this.value)"></div>' +
     '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize / crop the tiled box in the 2D editor.</div>';
 }
 /* Background tile controls — Density + Feather only (Gap removed; backgrounds pack tight). */
@@ -6777,8 +6820,10 @@ function onLayerLayout(id, mode) {
       /* single → tiled: remember the box, seed defaults, and fit the WHOLE exterior so the
          pattern fills the bag in the 2D editor. None later restores the saved box. */
       var snap = {}; _PRELAYOUT_KEYS.forEach(function(k){ snap[k] = L[k]; }); L._preLayoutBox = snap;
-      if (L.isBackground) { L.density = 3; L.gap = 0; }   /* background tile default */
-      else { L.density = 40; L.gap = 60; }                /* logo/text/graphic tile default */
+      if (L.isBackground) { L.density = 3; L.gap = 0; }            /* background tile default */
+      else if (L.kind === 'text') { L.density = 20; L.gap = 40; }  /* text tile default */
+      else if (L.isLogo) { L.density = 20; L.gap = 50; }           /* logo tile default */
+      else { L.density = 40; L.gap = 60; }                         /* graphic fallback */
       if (L.feather == null) L.feather = 0;
       if (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) {
         var _ex = BAG_UV.exterior, _PAD = (typeof ATLAS_PAD !== 'undefined') ? ATLAS_PAD : 0;
@@ -6906,7 +6951,8 @@ function addLayer(kind) {
   } else {
     BAG.artwork.layers.unshift(L); /* new layer on top of the stack */
   }
-  /* keep the new layer collapsed by default — the user expands for more settings */
+  /* Auto-expand the new layer and collapse the others (accordion: one open at a time). */
+  var _ll = document.getElementById('layers-list'); if (_ll) _ll.setAttribute('data-expanded', String(id));
   if (typeof renderLayersList === 'function') renderLayersList();
   if (kind === 'logo') pickLayerLogoFile(id);
   else if (kind === 'sticker' || kind === 'pattern') openAddSourcePrompt(id, kind);
