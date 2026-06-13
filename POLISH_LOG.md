@@ -3,6 +3,18 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 11)
+- **Foil / finish quality fix + Testing controls.** The material-finish maps (roughness / metalness /
+  finish-mask + emboss) were baked at **1024²**, half the 2048² colour atlas — so **foil & gloss looked
+  low-resolution**. Raised the defaults to **2048** (`PBR_SIZE` / `BUMP_SIZE` / `EMB_SIZE`) so the finish
+  is now 1:1 with the colour map. Added a **Testing → 3D Quality** group:
+  - **Finish & emboss quality** (`onFinishQuality`) — slider is a 2ⁿ exponent (512 → 4096); re-creates the
+    PBR + bump canvases at the new size and does a full live re-bake.
+  - **3D render quality** (`onRenderQuality`) — supersamples the whole 3D view via
+    `T.renderer.setPixelRatio(base × mul)` (clamped ≤ 3) for crisper edges & metallic highlights. The
+    EffectComposer auto-syncs the new pixel ratio each frame via realism's `_rlmSyncSize()` — **no
+    `realism-engine.js` change or `?v=` bump required.**
+
 ## 2026-06-13 (batch 10)
 - **Material finish restored for Graphic & Background layers.** The finish grid (gloss/matte/soft-touch/foil)
   + Advanced PBR is now its own `_finishHTML` shown on **all** layer types; Emboss/Deboss + Layout

@@ -2633,6 +2633,19 @@
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Working resolution for sticker artwork &amp; SVG rasterizing. Higher = sharper (esp. large stickers), but slower recolor. Re-applies to existing stickers live.</div>
 
+      <!-- 3D Quality sub-section -->
+      <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">3D Quality</div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-name">Finish &amp; emboss quality</span><span class="slider-val" id="finish-quality-val">2048px</span></div>
+        <input type="range" class="test-slider" id="finish-quality" min="9" max="12" step="1" value="11" oninput="onFinishQuality(this.value)">
+      </div>
+      <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Resolution of the material-finish maps (gloss / matte / soft-touch / <strong>foil</strong>) + emboss. Higher = crisper foil &amp; finishes (2048 = 1:1 with the colour atlas). 4096 is heavy. Re-bakes live.</div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-name">3D render quality</span><span class="slider-val" id="render-quality-val">1.00×</span></div>
+        <input type="range" class="test-slider" id="render-quality" min="0.5" max="2" step="0.25" value="1" oninput="onRenderQuality(this.value)">
+      </div>
+      <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Supersamples the whole 3D view (renderer pixel-ratio ×). Higher = sharper edges &amp; metallic reflections, lower = faster. Clamped to keep the buffer safe.</div>
+
       <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:2px 0 6px;">Neutral snap (per layer type)</div>
       <div class="slider-row">
         <div class="slider-top"><span class="slider-name">Text</span><span class="slider-val" id="neutral-snap-text-val">1%</span></div>
@@ -4735,8 +4748,8 @@ var artworkOriginalBlur = 8; /* px — controls Original Color swatch blur; also
 var bagBumpCanvas = null;
 var bagBumpTex    = null;
 var _embossActive = false;   /* true while a layer has a non-zero extrude — emboss then owns the single bumpMap slot (vs. the finish grain) */
-var BUMP_SIZE     = 1024; /* emboss / normal-map resolution */
-var PBR_SIZE      = 1024; /* roughness/metalness + finish-mask resolution (was 512 — too coarse to resolve dense tiled grids, so the finish didn't line up with the pattern) */
+var BUMP_SIZE     = 2048; /* emboss / normal-map resolution — matches the 2048 colour atlas (Testing → "Finish & emboss quality") */
+var PBR_SIZE      = 2048; /* roughness/metalness + finish-mask resolution. Half-res (1024) made foil/gloss look low-q vs the 2048 colour map; now 1:1. Adjustable in Testing → "Finish & emboss quality". */
 
 function getLogoDominantColor(img) {
   var tc = document.createElement('canvas');
@@ -7758,6 +7771,32 @@ function onStickerQualitySlider(v) {
   window._sqTimer = setTimeout(function() {
     BAG.artwork.layers.forEach(function(L){ if (L.kind === 'sticker') reprocessStickerQuality(L); });
   }, 220);
+}
+/* Material-finish map quality. Slider value is a power-of-two exponent (9→512 … 12→4096) so
+   the canvases stay power-of-two. 2048 = 1:1 with the colour atlas → crisp foil/gloss/emboss. */
+function onFinishQuality(v) {
+  var size = Math.pow(2, parseInt(v));
+  var lbl = document.getElementById('finish-quality-val'); if (lbl) lbl.textContent = size + 'px';
+  clearTimeout(window._fqTimer);
+  window._fqTimer = setTimeout(function() {
+    PBR_SIZE  = size;
+    BUMP_SIZE = size;
+    EMB_SIZE  = Math.min(2048, size);        /* emboss bevel is composited into the 2048 colour atlas — no gain past 2048 */
+    _embMaskCv = null; _embBevelCv = null;   /* drop cached staging canvases so they rebuild at the new size */
+    [bagRoughTex, bagMetalTex, bagAlphaTex, bagBumpTex].forEach(function(t){ if (t && t.dispose) t.dispose(); });
+    initBagPBRMaps();                        /* recreate roughness/metalness/alpha maps + reassign to material */
+    initBagBumpMap();                        /* recreate bump map + reassign */
+    drawBagTexture();                        /* full re-bake: colour → artwork → PBR overlay → emboss → bump */
+  }, 200);
+}
+/* Overall 3D crispness — supersamples the whole view by multiplying the renderer's pixel ratio.
+   The EffectComposer auto-syncs to the new ratio each frame via realism's _rlmSyncSize(). */
+function onRenderQuality(v) {
+  var mul = parseFloat(v);
+  var lbl = document.getElementById('render-quality-val'); if (lbl) lbl.textContent = mul.toFixed(2) + '×';
+  if (typeof T === 'undefined' || !T.renderer) return;
+  var base = Math.min(window.devicePixelRatio || 1, 2);
+  T.renderer.setPixelRatio(Math.max(0.5, Math.min(3, base * mul)));   /* clamp so the drawing buffer never blows up */
 }
 function onNeutralSnapSlider(type, v) {
   if (NEUTRAL_SNAP[type] == null) type = 'graphic';

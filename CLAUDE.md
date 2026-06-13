@@ -190,6 +190,12 @@ pointerdown/up on range inputs, and `_endSliderDrag` does one full-quality bake 
 ## Testing / admin defaults (current)
 - Finishes default to **soft-touch** (ext/int/handles). HDRI env = **studio3**, intensity ~1.10.
 - Floor: roughness **1.00**, reflectivity (env) **0.00**. **Bloom OFF, FXAA OFF.**
+- **Finish/emboss map resolution = 2048** (`PBR_SIZE`/`BUMP_SIZE`/`EMB_SIZE`), i.e. **1:1 with the colour
+  atlas** — anything less made **foil/gloss look low-q**. Testing → **3D Quality** has two controls:
+  *"Finish & emboss quality"* (`onFinishQuality`, slider value = 2ⁿ exponent 9–12 → 512…4096; re-inits the
+  PBR + bump maps and re-bakes) and *"3D render quality"* (`onRenderQuality`, supersamples via
+  `T.renderer.setPixelRatio(base×mul)`, clamped ≤3; the EffectComposer auto-syncs each frame through
+  realism's `_rlmSyncSize()`, so **no `realism-engine.js` edit / `?v=` bump is needed**).
 - 2D-editor labels: **Label size 16**, **Sub-label size 12**, **Sub-label opacity 60%** (`A2D.subLabelOpacity`).
   Sub-labels sit at each face's bottom-centre. Removed controls: 2D-editor resolution, Atlas edge padding,
   Label/Sub-label bold. Added: **Min layer size** (`MIN_LAYER_SCALE`), **Live preview update** (`previewInterval`),
