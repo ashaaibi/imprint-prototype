@@ -87,8 +87,11 @@ can't affect the bag configurator or marketplace. (To re-make the renamed GLB, s
 snippet in git history / re-run the rename on `paper_cup.glb`.)
 
 ## The 3D configurator (`configurator.html` + `realism-engine.js`)
-- Three.js r128, **inlined** into the HTML, plus the GLB bag model and the **studio3 HDRI**
-  embedded as **base64** (that's most of the file size). Only studio3 is kept (other HDRIs removed to save memory).
+- **Heavy assets are EXTERNAL (not inlined)** so they cache + are shared with the cup studio: Three.js r128 →
+  `vendor/three128/three.min.js` (loads before the post-FX add-ons), studio3 env → `assets/env/studio3.jpg`
+  (1024×512), kraft grain → `materials/kraft1.jpg`. These **must stay committed + same-origin** (a `file://`
+  open would taint the kraft canvas; the dev server / Pages are same-origin so it's fine). The GLB models load
+  from `paper_bag/*.glb` (bag) / `paper_cup/*.glb` (cup). Each configurator HTML is now ~0.7 MB (was ~2.9 MB).
 - `realism-engine.js` is loaded with a cache-bust query: `<script src="realism-engine.js?v=15">`.
   **Bump `?v=N` whenever you edit realism-engine.js**, or the browser serves a stale copy.
 - `REALISM` config object lives in **configurator.html** (~line 3215); the engine reads it as a global.
@@ -265,10 +268,11 @@ pointerdown/up on range inputs, and `_endSliderDrag` does one full-quality bake 
 - **`POLISH_LOG.md`** = running changelog of small UI/UX polish passes.
 
 ## Gotchas (read before editing)
-- **`configurator.html` is multi-MB** → the Read tool fails on it. Use `grep -n` and
-  `awk 'NR>=A && NR<=B'` with line ranges. The inlined Three.js is one **megabyte-long
-  line (~2592)**, which breaks macOS `awk` NR counting — don't trust line numbers derived
-  from awk over that line; anchor edits on unique text instead.
+- **`configurator.html` is large (~0.7 MB after externalizing the blobs)** — Read may still be heavy; prefer
+  `grep -n` + `awk 'NR>=A && NR<=B'`. A few long base64/min lines remain (masks, etc.) — anchor edits on unique
+  text, don't trust awk NR counting across a very long line. (Three.js is now external, no longer a 1 MB line.)
+- **`configurator-cup.html` is a duplicate of `configurator.html`** — most fixes to the bag studio must be
+  applied to BOTH (they share the external Three/env/kraft, but the HTML/JS is duplicated).
 - **r128 shares ONE uv transform across all texture maps** (from `map`); per-map `.repeat`
   is ignored. Tiling is done by baking into a canvas via `ctx.createPattern` + scale.
   `onBeforeCompile` shader patches are unreliable (program caching) — avoid.
