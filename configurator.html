@@ -5747,7 +5747,7 @@ function renderLayersList() {
         '<button class="layer-icon-btn danger" ' + ((L.isDefault || L.locked) ? ('disabled title="' + (L.locked ? 'Unlock to delete' : 'Default layers can&#39;t be deleted') + '"') : 'title="Delete layer"') + ' onclick="event.stopPropagation();deleteLayer(' + L.id + ')">' + trashSVG() + '</button>' +
         '<span class="layer-chevron">&#9658;</span>' +
       '</div>' +
-      '<div class="layer-body" id="lyr-' + L.id + '-body"' + (L.locked ? ' style="pointer-events:none;opacity:0.6;"' : '') + '>' + (expanded ? buildLayerBodyHTML(L) : '') + '</div>' +
+      '<div class="layer-body" id="lyr-' + L.id + '-body"' + ((L.locked && !L.isBackground) ? ' style="pointer-events:none;opacity:0.6;"' : '') + '>' + (expanded ? buildLayerBodyHTML(L) : '') + '</div>' +
     '</div>';
   });
   list.innerHTML = html;
@@ -6831,7 +6831,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'diagonal', gap:0, density:3, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:3, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new pattern covers the WHOLE exterior by default (centered on the exterior island). */
