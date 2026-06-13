@@ -55,6 +55,7 @@
     .pdp-opt { text-align: left; border: 1px solid var(--imp-border); border-radius: var(--imp-r-md); background: var(--imp-surface); padding: 11px 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; font-family: inherit; }
     .pdp-opt:hover { border-color: var(--imp-border-hover); }
     .pdp-opt.on { border-color: var(--imp-fg); background: var(--imp-surface-2); }
+    .pdp-opt.locked { opacity: 0.4; cursor: not-allowed; }
     .pdp-opt .o-name { display: block; font-size: 13px; font-weight: 600; color: var(--imp-fg); }
     .pdp-opt .o-sub { display: block; font-size: 11px; color: var(--imp-fg-3); margin-top: 2px; }
 
@@ -335,6 +336,7 @@ var MFRS = [
 
 /* ─── STATE ─── */
 var sel = { size:'wine', tier:2, mfr:'imprint', allRev:false };   /* Honeyloom is bottle-size; template locks to "wine" */
+var ALLOWED_SIZES = null;   /* set from the template's locks.sizes; null = all sizes selectable */
 
 function getSize(){ return SIZES.filter(function(s){return s.key===sel.size;})[0] || SIZES[0]; }
 function getMfr(){ return MFRS.filter(function(m){return m.key===sel.mfr;})[0] || MFRS[0]; }
@@ -402,7 +404,8 @@ function render(){
 
   /* sizes */
   document.getElementById('pdp-sizes').innerHTML = SIZES.map(function(x){
-    return '<button class="pdp-opt'+(x.key===sel.size?' on':'')+'" onclick="pickSize(\''+x.key+'\')">' +
+    var locked = ALLOWED_SIZES && ALLOWED_SIZES.indexOf(x.key)<0;
+    return '<button class="pdp-opt'+(x.key===sel.size?' on':'')+(locked?' locked':'')+'"'+(locked?' disabled title="Locked by the designer — this template is bottle-size only"':' onclick="pickSize(\''+x.key+'\')"')+'>' +
       '<span class="o-name">'+x.label.split(' · ')[0]+'</span><span class="o-sub">'+x.label.split(' · ')[1]+'</span><span class="o-sub">'+x.dims+'</span></button>';
   }).join('');
 
@@ -506,7 +509,7 @@ function renderDetails(){
 }
 
 /* ─── INTERACTIONS ─── */
-function pickSize(k){ sel.size=k; var n=getSize().tiers.length; if(sel.tier>n-1) sel.tier=n-1; render(); }
+function pickSize(k){ if(ALLOWED_SIZES && ALLOWED_SIZES.indexOf(k)<0) return; sel.size=k; var n=getSize().tiers.length; if(sel.tier>n-1) sel.tier=n-1; render(); }
 function pickTier(i){ sel.tier=i; render(); }
 function pickMfr(k){ sel.mfr=k; sel.allRev=false; render(); }
 
@@ -543,17 +546,23 @@ document.addEventListener('DOMContentLoaded', function(){
   if (_tr) _tr.textContent = MFRS.reduce(function(a,m){ return a + m.reviewCount; }, 0).toLocaleString();
   renderGallery();
   render();
-  /* Mirror the template's size lock on the product page (not just the configurator):
-     disable any size the designer locked out. */
+  /* Mirror the template's size lock on the product page — stored in ALLOWED_SIZES so it
+     survives every re-render (changing manufacturer/quantity no longer unlocks sizes). */
   fetch('templates/honey-gift-bag.template.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(tpl){
     var allowed = tpl && tpl.locks && tpl.locks.sizes;
-    if(!allowed || !allowed.length) return;
-    if(allowed.indexOf(sel.size)<0){ sel.size=allowed[0]; render(); }
-    document.querySelectorAll('#pdp-sizes .pdp-opt').forEach(function(b){
-      var mm=(b.getAttribute('onclick')||'').match(/pickSize\('([^']+)'\)/), key=mm&&mm[1];
-      if(key && allowed.indexOf(key)<0){ b.setAttribute('disabled',''); b.style.opacity='.4'; b.style.cursor='not-allowed'; b.setAttribute('onclick','return false;'); b.title='Locked by the designer — this template is bottle-size only'; }
-    });
+    if(allowed && allowed.length){ ALLOWED_SIZES = allowed; if(allowed.indexOf(sel.size)<0) sel.size=allowed[0]; render(); }
   }).catch(function(){});
+  /* Artist + "You may also like" (catalog-driven) */
+  if (window.IMP) (function(){
+    var p = IMP.product('honeyloom-gift-bag'); if(!p) return;
+    var a = IMP.artist(p.artist);
+    if(a){
+      var html='<a class="pdp-artist" href="artists.html?a='+a.id+'"><img src="'+a.avatar+'" alt="'+a.name+'"><div style="flex:1"><div class="pa-name">'+a.name+' '+(a.flag||'')+'</div><div class="pa-style">'+a.style+' · view profile →</div></div><button class="follow-btn'+(IMP.isFollowing(a.id)?' following':'')+'" data-follow="'+a.id+'" data-name="'+a.name+'" onclick="event.preventDefault()">'+(IMP.isFollowing(a.id)?'Following':'Follow')+'</button></a>';
+      var anchor=document.querySelector('.pdp-stars'); if(anchor) anchor.insertAdjacentHTML('afterend', html);
+    }
+    var rel=IMP.related(p,4);
+    if(rel.length){ var main=document.querySelector('main.pdp'); if(main){ var sec=document.createElement('section'); sec.className='sec'; sec.innerHTML='<div class="sec-head"><div><h2 class="sec-title">You may also like</h2></div><a class="sec-link" href="products.html">All products →</a></div><div class="pgrid">'+rel.map(IMP.productCard).join('')+'</div>'; main.appendChild(sec); } }
+  })();
   document.addEventListener('imprint:langchange', render);   /* currency/lang change → re-price */
 });
 </script>
