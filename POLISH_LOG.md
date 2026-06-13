@@ -3,6 +3,20 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 9)
+- **Template + designer system.** New unlisted `designer/` portal → opens the configurator in **designer mode**
+  (`?designer=1`): full studio + Testing panel + a Designer bar (Locks / Capture render / Export template) +
+  a Locks panel to choose what clients may change. **Testing is now hidden for everyone except designer mode.**
+- **Export** serializes the design (`_snapshotState` + embedded layer images) + locks + meta to a
+  `<id>.template.json`; **Capture render** downloads a PNG of the 3D view. Commit both to `templates/` and add
+  to `templates/index.json` to publish.
+- **Clients** open `configurator.html?template=<id>` → the design is restored and **locks enforced** (locked
+  sizes/steps/controls hidden; designer layers get a minimal panel with only the allowed text/colour/social
+  edits; geometry locked). Safety invariant: `LOCKS` null ⇒ the normal configurator is byte-for-byte unchanged
+  (enforcement is via monkey-patches + `_tplLock` guards).
+- **Template gallery** ("Start from a template") on the product page reads `templates/index.json`; seeded with a
+  "Minimal Wordmark" sample. Designer-captured renders replace the placeholder thumbnails when provided.
+
 ## 2026-06-13 (batch 8)
 - **New product detail page (`product.html`)** — the Paper-bag card now opens a PDP instead of jumping
   straight to the configurator. Styled SVG mockup gallery (kraft / white / colour / dark studio / spec

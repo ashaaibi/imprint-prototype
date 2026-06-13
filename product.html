@@ -123,7 +123,21 @@
     .pdp-rev-more { width: 100%; margin-top: 10px; padding: 11px; border: 1px solid var(--imp-border); border-radius: var(--imp-r-md); background: var(--imp-surface); color: var(--imp-fg); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
     .pdp-rev-more:hover { border-color: var(--imp-border-hover); }
 
+    /* Templates gallery */
+    .pdp-templates { margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--imp-border); }
+    .pdp-tpl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .pdp-tpl-card { border: 1px solid var(--imp-border); border-radius: var(--imp-r-md); overflow: hidden; cursor: pointer; background: var(--imp-surface); transition: border-color .15s, transform .15s, box-shadow .15s; text-decoration: none; color: inherit; display: block; }
+    .pdp-tpl-card:hover { border-color: var(--imp-border-hover); box-shadow: var(--imp-shadow-xs); transform: translateY(-2px); }
+    .pdp-tpl-stage { aspect-ratio: 4/3.1; display: flex; align-items: center; justify-content: center; }
+    .pdp-tpl-stage .pdp-bag { width: 52%; filter: drop-shadow(0 12px 20px rgba(20,16,10,0.25)); }
+    .pdp-tpl-stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pdp-tpl-body { padding: 11px 13px; }
+    .pdp-tpl-name { font-size: 14px; font-weight: 600; color: var(--imp-fg); }
+    .pdp-tpl-cat { font-size: 11.5px; color: var(--imp-fg-3); margin-top: 2px; }
+    .pdp-tpl-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+    .pdp-tpl-tag { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 2px 6px; border-radius: 5px; background: var(--imp-surface-2); color: var(--imp-fg-2); }
     @media (max-width: 880px) {
+      .pdp-tpl-grid { grid-template-columns: repeat(2, 1fr); }
       .pdp { padding: 20px 18px 56px; }
       .pdp-grid { grid-template-columns: 1fr; gap: 28px; }
       .pdp-gallery { position: static; }
@@ -196,6 +210,13 @@
       <div class="pdp-reassure">Customize opens the 3D studio on the <b>Design</b> step — go back to <b>Start</b> anytime to change size or quantity. No account needed · Ships across the GCC.</div>
     </div>
   </div>
+
+  <!-- ── START FROM A TEMPLATE ── -->
+  <section class="pdp-templates" id="pdp-templates" style="display:none;">
+    <h2 class="pdp-sec-title">Start from a template</h2>
+    <p style="font-size:13.5px;color:var(--imp-fg-2);margin:-8px 0 18px;max-width:620px;line-height:1.55;">Designer-made starting points — open one and just change the text, colours and social handles to make it yours. The layout stays locked, so it always looks right.</p>
+    <div class="pdp-tpl-grid" id="pdp-tpl-grid"></div>
+  </section>
 
   <!-- ── DETAILS: specs + reviews for the selected manufacturer ── -->
   <div class="pdp-details">
@@ -489,6 +510,22 @@ function addToCart(){
   location.href='checkout.html';
 }
 
+/* ─── Templates gallery (designer-made starting points) ─── */
+function loadTemplates(){
+  fetch('templates/index.json', { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    if (!list || !list.length) return;
+    var grid = document.getElementById('pdp-tpl-grid'); if (!grid) return;
+    grid.innerHTML = list.map(function(t){
+      var acc = t.accent || '#c79a63';
+      var thumb = t.render ? '<img src="'+t.render+'" alt="'+t.name+'">' : bagSVG(acc, _shade(acc,-24), _shade(acc,46));
+      var tags = (t.tags||[]).map(function(x){ return '<span class="pdp-tpl-tag">'+x+'</span>'; }).join('');
+      return '<a class="pdp-tpl-card" href="configurator.html?template='+encodeURIComponent(t.id)+'">' +
+        '<div class="pdp-tpl-stage" style="background:linear-gradient(160deg,'+_shade(acc,66)+','+_shade(acc,34)+')">'+thumb+'</div>' +
+        '<div class="pdp-tpl-body"><div class="pdp-tpl-name">'+t.name+'</div><div class="pdp-tpl-cat">'+(t.category||'')+(t.designer?' · by '+t.designer:'')+'</div>'+(tags?'<div class="pdp-tpl-tags">'+tags+'</div>':'')+'</div></a>';
+    }).join('');
+    document.getElementById('pdp-templates').style.display = '';
+  }).catch(function(){});
+}
 document.addEventListener('DOMContentLoaded', function(){
   initSiteHeader({
     activePage:'products',
@@ -499,6 +536,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if (_tr) _tr.textContent = MFRS.reduce(function(a,m){ return a + m.reviewCount; }, 0).toLocaleString();
   renderGallery();
   render();
+  loadTemplates();
   document.addEventListener('imprint:langchange', render);   /* currency/lang change → re-price */
 });
 </script>

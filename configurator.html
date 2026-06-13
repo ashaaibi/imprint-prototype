@@ -3111,6 +3111,22 @@ try {
     b.classList.toggle('on', oc.indexOf("'" + currentBagModel + "'") >= 0);
   });
 } catch(e){}
+
+/* ── TEMPLATE / DESIGNER SYSTEM ──────────────────────────────────────────────
+   Designers reach the builder only via the unlisted /designer portal, which opens us with
+   ?designer=1 — that reveals the Testing panel + a Designer bar (set locks, capture render,
+   export template JSON). Clients open a template via ?template=ID: it restores the saved design
+   and enforces the designer's locks. LOCKS stays null in normal/designer use, so the core
+   configurator is byte-for-byte unchanged unless a client template is actually loaded. */
+var _designerMode = false, LOCKS = null, _templateId = null;
+try { _designerMode = /[?&]designer=1(\b|&|$)/.test(location.search); } catch(e){}
+function _lkd(path){                         /* is this feature locked by the loaded template? */
+  if (!LOCKS) return false;
+  var p = path.split('.'), o = LOCKS;
+  for (var i = 0; i < p.length; i++){ if (o == null) return false; o = o[p[i]]; }
+  return !!o;
+}
+function _tplCanEdit(kind){ return !LOCKS || (LOCKS.edit && LOCKS.edit[kind]); }   /* client-editable: text/colour/social/graphics */
 function setBagUVForModel(key){
   var m = BAG_MODELS[key]; if (!m) return;
   BAG_UV.exterior = { x:m.uv.exterior.x, y:m.uv.exterior.y, w:m.uv.exterior.w, h:m.uv.exterior.h };
@@ -11170,7 +11186,7 @@ function _layerCropBox(b, L){
 }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerCropBox(_layerBox(L), L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
-  var L=a2d.sel; if(!L || (L.locked && !_moveLockOnly(L))) return null; var b=_layerCropBox(_layerBox(L), L);  /* a locked background still exposes resize/crop handles (only its MOVE is locked) */
+  var L=a2d.sel; if(!L || L._tplLock || (L.locked && !_moveLockOnly(L))) return null; var b=_layerCropBox(_layerBox(L), L);  /* template layers + locked non-bg expose no resize/crop handles */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
   /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
   var order=[ ['rotate',0,1.6],
@@ -11225,7 +11241,7 @@ function _aDown(e){
   }
   /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
-  if (L && L.locked){
+  if (L && (L.locked || L._tplLock)){
     /* Locked: the BODY can't be dragged (a body click-drag pans instead); a click just selects
        it (toolbar shows). Backgrounds are move-locked only — their resize/crop handles still work
        (handled above via _hitHandle), so this branch is only reached on a body hit. */
@@ -11247,7 +11263,7 @@ function _aMove(e){
     else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nwse-resize':'nesw-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
     else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
-    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ cur=_hL.locked?'grab':'move'; a2d.hoverL=(_hL.locked?null:_hL); } else a2d.hoverL=null; }
+    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ var _ml=(_hL.locked||_hL._tplLock); cur=_ml?'grab':'move'; a2d.hoverL=(_ml?null:_hL); } else a2d.hoverL=null; }
     if (cur!=='move') a2d.hoverL=null;   /* only preview the box when actually hovering an unlocked layer body */
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
@@ -12047,5 +12063,180 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     </div>
   </div>
 </div>
+<style id="tpl-css">
+  #testing-panel { display: none; }                         /* Testing is for designers only */
+  body.imp-designer #testing-panel { display: block; }
+  #imp-dbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 60; display: flex; gap: 8px; align-items: center; background: var(--imp-fg,#111); color: #fff; padding: 7px 9px; border-radius: 999px; box-shadow: 0 8px 28px rgba(0,0,0,0.32); font-family: var(--imp-font, Inter, sans-serif); }
+  #imp-dbar .dtag { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.65; padding: 0 4px 0 6px; }
+  #imp-dbar button { font-family: inherit; font-size: 12px; font-weight: 600; border: none; border-radius: 999px; padding: 8px 13px; cursor: pointer; background: rgba(255,255,255,0.15); color: #fff; }
+  #imp-dbar button:hover { background: rgba(255,255,255,0.28); }
+  #imp-locks { position: fixed; right: 16px; bottom: 66px; z-index: 61; width: 270px; max-height: 72vh; overflow: auto; background: var(--imp-surface,#fff); color: var(--imp-fg,#111); border: 1px solid var(--imp-border,#e5e5e5); border-radius: 14px; box-shadow: 0 14px 44px rgba(0,0,0,0.26); padding: 14px 16px; display: none; }
+  #imp-locks.open { display: block; }
+  #imp-locks h4 { margin: 0; font-size: 13px; }
+  #imp-locks .lk-sec { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--imp-fg-3,#999); font-weight: 700; margin: 13px 0 5px; }
+  #imp-locks label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--imp-fg-2,#555); margin: 5px 0; cursor: pointer; }
+  #imp-tplbar { position: fixed; left: 0; right: 0; top: 0; z-index: 55; background: var(--imp-accent,#c8a96e); color: #1a1a1a; font-family: var(--imp-font, Inter, sans-serif); font-size: 12.5px; font-weight: 600; text-align: center; padding: 6px 12px; }
+  body.imp-client-tpl { /* template-editing client */ }
+</style>
+<script>
+/* ── Template / Designer system (self-contained; no effect unless ?designer=1 or ?template=ID) ── */
+(function(){
+  function $(s){ return document.querySelector(s); }
+  function dl(name, blob){ var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },120); }
+
+  /* ===== Designer: lock config ===== */
+  var LK = { sizes:[], addLayer:true, hideSteps:[], controls:{ layout:true, emboss:true, recolor:true, finish:true, areas:true, move:true }, edit:{ text:true, colour:true, social:true, graphics:false } };
+
+  /* ===== Designer: export template + capture render ===== */
+  function serializeTemplate(meta){
+    var snap = _snapshotState();
+    snap.layers = snap.layers.map(function(L){
+      var o={}; for (var k in L){ if (k==='img'||k==='srcImg'||k==='cutCanvas') continue; o[k]=L[k]; }
+      try { if (L.srcImg) o._srcImgSrc = L.srcImg.src || (L.srcImg.toDataURL && L.srcImg.toDataURL('image/png')); } catch(e){}
+      try { if (!o._srcImgSrc && L.img) o._imgSrc = L.img.src || (L.img.toDataURL && L.img.toDataURL('image/png')); } catch(e){}
+      return o;
+    });
+    return { v:1, meta:meta, locks: JSON.parse(JSON.stringify(LK)), snapshot: snap };
+  }
+  window.IMPRINT_exportTemplate = function(){
+    var name = prompt('Template name', 'My template'); if (!name) return;
+    var cat = prompt('Category (e.g. Café, Boutique, Eid, Ramadan)', 'General') || 'General';
+    var id = (name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)) || ('tpl-'+Date.now());
+    var tpl = serializeTemplate({ id:id, name:name, category:cat, designer:'Imprint', created:new Date().toISOString().slice(0,10) });
+    dl(id+'.template.json', new Blob([JSON.stringify(tpl)], {type:'application/json'}));
+    alert('Exported '+id+'.template.json\n\nNext: commit it to /templates/, capture a render (📷) and commit that too, then add an entry to /templates/index.json to publish it to the gallery.');
+  };
+  window.IMPRINT_captureRender = function(){
+    try {
+      if (typeof drawBagTexture==='function') drawBagTexture();
+      if (typeof realismRender==='function') realismRender();
+      var cv = document.getElementById('three-canvas');
+      cv.toBlob(function(b){ if (b) dl('render-'+Date.now()+'.png', b); else alert('Capture failed — try rotating the bag and retry.'); }, 'image/png');
+    } catch(e){ alert('Could not capture render: '+e.message); }
+  };
+
+  /* ===== Client: load a template + enforce locks ===== */
+  window.IMPRINT_loadTemplate = function(tpl){
+    LOCKS = tpl.locks || {}; _templateId = (tpl.meta && tpl.meta.id) || null;
+    var snap = tpl.snapshot; (snap.layers||[]).forEach(function(L){ L._tplLock = true; });
+    var withImg = (snap.layers||[]).filter(function(L){ return L._srcImgSrc || L._imgSrc; });
+    if (!withImg.length){ _finishTpl(snap, tpl); return; }
+    var pending = withImg.length;
+    withImg.forEach(function(L){
+      var im = new Image(); im.crossOrigin='anonymous';
+      im.onload = im.onerror = function(){ if (im.naturalWidth) { L.srcImg = im; L.img = im; } if (--pending<=0) _finishTpl(snap, tpl); };
+      im.src = L._srcImgSrc || L._imgSrc;
+    });
+  };
+  function _finishTpl(snap, tpl){
+    try { _restoreState(snap); } catch(e){ console.warn('template restore', e); }
+    (BAG.artwork.layers||[]).forEach(function(L){
+      L._tplLock = true;
+      if (L.kind==='sticker' && L.srcImg && typeof _rebuildStickerCutAndRecolor==='function'){ try{ _rebuildStickerCutAndRecolor(L); }catch(e){} }
+    });
+    if (typeof renderLayersList==='function') renderLayersList();
+    if (typeof drawBagTexture==='function') drawBagTexture();
+    _applyLocks();
+    if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
+    var b=document.createElement('div'); b.id='imp-tplbar';
+    b.textContent = 'Editing template: ' + ((tpl.meta&&tpl.meta.name)||'') + ' — change the text, colours & handles; the layout is set by the designer.';
+    document.body.appendChild(b);
+    try { document.querySelector('.canvas-stage').style.marginTop='28px'; }catch(e){}
+  }
+
+  function _applyLocks(){
+    if (!LOCKS) return;
+    if (LOCKS.sizes && LOCKS.sizes.length){
+      document.querySelectorAll('.bag-sopt').forEach(function(b){ var oc=b.getAttribute('onclick')||''; b.style.display = LOCKS.sizes.some(function(s){return oc.indexOf("'"+s+"'")>=0;}) ? '' : 'none'; });
+    }
+    (LOCKS.hideSteps||[]).forEach(function(n){ var p=document.querySelector('[data-cstep-pill="'+n+'"]'); if(p) p.style.display='none'; });
+    var al=document.querySelector('.add-layer-btn'); if (al) al.style.display = (LOCKS.edit && LOCKS.edit.graphics) ? '' : 'none';
+    document.querySelectorAll('#layers-list .layer-row').forEach(function(row){
+      row.querySelectorAll('.layer-icon-btn').forEach(function(btn){
+        var t=(btn.getAttribute('title')||'')+(btn.getAttribute('onclick')||'');
+        if (/Lock|Duplicate|Delete|toggleLayerLock|duplicateLayer|deleteLayer/.test(t)) btn.style.display='none';
+      });
+    });
+  }
+  window._applyLocks = _applyLocks;
+
+  /* ===== Monkey-patches (return original when LOCKS is null → normal mode unchanged) ===== */
+  function patch(n, make){ if (typeof window[n]==='function') window[n]=make(window[n]); }
+  patch('renderLayersList', function(o){ return function(){ var r=o.apply(this,arguments); try{_applyLocks();}catch(e){} return r; }; });
+  patch('_layoutPickerHTML', function(o){ return function(id,L){ return _lkd('controls.layout')?'':o(id,L); }; });
+  patch('_areasSectionHTML', function(o){ return function(id,L){ return _lkd('controls.areas')?'':o(id,L); }; });
+  patch('_moveSectionHTML',  function(o){ return function(id,L){ return _lkd('controls.move')?'':o(id,L); }; });
+  patch('layerFinishGridHTML', function(o){ return function(L){ return _lkd('controls.finish')?'':o(L); }; });
+  patch('_embossSegHTML',    function(o){ return function(id,L){ return _lkd('controls.emboss')?'':o(id,L); }; });
+  patch('buildLayerBodyHTML', function(o){ return function(L){ return (LOCKS && L && L._tplLock) ? _clientPanel(L) : o(L); }; });
+
+  function _clientPanel(L){
+    var id=L.id, h='';
+    if (L.kind==='text' && _tplCanEdit('text')){
+      h += '<div class="ctrl-color-label" style="margin-top:14px">Your text</div>' +
+        '<textarea rows="2" oninput="onLayerTextChange('+id+',this.value)" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;">'+escapeHTML(L.content||'')+'</textarea>';
+    }
+    if (_tplCanEdit('colour')){
+      if (L.kind==='text'){
+        h += '<div class="ctrl-color-label" style="margin-top:16px">Colour</div>' +
+          '<div class="hue-slider-wrap"><input type="range" class="hue-slider" id="lyr-'+id+'-hslider" min="0" max="360" value="'+(L.hue||0)+'" oninput="onLayerHue('+id+',this.value)"></div>' +
+          '<div class="mono-swatches" id="lyr-'+id+'-swatches"></div><div class="color-hex" id="lyr-'+id+'-chex"></div>';
+      } else if (L.kind==='logo' || L.kind==='sticker') {
+        var ih=(L.imgHue||0), is=(L.imgSat!=null?L.imgSat:100);
+        h += '<div class="ctrl-color-label" style="margin-top:16px">Adjust colour</div>' +
+          '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name">Hue</span><span class="ctrl-slider-val" id="lyr-'+id+'-imghue-val">'+ih+'°</span></div><input type="range" class="hue-slider" id="lyr-'+id+'-imghue" min="0" max="360" value="'+ih+'" oninput="onLayerImgHue('+id+',this.value)"></div>' +
+          '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name">Saturation</span><span class="ctrl-slider-val" id="lyr-'+id+'-imgsat-val">'+is+'%</span></div><input type="range" class="sat-slider" id="lyr-'+id+'-imgsat" min="0" max="200" value="'+is+'" style="background:linear-gradient(to right,hsl('+ih+',0%,62%),hsl('+ih+',92%,50%))" oninput="onLayerImgSat('+id+',this.value)"></div>';
+      }
+    }
+    if (!h) h = '<div style="font-size:11px;color:var(--imp-fg-3);padding:10px 0;line-height:1.5;">Set by the designer — locked.</div>';
+    return h;
+  }
+
+  /* ===== Designer UI (bar + locks panel) ===== */
+  function ckb(path,label,on){ return '<label><input type="checkbox" data-lk="'+path+'"'+(on?' checked':'')+'> '+label+'</label>'; }
+  function buildDesignerUI(){
+    var bar=document.createElement('div'); bar.id='imp-dbar';
+    bar.innerHTML='<span class="dtag">Designer</span>' +
+      '<button type="button" onclick="document.getElementById(\'imp-locks\').classList.toggle(\'open\')">🔒 Locks</button>' +
+      '<button type="button" onclick="IMPRINT_captureRender()">📷 Render</button>' +
+      '<button type="button" onclick="IMPRINT_exportTemplate()">⬇ Export template</button>';
+    document.body.appendChild(bar);
+    var lk=document.createElement('div'); lk.id='imp-locks';
+    lk.innerHTML = '<h4>What clients can change</h4>' +
+      '<div class="lk-sec">Client may edit</div>' + ckb('edit.text','Text content',true) + ckb('edit.colour','Colours',true) + ckb('edit.social','Social handles',true) + ckb('edit.graphics','Add their own graphics',false) +
+      '<div class="lk-sec">Lock controls</div>' + ckb('controls.layout','Layout',true) + ckb('controls.emboss','Emboss / Deboss',true) + ckb('controls.recolor','Recolor wheel',true) + ckb('controls.finish','Material finish',true) + ckb('controls.areas','Areas (faces)',true) + ckb('controls.move','Move / resize',true) +
+      '<div class="lk-sec">Size & steps</div>' +
+      '<label><input type="checkbox" id="lk-fixsize" checked> Fix to current size</label>' +
+      '<label><input type="checkbox" data-step="3" checked> Hide Exterior step</label>' +
+      '<label><input type="checkbox" data-step="4" checked> Hide Interior step</label>' +
+      '<label><input type="checkbox" data-step="5" checked> Hide Handles step</label>' +
+      '<div style="font-size:10.5px;color:var(--imp-fg-3);margin-top:11px;line-height:1.5;">Saved into the template on Export. Anything locked is hidden/disabled for the client.</div>';
+    document.body.appendChild(lk);
+    lk.addEventListener('change', syncLocks);
+    syncLocks();
+  }
+  function syncLocks(){
+    document.querySelectorAll('#imp-locks [data-lk]').forEach(function(el){
+      var p=el.getAttribute('data-lk').split('.');
+      if (p.length===2){ LK[p[0]]=LK[p[0]]||{}; LK[p[0]][p[1]]=el.checked; } else { LK[p[0]]=el.checked; }
+    });
+    var fx=$('#lk-fixsize'); LK.sizes = (fx&&fx.checked) ? [currentBagModel] : [];
+    LK.hideSteps = []; document.querySelectorAll('#imp-locks [data-step]').forEach(function(el){ if(el.checked) LK.hideSteps.push(parseInt(el.getAttribute('data-step'),10)); });
+    LK.addLayer = !(LK.edit && LK.edit.graphics);
+  }
+
+  /* ===== Boot ===== */
+  document.addEventListener('DOMContentLoaded', function(){
+    if (_designerMode){ document.body.classList.add('imp-designer'); buildDesignerUI(); return; }
+    try {
+      var tid = new URLSearchParams(location.search).get('template');
+      if (tid){ _templateId=tid; document.body.classList.add('imp-client-tpl');
+        fetch('templates/'+tid+'.template.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+          .then(function(tpl){ IMPRINT_loadTemplate(tpl); })
+          .catch(function(){ console.warn('Template not found:', tid); }); }
+    } catch(e){}
+  });
+})();
+</script>
 </body>
 </html>

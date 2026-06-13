@@ -24,7 +24,9 @@ mangling files/folders.
   (lands on Design); "Add to cart" → `setCart()` → `checkout.html`. Manufacturers vary price (`priceMul`) + lead time.
 - `configurator.html` — **the 3D configurator (centerpiece, ~2.5 MB)**
 - `checkout.html` · `confirmation.html` — order flow
-- `admin.html` — testing controls · `designer/` · `factory/` — demo stubs
+- `admin.html` — testing controls · `factory/` — demo stubs
+- `designer/index.html` — **unlisted designer portal** (build/publish templates) · `designer/builder.html` — old stub
+- `templates/` — **template JSONs** (`<id>.template.json`) + `index.json` manifest (the template gallery reads it)
 - `shared.css` / `shared.js` — header, GCC country/currency state, helpers
 - `realism-engine.js` — 3D realism (post-processing, lighting, floor, per-finish PBR)
 - `vendor/three128/` — Three r128 post-FX (EffectComposer, SSAO, Bloom, Bokeh, FXAA, RectAreaLight)
@@ -99,6 +101,22 @@ left of the handle. Icons + example placeholders live in `SOCIAL_ICONS` / `SOCIA
 6 steps: **Start · Design · Exterior · Interior · Handles · Review** (`CONFIG_STEP_COUNT=6`, `goConfigStep`,
 `applyStepCamera`, `STEP_PART`). Step number is the source of truth — pills (`data-cstep-pill`), sections
 (`data-cstep`), `STEP_PART` and `applyStepCamera` must all agree. The active pill auto-centers in the row.
+
+### Templates & designer mode (configurator)
+A self-contained block at the **end of `configurator.html`** (after `</body>`'s last script) adds the template
+system. **Invariant: `LOCKS` is null in normal/designer use, so the core configurator is unchanged unless a
+client opens a template.** It monkey-patches the render fns (e.g. `_layoutPickerHTML`, `buildLayerBodyHTML`)
+so they return original output when `LOCKS` is null.
+- **Designer mode** = `?designer=1` (reached only via the unlisted `designer/` portal). Shows the **Testing
+  panel** (hidden for everyone else — `#testing-panel{display:none}` + `body.imp-designer`), a **Designer bar**
+  (`🔒 Locks` / `📷 Render` / `⬇ Export template`), and the **Locks panel** (`LK`).
+- **Export** (`IMPRINT_exportTemplate`) = `_snapshotState()` (layer images serialized to `_imgSrc`/`_srcImgSrc`)
+  + `locks` + `meta` → downloaded `<id>.template.json`. `📷 Render` (`IMPRINT_captureRender`) downloads a PNG of
+  the 3D canvas. Commit both to `templates/` + add to `templates/index.json`.
+- **Client** = `?template=<id>` → fetch `templates/<id>.template.json` → rebuild layer images → `_restoreState`
+  → mark layers `_tplLock` → `_applyLocks()` (hide locked sizes/steps/add-layer + lock layers) → land on Design.
+  `_tplLock` layers get a **minimal panel** (`_clientPanel`: only the designer-allowed text / colour / social);
+  geometry is locked via the `_tplLock` guards in `_aDown`/`_hitHandle`. Clients **never** see Testing.
 
 ## Presets folders + manifests  ⚠️ IMPORTANT
 The "Presets" picker reads three TYPE folders, each holding COLLECTION sub-folders:

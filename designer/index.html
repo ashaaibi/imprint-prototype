@@ -3,318 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMPRINT® — Designer dashboard</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>IMPRINT® — Designer portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared.css">
   <style>
-    .designer-layout {
-      max-width: var(--imp-max-w);
-      margin: 0 auto;
-      padding: 32px 32px 80px;
-    }
-    .designer-head {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 32px;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .designer-greeting {
-      font-family: var(--imp-font);
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      color: var(--imp-fg);
-      margin-bottom: 4px;
-    }
-    .designer-greeting .name { color: var(--imp-gold); }
-    .designer-meta { font-size: 13px; color: var(--imp-fg-3); }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-    .stat-card {
-      background: var(--imp-surface);
-      border: 1px solid var(--imp-border);
-      border-radius: var(--imp-r-lg);
-      padding: 22px 24px;
-      box-shadow: var(--imp-shadow-xs);
-      transition: border-color 0.18s, box-shadow 0.18s;
-    }
-    .stat-card:hover { border-color: var(--imp-border-hover); box-shadow: var(--imp-shadow-sm); }
-    .sc-lbl {
-      font-size: 12px;
-      color: var(--imp-fg-3);
-      font-weight: 500;
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
-    }
-    .sc-val {
-      font-family: var(--imp-font);
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--imp-fg);
-      letter-spacing: -0.02em;
-      font-variant-numeric: tabular-nums;
-    }
-    .sc-trend {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      margin-top: 6px;
-      padding: 2px 8px;
-      border-radius: var(--imp-r-pill);
-    }
-    .sc-trend.up { background: var(--imp-success-bg); color: var(--imp-success); }
-    .sc-trend.down { background: var(--imp-error-bg); color: var(--imp-error); }
-    .sc-trend svg { width: 10px; height: 10px; }
-
-    .page-grid {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-    .panel {
-      background: var(--imp-surface);
-      border: 1px solid var(--imp-border);
-      border-radius: var(--imp-r-lg);
-      padding: 24px;
-      box-shadow: var(--imp-shadow-xs);
-    }
-    .panel-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      gap: 12px;
-    }
-    .panel-title {
-      font-family: var(--imp-font);
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      color: var(--imp-fg);
-    }
-
-    .feed-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--imp-border);
-    }
-    .feed-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .feed-item:first-child { padding-top: 0; }
-    .feed-flag { font-size: 22px; }
-    .feed-content { flex: 1; min-width: 0; }
-    .feed-id {
-      font-family: var(--imp-font-mono);
-      font-size: 12px;
-      color: var(--imp-fg-3);
-      font-weight: 500;
-    }
-    .feed-meta {
-      font-size: 13px;
-      color: var(--imp-fg);
-      margin-top: 2px;
-      font-weight: 500;
-    }
-    .feed-amount {
-      font-family: var(--imp-font);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--imp-fg);
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-
-    @media (max-width: 900px) {
-      .designer-layout { padding: 20px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .page-grid { grid-template-columns: 1fr; }
-    }
+    .dp { max-width: 1040px; margin: 0 auto; padding: 40px 28px 90px; }
+    .dp-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--imp-gold); margin-bottom: 10px; }
+    .dp-title { font-family: var(--imp-font); font-size: clamp(30px,4vw,44px); font-weight: 600; letter-spacing: -0.02em; color: var(--imp-fg); margin: 0 0 8px; }
+    .dp-sub { font-size: 15px; color: var(--imp-fg-2); line-height: 1.6; max-width: 640px; }
+    .dp-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 26px 0 8px; }
+    .dp-btn { font-family: inherit; font-size: 14px; font-weight: 600; padding: 13px 20px; border-radius: var(--imp-r-md); cursor: pointer; border: 1px solid var(--imp-border); background: var(--imp-surface); color: var(--imp-fg); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .dp-btn.primary { background: var(--imp-fg); color: var(--imp-surface); border-color: var(--imp-fg); }
+    .dp-btn:hover { border-color: var(--imp-border-hover); }
+    .dp-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 36px 0 44px; }
+    .dp-step { border: 1px solid var(--imp-border); border-radius: var(--imp-r-md); padding: 16px; background: var(--imp-surface); }
+    .dp-step .n { width: 26px; height: 26px; border-radius: 50%; background: var(--imp-fg); color: var(--imp-surface); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .dp-step h3 { font-size: 14px; margin: 0 0 5px; color: var(--imp-fg); }
+    .dp-step p { font-size: 12.5px; color: var(--imp-fg-2); line-height: 1.5; margin: 0; }
+    .dp-step code { background: var(--imp-surface-2); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+    .dp-sec-title { font-family: var(--imp-font); font-size: 22px; font-weight: 600; color: var(--imp-fg); margin: 0 0 4px; }
+    .dp-sec-sub { font-size: 13px; color: var(--imp-fg-3); margin: 0 0 18px; }
+    .dp-tpl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .dp-tpl { border: 1px solid var(--imp-border); border-radius: var(--imp-r-md); overflow: hidden; background: var(--imp-surface); }
+    .dp-tpl-stage { aspect-ratio: 4/3.1; display: flex; align-items: center; justify-content: center; }
+    .dp-tpl-stage svg { width: 52%; filter: drop-shadow(0 12px 20px rgba(20,16,10,0.25)); }
+    .dp-tpl-stage img { width: 100%; height: 100%; object-fit: cover; }
+    .dp-tpl-body { padding: 11px 13px; }
+    .dp-tpl-name { font-size: 14px; font-weight: 600; color: var(--imp-fg); }
+    .dp-tpl-cat { font-size: 11.5px; color: var(--imp-fg-3); margin: 2px 0 9px; }
+    .dp-tpl-links { display: flex; gap: 8px; }
+    .dp-tpl-links a { font-size: 11.5px; font-weight: 600; color: var(--imp-fg-2); text-decoration: none; border: 1px solid var(--imp-border); border-radius: var(--imp-r-pill); padding: 5px 11px; }
+    .dp-tpl-links a:hover { border-color: var(--imp-fg); color: var(--imp-fg); }
+    .dp-empty { border: 1px dashed var(--imp-border); border-radius: var(--imp-r-md); padding: 28px; text-align: center; color: var(--imp-fg-3); font-size: 13px; }
+    @media (max-width: 820px) { .dp-steps, .dp-tpl-grid { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
+<div class="dp">
+  <div class="dp-eyebrow">Designer portal · unlisted</div>
+  <h1 class="dp-title">Build &amp; publish templates</h1>
+  <p class="dp-sub">Open the studio in <strong>designer mode</strong> — you get the full configurator plus the Testing panel, a Locks panel (choose what clients may change), a render-capture button, and Export. Clients only ever see the locked template.</p>
 
-<div id="site-header"></div>
-
-<div class="designer-layout">
-  <div class="designer-head">
-    <div>
-      <div class="designer-greeting">
-        <span data-i18n="des.welcome">Welcome back</span>, <span class="name">Noura</span>
-      </div>
-      <div class="designer-meta" id="designer-meta-line">5 templates live · Member since Aug 2025</div>
-    </div>
-    <a href="builder.html" class="btn btn-primary">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span data-i18n="des.new">Create new template</span>
-    </a>
+  <div class="dp-cta-row">
+    <a class="dp-btn primary" href="../configurator.html?designer=1">✦ New template (open builder)</a>
+    <a class="dp-btn" href="../product.html" target="_blank">View the live product page</a>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="sc-lbl" data-i18n="des.stat.templates">Templates live</div>
-      <div class="sc-val">5</div>
-      <span class="sc-trend up">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-        +2 <span data-en="this month" data-ar="هذا الشهر">this month</span>
-      </span>
-    </div>
-    <div class="stat-card">
-      <div class="sc-lbl" data-i18n="des.stat.orders">Orders this month</div>
-      <div class="sc-val">342</div>
-      <span class="sc-trend up">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-        +18%
-      </span>
-    </div>
-    <div class="stat-card">
-      <div class="sc-lbl" data-i18n="des.stat.earnings">Earnings (MTD)</div>
-      <div class="sc-val" id="earnings-val">AED 8,940</div>
-      <span class="sc-trend up">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-        +AED 1,210
-      </span>
-    </div>
-    <div class="stat-card">
-      <div class="sc-lbl" data-i18n="des.stat.conv">Avg conversion</div>
-      <div class="sc-val">68%</div>
-      <span class="sc-trend up">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-        +4 pts
-      </span>
-    </div>
+  <div class="dp-steps">
+    <div class="dp-step"><div class="n">1</div><h3>Design</h3><p>Build the bag in designer mode — size, colours, finishes, text, logos, graphics, social layers.</p></div>
+    <div class="dp-step"><div class="n">2</div><h3>Lock</h3><p>Open <strong>🔒 Locks</strong> and choose what clients can change (text, colours, handles) and what's fixed (size, layout, emboss, finish…).</p></div>
+    <div class="dp-step"><div class="n">3</div><h3>Capture &amp; export</h3><p>Hit <strong>📷 Render</strong> for product photos, then <strong>⬇ Export template</strong> to download the JSON.</p></div>
+    <div class="dp-step"><div class="n">4</div><h3>Publish</h3><p>Commit the JSON + renders to <code>/templates/</code> and add an entry to <code>templates/index.json</code>. It appears in the gallery.</p></div>
   </div>
 
-  <div class="page-grid">
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title" data-i18n="des.templates">My templates</div>
-      </div>
-      <table class="imp-table">
-        <thead>
-          <tr>
-            <th data-i18n="des.tbl.name">Name</th>
-            <th data-i18n="des.tbl.orders">Orders</th>
-            <th data-i18n="des.tbl.earnings">Earnings</th>
-            <th data-i18n="des.tbl.conv">Conv.</th>
-            <th data-i18n="des.tbl.status">Status</th>
-          </tr>
-        </thead>
-        <tbody id="templates-body">
-          <tr>
-            <td><strong>Minimal Latte</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Aug 12</span></td>
-            <td>128</td>
-            <td class="imp-mono">AED 3,840</td>
-            <td>72%</td>
-            <td><span class="badge badge-green">Live</span></td>
-          </tr>
-          <tr>
-            <td><strong>Desert Bloom</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Sep 04</span></td>
-            <td>96</td>
-            <td class="imp-mono">AED 2,880</td>
-            <td>64%</td>
-            <td><span class="badge badge-green">Live</span></td>
-          </tr>
-          <tr>
-            <td><strong>Aurum Mono</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Sep 22</span></td>
-            <td>71</td>
-            <td class="imp-mono">AED 2,130</td>
-            <td>69%</td>
-            <td><span class="badge badge-green">Live</span></td>
-          </tr>
-          <tr>
-            <td><strong>Velvet Black</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · created Oct 08</span></td>
-            <td>34</td>
-            <td class="imp-mono">AED 1,020</td>
-            <td>58%</td>
-            <td><span class="badge badge-green">Live</span></td>
-          </tr>
-          <tr>
-            <td><strong>Olive Garden</strong><br><span style="color:var(--imp-fg-3);font-size:11px;">Paper bag · submitted Nov 02</span></td>
-            <td>13</td>
-            <td class="imp-mono">AED 390</td>
-            <td>—</td>
-            <td><span class="badge badge-amber">In review</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title" data-i18n="des.recent">Recent orders</div>
-      </div>
-      <div id="recent-orders"></div>
-    </div>
-  </div>
+  <h2 class="dp-sec-title">Published templates</h2>
+  <p class="dp-sec-sub">Live in the gallery on the product page.</p>
+  <div id="dp-templates"></div>
 </div>
 
-<footer class="site-footer">
-  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
-  <span class="site-footer-links">
-    <a href="#" data-i18n="common.terms">Terms</a>
-    <a href="#" data-i18n="common.privacy">Privacy</a>
-  </span>
-</footer>
-
-<script src="../shared.js"></script>
 <script>
-  var RECENT_ORDERS = [
-    { id: 'IMP-2851', flag: '🇦🇪', initials: 'A.M.', tpl: 'Minimal Latte', qty: 1000, valueAed: 3171 },
-    { id: 'IMP-2848', flag: '🇸🇦', initials: 'H.S.', tpl: 'Desert Bloom',  qty: 500,  valueAed: 1786 },
-    { id: 'IMP-2845', flag: '🇶🇦', initials: 'F.A.', tpl: 'Aurum Mono',   qty: 2000, valueAed: 5610 },
-    { id: 'IMP-2841', flag: '🇰🇼', initials: 'N.B.', tpl: 'Minimal Latte', qty: 200,  valueAed: 1290 },
-    { id: 'IMP-2837', flag: '🇧🇭', initials: 'R.K.', tpl: 'Velvet Black',  qty: 1000, valueAed: 3450 },
-  ];
-
-  document.addEventListener('DOMContentLoaded', function() {
-    initSiteHeader({
-      activePage: 'designer',
-      role: t('des.role') + ' · Noura',
-      showCart: false
-    });
-    renderRecentOrders();
-    document.addEventListener('imprint:langchange', renderRecentOrders);
-    document.addEventListener('imprint:countrychange', renderRecentOrders);
-    /* Convert earnings stat */
-    var earn = document.getElementById('earnings-val');
-    if (earn) earn.textContent = formatPrice(8940);
-    /* Convert template earnings */
-    document.querySelectorAll('#templates-body td.imp-mono').forEach(function(td) {
-      var match = td.textContent.match(/[\d,]+/);
-      if (match) {
-        var n = parseFloat(match[0].replace(/,/g, ''));
-        td.textContent = formatPrice(n);
-      }
-    });
-  });
-
-  function renderRecentOrders() {
-    var lang = getLang();
-    var html = RECENT_ORDERS.map(function(o) {
-      return '<div class="feed-item">' +
-        '<span class="feed-flag">' + o.flag + '</span>' +
-        '<div class="feed-content">' +
-          '<div class="feed-id">' + o.id + ' · ' + o.initials + '</div>' +
-          '<div class="feed-meta">' + o.tpl + ' · ' + o.qty.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US') + ' ' + t('cfg.units') + '</div>' +
-        '</div>' +
-        '<div class="feed-amount">' + formatPrice(o.valueAed) + '</div>' +
-      '</div>';
-    }).join('');
-    document.getElementById('recent-orders').innerHTML = html;
-  }
+function _shade(hex, amt){ var n=parseInt((hex||'#c79a63').slice(1),16); var r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt)); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+function bagSVG(body,side,handle){
+  return '<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M66 54 Q66 22 100 22 Q134 22 134 54" fill="none" stroke="'+handle+'" stroke-width="6" stroke-linecap="round"/>' +
+    '<path d="M44 64 L150 56 L162 70 L172 218 L52 226 Z" fill="'+side+'"/>' +
+    '<path d="M40 70 L150 56 L150 222 L40 226 Z" fill="'+body+'"/>' +
+    '<path d="M40 70 L150 56 L162 70 L52 84 Z" fill="'+side+'" opacity="0.85"/>' +
+  '</svg>';
+}
+fetch('../templates/index.json', { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+  var box = document.getElementById('dp-templates');
+  if (!list || !list.length){ box.innerHTML = '<div class="dp-empty">No templates published yet — click <strong>New template</strong> above to create your first.</div>'; return; }
+  box.innerHTML = '<div class="dp-tpl-grid">' + list.map(function(t){
+    var acc=t.accent||'#c79a63';
+    var thumb = t.render ? '<img src="../'+t.render+'" alt="'+t.name+'">' : bagSVG(acc,_shade(acc,-24),_shade(acc,46));
+    return '<div class="dp-tpl"><div class="dp-tpl-stage" style="background:linear-gradient(160deg,'+_shade(acc,66)+','+_shade(acc,34)+')">'+thumb+'</div>' +
+      '<div class="dp-tpl-body"><div class="dp-tpl-name">'+t.name+'</div><div class="dp-tpl-cat">'+(t.category||'')+'</div>' +
+      '<div class="dp-tpl-links"><a href="../configurator.html?template='+encodeURIComponent(t.id)+'" target="_blank">Preview as client</a><a href="../configurator.html?designer=1" target="_blank">New from studio</a></div></div></div>';
+  }).join('') + '</div>';
+}).catch(function(){ document.getElementById('dp-templates').innerHTML='<div class="dp-empty">Could not load templates/index.json.</div>'; });
 </script>
 </body>
 </html>
