@@ -5568,6 +5568,7 @@ function setBagLoading(on) {
 }
 
 function finishConfigLoading() {
+  if (window._tplPending) return;   /* client template still restoring — keep loader up; _finishTpl re-calls when ready */
   setBagLoading(false);
   if (typeof _stopLoaderText === 'function') _stopLoaderText();   /* stop the rotating loader copy */
   var MIN_VISIBLE = 650; /* ms — keep the loader up long enough to feel intentional */
@@ -12143,6 +12144,15 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
   #imp-locks .lk-sec { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--imp-fg-3,#999); font-weight: 700; margin: 13px 0 5px; }
   #imp-locks label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--imp-fg-2,#555); margin: 5px 0; cursor: pointer; }
   #imp-tplbar { position: fixed; left: 0; right: 0; top: 0; z-index: 55; background: var(--imp-accent,#c8a96e); color: #1a1a1a; font-family: var(--imp-font, Inter, sans-serif); font-size: 12.5px; font-weight: 600; text-align: center; padding: 6px 12px; }
+  /* Template bar present → shift the whole studio down by the bar height so the 3D
+     stage (and its dimensions badge) stay fully within the viewport — no scroll. */
+  body.imp-has-tplbar { padding-top: 30px; }
+  body.imp-has-tplbar .site-header { top: 30px; }
+  body.imp-has-tplbar .configurator { min-height: calc(100vh - var(--imp-header-h) - 30px); }
+  body.imp-has-tplbar .controls-panel { max-height: calc(100vh - var(--imp-header-h) - 30px); }
+  /* Client template: hold a full-screen loader until the template has restored, so
+     the Start-step panel never flashes before we land on Design. */
+  body.imp-client-tpl #cfg-loader { position: fixed; inset: 0; z-index: 60; }
   body.imp-client-tpl { /* template-editing client */ }
 </style>
 <script>
@@ -12213,7 +12223,9 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       var b=document.createElement('div'); b.id='imp-tplbar';
       b.textContent = 'Editing template: ' + ((tpl.meta&&tpl.meta.name)||'') + ' — change the text, colours & handles; the layout is set by the designer.';
       document.body.appendChild(b);
-      try { document.querySelector('.canvas-stage').style.marginTop='28px'; }catch(e){}
+      document.body.classList.add('imp-has-tplbar');   /* shift the layout below the bar so nothing overflows */
+      window._tplPending = false;
+      if (typeof finishConfigLoading === 'function') finishConfigLoading();   /* reveal now — lands straight on Design, no Start-step flash */
     }
     if (!stickers.length){ done(); return; }
     var pending = stickers.length;
@@ -12310,11 +12322,12 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     if (_designerMode){ document.body.classList.add('imp-designer'); buildDesignerUI(); return; }
     try {
       var tid = new URLSearchParams(location.search).get('template');
-      if (tid){ _templateId=tid; document.body.classList.add('imp-client-tpl');
+      if (tid){ _templateId=tid; window._tplPending=true; document.body.classList.add('imp-client-tpl');
+        setTimeout(function(){ if(window._tplPending){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } }, 9000);
         fetch('templates/'+tid+'.template.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
           .then(function(tpl){ IMPRINT_loadTemplate(tpl); })
-          .catch(function(){ console.warn('Template not found:', tid); }); }
-    } catch(e){}
+          .catch(function(){ console.warn('Template not found:', tid); window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); }); }
+    } catch(e){ window._tplPending=false; }
   });
 })();
 </script>
