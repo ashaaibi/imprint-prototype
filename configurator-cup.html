@@ -7226,10 +7226,14 @@ function addLayer(kind) {
   /* New layers drop at the exterior FRONT-face centre (computed per size so it's correct for
      every bag, not a hard-coded UV). Falls back to the wide-bag value if faces aren't ready. */
   var _fp = { posU:33.27, posV:72.00 };
-  if (typeof BAG_FACES !== 'undefined' && BAG_FACES.exterior && BAG_FACES.exterior.front) {
-    var _ff = BAG_FACES.exterior.front, _PADf = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
-    /* Drop new Text/Graphic/Logo in the LOWER HALF of the front (28% up from the base edge), centred
-       horizontally — per size, since BAG_FACES.exterior.front is the active model's front island. */
+  var _PADf = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
+  var _slv = (typeof BAG_FACES!=='undefined' && BAG_FACES.interior && BAG_FACES.interior.sleeve) ? BAG_FACES.interior.sleeve : null;
+  if (_slv) {
+    /* Cup: new layers drop at the SLEEVE UV centre, near the TOP (≈18% down from its top edge). */
+    _fp = { posU: (_slv.x + _slv.w/2 - _PADf)/2048*100, posV: (_slv.y + _slv.h*0.18 - _PADf)/2048*100 };
+  } else if (typeof BAG_FACES !== 'undefined' && BAG_FACES.exterior && BAG_FACES.exterior.front) {
+    var _ff = BAG_FACES.exterior.front;
+    /* Drop new Text/Graphic/Logo in the LOWER HALF of the front (28% up from the base edge), centred. */
     _fp = { posU: (_ff.x + _ff.w/2 - _PADf)/2048*100, posV: (_ff.y + _ff.h*0.28 - _PADf)/2048*100 };
   }
   if (kind === 'logo') {
@@ -10952,8 +10956,8 @@ function applyStepCamera(n){
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
-  if (n === 4) startCamTween(viewThetaRad('front'), INTERIOR_VIEW_PHI);
-  else if (n === 3 || n === 5) startCamTween(viewThetaRad('front'), VIEW_PHI);
+  if (n === 3 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);   /* Cup / Sleeve → front view */
+  else if (n === 5) startCamTween(viewThetaRad('front'), 2.30);             /* Base → look up from below */
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
