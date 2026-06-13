@@ -3,6 +3,17 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 4)
+- **Text** layer control order is now Scale → Rotation → Opacity → Text Color → Move → Areas →
+  (Finish/Emboss/Layout). `_transformHTML(id, L, rotFirst)` gained a rotation-first mode for text.
+- Picking a **Layout** on a Text or Logo layer now treats it like a background: `_fitTiledBoxToBag`
+  fits the box to the whole bag (exterior + interior + handles) and the layer is **move-locked** (can't be
+  dragged in the 2D editor; resize/crop handles + panel controls still work). "None" restores box + lock.
+  Move-lock generalised from `isBackground` to `isBackground || tiled` (`_moveLockOnly`).
+- **Background collections**: added **Florals** + **Autumn**; **Summer** replaced with the new set.
+- **Graphic collections**: added **Eid_Al_Fitr**, **Ramadan**, **Positivity** (GCC-relevant SVG sets).
+- Manifests regenerated (Essentials first, then A→Z).
+
 ## 2026-06-13 (batch 3)
 - **Hue/Saturation split out of Recolor** into a standalone, always-visible **Adjust** section for image
   layers — visual tracks (rainbow Hue, gray→colour Saturation) applied as a global `hue-rotate()`/`saturate()`

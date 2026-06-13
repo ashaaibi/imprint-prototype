@@ -5815,11 +5815,11 @@ function renderLayersList() {
         '<span class="layer-name" id="lyr-' + L.id + '-name">' + escapeHTML(layerAutoName(L)) + '</span>' +
         '<button class="layer-icon-btn' + (L.visible ? '' : ' off') + '" title="Show / hide" onclick="event.stopPropagation();toggleLayerVisible(' + L.id + ')">' + (L.visible ? eyeOpenSVG() : eyeClosedSVG()) + '</button>' +
         '<button class="layer-icon-btn' + (L.locked ? ' on' : '') + '" title="' + (L.locked ? 'Unlock layer' : 'Lock layer') + '" onclick="event.stopPropagation();toggleLayerLock(' + L.id + ')">' + lockSVG(L.locked) + '</button>' +
-        '<button class="layer-icon-btn" ' + ((L.locked && !L.isBackground) ? 'disabled title="Unlock to duplicate"' : 'title="Duplicate layer"') + ' onclick="event.stopPropagation();duplicateLayer(' + L.id + ')">' + duplicateSVG() + '</button>' +
-        '<button class="layer-icon-btn danger" ' + ((L.isDefault || (L.locked && !L.isBackground)) ? ('disabled title="' + (L.locked ? 'Unlock to delete' : 'Default layers can&#39;t be deleted') + '"') : 'title="Delete layer"') + ' onclick="event.stopPropagation();deleteLayer(' + L.id + ')">' + trashSVG() + '</button>' +
+        '<button class="layer-icon-btn" ' + ((L.locked && !_moveLockOnly(L)) ? 'disabled title="Unlock to duplicate"' : 'title="Duplicate layer"') + ' onclick="event.stopPropagation();duplicateLayer(' + L.id + ')">' + duplicateSVG() + '</button>' +
+        '<button class="layer-icon-btn danger" ' + ((L.isDefault || (L.locked && !_moveLockOnly(L))) ? ('disabled title="' + (L.locked ? 'Unlock to delete' : 'Default layers can&#39;t be deleted') + '"') : 'title="Delete layer"') + ' onclick="event.stopPropagation();deleteLayer(' + L.id + ')">' + trashSVG() + '</button>' +
         '<span class="layer-chevron">&#9658;</span>' +
       '</div>' +
-      '<div class="layer-body" id="lyr-' + L.id + '-body"' + ((L.locked && !L.isBackground) ? ' style="pointer-events:none;opacity:0.6;"' : '') + '>' + (expanded ? buildLayerBodyHTML(L) : '') + '</div>' +
+      '<div class="layer-body" id="lyr-' + L.id + '-body"' + ((L.locked && !_moveLockOnly(L)) ? ' style="pointer-events:none;opacity:0.6;"' : '') + '>' + (expanded ? buildLayerBodyHTML(L) : '') + '</div>' +
     '</div>';
   });
   list.innerHTML = html;
@@ -6485,6 +6485,26 @@ document.addEventListener('pointermove', _lyrEdMoveHandler);
 document.addEventListener('pointerup', _lyrEdUp);
 document.addEventListener('pointercancel', _lyrEdUp);
 
+/* A layer is MOVE-locked (vs fully locked) when it behaves like a background pattern —
+   i.e. it's a background OR it has a tile Layout active. Move-lock blocks only body dragging
+   in the 2D editor; resize/crop handles + panel controls still work. */
+function _moveLockOnly(L) { return !!(L && (L.isBackground || L.tiled)); }
+/* Fit a tiled layer's box to the WHOLE bag — the union of the exterior, interior and handle
+   UV islands — so the pattern repeats everywhere and toggling any Area needs no resize. */
+function _fitTiledBoxToBag(L) {
+  if (typeof BAG_UV === 'undefined' || !BAG_UV.exterior) { L.scale = 50; L.scaleH = 50; return; }
+  var _PAD = (typeof ATLAS_PAD !== 'undefined') ? ATLAS_PAD : 0;
+  var _sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : BAG_UV.exterior.w;
+  var _corr = (typeof getArtCorr === 'function') ? getArtCorr() : { x: 1, y: 1 };
+  var boxes = [BAG_UV.exterior, BAG_UV.interior, BAG_UV.handles].filter(Boolean);
+  var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  boxes.forEach(function(b){ minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
+  var uw = maxx - minx, uh = maxy - miny;
+  L.posU = (minx + uw / 2 - _PAD) / 2048 * 100; L.posV = (miny + uh / 2 - _PAD) / 2048 * 100;
+  L.scale  = Math.max(2, Math.min(400, uw * 1.04 / (_sref * (_corr.x || 1)) * 100));
+  L.scaleH = Math.max(2, Math.min(400, uh * 1.04 / (_sref * (_corr.y || 1)) * 100));
+  L.rotation = 0; L.cropBoxL = L.cropBoxR = L.cropBoxT = L.cropBoxB = 0;
+}
 function buildLayerBodyHTML(L) {
   var id = L.id, h = '';
   if (L.kind === 'ai') {
@@ -6535,43 +6555,52 @@ function buildLayerBodyHTML(L) {
     if (L.kind === 'logo') _colorSec += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
   }
 
+  /* Material finish / Emboss / Layout — offered on Logo & Text only (Graphic & Background omit). */
+  var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
+  var _extrasHTML = '';
+  if (!_isGraphic && !L.isBackground) {
+    var _fl = kindLabel + ' Finish';
+    _extrasHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
+      '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
+      '<div class="advanced-body" id="lyr-' + id + '-adv">' +
+        sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
+        sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
+        sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
+      '</div>' +
+      '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
+      _embossSegHTML(id, L) +
+      '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>' +
+      _layoutPickerHTML(id, L);
+    if (L.tiled) _extrasHTML += _tiledControlsHTML(id, L);
+  }
+
   if (L.isBackground) {
-    /* Background order: Density (+ Feather) → Opacity → Areas → Recolor. (No Gap, no Move.) */
+    /* Background: Density (+ Feather) → Opacity → Areas → Recolor. (No Gap, no Move.) */
     h += _bgTiledControlsHTML(id, L);
     h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
     h += _areasSectionHTML(id, L);
     h += _colorSec;
+  } else if (L.kind === 'text') {
+    /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → (Finish/Emboss/Layout). */
+    h += _transformHTML(id, L, true);
+    h += _colorSec;
+    h += _moveSectionHTML(id, L);
+    h += _areasSectionHTML(id, L);
+    h += _extrasHTML;
   } else {
-    /* All other layers: Scale → Opacity → Rotation → Move → Areas → Recolor → (extras). */
+    /* Logo / Graphic: Scale → Opacity → Rotation → Move → Areas → Recolor → (extras: Logo only). */
     h += _transformHTML(id, L);
     h += _moveSectionHTML(id, L);
     h += _areasSectionHTML(id, L);
     h += _colorSec;
-    /* Material finish, Emboss/Deboss and Layout are only offered on Logo and Text layers
-       (Graphic layers omit them, per spec). */
-    var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
-    if (!_isGraphic) {
-      var _fl = kindLabel + ' Finish';
-      h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
-        '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
-        '<div class="advanced-body" id="lyr-' + id + '-adv">' +
-          sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
-          sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
-          sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
-        '</div>' +
-        '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
-        _embossSegHTML(id, L) +
-        '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>';
-      /* Layout (None + tile layouts) AFTER emboss; tiled controls appear when active. */
-      h += _layoutPickerHTML(id, L);
-      if (L.tiled) h += _tiledControlsHTML(id, L);
-    }
+    h += _extrasHTML;
   }
   return h;
 }
-/* Scale (font-size for text) / Opacity / Rotation. When a tile Layout is active, Scale &
-   Rotation are driven by the tile box, so they're locked (disabled, not-allowed cursor). */
-function _transformHTML(id, L) {
+/* Scale (font-size for text) + Opacity + Rotation. `rotFirst` → Scale/Rotation/Opacity (text);
+   otherwise Scale/Opacity/Rotation. When a tile Layout is active, Scale & Rotation are driven by
+   the tile box, so they're locked (disabled, not-allowed cursor). */
+function _transformHTML(id, L, rotFirst) {
   var isText = (L.kind === 'text' && !L.tiled);
   var sVal = Math.round(isText ? (L.fontSize || 130) : (L.scale || 18));
   var sMin = isText ? 20 : 2, sMax = isText ? 500 : 200, sSuf = isText ? 'px' : '%';
@@ -6579,10 +6608,11 @@ function _transformHTML(id, L) {
   var lock = !!L.tiled;
   var sRowSty = lock ? ' style="opacity:0.5;cursor:not-allowed;"' : '';
   var sInSty = lock ? ' style="pointer-events:none;cursor:not-allowed;"' : '';
-  return '<div class="ctrl-slider-row"' + sRowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
-    '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '"' + sInSty + ' oninput="onLayerScale(' + id + ',this.value)"' + (lock ? ' disabled' : '') + '></div>' +
-    sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%') +
-    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°', lock);
+  var scaleRow = '<div class="ctrl-slider-row"' + sRowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
+    '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '"' + sInSty + ' oninput="onLayerScale(' + id + ',this.value)"' + (lock ? ' disabled' : '') + '></div>';
+  var opRow = sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+  var rotRow = sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°', lock);
+  return scaleRow + (rotFirst ? (rotRow + opRow) : (opRow + rotRow));
 }
 function onLayerScale(id, val) {
   var L = getLayer(id); if (!L) return; val = parseFloat(val);
@@ -6911,28 +6941,24 @@ function onLayerLayout(id, mode) {
   var L = getLayer(id); if (!L) return;
   if (mode === 'none') {
     L.tiled = false;
-    if (L._preLayoutBox) {   /* restore the pre-layout box & size */
+    if (L._preLayoutBox) {   /* restore the pre-layout box, size & lock state */
       _PRELAYOUT_KEYS.forEach(function(k){ if (L._preLayoutBox[k] != null) L[k] = L._preLayoutBox[k]; });
+      if (!L.isBackground) L.locked = !!L._preLayoutBox.locked;   /* tiling move-locked it → restore */
       L._preLayoutBox = null;
     }
   } else {
     if (!L.tiled) {
-      /* single → tiled: remember the box, seed defaults, and fit the WHOLE exterior so the
-         pattern fills the bag in the 2D editor. None later restores the saved box. */
-      var snap = {}; _PRELAYOUT_KEYS.forEach(function(k){ snap[k] = L[k]; }); L._preLayoutBox = snap;
+      /* single → tiled: remember the box + lock, seed defaults, then fit the WHOLE bag (exterior
+         + interior + handles) and move-lock — a tiled layer behaves like a background pattern.
+         None later restores the saved box + lock. */
+      var snap = {}; _PRELAYOUT_KEYS.forEach(function(k){ snap[k] = L[k]; }); snap.locked = L.locked; L._preLayoutBox = snap;
       if (L.isBackground) { L.density = 3; L.gap = 0; }            /* background tile default */
       else if (L.kind === 'text') { L.density = 20; L.gap = 40; }  /* text tile default */
       else if (L.isLogo) { L.density = 20; L.gap = 50; }           /* logo tile default */
       else { L.density = 40; L.gap = 60; }                         /* graphic fallback */
       if (L.feather == null) L.feather = 0;
-      if (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) {
-        var _ex = BAG_UV.exterior, _PAD = (typeof ATLAS_PAD !== 'undefined') ? ATLAS_PAD : 0;
-        var _sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : _ex.w, _corr = (typeof getArtCorr === 'function') ? getArtCorr() : {x:1,y:1};
-        L.posU = (_ex.x + _ex.w/2 - _PAD)/2048*100; L.posV = (_ex.y + _ex.h/2 - _PAD)/2048*100;
-        L.scale  = Math.max(2, Math.min(400, _ex.w*1.06/(_sref*(_corr.x||1))*100));
-        L.scaleH = Math.max(2, Math.min(400, _ex.h*1.06/(_sref*(_corr.y||1))*100));
-        L.rotation = 0; L.cropBoxL = L.cropBoxR = L.cropBoxT = L.cropBoxB = 0;
-      } else { L.scale = 50; L.scaleH = 50; }
+      _fitTiledBoxToBag(L);                          /* cover exterior + interior + handles */
+      if (!L.isBackground) L.locked = true;          /* move-lock so it can't be dragged in the 2D editor */
     }
     L.tiled = true; L.patStack = mode;
   }
@@ -6974,11 +7000,11 @@ function deleteLayer(id) {
   renderLayersList(); drawBagTexture();
 }
 function duplicateLayer(id) {
-  var L = getLayer(id); if (!L || (L.locked && !L.isBackground)) return;
+  var L = getLayer(id); if (!L || (L.locked && !_moveLockOnly(L))) return;
   var copy = Object.assign({}, L);
   copy.id = BAG.artwork.nextId++;
   copy.isDefault = false;
-  copy.locked = !!L.isBackground;   /* a duplicated background stays move-locked like the original */
+  copy.locked = !!(L.isBackground || L.tiled);   /* a duplicated background / tiled layer stays move-locked */
   copy.visible = true;
   if (L.areas)    copy.areas    = Object.assign({}, L.areas);
   if (L.faceHide) copy.faceHide = Object.assign({}, L.faceHide);   /* own copy → toggles don't cross-link the duplicate */
@@ -10890,7 +10916,7 @@ var _layerClipboard = null;
 document.addEventListener('keydown', function(e){
   var t=e.target; if (t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
   var L = a2d.sel, meta = e.metaKey||e.ctrlKey, k=(e.key||'').toLowerCase();
-  if ((e.key==='Delete'||e.key==='Backspace') && L && (!L.locked || L.isBackground)){ e.preventDefault(); var id=L.id; a2d.sel=null; deleteLayer(id); }
+  if ((e.key==='Delete'||e.key==='Backspace') && L && (!L.locked || _moveLockOnly(L))){ e.preventDefault(); var id=L.id; a2d.sel=null; deleteLayer(id); }
   else if (meta && k==='c' && L){ e.preventDefault(); _layerClipboard=L.id; }
   else if (meta && k==='v' && _layerClipboard!=null){ e.preventDefault(); duplicateLayer(_layerClipboard); }
   else if (meta && k==='d' && L){ e.preventDefault(); duplicateLayer(L.id); }
@@ -10971,7 +10997,7 @@ function _layerCropBox(b, L){
 }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerCropBox(_layerBox(L), L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
-  var L=a2d.sel; if(!L || (L.locked && !L.isBackground)) return null; var b=_layerCropBox(_layerBox(L), L);  /* a locked background still exposes resize/crop handles (only its MOVE is locked) */
+  var L=a2d.sel; if(!L || (L.locked && !_moveLockOnly(L))) return null; var b=_layerCropBox(_layerBox(L), L);  /* a locked background still exposes resize/crop handles (only its MOVE is locked) */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
   /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
   var order=[ ['rotate',0,1.6],
@@ -11431,7 +11457,7 @@ function atlas2dRender(){
     ctx.setLineDash(sel?[6*D,5*D]:(hov?[5*D,4*D]:[]));
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
-    if (sel && (!L.locked || L.isBackground)){   /* locked non-backgrounds show only the box; a locked background still shows resize/crop handles */
+    if (sel && (!L.locked || _moveLockOnly(L))){   /* locked non-backgrounds show only the box; a locked background still shows resize/crop handles */
       /* rotate stick at the visual TOP, 4 corner resize dots, 4 edge crop BARS (lines) */
       var rh=_boxLocalToScreen(b,0,1.6), topMid={x:(bl.x+br.x)/2,y:(bl.y+br.y)/2};
       ctx.strokeStyle=HC; ctx.lineWidth=1.6*D;

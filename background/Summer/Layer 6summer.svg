@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 125.86 500">
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 500">
   <defs>
     <style>
       .cls-1 {
@@ -73,7 +73,7 @@
     <clipPath id="clippath-4">
       <path class="cls-3" d="M78.5,217.9c0-8.56,9.63-31.5,21.5-31.5s21.5,22.94,21.5,31.5-9.63,15.5-21.5,15.5-21.5-6.94-21.5-15.5Z"/>
     </clipPath>
-    <pattern id="Nueva_muestra_de_motivo_3" data-name="Nueva muestra de motivo 3" x="0" y="0" width="200" height="200" patternTransform="translate(-2711.02 -2341.58) scale(.7)" patternUnits="userSpaceOnUse" viewBox="0 0 200 200">
+    <pattern id="Nueva_muestra_de_motivo_3" data-name="Nueva muestra de motivo 3" x="0" y="0" width="200" height="200" patternTransform="translate(-2461.59 -2341.58) scale(.7)" patternUnits="userSpaceOnUse" viewBox="0 0 200 200">
       <g>
         <rect class="cls-1" x="0" width="200" height="200"/>
         <g class="cls-13">
@@ -223,7 +223,7 @@
       </g>
     </pattern>
   </defs>
-  <g id="PATTERN">
-    <rect class="cls-11" width="125.86" height="500"/>
+  <g id="Layer_6" data-name="Layer 6">
+    <rect class="cls-11" width="500" height="500"/>
   </g>
 </svg>

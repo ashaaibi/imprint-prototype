@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 131.11 118.33">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        stroke: #546e7a;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2px;
+      }
+
+      .cls-2 {
+        fill: #b2ebf2;
+      }
+
+      .cls-3 {
+        fill: #ffca28;
+      }
+
+      .cls-4 {
+        fill: none;
+      }
+
+      .cls-5 {
+        fill: #546e7a;
+        font-family: LeagueGothic-Regular, 'League Gothic';
+        font-size: 23.15px;
+      }
+    </style>
+  </defs>
+  <g id="OBJECTS">
+    <g>
+      <polygon class="cls-2" points="130.11 117.33 1 117.33 7.82 103.72 1 90.1 130.11 90.1 123.29 103.72 130.11 117.33"/>
+      <text class="cls-5" transform="translate(29.99 111.9)"><tspan x="0" y="0">EID AL-FITR</tspan></text>
+      <g>
+        <line class="cls-1" x1="8.37" y1="103.72" x2="21.36" y2="103.72"/>
+        <line class="cls-1" x1="109.75" y1="103.72" x2="122.74" y2="103.72"/>
+      </g>
+      <g>
+        <g>
+          <rect class="cls-1" x="17.86" y="70.28" width="9.13" height="19.82"/>
+          <g>
+            <line class="cls-1" x1="17.86" y1="70.28" x2="17.86" y2="52.15"/>
+            <line class="cls-1" x1="22.43" y1="70.28" x2="22.43" y2="52.15"/>
+            <line class="cls-1" x1="27" y1="70.28" x2="27" y2="52.15"/>
+          </g>
+          <g>
+            <line class="cls-1" x1="17.86" y1="35.43" x2="17.86" y2="22.92"/>
+            <line class="cls-1" x1="22.43" y1="35.43" x2="22.43" y2="22.92"/>
+            <line class="cls-1" x1="27" y1="35.43" x2="27" y2="22.92"/>
+          </g>
+          <rect class="cls-1" x="17.86" y="35.01" width="9.13" height="17.55"/>
+          <polygon class="cls-3" points="27 15.91 22.43 9.09 17.86 15.91 17.86 23.64 27 23.64 27 15.91"/>
+          <line class="cls-1" x1="22.43" y1="9.09" x2="22.43" y2="1"/>
+          <line class="cls-3" x1="15.04" y1="22.92" x2="29.82" y2="22.92"/>
+        </g>
+        <g>
+          <rect class="cls-1" x="104.11" y="70.28" width="9.14" height="19.82"/>
+          <g>
+            <line class="cls-1" x1="104.11" y1="70.28" x2="104.11" y2="52.15"/>
+            <line class="cls-1" x1="108.68" y1="70.28" x2="108.68" y2="52.15"/>
+            <line class="cls-1" x1="113.25" y1="70.28" x2="113.25" y2="52.15"/>
+          </g>
+          <g>
+            <line class="cls-1" x1="104.11" y1="35.43" x2="104.11" y2="22.92"/>
+            <line class="cls-1" x1="108.68" y1="35.43" x2="108.68" y2="22.92"/>
+            <line class="cls-1" x1="113.25" y1="35.43" x2="113.25" y2="22.92"/>
+          </g>
+          <rect class="cls-1" x="104.11" y="35.01" width="9.14" height="17.55"/>
+          <polygon class="cls-3" points="113.25 15.91 108.68 9.09 104.11 15.91 104.11 23.64 113.25 23.64 113.25 15.91"/>
+          <line class="cls-1" x1="108.68" y1="9.09" x2="108.68" y2="1"/>
+          <line class="cls-3" x1="101.29" y1="22.92" x2="116.08" y2="22.92"/>
+        </g>
+      </g>
+      <g>
+        <rect class="cls-1" x="38.26" y="75.94" width="54.6" height="14.16"/>
+        <path class="cls-1" d="M88.05,75.84c0-12.43-10.07-22.5-22.5-22.5s-22.5,10.07-22.5,22.5h45Z"/>
+        <line class="cls-1" x1="65.56" y1="53.34" x2="65.56" y2="39.58"/>
+        <path class="cls-3" d="M71.42,37.08c-4.58,0-8.3-3.72-8.3-8.3,0-1.15.24-2.25.66-3.24-2.97,1.26-5.05,4.21-5.05,7.64,0,4.58,3.72,8.3,8.3,8.3,3.43,0,6.38-2.08,7.64-5.05-1,.42-2.09.66-3.24.66Z"/>
+        <line class="cls-4" x1="44.32" y1="75.94" x2="44.32" y2="90.1"/>
+        <line class="cls-4" x1="50.39" y1="75.94" x2="50.39" y2="90.1"/>
+        <line class="cls-4" x1="56.46" y1="75.94" x2="56.46" y2="90.1"/>
+        <line class="cls-4" x1="62.52" y1="75.94" x2="62.52" y2="90.1"/>
+        <line class="cls-4" x1="68.59" y1="75.94" x2="68.59" y2="90.1"/>
+        <line class="cls-4" x1="74.66" y1="75.94" x2="74.66" y2="90.1"/>
+        <line class="cls-4" x1="80.72" y1="75.94" x2="80.72" y2="90.1"/>
+        <line class="cls-4" x1="86.79" y1="75.94" x2="86.79" y2="90.1"/>
+      </g>
+    </g>
+  </g>
+</svg>

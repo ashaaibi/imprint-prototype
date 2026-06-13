@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 131.16 129.65">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: OpenSans-Semibold, 'Open Sans';
+        font-size: 18.96px;
+        font-weight: 600;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #546e7a;
+      }
+
+      .cls-3 {
+        fill: #ff7043;
+      }
+
+      .cls-3, .cls-4 {
+        stroke: #546e7a;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2px;
+      }
+
+      .cls-4 {
+        fill: #ffca28;
+      }
+
+      .cls-2 {
+        font-family: LeagueGothic-Regular, 'League Gothic';
+        font-size: 42.68px;
+      }
+    </style>
+  </defs>
+  <g id="OBJECTS">
+    <g>
+      <path class="cls-4" d="M85.42,26.34c-.6.86-1.29,1.69-2.06,2.46-7.11,7.11-18.64,7.11-25.74,0-7.11-7.11-7.11-18.64,0-25.74.77-.77,1.6-1.45,2.46-2.06-3.07.94-5.97,2.62-8.4,5.05-7.92,7.92-7.92,20.76,0,28.69,7.92,7.92,20.76,7.92,28.69,0,2.43-2.43,4.11-5.32,5.05-8.4Z"/>
+      <text class="cls-2" transform="translate(0 81.38)"><tspan x="0" y="0">EID AL-FITR</tspan></text>
+      <text class="cls-1" transform="translate(18.89 102.2)"><tspan x="0" y="0">MUBARAK</tspan></text>
+      <g>
+        <polygon class="cls-3" points="65.58 108.43 62.82 115.82 54.94 116.16 61.12 121.06 59.01 128.65 65.58 124.3 72.15 128.65 70.04 121.06 76.21 116.16 68.33 115.82 65.58 108.43"/>
+        <g>
+          <g>
+            <line class="cls-3" x1="48.35" y1="118.58" x2="39.61" y2="118.58"/>
+            <line class="cls-3" x1="49.03" y1="114.4" x2="40.81" y2="111.41"/>
+            <line class="cls-3" x1="49.15" y1="122.74" x2="40.93" y2="125.73"/>
+          </g>
+          <g>
+            <line class="cls-3" x1="82.8" y1="118.56" x2="91.55" y2="118.56"/>
+            <line class="cls-3" x1="82.12" y1="122.74" x2="90.34" y2="125.73"/>
+            <line class="cls-3" x1="82.01" y1="114.4" x2="90.22" y2="111.41"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

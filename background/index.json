@@ -13,6 +13,17 @@
 ]
 },
 {
+"name": "Autumn",
+"files": [
+"Asset 1floral.svg",
+"Asset 2floral.svg",
+"Asset 3floral.svg",
+"Asset 4floral.svg",
+"Asset 5floral.svg",
+"Asset 6floral.svg"
+]
+},
+{
 "name": "Cosmic",
 "files": [
 "Untitled-2_0003_Layer-7.png",
@@ -21,6 +32,21 @@
 "Untitled-2_0006_Layer-4.png",
 "Untitled-2_0007_Layer-3.png",
 "Untitled-2_0009_Layer-1.png"
+]
+},
+{
+"name": "Florals",
+"files": [
+"Seamless Floral Pattern 10floral.svg",
+"Seamless Floral Pattern 1floral.svg",
+"Seamless Floral Pattern 2floral.svg",
+"Seamless Floral Pattern 3floral.svg",
+"Seamless Floral Pattern 4floral.svg",
+"Seamless Floral Pattern 5floral.svg",
+"Seamless Floral Pattern 6floral.svg",
+"Seamless Floral Pattern 7floral.svg",
+"Seamless Floral Pattern 8floral.svg",
+"Seamless Floral Pattern 9floral.svg"
 ]
 },
 {
@@ -40,13 +66,13 @@
 {
 "name": "Summer",
 "files": [
-"Asset 1summer.svg",
-"Asset 1summer2.svg",
-"Asset 2summer.svg",
-"Asset 2summer2.svg",
-"Asset 3summer.svg",
-"Asset 3summer2.svg",
-"Asset 4summer.svg"
+"Asset 1summerr.svg",
+"Asset 2summerr.svg",
+"Asset 3summerr.svg",
+"Layer 5summer.svg",
+"Layer 6summer.svg",
+"Layer 7summer.svg",
+"Layer 8summer.svg"
 ]
 }
 ]

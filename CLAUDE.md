@@ -117,8 +117,10 @@ text/        graphic/        background/      ← layer types
   Poppins, Merriweather, Dancing Script); **Display** = display/script fonts. ("Social Media" is
   synthetic — NOT a folder; see SOCIAL_ICONS.) Preset font labels show `_`→space.
 - `graphic/`: **Essentials** = 30 solid-colour shapes (square, circle, line, then the rest), each SVG
-  with a **tight auto-cropped viewBox** so the layer bounding box hugs the shape; **Illustrations** = stock art.
-- `background/`: **Essentials** (basic patterns + the legacy `pattern_N.svg`) + **Cosmic** + **Spring** + **Summer**.
+  with a **tight auto-cropped viewBox** so the layer bounding box hugs the shape; **Illustrations** = stock art;
+  **Eid_Al_Fitr** + **Ramadan** + **Positivity** = themed SVG sets (GCC-relevant).
+- `background/`: **Essentials** (basic patterns + the legacy `pattern_N.svg`) + **Cosmic** + **Florals**
+  + **Spring** + **Summer** + **Autumn**.
 
 **When you add/rename/delete any file or collection, regenerate the manifests** (Pages has
 no directory listing, so the picker reads `text|graphic|background/index.json`):

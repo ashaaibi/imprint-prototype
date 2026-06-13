@@ -35,6 +35,20 @@
 ]
 },
 {
+"name": "Eid_Al_Fitr",
+"files": [
+"Asset 1eid_fitr.svg",
+"Asset 2eid_fitr.svg",
+"Asset 3eid_fitr.svg",
+"Asset 4eid_fitr.svg",
+"Asset 5eid_fitr.svg",
+"Asset 6eid_fitr.svg",
+"Asset 7eid_fitr.svg",
+"Asset 8eid_fitr.svg",
+"Asset 9eid_fitr.svg"
+]
+},
+{
 "name": "Illustrations",
 "files": [
 "Layer 10Graphic.svg",
@@ -48,6 +62,31 @@
 "Layer 6Graphic.svg",
 "Layer 8Graphic.svg",
 "Layer 9Graphic.svg"
+]
+},
+{
+"name": "Positivity",
+"files": [
+"Asset 1motivational.svg",
+"Asset 2motivational.svg",
+"Asset 3motivational.svg",
+"Asset 4motivational.svg",
+"Asset 5motivational.svg",
+"Asset 6motivational.svg",
+"Asset 7motivational.svg",
+"Asset 8motivational.svg",
+"Asset 9motivational.svg"
+]
+},
+{
+"name": "Ramadan",
+"files": [
+"Asset 1ramadan.svg",
+"Asset 2ramadan.svg",
+"Asset 3ramadan.svg",
+"Asset 4ramadan.svg",
+"Asset 5ramadan.svg",
+"Asset 6ramadan.svg"
 ]
 }
 ]

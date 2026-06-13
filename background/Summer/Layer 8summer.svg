@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 125.86 500">
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 500">
   <defs>
     <style>
       .cls-1 {
@@ -170,7 +170,7 @@
       </g>
     </pattern>
   </defs>
-  <g id="PATTERN">
-    <rect class="cls-11" width="125.86" height="500"/>
+  <g id="Layer_8" data-name="Layer 8">
+    <rect class="cls-11" width="500" height="500"/>
   </g>
 </svg>
