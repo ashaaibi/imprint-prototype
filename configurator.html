@@ -4496,11 +4496,15 @@ function drawArtworkOnBag() {
     if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
-    /* per-face hide: if this layer is hidden on one or more faces, render it to a temp
-       canvas, punch the hidden faces' islands out (destination-out), then composite. */
-    var _fh = L.faceHide, _anyHide = false;
-    if (_fh) { for (var _k in _fh){ if (_fh[_k]){ _anyHide = true; break; } } }
-    if (_anyHide && typeof BAG_FACES !== 'undefined' && BAG_FACES){
+    /* per-face / handle hide: if this layer is hidden on one or more faces (or on the
+       handles), render it to a temp canvas, punch those islands out (destination-out),
+       then composite. The handle erase is skipped mid 2D-drag so plain layers keep the
+       fast direct-draw path — it settles correctly when the drag ends. */
+    var _fh = L.faceHide, _anyFaceHide = false, _hideHandles = false;
+    if (_fh) { for (var _k in _fh){ if (!_fh[_k]) continue; if (_k === 'handles') _hideHandles = true; else _anyFaceHide = true; } }
+    var _doFaceHide = _anyFaceHide && typeof BAG_FACES !== 'undefined' && BAG_FACES;
+    var _doHandleHide = _hideHandles && !_a2dDragging && bagHandleClip && bagHandleClip.path;
+    if (_doFaceHide || _doHandleHide){
       var _FW = bagTexCanvas.width;
       if (!_faceHideCv || _faceHideCv.width !== _FW){ _faceHideCv = document.createElement('canvas'); _faceHideCv.width = _faceHideCv.height = _FW; }
       var _fhx = _faceHideCv.getContext('2d');
@@ -4509,13 +4513,17 @@ function drawArtworkOnBag() {
       drawLayerContent(_fhx, L, 1, corr, 'color');
       _fhx.restore();
       _fhx.save(); _fhx.globalCompositeOperation = 'destination-out';
-      for (var _hk in _fh){ if (!_fh[_hk]) continue; var _hp = _hk.split('_'), _hrg = _hp[0], _hfc = _hp[1];
-        var _fe = (BAG_FACES[_hrg]||{})[_hfc];
-        if (_fe && _fe.clip && _fe.clip.path){ var _mx=_fe.w*0.10, _my=_fe.h*0.10;
-          _fhx.save(); _fhx.beginPath(); _fhx.rect(_fe.x-_mx, _fe.y-_my, _fe.w+2*_mx, _fe.h+2*_my); _fhx.clip();
-          _fhx.fillStyle='#000'; _fhx.fill(_fe.clip.path);
-          if (A2D.padding>0){ _fhx.lineJoin='round'; _fhx.lineCap='round'; _fhx.lineWidth=A2D.padding*2; _fhx.strokeStyle='#000'; _fhx.stroke(_fe.clip.path); }
-          _fhx.restore(); } }
+      if (_doFaceHide){
+        for (var _hk in _fh){ if (!_fh[_hk] || _hk === 'handles') continue; var _hp = _hk.split('_'), _hrg = _hp[0], _hfc = _hp[1];
+          var _fe = (BAG_FACES[_hrg]||{})[_hfc];
+          if (_fe && _fe.clip && _fe.clip.path){ var _mx=_fe.w*0.10, _my=_fe.h*0.10;
+            _fhx.save(); _fhx.beginPath(); _fhx.rect(_fe.x-_mx, _fe.y-_my, _fe.w+2*_mx, _fe.h+2*_my); _fhx.clip();
+            _fhx.fillStyle='#000'; _fhx.fill(_fe.clip.path);
+            if (A2D.padding>0){ _fhx.lineJoin='round'; _fhx.lineCap='round'; _fhx.lineWidth=A2D.padding*2; _fhx.strokeStyle='#000'; _fhx.stroke(_fe.clip.path); }
+            _fhx.restore(); } }
+      }
+      if (_doHandleHide){ _fhx.fillStyle='#000'; _fhx.fill(bagHandleClip.path);
+        if (A2D.padding>0){ _fhx.lineJoin='round'; _fhx.lineCap='round'; _fhx.lineWidth=A2D.padding*2; _fhx.strokeStyle='#000'; _fhx.stroke(bagHandleClip.path); } }
       _fhx.restore();
       bagTexCtx.save(); bagTexCtx.drawImage(_faceHideCv, 0, 0); bagTexCtx.restore();
       continue;
@@ -6384,52 +6392,55 @@ function buildLayerBodyHTML(L) {
     h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
       layerFontRowHTML(L);
   }
-  /* Backgrounds: Opacity + tile controls (density/gap/feather), no scale/rotation/move.
-     Everything else: Scale / Rotation / Opacity. Then Colour/Recolor → Move → Areas. */
-  if (L.isBackground) {
-    h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
-    h += _tiledControlsHTML(id, L);
-  } else {
-    h += _transformHTML(id, L);
-  }
-
+  /* Colour / Recolor section — built here but placed LAST among the common controls
+     (after Areas), per the requested control order. */
+  var _colorSec;
   if (L.kind === 'sticker') {
-    h += stickerColorSectionHTML(L);
+    _colorSec = stickerColorSectionHTML(L);
   } else {
     var _ccl = (L.kind === 'logo' ? 'Logo Color' : 'Text Color');
-    h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px"' + _arAttr(_ccl) + '>' + _ccl + '</div>' +
+    _colorSec = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:12px"' + _arAttr(_ccl) + '>' + _ccl + '</div>' +
       '<div class="hue-slider-wrap"><input type="range" class="hue-slider" id="lyr-' + id + '-hslider" min="0" max="360" value="' + (L.hue || 0) + '" oninput="onLayerHue(' + id + ',this.value)"></div>' +
       '<div class="mono-swatches" id="lyr-' + id + '-swatches"></div>' +
       '<div class="color-hex" id="lyr-' + id + '-chex"></div>';
-    if (L.kind === 'logo') h += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
+    if (L.kind === 'logo') _colorSec += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
   }
 
-  if (!L.isBackground) h += _moveSectionHTML(id, L);   /* backgrounds can't be moved → no Move section */
-  h += _areasSectionHTML(id, L);
-
-  /* Material finish, Emboss/Deboss and Layout are only offered on Logo and Text layers.
-     Graphic and Background layers omit them (per spec). */
-  var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
-  var _hideExtras = _isGraphic || L.isBackground;
-  if (!_hideExtras) {
-    var _fl = kindLabel + ' Finish';
-    h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
-      '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
-      '<div class="advanced-body" id="lyr-' + id + '-adv">' +
-        sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
-        sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
-        sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
-      '</div>' +
-      '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
-      _embossSegHTML(id, L) +
-      '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>';
-    /* Layout (None + tile layouts) AFTER emboss; tiled controls appear when active. */
-    h += _layoutPickerHTML(id, L);
-    if (L.tiled) h += _tiledControlsHTML(id, L);
+  if (L.isBackground) {
+    /* Background order: Density (+ Feather) → Opacity → Areas → Recolor. (No Gap, no Move.) */
+    h += _bgTiledControlsHTML(id, L);
+    h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+    h += _areasSectionHTML(id, L);
+    h += _colorSec;
+  } else {
+    /* All other layers: Scale → Opacity → Rotation → Move → Areas → Recolor → (extras). */
+    h += _transformHTML(id, L);
+    h += _moveSectionHTML(id, L);
+    h += _areasSectionHTML(id, L);
+    h += _colorSec;
+    /* Material finish, Emboss/Deboss and Layout are only offered on Logo and Text layers
+       (Graphic layers omit them, per spec). */
+    var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
+    if (!_isGraphic) {
+      var _fl = kindLabel + ' Finish';
+      h += '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
+        '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
+        '<div class="advanced-body" id="lyr-' + id + '-adv">' +
+          sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
+          sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
+          sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
+        '</div>' +
+        '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
+        _embossSegHTML(id, L) +
+        '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>';
+      /* Layout (None + tile layouts) AFTER emboss; tiled controls appear when active. */
+      h += _layoutPickerHTML(id, L);
+      if (L.tiled) h += _tiledControlsHTML(id, L);
+    }
   }
   return h;
 }
-/* Scale (font-size for text) / Rotation / Opacity. */
+/* Scale (font-size for text) / Opacity / Rotation. */
 function _transformHTML(id, L) {
   var isText = (L.kind === 'text' && !L.tiled);
   var sVal = Math.round(isText ? (L.fontSize || 130) : (L.scale || 18));
@@ -6437,8 +6448,8 @@ function _transformHTML(id, L) {
   var rVal = ((Math.round(L.rotation || 0) % 360) + 360) % 360;
   return '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
     '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '" oninput="onLayerScale(' + id + ',this.value)"></div>' +
-    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°') +
-    sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+    sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%') +
+    sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°');
 }
 function onLayerScale(id, val) {
   var L = getLayer(id); if (!L) return; val = parseFloat(val);
@@ -6511,6 +6522,15 @@ function _areasSectionHTML(id, L) {
     });
     h += '</div></div>';
   });
+  /* Handles — a single on/off (no sub-faces). Off by default for every layer. */
+  if (typeof bagHandleClip !== 'undefined' && bagHandleClip && bagHandleClip.path) {
+    var _hOn = !(L.faceHide && L.faceHide.handles);
+    h += '<div class="area-region" data-region="handles" style="margin-top:4px;">' +
+      '<div class="area-region-head" style="cursor:default;margin-bottom:0;">' +
+        '<span class="area-all' + (_hOn ? ' on' : '') + '" onclick="event.stopPropagation();toggleLayerHandles(' + id + ',this)" title="Print artwork on the handles"><span class="knob"></span></span>' +
+        '<span class="arh-title"' + _arAttr('Handles') + '>Handles</span>' +
+      '</div></div>';
+  }
   return h + '</div>';
 }
 function toggleAreaCollapse(headEl) {
@@ -6546,6 +6566,14 @@ function onLayerAreaGroup(id, region) {
   var box = document.getElementById('lyr-' + id + '-areas');
   if (box) box.querySelectorAll('.area-cube[data-region="' + region + '"]').forEach(function(c){ c.classList.toggle('on', turnOn); });
   _syncAreaParent(id, region);
+  if (typeof drawBagTexture === 'function') drawBagTexture();
+}
+/* Handles area toggle — "on" = the layer prints on the handles. Off by default. */
+function toggleLayerHandles(id, el) {
+  var L = getLayer(id); if (!L) return;
+  L.faceHide = L.faceHide || {};
+  if (L.faceHide.handles) delete L.faceHide.handles; else L.faceHide.handles = true;
+  if (el) el.classList.toggle('on', !L.faceHide.handles);
   if (typeof drawBagTexture === 'function') drawBagTexture();
 }
 
@@ -6728,6 +6756,12 @@ function _tiledControlsHTML(id, L) {
     sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
     '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize / crop the tiled box in the 2D editor.</div>';
 }
+/* Background tile controls — Density + Feather only (Gap removed; backgrounds pack tight). */
+function _bgTiledControlsHTML(id, L) {
+  return sliderRow(id, 'density', 'Density', 1, 100, 1, (L.density != null ? L.density : 40), '×') +
+    sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
+    '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize / crop the tiled box in the 2D editor.</div>';
+}
 /* Pick a tile layout (or None = single instance) on any layer type. */
 var _PRELAYOUT_KEYS = ['posU','posV','scale','scaleH','rotation','cropT','cropB','cropL','cropR','cropBoxL','cropBoxR','cropBoxT','cropBoxB'];
 function onLayerLayout(id, mode) {
@@ -6801,7 +6835,8 @@ function duplicateLayer(id) {
   copy.isDefault = false;
   copy.locked = !!L.isBackground;   /* a duplicated background stays move-locked like the original */
   copy.visible = true;
-  if (L.areas)   copy.areas   = Object.assign({}, L.areas);
+  if (L.areas)    copy.areas    = Object.assign({}, L.areas);
+  if (L.faceHide) copy.faceHide = Object.assign({}, L.faceHide);   /* own copy → toggles don't cross-link the duplicate */
   if (L.surface) copy.surface = L.surface;
   if (L.recolor) { try { copy.recolor = JSON.parse(JSON.stringify(L.recolor)); } catch (e) { copy.recolor = L.recolor; } }
   if (typeof copy.posU === 'number') copy.posU = Math.max(2, Math.min(98, copy.posU + 4));
@@ -6830,7 +6865,7 @@ function addLayer(kind) {
        the full Graphic recolor/finish/layout controls. isLogo only changes its name/label. */
     L = { id:id, kind:'sticker', isLogo:true, tiled:false, patStack:'vertical', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:18, scaleH:18, posU:_fp.posU, posV:_fp.posV, rotation:0,
           color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
-          recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
+          recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else if (kind === 'text') {
     L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:45, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
           color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
@@ -6839,7 +6874,7 @@ function addLayer(kind) {
        (upload, background removal, recolor, quality, finish, emboss). */
     L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:3, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
-          recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
+          recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new background's box covers BOTH the exterior AND interior islands (union), so toggling
        Inside on later needs no resize. Only the Outside faces are shown by default. */
     if (kind === 'pattern' && typeof BAG_UV!=='undefined' && BAG_UV.exterior){
@@ -6857,6 +6892,9 @@ function addLayer(kind) {
   } else {
     L = { id:id, kind:'ai', isDefault:false, visible:false, prompt:'', areas:allAreas };
   }
+  /* Handles off by default for every layer — toggle in the Areas section (panel + 2D editor). */
+  L.faceHide = L.faceHide || {};
+  L.faceHide.handles = true;
   L.opacity = (L.opacity != null ? L.opacity : 100);
   if (kind === 'pattern') L.locked = true;   /* backgrounds start locked so you can pan without grabbing them */
   if (kind === 'pattern') {
@@ -10822,7 +10860,9 @@ function _aDown(e){
     if (ui.type==='facetoggle'){
       var _sel=a2d.sel;
       if (_sel){ _sel.faceHide=_sel.faceHide||{};
-        if (ui.face){ var _fk=ui.region+'_'+ui.face;   /* per-face: toggle visibility (default shown) */
+        if (ui.region==='handles'){   /* handles: a single on/off (no sub-faces) */
+          if (_sel.faceHide.handles) delete _sel.faceHide.handles; else _sel.faceHide.handles=true;
+        } else if (ui.face){ var _fk=ui.region+'_'+ui.face;   /* per-face: toggle visibility (default shown) */
           if (_sel.faceHide[_fk]) delete _sel.faceHide[_fk]; else _sel.faceHide[_fk]=true;
         } else {   /* whole region (exterior/interior): hide all faces if any shown, else show all */
           var _rf=(typeof BAG_FACES!=='undefined'&&BAG_FACES[ui.region])||{}, _anyVis=false;
@@ -11369,9 +11409,11 @@ function atlas2dRender(){
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
     var cyC=ly - 5*D - _mainFP*0.78;   /* pill sits just above the island top edge */
     var _isReg=(it.target.kind==='region'), _isHandles=(it.target.kind==='handles');
-    var _tog=(_isReg && _selL)?{type:'facetoggle', region:it.target.region}:null;
+    var _tog=(_isReg && _selL)?{type:'facetoggle', region:it.target.region}
+            :(_isHandles && _selL)?{type:'facetoggle', region:'handles'}:null;   /* per-layer show/hide on the handles too */
     var _fin=_isReg?{type:'finish', region:it.target.region}:(_isHandles?{type:'finish', region:'ribbon'}:null);   /* material-finish picker on Exterior/Interior/Handles */
-    _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _isReg?_regionChecked(it.target.region):true, _fin);
+    var _chk=_isReg?_regionChecked(it.target.region):(_isHandles?!(_selL && _selL.faceHide && _selL.faceHide.handles):true);
+    _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _chk, _fin);
   });
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB populated
      BAG_FACES. Pill centred inside each face; position (top/bottom/center) testing-tunable. */

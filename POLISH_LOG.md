@@ -3,6 +3,16 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13
+- Layer panel control order changed to **Scale → Opacity → Rotation → Move → Areas → Colour/Recolor**
+  (Finish/Emboss/Layout still last, Logo & Text only). `_transformHTML` now outputs Scale/Opacity/Rotation.
+- **Recolor now defaults ON** for Graphic/Logo/Background layers (`recolorOn:true` at creation).
+- **Handles** area toggle added (off by default for every layer) in both the layer panel Areas section and
+  the 2D-editor Handles pill; wired into `drawArtworkOnBag` via `L.faceHide.handles` (erases `bagHandleClip`).
+- **Background panel**: Gap control removed (`_bgTiledControlsHTML`); order is now Density/Feather → Opacity
+  → Areas → Recolor.
+- `duplicateLayer` now deep-copies `faceHide` so area/handle toggles don't cross-link the duplicate.
+
 ## 2026-06-12
 - Removed dead `.add-layer-menu` / `.add-layer-item` CSS (the old Add-Layer dropdown was
   replaced by the popup window).

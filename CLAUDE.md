@@ -44,15 +44,20 @@ Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (al
 - **Background** (`kind:'sticker', isBackground:true, tiled:true`) — a tiled pattern.
 - Adding Graphic/Logo/Text/Background opens the **add-source prompt** (Upload / Presets; fonts no AI).
 - **Edit-background modal** (cutout): bg removal, **draggable crop box**, **PDF page selector**.
-- **Recolor** = optional toggle (default OFF). Layer body order: kind controls → **Scale/Rotation/Opacity**
-  → **Colour/Recolor** → **Move** → **Areas** → (Finish/Emboss/Layout only on Logo & Text).
+- **Recolor** = optional toggle, **default ON** for Graphic/Logo/Background (`recolorOn:true` at creation;
+  Text uses a hue picker, not recolor). Layer body order: kind controls → **Scale/Opacity/Rotation**
+  → **Move** → **Areas** → **Colour/Recolor** → (Finish/Emboss/Layout only on Logo & Text).
 
 **Per-layer transform & per-face visibility**
-- `_transformHTML` = Scale (font-size for text) / Rotation / Opacity sliders. `onLayerScale` maps Scale.
+- `_transformHTML` = Scale (font-size for text) / Opacity / Rotation sliders. `onLayerScale` maps Scale.
 - **Move** section = a button that opens the full 2D editor focused on the layer (no embedded mini-editor).
 - **Areas** = per-face show/hide via `L.faceHide` (`{region}_{face}`, region=exterior|interior, faces from
   `BAG_FACES`). UI = collapsible **Outside/Inside** sections with **isometric cube icons** (`_faceCubeSVG`)
   + an "All" toggle (`onLayerAreaGroup`). `toggleLayerArea` flips one face. **Collapsed by default.**
+  Plus a **Handles** on/off toggle (`L.faceHide.handles`, `toggleLayerHandles`) — **off by default** for
+  every layer (set at creation). The handle hide is applied in `drawArtworkOnBag` by erasing `bagHandleClip`
+  (skipped mid 2D-drag → settles on release). Also on the **2D-editor Handles pill** (`facetoggle` region
+  `'handles'`). The handle clip is its own UV island, NOT in `BAG_FACES`.
 - **2D editor resize**: hold **Shift** = non-proportional (graphics/logos via `L.freeAspect`+scaleH; text via
   `L.stretchX`). Min size = `MIN_LAYER_SCALE` (Testing, default 0.5%).
 - **Emboss/Deboss** (`L.extrude`) and the finish's paper-grain share the material's ONE bump slot. Emboss
@@ -62,7 +67,8 @@ Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (al
 **Background specifics**
 - Created with grid layout (`patStack:'vertical'`), density **3** / gap **0**, box covering the
   **exterior+interior union**, **Inside faces hidden by default** (toggle on → no resize needed).
-- Panel shows Opacity + Density/Gap/Feather only (no Scale/Rotation/Move/Finish/Emboss/Layout).
+- Panel order: **Density/Feather → Opacity → Areas → Recolor** (via `_bgTiledControlsHTML`; **Gap removed**;
+  no Scale/Rotation/Move/Finish/Emboss/Layout). `L.gap` stays 0 so tiles pack tight.
 - **Locked by default. Background "lock" = MOVE-LOCK ONLY** — resize/crop handles, duplicate, delete and all
   panel controls still work; only body drag is blocked (pans instead). Other layer types = full lock.
 - Pattern crop/fade masks the **whole pattern region across enabled faces as one** (union bbox), not per tile.
