@@ -1705,7 +1705,8 @@
           <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Cup" data-ar="الكوب">Cup</span></button>
           <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Sleeve" data-ar="الغلاف">Sleeve</span></button>
           <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Base" data-ar="القاعدة">Base</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Lid" data-ar="الغطاء">Lid</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(7)" data-cstep-pill="7"><span class="cstep-pill-num">7</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
     </div>
@@ -1928,6 +1929,63 @@
       </div>
     </div>
 
+<div class="cs bag-section config-step" id="bag-rivet-section" data-cstep="6">
+      <label class="cl"><span data-en="Lid" data-ar="الغطاء">Lid</span></label>
+      
+      <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
+      <div class="hue-slider-wrap">
+        <input type="range" class="hue-slider" id="bag-riv-hslider" min="0" max="360" value="175" oninput="onBagHue('rivet', this.value)">
+      </div>
+      <div class="mono-swatches" id="bag-riv-swatches"></div>
+      <div class="color-hex" id="bag-riv-chex">#FF0000</div>
+
+      <div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"><span data-en="Material Finish" data-ar="تشطيب المادة">Material Finish</span></div>
+      <div class="finish-grid" id="bag-riv-finish-grid">
+        <div class="finish-card" data-finish="gloss" onclick="applyBagFinish('rivet','gloss',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
+          <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
+        </div>
+        <div class="finish-card" data-finish="matte" onclick="applyBagFinish('rivet','matte',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
+          <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
+        </div>
+        <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('rivet','softtouch',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
+          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
+        </div>
+        <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('rivet','kraft',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
+          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
+        </div>
+        <div class="finish-card" data-finish="foil" onclick="applyBagFinish('rivet','foil',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
+          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
+        </div>
+      </div>
+
+      <div class="advanced-toggle" onclick="toggleAdvanced('bag-riv-adv')">
+        <span class="adv-arrow">&#9658;</span> <span data-en="Advanced" data-ar="إعدادات متقدمة">Advanced</span>
+      </div>
+      <div class="advanced-body" id="bag-riv-adv">
+        <div class="ctrl-slider-row" style="margin-top:12px">
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Roughness" data-ar="الخشونة">Roughness</span><span class="ctrl-slider-val" id="bag-riv-rough-val">0.20</span></div>
+          <input type="range" class="test-slider" id="bag-riv-rough" min="0" max="1" step="0.01" value="0.20" oninput="onBagRoughness('rivet',this.value)">
+        </div>
+        <div class="ctrl-slider-row">
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Metalness" data-ar="المعدنية">Metalness</span><span class="ctrl-slider-val" id="bag-riv-metal-val">0.17</span></div>
+          <input type="range" class="test-slider" id="bag-riv-metal" min="0" max="1" step="0.01" value="0.17" oninput="onBagMetalness('rivet',this.value)">
+        </div>
+        <div class="ctrl-slider-row">
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Transmission" data-ar="النفاذية">Transmission</span><span class="ctrl-slider-val" id="bag-riv-trans-val">0.00</span></div>
+          <input type="range" class="test-slider" id="bag-riv-trans" min="0" max="1" step="0.01" value="0.00" oninput="onBagTransmission('rivet',this.value)">
+        </div>
+        <div class="ctrl-slider-row">
+          <div class="ctrl-slider-top"><span class="ctrl-slider-name">Opacity</span><span class="ctrl-slider-val" id="bag-riv-opac-val">1.00</span></div>
+          <input type="range" class="test-slider" id="bag-riv-opac" min="0" max="1" step="0.01" value="1.00" oninput="onBagOpacity('rivet',this.value)">
+        </div>
+      </div>
+    </div>
+
 
     <!-- Size ───────────────────────────── -->
 
@@ -1998,7 +2056,7 @@
 
     <!-- Pricing Summary ────────────────── -->
     <!-- Review step (7): full summary of choices; the price breakdown below is always shown -->
-    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="6">
+    <div class="cs bag-section config-step" id="bag-review-section" data-cstep="7">
       <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
       <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
       <div id="review-summary"></div>
@@ -2009,7 +2067,7 @@
     </div>
 
     <!-- Price summary — Review step only -->
-    <div class="cs config-step" id="price-summary-block" data-cstep="6">
+    <div class="cs config-step" id="price-summary-block" data-cstep="7">
       <label class="cl" data-en="Summary" data-ar="الملخص">Summary</label>
 
       <!-- Base bag cost -->
@@ -2061,7 +2119,7 @@
     </div>
 
     <!-- Add to Cart — Review step only ──── -->
-    <div class="cta-area config-step" data-cstep="6">
+    <div class="cta-area config-step" data-cstep="7">
       <button class="btn-cart" id="atcbtn" disabled onclick="addCart()"
               data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
       <div class="cta-hint" id="cta-hint">Upload a logo and confirm rights to continue.</div>
@@ -8325,7 +8383,6 @@ function renderBagSwatches(region, hue, activeHex) {
 }
 
 function applyRibbonColor() {
-  if (BAG.rivet) BAG.rivet.color = BAG.ribbon.color;   /* rivets share the handles colour */
   /* Atlas-sampling handles → colour lives in the canvas island; repaint instead. */
   if (bagHandleClip) { if (typeof drawBagTexture === 'function') drawBagTexture(); }
   else if (bagFrontRef || bagBackRef) {
@@ -10958,10 +11015,11 @@ function applyStepCamera(n){
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
   if (n === 3 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);   /* Cup / Sleeve → front view */
   else if (n === 5) startCamTween(viewThetaRad('front'), 2.30);             /* Base → look up from below */
+  else if (n === 6) startCamTween(viewThetaRad('front'), 0.30);             /* Lid → look down from top */
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
-var CONFIG_STEP_COUNT = 6;
+var CONFIG_STEP_COUNT = 7;
 var currentConfigStep = 1;
 /* ─── PHASE C: UI feedback sounds (Web Audio, synthesized — no asset files) ── */
 var _uiSoundOn = true, _audioCtx = null;
@@ -11021,7 +11079,7 @@ document.addEventListener('pointerout', function(e){
    When the user lands on a part's step, that part idle-cycles through the hue
    spectrum to signal what they're editing — until they pick a colour or leave
    the step. Purely visual; never writes to saved BAG state. */
-var STEP_PART = { 3:'exterior', 4:'interior', 5:'ribbon' };   /* hue-guide part per step (Design is now step 2) */
+var STEP_PART = { 3:'exterior', 4:'interior', 5:'ribbon', 6:'rivet' };   /* hue-guide part per step (Design is now step 2) */
 var _partTouched = {}, _suppressTouch = false;
 /* Wayfinding pulse: when you land on a part's step, that part fades the highlight
    colour (default red) in and out between an opacity min and max, to signal what
