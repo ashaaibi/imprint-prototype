@@ -48,9 +48,15 @@ Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (al
 - **Background** (`kind:'sticker', isBackground:true, tiled:true`) — a tiled pattern.
 - Adding Graphic/Logo/Text/Background opens the **add-source prompt** (Upload / Presets; fonts no AI).
 - **Edit-background modal** (cutout): bg removal, **draggable crop box**, **PDF page selector**.
+- Image layers (Graphic/Logo/Background) have a standalone **Adjust** section — **Hue** (rainbow track)
+  + **Saturation** (gray→colour track) — applied as a global `hue-rotate()`/`saturate()` filter in
+  `drawLayerContent` (`L.imgHue`/`L.imgSat`, via `_layerColorFilter`). It's **independent of Recolor**
+  (no colour extraction needed). The old per-cluster Hue/Sat sliders inside Recolor were removed.
 - **Recolor** = optional toggle, **default ON** for Graphic/Logo/Background (`recolorOn:true` at creation;
-  Text uses a hue picker, not recolor). Layer body order: kind controls → **Scale/Opacity/Rotation**
-  → **Move** → **Areas** → **Colour/Recolor** → (Finish/Emboss/Layout only on Logo & Text).
+  Text uses a hue picker, not recolor). SVG layers extract their palette from the **vector source**
+  (`extractSvgColors`, before rasterizing); rasters via `extractStickerColors` (`_extractLayerColors` picks).
+  Recolor keeps the colour-count selector + wheel + shuffle/reset. Layer body order: kind controls →
+  **Scale/Opacity/Rotation** → **Move** → **Areas** → **Adjust/Recolor** → (Finish/Emboss/Layout only on Logo & Text).
 
 **Per-layer transform & per-face visibility**
 - `_transformHTML` = Scale (font-size for text) / Opacity / Rotation sliders. `onLayerScale` maps Scale.
@@ -94,8 +100,8 @@ left of the handle. Icons + example placeholders live in `SOCIAL_ICONS` / `SOCIA
 The "Presets" picker reads three TYPE folders, each holding COLLECTION sub-folders:
 ```
 text/        graphic/        background/      ← layer types
-  System_Presets/   …          …             ← collections (UI name = folder, "_"→" ")
-  Artists_Collection_1/        …
+  Essentials/       …          …             ← collections (UI name = folder, "_"→" ")
+  Display/                     …
   index.json                                  ← manifest (REQUIRED on Pages)
 ```
 - Collection UI name = folder name with `_`→` `. **Underscores only, no apostrophes/spaces.**
@@ -103,16 +109,16 @@ text/        graphic/        background/      ← layer types
   (.svg/.png/.jpg/.webp/.gif). Keep image files small (faster thumbnails).
 - Picker shows **3 designs per collection**, then "Show more" reveals **+6** each time,
   loading thumbnails left-to-right with a skeleton placeholder.
-- Collection order: `System_Presets` first, then the rest A→Z.
+- Collection order: `Essentials` first (special-cased), then the rest A→Z.
 - Each TYPE folder has a `README.txt` with the same instructions.
 
 **Current collections (regenerate manifests after any change):**
-- `text/`: **System_Presets** = 9 basic fonts (Inter, Roboto, Montserrat, Lora, Playfair Display, Oswald,
-  Poppins, Merriweather, Dancing Script); **Artists_Collection_1** = display fonts. ("Social Media" is
+- `text/`: **Essentials** = 9 basic fonts (Inter, Roboto, Montserrat, Lora, Playfair Display, Oswald,
+  Poppins, Merriweather, Dancing Script); **Display** = display/script fonts. ("Social Media" is
   synthetic — NOT a folder; see SOCIAL_ICONS.) Preset font labels show `_`→space.
-- `graphic/`: **System_Presets** = 30 solid-colour shapes (square, circle, line, then the rest), each SVG
-  with a **tight auto-cropped viewBox** so the layer bounding box hugs the shape; **Artists_Collection_1** = stock art.
-- `background/`: **System_Presets** + **Spring_Collection** + **Summer_Collection** + **Super_Nova_Collection**.
+- `graphic/`: **Essentials** = 30 solid-colour shapes (square, circle, line, then the rest), each SVG
+  with a **tight auto-cropped viewBox** so the layer bounding box hugs the shape; **Illustrations** = stock art.
+- `background/`: **Essentials** (basic patterns + the legacy `pattern_N.svg`) + **Cosmic** + **Spring** + **Summer**.
 
 **When you add/rename/delete any file or collection, regenerate the manifests** (Pages has
 no directory listing, so the picker reads `text|graphic|background/index.json`):
@@ -122,7 +128,7 @@ import json, os
 TYPES={'text':('.ttf','.otf','.woff','.woff2'),
        'graphic':('.svg','.png','.jpg','.jpeg','.webp','.gif'),
        'background':('.svg','.png','.jpg','.jpeg','.webp','.gif')}
-key=lambda n:(0,'') if n=='System_Presets' else (1,n.lower())
+key=lambda n:(0,'') if n=='Essentials' else (1,n.lower())
 for typ,exts in TYPES.items():
     if not os.path.isdir(typ): continue
     cols=[]
@@ -133,7 +139,7 @@ for typ,exts in TYPES.items():
     print(typ,[(c['name'],len(c['files'])) for c in cols])
 PY
 ```
-(The legacy region-pattern feature still reads `background/System_Presets/pattern_N.svg`.)
+(The legacy region-pattern feature still reads `background/Essentials/pattern_N.svg`.)
 
 ## 2D-editor performance (important)
 The 2D editor shows the flat bag; the 3D view shrinks to a small **"Live preview"** (bottom-right).

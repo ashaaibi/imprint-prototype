@@ -5,7 +5,7 @@ This folder powers the "Presets" picker for GRAPHIC layers.
 
 Structure:
   graphic/
-    System_Presets/        <- a collection (shown as "System Presets")
+    Essentials/        <- a collection (shown as "System Presets")
     Artists_Collection_1/  <- a collection (shown as "Artists Collection 1")
     Artists_Collection_2/  <- add as many as you like
     index.json             <- manifest (REQUIRED on GitHub Pages — regenerate after edits)
@@ -16,7 +16,7 @@ Rules:
   * Drop design files directly inside a collection folder.
     - graphic / background: .svg .png .jpg .jpeg .webp .gif  (keep them small for fast loading)
     - text (fonts):         .ttf .otf .woff .woff2
-  * Collection order in the picker: System_Presets first, then the rest A->Z.
+  * Collection order in the picker: Essentials first, then the rest A->Z.
 
 After adding/renaming/removing ANY file or collection, REGENERATE the manifests
 (GitHub Pages has no directory listing, so the picker reads index.json):
@@ -26,7 +26,7 @@ After adding/renaming/removing ANY file or collection, REGENERATE the manifests
   TYPES = {'text':('.ttf','.otf','.woff','.woff2'),
            'graphic':('.svg','.png','.jpg','.jpeg','.webp','.gif'),
            'background':('.svg','.png','.jpg','.jpeg','.webp','.gif')}
-  key = lambda n: (0,'') if n=='System_Presets' else (1,n.lower())
+  key = lambda n: (0,'') if n=='Essentials' else (1,n.lower())
   for typ,exts in TYPES.items():
       if not os.path.isdir(typ): continue
       cols=[]
@@ -40,7 +40,7 @@ After adding/renaming/removing ANY file or collection, REGENERATE the manifests
 ------------------------------------------------------------------------
 TEXT-SPECIFIC NOTES
 ------------------------------------------------------------------------
-* System_Presets here holds BASIC, general-purpose fonts (Inter, Roboto,
+* Essentials here holds BASIC, general-purpose fonts (Inter, Roboto,
   Montserrat, Lora, Playfair Display, Oswald, Poppins, Merriweather,
   Dancing Script). Display / artist fonts live in Artists_Collection_1.
 * "Social Media" is a BUILT-IN, synthetic collection injected by the

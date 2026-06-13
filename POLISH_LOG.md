@@ -3,6 +3,23 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 3)
+- **Hue/Saturation split out of Recolor** into a standalone, always-visible **Adjust** section for image
+  layers — visual tracks (rainbow Hue, gray→colour Saturation) applied as a global `hue-rotate()`/`saturate()`
+  filter (`L.imgHue`/`L.imgSat`, `_layerColorFilter`). Works without extracting colours. Recolor's old
+  per-cluster Hue/Sat sliders removed (wheel + count + shuffle/reset remain).
+- **SVG colour extraction from the vector source** (`extractSvgColors`) before rasterizing → exact colours.
+  Raster extraction tuned (coverage gate 2%→0.5%, merge 50→40) so busy/colourful images no longer collapse
+  to a single detected colour.
+- **Emboss/Deboss now visible**: `bumpScale` 0.04→0.3 (configurator + `realism-engine.js?v=16`) + sharper
+  1px bump edges. The depth slider still scales the effect.
+- **Finish & emboss follow tiled Layouts**: `_drawTiledCell` now scales tile size by `ms`, so the
+  finish/bump masks (drawn at reduced scale) tile at the SAME density as the visible colour map.
+- **Neutral snap is now per layer type** (Text / Logo / Graphic / Background) in Testing (`NEUTRAL_SNAP`).
+- **Collections renamed**: `System_Presets`→**Essentials**, `Artists_Collection_1`→**Display** (text) /
+  **Illustrations** (graphic), `Super_Nova_Collection`→**Cosmic**, `Spring_Collection`/`Summer_Collection`→
+  **Spring**/**Summer**. Manifests regenerated (Essentials first); legacy `pattern_N` path updated.
+
 ## 2026-06-13 (batch 2)
 - Text/Logo tile layouts: when a Layout other than None is active, **Scale & Rotation lock**
   (disabled + not-allowed cursor) and the Layout section gains an **Opacity** slider synced to the
