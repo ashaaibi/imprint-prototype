@@ -1,3 +1,4 @@
 [
+  { "id": "honey-gift-bag", "name": "Honeyloom Gift Bag", "category": "Gourmet", "tags": ["Foil", "Editable text", "Bottle bag"], "render": null, "renders": [], "accent": "#d29b35", "designer": "Imprint" },
   { "id": "sample-cafe", "name": "Minimal Wordmark", "category": "Café", "tags": ["Trending", "Editable text"], "render": null, "accent": "#1a1a1a", "designer": "Imprint" }
 ]
