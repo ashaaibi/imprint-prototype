@@ -28,7 +28,7 @@
     // Gallery
     var gal = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
     var thumbs = gal.map(function (g, i) {
-      return '<div class="pdp-thumb' + (i === 0 ? ' on' : '') + '" data-i="' + i + '"><img src="' + IMP.esc(g) + '" alt=""></div>';
+      return '<div class="pdp-thumb' + (i === 0 ? ' on' : '') + '" data-i="' + i + '"><img src="' + IMP.src(g) + '" alt="" loading="lazy" decoding="async"></div>';
     }).join('');
 
     // Sizes — locked placeholder templates expose a single fixed size; others show the
@@ -50,7 +50,7 @@
           '<span class="sep">/</span>' + IMP.esc(p.name) + '</div>' +
         '<div class="pdp-grid">' +
           '<div class="pdp-gallery">' +
-            '<div class="pdp-stage" id="pdp-stage"><img id="pdp-main" src="' + IMP.esc(gal[0]) + '" alt="' + IMP.esc(p.name) + '"></div>' +
+            '<div class="pdp-stage" id="pdp-stage"><img id="pdp-main" src="' + IMP.src(gal[0]) + '" alt="' + IMP.esc(p.name) + '" decoding="async"></div>' +
             (gal.length > 1 ? '<div class="pdp-thumbs" id="pdp-thumbs">' + thumbs + '</div>' : '') +
           '</div>' +
           '<div class="pdp-info">' +
@@ -62,7 +62,7 @@
             '</div>' +
             '<div class="pdp-price">' + IMP.price(p.price) + ' <span>/ unit · from</span></div>' +
             (a ? '<a class="pdp-artist" href="artists.html?a=' + a.id + '">' +
-                '<img src="' + IMP.esc(a.avatar) + '" alt="' + IMP.esc(a.name) + '">' +
+                '<img src="' + IMP.src(a.avatar) + '" alt="' + IMP.esc(a.name) + '" decoding="async">' +
                 '<div style="flex:1"><div class="pa-name">' + IMP.esc(a.name) + ' ' + (a.flag || '') + '</div><div class="pa-style">' + IMP.esc(a.style) + ' · view profile →</div></div>' +
                 '<button class="follow-btn' + (IMP.isFollowing(a.id) ? ' following' : '') + '" data-follow="' + a.id + '" data-name="' + IMP.esc(a.name) + '" onclick="event.preventDefault()">' + (IMP.isFollowing(a.id) ? 'Following' : 'Follow') + '</button>' +
               '</a>' : '') +
@@ -94,7 +94,7 @@
     if (thumbsEl) {
       thumbsEl.querySelectorAll('.pdp-thumb').forEach(function (t) {
         t.addEventListener('click', function () {
-          document.getElementById('pdp-main').src = gal[parseInt(t.getAttribute('data-i'), 10)];
+          document.getElementById('pdp-main').src = IMP.src(gal[parseInt(t.getAttribute('data-i'), 10)]);
           thumbsEl.querySelectorAll('.pdp-thumb').forEach(function (x) { x.classList.remove('on'); });
           t.classList.add('on');
         });

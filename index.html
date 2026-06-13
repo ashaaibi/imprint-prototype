@@ -125,9 +125,9 @@
   var C = IMP.cat();
   function pick(arr,n){ return arr.slice(0,n); }
 
-  var hero = [].concat(['templates/renders/honey-gift-bag-1.jpg'],
-    pick(C.products.filter(function(p){return p.id!=='honeyloom-gift-bag';}),3).map(function(p){return p.image;}));
-  document.getElementById('hero-collage').innerHTML = hero.map(function(src){ return '<img src="'+src+'" alt="" loading="lazy">'; }).join('');
+  var honeyImg = (IMP.product('honeyloom-gift-bag')||{}).image;
+  var hero = [honeyImg].concat(pick(C.products.filter(function(p){return p.id!=='honeyloom-gift-bag';}),3).map(function(p){return p.image;}));
+  document.getElementById('hero-collage').innerHTML = hero.map(function(o,i){ return IMP.img(o, '(max-width:800px) 50vw, 280px', {eager:i===0}); }).join('');
 
   document.getElementById('statstrip').innerHTML = [
     [C.products.length, 'Designer templates'],

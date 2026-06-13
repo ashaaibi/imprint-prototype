@@ -48,7 +48,7 @@
     root.innerHTML =
       '<div class="pdp-bc"><a href="index.html">Home</a><span class="sep">/</span><a href="artists.html">Artists</a><span class="sep">/</span>'+IMP.esc(a.name)+'</div>' +
       '<div class="artist-hero">' +
-        '<img class="ah-avatar" src="'+IMP.esc(a.avatar)+'" alt="'+IMP.esc(a.name)+'">' +
+        '<img class="ah-avatar" src="'+IMP.src(a.avatar)+'" alt="'+IMP.esc(a.name)+'" decoding="async">' +
         '<div style="flex:1;min-width:260px">' +
           '<div class="ah-name imp-display">'+IMP.esc(a.name)+' '+(a.flag||'')+'</div>' +
           '<div class="ah-style">'+IMP.esc(a.style)+' · '+IMP.esc(a.studio)+'</div>' +

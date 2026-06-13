@@ -359,9 +359,9 @@ function bagSVG(body, side, handle){
 /* Real product renders (designer-captured) lead the gallery in order; spec sheet last.
    Each keeps an SVG mockup as a fallback if its render ever fails to load. */
 var VIEWS = [
-  { tag:'Lifestyle',         img:'templates/renders/honey-gift-bag-1.jpg', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
-  { tag:'Detail · flat-lay', img:'templates/renders/honey-gift-bag-2.jpg', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
-  { tag:'Studio',            img:'templates/renders/honey-gift-bag-3.jpg', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
+  { tag:'Lifestyle',         img:'templates/renders/honey-gift-bag-1-l.webp', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
+  { tag:'Detail · flat-lay', img:'templates/renders/honey-gift-bag-2-l.webp', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
+  { tag:'Studio',            img:'templates/renders/honey-gift-bag-3-l.webp', bg:'linear-gradient(160deg,#efe7da,#e3d7c4)', svg:bagSVG('#caa96f','#a8854f','#7a5c33') },
   { tag:'Spec sheet', bg:'var(--imp-surface-2)', spec:true }
 ];
 
@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var p = IMP.product('honeyloom-gift-bag'); if(!p) return;
     var a = IMP.artist(p.artist);
     if(a){
-      var html='<a class="pdp-artist" href="artists.html?a='+a.id+'"><img src="'+a.avatar+'" alt="'+a.name+'"><div style="flex:1"><div class="pa-name">'+a.name+' '+(a.flag||'')+'</div><div class="pa-style">'+a.style+' · view profile →</div></div><button class="follow-btn'+(IMP.isFollowing(a.id)?' following':'')+'" data-follow="'+a.id+'" data-name="'+a.name+'" onclick="event.preventDefault()">'+(IMP.isFollowing(a.id)?'Following':'Follow')+'</button></a>';
+      var html='<a class="pdp-artist" href="artists.html?a='+a.id+'"><img src="'+IMP.src(a.avatar)+'" alt="'+a.name+'"><div style="flex:1"><div class="pa-name">'+a.name+' '+(a.flag||'')+'</div><div class="pa-style">'+a.style+' · view profile →</div></div><button class="follow-btn'+(IMP.isFollowing(a.id)?' following':'')+'" data-follow="'+a.id+'" data-name="'+a.name+'" onclick="event.preventDefault()">'+(IMP.isFollowing(a.id)?'Following':'Follow')+'</button></a>';
       var anchor=document.querySelector('.pdp-stars'); if(anchor) anchor.insertAdjacentHTML('afterend', html);
     }
     var rel=IMP.related(p,4);

@@ -61,6 +61,20 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   IMP.esc = esc;
 
+  /* Image objects from catalog.js: { l, s, lw, sw, h }. IMP.src → a usable URL;
+     IMP.img → a responsive <img> (srcset + sizes + width/height + lazy/priority). */
+  IMP.src = function (o) { return o ? (typeof o === 'string' ? o : o.l) : ''; };
+  IMP.img = function (o, sizes, opts) {
+    opts = opts || {};
+    if (!o) return '';
+    if (typeof o === 'string') o = { l: o, s: o, lw: 1200, sw: 480, h: 0 };
+    var srcset = (o.s && o.s !== o.l) ? (' srcset="' + o.s + ' ' + o.sw + 'w, ' + o.l + ' ' + o.lw + 'w"') : '';
+    var dims = o.h ? (' width="' + o.lw + '" height="' + o.h + '"') : '';
+    var load = opts.eager ? ' fetchpriority="high"' : ' loading="lazy"';
+    return '<img src="' + o.l + '"' + srcset + ' sizes="' + (sizes || '240px') + '"' + dims +
+      ' alt="' + esc(opts.alt || '') + '"' + load + ' decoding="async"' + (opts.cls ? ' class="' + opts.cls + '"' : '') + '>';
+  };
+
   IMP.stars = function (r) {
     var full = Math.round(r || 0), s = '<span class="s">';
     for (var i = 0; i < 5; i++) s += i < full ? '★' : '<span style="opacity:.3">★</span>';
@@ -88,7 +102,7 @@
     var topPill = topTag ? '<span class="tag tag-' + ((T[topTag] || {}).tone || '') + ' tag-pill-media">' + esc((T[topTag] || {}).label || topTag) + '</span>' : '';
     return '<a class="pcard" href="' + esc(p.href || (p.id + '/')) + '">' +
       '<div class="pcard-media">' + topPill + IMP.favBtn(p.id) +
-        '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy"></div>' +
+        IMP.img(p.image, '(max-width:640px) 46vw, 240px', { alt: p.name }) + '</div>' +
       '<div class="pcard-body">' +
         '<div class="pcard-name">' + esc(p.name) + '</div>' +
         (a ? '<div class="pcard-by">by <b>' + esc(a.name) + '</b></div>' : '') +
@@ -102,7 +116,7 @@
   IMP.artistCard = function (a) {
     if (!a) return '';
     return '<a class="acard" href="artists.html?a=' + esc(a.id) + '">' +
-      '<div class="acard-cover"><img src="' + esc(a.avatar) + '" alt="' + esc(a.name) + '" loading="lazy"></div>' +
+      '<div class="acard-cover">' + IMP.img(a.avatar, '(max-width:640px) 46vw, 240px', { alt: a.name }) + '</div>' +
       '<div class="acard-body">' +
         '<div class="acard-name">' + esc(a.name) + ' <span>' + (a.flag || '') + '</span></div>' +
         '<div class="acard-style">' + esc(a.style) + '</div>' +
@@ -114,7 +128,7 @@
     if (!c) return '';
     var a = IMP.artist(c.artist);
     return '<a class="colcard" href="search.html?collection=' + esc(c.id) + '" style="background:' + esc(c.accent || '#c79a63') + '">' +
-      '<img src="' + esc(c.image) + '" alt="' + esc(c.name) + '" loading="lazy"><div class="col-grad"></div>' +
+      IMP.img(c.image, '(max-width:640px) 46vw, 220px', { alt: c.name }) + '<div class="col-grad"></div>' +
       '<div class="col-body"><div class="col-name">' + esc(c.name) + '</div>' +
       (a ? '<div class="col-by">by ' + esc(a.name) + '</div>' : '') + '</div></a>';
   };
