@@ -4965,7 +4965,7 @@ function overlayArtworkPBR() {
 /* Kraft is a finish that paints a base color (#c49345) + a hidden kraft1.png
    texture overlay (its own opacity/density), drawn UNDER any normal pattern. */
 var KRAFT_COLOR = '#c49345';
-var kraftPatternImg = null;       /* materials/kraft1.png (inlined) */
+var kraftPatternImg = null;       /* materials/kraft1.jpg (inlined) */
 var kraftOverlayOpacity = 0.62;   /* 0..1 — target opacity (slider), default 62% */
 var kraftOverlayRender  = { exterior: 0, interior: 0 }; /* per-region animated opacity — 0 until a region is set to kraft */
 var kraftOverlayDensity = 2.5;    /* tiles across the region — default 2.5× */
@@ -4974,8 +4974,8 @@ var kraftOpacityTween = { exterior: null, interior: null };   /* per-region { fr
 (function() {
   var img = new Image();
   img.onload = function() { kraftPatternImg = img; if (typeof drawBagTexture === 'function') drawBagTexture(); };
-  img.onerror = function() { console.warn('materials/kraft1.png not found'); };
-  img.src = 'materials/kraft1.png'; /* inlined kraft1.png (512px) — avoids canvas taint in file:// / cross-origin contexts */
+  img.onerror = function() { console.warn('materials/kraft1.jpg not found'); };
+  img.src = 'materials/kraft1.jpg'; /* inlined kraft1.png (512px) — avoids canvas taint in file:// / cross-origin contexts */
 })();
 
 /* Draw the hidden kraft texture over a region (multiply), tiled by density.
