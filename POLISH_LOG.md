@@ -3,6 +3,16 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 5)
+- **Background preset thumbnails square-cropped** (`object-fit:cover`, full-bleed) so a rectangular
+  background doesn't look rectangular in the picker. Graphic/text thumbs stay `contain`.
+- Added the **Arabesque** background collection (5 SVGs).
+- **Emboss/Deboss now visibly works on matte paper**: a normal bump map is nearly invisible under soft
+  studio light, so `overlayArtworkEmboss` also bakes a directional highlight/shadow **bevel into the
+  albedo** (3D only, after the 2D clean snapshot). Cheap when nothing is embossed.
+- **Finish now syncs with tiled grids**: roughness/metalness + finish-mask resolution raised 512→1024
+  (`PBR_SIZE`) so a dense full-bag grid resolves and the finish lines up with the visible pattern.
+
 ## 2026-06-13 (batch 4)
 - **Text** layer control order is now Scale → Rotation → Opacity → Text Color → Move → Areas →
   (Finish/Emboss/Layout). `_transformHTML(id, L, rotFirst)` gained a rotation-first mode for text.

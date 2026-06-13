@@ -4091,6 +4091,7 @@ function drawBagTexture() {
   // Finish (paper) overlay — applied to the 3D colour map AFTER the clean snapshot, so
   // it never appears in the 2D editor. Skipped mid-drag for speed.
   if (!_a2dDragging && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
+  if (!_a2dDragging && typeof overlayArtworkEmboss === 'function') overlayArtworkEmboss();   /* visible emboss/deboss bevel (3D only) */
 
   if (bagTexture) bagTexture.needsUpdate = true;
   if (!_a2dDragging) {            /* skip heavy passes mid-drag → smooth FPS; full redraw on release */
@@ -4606,7 +4607,8 @@ var artworkOriginalBlur = 8; /* px — controls Original Color swatch blur; also
 var bagBumpCanvas = null;
 var bagBumpTex    = null;
 var _embossActive = false;   /* true while a layer has a non-zero extrude — emboss then owns the single bumpMap slot (vs. the finish grain) */
-var BUMP_SIZE     = 1024; /* higher than PBR maps for smooth normal transitions */
+var BUMP_SIZE     = 1024; /* emboss / normal-map resolution */
+var PBR_SIZE      = 1024; /* roughness/metalness + finish-mask resolution (was 512 — too coarse to resolve dense tiled grids, so the finish didn't line up with the pattern) */
 
 function getLogoDominantColor(img) {
   var tc = document.createElement('canvas');
@@ -4648,10 +4650,10 @@ function buildArtworkMaskCanvas(L) {
   if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.naturalWidth)) return null;
   if (L.kind === 'text' && !L.content) return null;
 
-  var ms = 512 / 2048;
+  var ms = PBR_SIZE / 2048;
   var corr = getArtCorr();
   var mc = document.createElement('canvas');
-  mc.width = mc.height = 512;
+  mc.width = mc.height = PBR_SIZE;
   var mCtx = mc.getContext('2d');
   mCtx.imageSmoothingEnabled = false;
   mCtx.filter = 'contrast(1000%)';
@@ -4733,6 +4735,46 @@ function overlayArtworkBump() {
   bagBumpTex.needsUpdate = true;
 }
 
+/* Emboss/Deboss visible-bevel: a normal bump map is nearly invisible on matte paper under soft
+   studio light, so we ALSO bake a directional highlight/shadow rim into the colour (albedo) — that
+   reads as raised/pressed on any material/lighting. Light is assumed top-left. 3D-only (baked after
+   the 2D clean snapshot). Cheap when nothing is embossed (loop skips non-extruded layers). */
+var _embMaskCv = null, _embBevelCv = null, EMB_SIZE = 1024;
+function overlayArtworkEmboss() {
+  if (!bagTexCtx || typeof EXTRUDE_MAX === 'undefined' || !EXTRUDE_MAX) return;
+  var corr = getArtCorr(), W = bagTexCanvas.width, ms = EMB_SIZE / 2048, did = false;
+  for (var li = BAG.artwork.layers.length - 1; li >= 0; li--) {
+    var L = BAG.artwork.layers[li];
+    if (!L || !L.visible || !L.extrude) continue;
+    if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue;
+    if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.naturalWidth)) continue;
+    if (L.kind === 'text' && !L.content) continue;
+    var depth = Math.max(-1, Math.min(1, L.extrude / EXTRUDE_MAX)); if (!depth) continue;
+    var s = (depth >= 0) ? 1 : -1;                         /* emboss raised vs deboss pressed */
+    var off = Math.max(1, Math.round(Math.abs(depth) * 5) + 1);
+    var amt = Math.min(0.85, 0.30 + Math.abs(depth) * 0.55);
+    if (!_embMaskCv) { _embMaskCv = document.createElement('canvas'); _embMaskCv.width = _embMaskCv.height = EMB_SIZE; }
+    var mctx = _embMaskCv.getContext('2d'); mctx.setTransform(1,0,0,1,0,0); mctx.clearRect(0,0,EMB_SIZE,EMB_SIZE);
+    mctx.save(); var ok = clipToLayerAreas(mctx, L, ms); if (ok > 0) drawLayerContent(mctx, L, ms, corr, 'mask'); mctx.restore();
+    if (ok <= 0) continue;
+    if (!_embBevelCv) { _embBevelCv = document.createElement('canvas'); _embBevelCv.width = _embBevelCv.height = EMB_SIZE; }
+    var bx = _embBevelCv.getContext('2d');
+    /* highlight rim = shape minus shape shifted toward the light → top-left edge (bottom-right for deboss) */
+    bx.setTransform(1,0,0,1,0,0); bx.globalCompositeOperation = 'source-over'; bx.clearRect(0,0,EMB_SIZE,EMB_SIZE);
+    bx.drawImage(_embMaskCv, 0, 0);
+    bx.globalCompositeOperation = 'destination-out'; bx.drawImage(_embMaskCv, s*off, s*off);
+    bx.globalCompositeOperation = 'source-in'; bx.fillStyle = '#ffffff'; bx.fillRect(0,0,EMB_SIZE,EMB_SIZE);
+    bagTexCtx.save(); bagTexCtx.globalCompositeOperation = 'screen'; bagTexCtx.globalAlpha = amt; bagTexCtx.drawImage(_embBevelCv, 0,0, W,W); bagTexCtx.restore();
+    /* shadow rim = opposite edge */
+    bx.setTransform(1,0,0,1,0,0); bx.globalCompositeOperation = 'source-over'; bx.clearRect(0,0,EMB_SIZE,EMB_SIZE);
+    bx.drawImage(_embMaskCv, 0, 0);
+    bx.globalCompositeOperation = 'destination-out'; bx.drawImage(_embMaskCv, -s*off, -s*off);
+    bx.globalCompositeOperation = 'source-in'; bx.fillStyle = '#000000'; bx.fillRect(0,0,EMB_SIZE,EMB_SIZE);
+    bagTexCtx.save(); bagTexCtx.globalCompositeOperation = 'multiply'; bagTexCtx.globalAlpha = amt; bagTexCtx.drawImage(_embBevelCv, 0,0, W,W); bagTexCtx.restore();
+    did = true;
+  }
+  if (did && typeof bagTexture !== 'undefined' && bagTexture) bagTexture.needsUpdate = true;
+}
 function rebuildBumpMap() {
   overlayArtworkBump();
 }
@@ -4752,12 +4794,12 @@ function overlayArtworkPBR() {
   function paintRegionMasked(maskCanvas, canvas, tex, val) {
     var v = Math.round(Math.max(0, Math.min(1, val)) * 255);
     var tmp = document.createElement('canvas');
-    tmp.width = tmp.height = 512;
+    tmp.width = tmp.height = PBR_SIZE;
     var tCtx = tmp.getContext('2d');
     tCtx.drawImage(maskCanvas, 0, 0);
     tCtx.globalCompositeOperation = 'source-in';
     tCtx.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')';
-    tCtx.fillRect(0, 0, 512, 512);
+    tCtx.fillRect(0, 0, PBR_SIZE, PBR_SIZE);
     canvas.getContext('2d').drawImage(tmp, 0, 0);
     tex.needsUpdate = true;
   }
@@ -7342,9 +7384,10 @@ function _renderPresetGrid(i){
     for(var k2=have2;k2<n;k2++){ (function(f){
       var url=_presetUrl(type,c.name,f), safe=(''+f).replace(/'/g,"\\'"), cn=(''+c.name).replace(/'/g,"\\'"), seen=!!_presetSeen[url];
       var btn=document.createElement('button'); btn.className='preset-thumb '+(seen?'preset-shown':'preset-pending'); btn.title=f;
-      btn.style.cssText='aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:var(--imp-surface,#fff);cursor:pointer;padding:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;';
+      var _bgThumb=(type==='background');   /* backgrounds: square-crop (cover) so rectangular patterns don't look rectangular */
+      btn.style.cssText='aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:var(--imp-surface,#fff);cursor:pointer;padding:'+(_bgThumb?'0':'6px')+';overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;';
       btn.setAttribute('onclick',"choosePreset('"+cn+"','"+safe+"')");
-      btn.innerHTML='<span class="preset-spin"></span><img decoding="async" style="max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;position:relative;">';
+      btn.innerHTML='<span class="preset-spin"></span><img decoding="async" style="'+(_bgThumb?'width:100%;height:100%;object-fit:cover;':'max-width:100%;max-height:100%;object-fit:contain;')+'pointer-events:none;position:relative;display:block;">';
       var img=btn.querySelector('img');
       img.addEventListener('load', function(){ _presetSeen[url]=true; });   /* remember it for instant show next visit */
       img.src=url;   /* start the download NOW, in parallel/background (cached → instant) */
@@ -8226,7 +8269,7 @@ function onPaperNormalToggle(on) {
 }
 
 function initBagPBRMaps() {
-  var S = 512;
+  var S = PBR_SIZE;
   bagRoughCanvas = document.createElement('canvas'); bagRoughCanvas.width = bagRoughCanvas.height = S;
   bagMetalCanvas = document.createElement('canvas'); bagMetalCanvas.width = bagMetalCanvas.height = S;
   bagAlphaCanvas = document.createElement('canvas'); bagAlphaCanvas.width = bagAlphaCanvas.height = S;
@@ -8281,7 +8324,7 @@ function onBagOpacity(region, v) {
 
 function updateBagPBRMaps() {
   if (!bagRoughCanvas || !bagMetalCanvas || !bagAlphaCanvas) return;
-  var S = 512, scale = S / 2048;
+  var S = PBR_SIZE, scale = S / 2048;
   var ui = BAG_UV.interior;
   var ix = Math.round(ui.x * scale), iy = Math.round(ui.y * scale);
   var iw = Math.round(ui.w * scale), ih = Math.round(ui.h * scale);

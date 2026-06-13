@@ -13,6 +13,16 @@
 ]
 },
 {
+"name": "Arabesque",
+"files": [
+"Asset 1arab.svg",
+"Asset 2arab.svg",
+"Asset 3arab.svg",
+"Asset 4arab.svg",
+"Asset 5arab.svg"
+]
+},
+{
 "name": "Autumn",
 "files": [
 "Asset 1floral.svg",
