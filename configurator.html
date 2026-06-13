@@ -2200,14 +2200,12 @@
         <input type="range" class="test-slider" min="0" max="12" step="0.5" value="5" oninput="onA2Dnum('labelStroke',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Label stroke color</span><span class="slider-val" id="a2d-labelStrokeColor-val">#ffffff</span></div>
         <input type="color" value="#ffffff" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('labelStrokeColor',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Label bold</span><span class="slider-val" id="a2d-labelWeight-val">1000</span></div>
-        <input type="range" class="test-slider" min="100" max="3000" step="50" value="1000" oninput="onA2Dnum('labelWeight',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label bold</span><span class="slider-val" id="a2d-subLabelWeight-val">1000</span></div>
-        <input type="range" class="test-slider" min="100" max="3000" step="50" value="1000" oninput="onA2Dnum('subLabelWeight',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Show unselected layer box</span>
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('showUnselectedBox',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">12</span></div>
         <input type="range" class="test-slider" min="6" max="36" step="1" value="12" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label opacity</span><span class="slider-val" id="a2d-subLabelOpacity-val">100%</span></div>
+        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="1" oninput="onSubLabelOpacity(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
         <input type="color" value="#333333" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('subLabelColor',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert label in dark</span>
@@ -10177,6 +10175,7 @@ function onSceneLightsSlider(v) {
   T.hemiLight.intensity   = SCENE_LIGHTS_BASE.hemi   * mul;
 }
 function onMinLayerScale(v){ MIN_LAYER_SCALE = Math.max(0.05, parseFloat(v)||0.5); var el=document.getElementById('min-layer-scale-val'); if(el) el.textContent=MIN_LAYER_SCALE.toFixed(2)+'%'; }
+function onSubLabelOpacity(v){ A2D.subLabelOpacity = Math.max(0, Math.min(1, parseFloat(v))); var el=document.getElementById('a2d-subLabelOpacity-val'); if(el) el.textContent=Math.round(A2D.subLabelOpacity*100)+'%'; }
 function onPreviewInterval(v){ A2D.previewInterval = Math.max(0, parseFloat(v)||0); var el=document.getElementById('a2d-previewInterval-val'); if(el) el.textContent=(A2D.previewInterval<=0?'real-time':A2D.previewInterval.toFixed(1)+'s'); }
 function onLayerBrightnessSlider(v) {
   LAYER_BRIGHTNESS = parseFloat(v);
@@ -10623,7 +10622,7 @@ var A2D = {
   showUnselectedBox:false,                     /* draw the faint bounding box on ALL unselected layers (else only the hovered one) */
   labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
-  subLabelSize:12, subLabelColor:'#333333',    /* per-face sub-label size + colour */
+  subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:1,    /* per-face sub-label size + colour + opacity */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
   snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
@@ -11369,6 +11368,7 @@ function atlas2dRender(){
                   : {front:'Front', back:'Back', left:'Left', right:'Right', base:'Base'};
     var _subFP=Math.max(7,A2D.subLabelSize||13)*D;
     var _pos=A2D.subLabelPos||'center';
+    ctx.save(); ctx.globalAlpha = (A2D.subLabelOpacity!=null?A2D.subLabelOpacity:1);   /* sub-label opacity (testing) */
     ['exterior','interior'].forEach(function(grp){
       var _showWheel=true;   /* per-face recolour wheel always available (no longer gated on the parent colour) */
       var faces=BAG_FACES[grp]||{};
@@ -11386,6 +11386,7 @@ function atlas2dRender(){
         _drawLabelPill(p.x, dy, _txt, _subFP, {kind:'face',region:grp,face:f}, _tog, _checked, null, _showWheel);
       });
     });
+    ctx.restore();
   }
   ctx.textAlign='left';
   updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
