@@ -3,6 +3,22 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 13) — Marketplace + cup studio + configurator fixes
+- **Turned the site into a three-sided marketplace** (artists · brands · manufacturers), driven by a
+  generated `catalog.js` (`tools/build_catalog.py`): 50 products, 13 artists, 6 manufacturers, 25
+  collections from the curated asset zips. New/rewritten pages: landing, products (by category),
+  per-product **clean-URL** PDPs (`/<slug>/`), artists + profiles, manufacturers + profiles, search
+  (full filters), collections, favourites, account, orders. New `catalog.css` + `app.js` (nav/footer,
+  favourites/follow/share) + `product.js` (lean PDP). Tags (hot/trending/new/foil/eco…) throughout.
+- **Honeyloom Gift Bag** moved to its own clean URL `/honeyloom-gift-bag/` (rich PDP, template gallery
+  removed); `product.html` redirects there. **Minimal Wordmark template deleted.** PDP now mirrors the
+  template's **size lock**.
+- **Configurator**: wayfinding **pulse OFF by default** (+ Testing toggle); **finish nudge on load** fixes
+  the handle/ribbon finish not rendering until clicked.
+- **Artisan Coffee Cup**: new product + render + **lean cup 3D studio** (`configurator-cup.html`, 4
+  materials, lid print-area hidden, sizes, designer/export, template) + designer-portal builder. v1 —
+  needs live browser verification (no WebGL in the headless build).
+
 ## 2026-06-13 (batch 12)
 - **Fixed super-slow template loading.** A sticker-heavy client template (e.g. Honeyloom Gift Bag — logo +
   two foil graphics) was baking the bag **4–5×** on load: `_restoreState` baked once, then every recolored

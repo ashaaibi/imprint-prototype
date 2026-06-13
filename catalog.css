@@ -11,7 +11,7 @@ main { min-height: 60vh; }
 a { color: inherit; }
 
 /* ── Secondary app nav ───────────────────────────────────── */
-.app-nav { position: sticky; top: var(--imp-header-h); z-index: 40; background: color-mix(in srgb, var(--imp-bg) 88%, transparent); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--imp-border); }
+.app-nav { position: sticky; top: var(--imp-header-h); z-index: 40; background: var(--imp-bg); background: color-mix(in srgb, var(--imp-bg) 88%, transparent); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--imp-border); }
 .an-inner { max-width: var(--imp-max-w); margin: 0 auto; padding: 9px 24px; display: flex; align-items: center; gap: 18px; }
 .an-links { display: flex; gap: 4px; flex: 0 0 auto; }
 .an-links a { font-size: 13.5px; font-weight: 600; color: var(--imp-fg-2); text-decoration: none; padding: 7px 12px; border-radius: var(--imp-r-pill); white-space: nowrap; transition: background .15s, color .15s; }
