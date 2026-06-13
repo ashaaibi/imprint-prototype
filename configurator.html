@@ -3094,6 +3094,23 @@ const BAG_MODELS = {
     tiers:[{qty:200,pu:7.50,save:0},{qty:500,pu:5.60,save:25},{qty:1000,pu:4.40,save:41},{qty:2000,pu:3.40,save:55}] },
 };
 var currentBagModel = 'wide';
+/* ── PDP hand-off ── product.html opens us with ?size=&qty=&pmul=&mfr=&step= so the user can
+   pre-pick size/quantity/manufacturer there, then land on the Design step. Read it before the
+   first build so the correct model loads and the price reflects the manufacturer. */
+window._entryQty = null; window._entryPmul = 1; window._entryStep = null; window._entryMfr = null;
+try {
+  var _ep = new URLSearchParams(location.search);
+  var _es = _ep.get('size'); if (_es && BAG_MODELS[_es]) currentBagModel = _es;
+  if (_ep.get('qty'))  window._entryQty  = parseInt(_ep.get('qty'), 10) || null;
+  if (_ep.get('pmul')) window._entryPmul = parseFloat(_ep.get('pmul')) || 1;
+  if (_ep.get('step')) window._entryStep = parseInt(_ep.get('step'), 10) || null;
+  window._entryMfr = _ep.get('mfr') || null;
+  /* reflect the chosen size on the Start-step size buttons (DOM is already parsed above the script) */
+  document.querySelectorAll('.bag-sopt').forEach(function(b){
+    var oc = b.getAttribute('onclick') || '';
+    b.classList.toggle('on', oc.indexOf("'" + currentBagModel + "'") >= 0);
+  });
+} catch(e){}
 function setBagUVForModel(key){
   var m = BAG_MODELS[key]; if (!m) return;
   BAG_UV.exterior = { x:m.uv.exterior.x, y:m.uv.exterior.y, w:m.uv.exterior.w, h:m.uv.exterior.h };
@@ -9113,6 +9130,13 @@ function updateBagQtyGridFromEntry(entry) {
   });
   grid.innerHTML = html;
   S.qty = tiers[0].qty; S.pu = tiers[0].pu;
+  /* PDP hand-off: pre-select the quantity that was picked on the product page (once). */
+  if (window._entryQty) {
+    var _q = window._entryQty; window._entryQty = null;
+    var _btns = grid.querySelectorAll('.qopt'), _done = false;
+    for (var _i = 0; _i < tiers.length; _i++) { if (tiers[_i].qty === _q && _btns[_i]) { onQty(tiers[_i].qty, tiers[_i].pu, tiers[_i].save, _btns[_i]); _done = true; break; } }
+    if (!_done) { var _qf = document.getElementById('cs-qty'); if (_qf) { _qf.value = _q; if (typeof applyCustomQty === 'function') applyCustomQty(); } }
+  }
   var vmsg = document.getElementById('vmsg-bag');
   if (vmsg && tiers[2]) {
     vmsg.innerHTML = 'Order <strong>' + tiers[2].qty.toLocaleString() + '</strong> and pay <strong>' + fmtUnit(tiers[2].pu) + ' / unit</strong> — save <strong>' + tiers[2].save + '%</strong> vs. 200 units.';
@@ -9218,7 +9242,7 @@ function onQty(qty, pu, save, btn) {
   updatePricing();
 }
 function updatePricing() {
-  var qty = S.qty, pu = S.pu;
+  var qty = S.qty, pu = S.pu * (window._entryPmul || 1);   /* manufacturer price multiplier from the PDP hand-off */
   var base = qty * pu;
 
   /* Finish add-ons (per unit) */
@@ -11866,7 +11890,7 @@ if (typeof initSiteHeader === 'function') {
     showCart: true
   });
 }
-goConfigStep(1);
+goConfigStep(window._entryStep || 1);   /* PDP "Customize" lands on Design (step 2); otherwise Start */
 
 updatePricing();
 checkCart();

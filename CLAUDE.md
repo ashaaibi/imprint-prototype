@@ -19,6 +19,9 @@ mangling files/folders.
 
 ## Page map
 - `index.html` — homepage · `products.html` — category grid
+- `product.html` — **paper-bag product detail page (PDP)**: pick size/quantity/manufacturer, price breakdown,
+  delivery, fake reviews+specs per maker. "Customize" → `configurator.html?size=&qty=&pmul=&mfr=&step=2`
+  (lands on Design); "Add to cart" → `setCart()` → `checkout.html`. Manufacturers vary price (`priceMul`) + lead time.
 - `configurator.html` — **the 3D configurator (centerpiece, ~2.5 MB)**
 - `checkout.html` · `confirmation.html` — order flow
 - `admin.html` — testing controls · `designer/` · `factory/` — demo stubs

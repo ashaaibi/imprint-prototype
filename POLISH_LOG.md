@@ -3,6 +3,18 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 8)
+- **New product detail page (`product.html`)** — the Paper-bag card now opens a PDP instead of jumping
+  straight to the configurator. Styled SVG mockup gallery (kraft / white / colour / dark studio / spec
+  sheet), tags (Trending · Eco · rated), **size + quantity-tier + manufacturer pickers**, live price
+  breakdown (base + VAT + total, in the user's currency), estimated delivery, and per-manufacturer
+  **specs + fake reviews**. Four manufacturers (Imprint featured; Gulf Print, Najm, Levant) each vary
+  **price (`priceMul`) and lead time**.
+- **Two CTAs**: "Customize design" → `configurator.html?size=&qty=&pmul=&mfr=&step=2` (configurator reads
+  the params, loads that size, pre-selects the quantity, applies the manufacturer price multiplier, and
+  lands on the **Design** step; Start still lets you change size/qty). "Add to cart" → `setCart()` →
+  `checkout.html`.
+
 ## 2026-06-13 (batch 7)
 - **Tiled-layer colour fix**: `_drawTiledCell` now caps the staging-canvas area (~2048²). A whole-bag-fit
   tile at full scale made it ~4k²+, which renders BLANK past Safari/iPad's canvas limit — the tiled
