@@ -136,61 +136,53 @@ TAGS = {
 # ── ARTISTS (13) ─────────────────────────────────────────────────────────────
 # avatar index = position; styleTags drive product/collection matching.
 ARTISTS = [
- ("layla-haddad",     "Layla Haddad",     "Atelier Haddad",     "AE","🇦🇪","Gilded Ornament", ["luxury","gold","ornate","mandala","ivory"],
-    "Layla turns Khaleeji ornament into modern gold-foil packaging — mandalas, lattices and lotus motifs rendered with restraint."),
- ("yuki-tanaka",      "Yuki Tanaka",      "Studio Mu",          "JP","🇯🇵","Quiet Minimal",   ["minimal","white","silver","clean"],
-    "Yuki designs in negative space. White, bone and brushed silver, with a single deliberate mark — packaging that whispers."),
- ("omar-farouk",      "Omar Farouk",      "Cairo Deco",         "EG","🇪🇬","Art Deco",        ["deco","geometric","diamond","copper"],
-    "Omar revives 1920s Cairo glamour: stepped fans, diamond lattices and copper line-work with architectural precision."),
- ("sofia-marchetti",  "Sofia Marchetti",  "Foglia Studio",      "IT","🇮🇹","Botanical Ink",   ["botanical","floral","woodland","wildflower","illustrated"],
-    "Sofia hand-inks ferns, wildflowers and orchard branches — heritage botanical illustration for gourmet and beauty brands."),
- ("noor-al-rashid",   "Noor Al-Rashid",   "Najma Pattern Co.",  "AE","🇦🇪","Arabesque Geo",   ["moroccan","arabesque","navy","copper","tin"],
-    "Noor builds tessellating Moorish geometry — zellige stars and navy-and-copper arabesque that wraps seamlessly."),
- ("diego-reyes",      "Diego Reyes",      "Reyes Color Lab",    "MX","🇲🇽","Maximal Abstract",["abstract","multicolor","vibrant","playful","bold","colorful"],
-    "Diego is loud on purpose — saturated abstract colour-blocks and painterly shapes that pop on a shelf from across the room."),
- ("amara-okafor",     "Amara Okafor",     "Bloom & Blush",      "NG","🇳🇬","Soft Floral",     ["blush","pink","floral","sage","soft"],
-    "Amara works in blush, sage and powder tones — soft botanical florals for bridal, beauty and boutique gifting."),
- ("liam-obrien",      "Liam O'Brien",     "Kraft & Co.",        "IE","🇮🇪","Natural Kraft",   ["kraft","natural","neutral","taupe","gray","mailer"],
-    "Liam champions honest materials — uncoated kraft, taupe and recycled board with understated typographic marks."),
- ("hana-kim",         "Hana Kim",         "Seoul Lux",          "KR","🇰🇷","Emerald Deco",    ["emerald","deco","gold","chocolate"],
-    "Hana pairs deep emerald with warm gold foil — jewel-toned deco built for chocolate, patisserie and fine fragrance."),
- ("fatima-zahra",     "Fatima Zahra",     "Maison Zahra",       "MA","🇲🇦","Ornate Burgundy", ["burgundy","ornate","gold","luxury","black"],
-    "Fatima designs after-dark luxury — burgundy, jet black and ornate gold filigree for perfume and couture houses."),
- ("elena-petrova",    "Elena Petrova",    "Linea Nordica",      "FR","🇫🇷","Charcoal Geometry",["charcoal","copper","geometric","diamond"],
-    "Elena draws crisp charcoal-and-copper grids — confident geometric systems for modern menswear and tech-lux brands."),
- ("rami-khoury",      "Rami Khoury",      "Beirut Modern",      "LB","🇱🇧","Teal Modern",     ["teal","gold","geometric","modern"],
-    "Rami balances teal and gold in clean modern geometry — contemporary luxury with a Levantine accent."),
- ("isabella-santos",  "Isabella Santos",  "Raposa Atelier",     "BR","🇧🇷","Woodland Whimsy", ["woodland","fox","whimsy","illustrated","cream"],
-    "Isabella tells little forest stories — foxes, foliage and cream backdrops with a warm, collectible, storybook charm."),
+ ("aminata-diallo",   "Aminata Diallo",   "Atelier Sahel",      "SN","🇸🇳","Heritage Textile", ["kraft","natural","neutral","taupe","woodland","botanical","earth"],
+    "Aminata translates West-African textile heritage — mudcloth geometry, indigo and warm earth tones — into modern, tactile packaging."),
+ ("kenji-sato",       "Kenji Sato",       "Studio Sumi",        "JP","🇯🇵","Quiet Line Work",  ["minimal","white","silver","clean","illustrated","line","fox"],
+    "Kenji draws in fine ink lines and negative space — restrained, botanical-leaning illustration with a calm Japanese sensibility."),
+ ("priya-nair",       "Priya Nair",       "Marigold Studio",    "IN","🇮🇳","Vibrant Floral",   ["floral","blush","pink","sage","soft","vibrant","botanical","wildflower"],
+    "Priya bursts with colour — marigolds, paisley and joyful florals from South-Indian craft, tuned for celebration and gifting."),
+ ("mateo-herrera",    "Mateo Herrera",    "Taller Herrera",     "MX","🇲🇽","Folk Maximalist",  ["abstract","multicolor","vibrant","playful","bold","colorful"],
+    "Mateo is loud and proud — saturated folk-art colour blocks and papel-picado energy that leap off the shelf."),
+ ("yasmin-al-najjar", "Yasmin Al-Najjar", "Najma Studio",       "AE","🇦🇪","Arabesque",        ["moroccan","arabesque","navy","copper","tin","ornate","gold","geometric"],
+    "Yasmin builds tessellating Khaleeji geometry — zellige stars, gold lattices and arabesque borders that wrap seamlessly."),
+ ("henrik-sorensen",  "Henrik Sørensen",  "Linea Nord",         "DK","🇩🇰","Scandinavian Minimal", ["minimal","white","silver","clean","kraft","neutral","gray"],
+    "Henrik designs in a whisper — bone, brushed silver and uncoated kraft with one deliberate mark. Packaging that lets the product speak."),
+ ("amina-yusuf",      "Amina Yusuf",      "Lagos Colour Lab",   "NG","🇳🇬","Bold Abstract",    ["abstract","multicolor","vibrant","bold","colorful","playful"],
+    "Amina channels Lagos energy — bold abstract colour and pattern with fearless contrast, made to be seen across a room."),
+ ("hana-lee",         "Hana Lee",         "Seoul Atelier",      "KR","🇰🇷","Emerald Deco",     ["deco","geometric","diamond","copper","emerald","gold","teal","chocolate"],
+    "Hana pairs jewel-toned emerald and teal with warm gold foil — crisp deco geometry for confectionery and fine fragrance."),
+ ("kwame-mensah",     "Kwame Mensah",     "Accra Geometric",    "GH","🇬🇭","Geometric Luxe",   ["geometric","charcoal","diamond","burgundy"],
+    "Kwame fuses kente-inspired geometry with deep luxe palettes — charcoal, burgundy and gold for jewellery, spirits and couture."),
 ]
 
 # Explicit collection -> artist (by filename stem keyword), curated for coherence.
 COLLECTION_ARTIST = {
- "01-playful-abstract-multicolor":"diego-reyes",
- "02-ivory-gold-lotus-luxury":"layla-haddad",
- "03-floral-fox-woodland":"isabella-santos",
- "04-teal-gold-geometric":"rami-khoury",
- "05-emerald-gold-deco-chocolate":"hana-kim",
- "06-cream-kraft-minimal":"liam-obrien",
- "07-blush-kraft-natural":"amara-okafor",
- "08-emerald-copper-deco":"hana-kim",
- "09-neutral-taupe-botanical":"liam-obrien",
- "10-white-gold-minimal":"yuki-tanaka",
- "11-woodland-botanical-cream":"sofia-marchetti",
- "12-charcoal-copper-geometric":"omar-farouk",
- "13-bold-abstract-colorful":"diego-reyes",
- "14-white-silver-minimal":"yuki-tanaka",
- "15-sage-wildflower-illustrated":"sofia-marchetti",
- "16-charcoal-copper-diamond":"elena-petrova",
- "17-vibrant-multicolor-abstract":"diego-reyes",
- "18-burgundy-gold-ornate":"fatima-zahra",
- "19-blush-pink-floral":"amara-okafor",
- "20-navy-copper-moroccan":"noor-al-rashid",
- "21-gray-kraft-mailer":"liam-obrien",
- "22-black-burgundy-gold-luxury":"fatima-zahra",
- "23-sage-blush-floral":"amara-okafor",
- "24-navy-copper-moroccan-tin":"noor-al-rashid",
- "25-kraft-gray-natural":"liam-obrien",
+ "01-playful-abstract-multicolor":"mateo-herrera",
+ "02-ivory-gold-lotus-luxury":"kwame-mensah",
+ "03-floral-fox-woodland":"kenji-sato",
+ "04-teal-gold-geometric":"hana-lee",
+ "05-emerald-gold-deco-chocolate":"hana-lee",
+ "06-cream-kraft-minimal":"henrik-sorensen",
+ "07-blush-kraft-natural":"priya-nair",
+ "08-emerald-copper-deco":"hana-lee",
+ "09-neutral-taupe-botanical":"aminata-diallo",
+ "10-white-gold-minimal":"henrik-sorensen",
+ "11-woodland-botanical-cream":"aminata-diallo",
+ "12-charcoal-copper-geometric":"kwame-mensah",
+ "13-bold-abstract-colorful":"mateo-herrera",
+ "14-white-silver-minimal":"kenji-sato",
+ "15-sage-wildflower-illustrated":"kenji-sato",
+ "16-charcoal-copper-diamond":"kwame-mensah",
+ "17-vibrant-multicolor-abstract":"amina-yusuf",
+ "18-burgundy-gold-ornate":"kwame-mensah",
+ "19-blush-pink-floral":"priya-nair",
+ "20-navy-copper-moroccan":"yasmin-al-najjar",
+ "21-gray-kraft-mailer":"henrik-sorensen",
+ "22-black-burgundy-gold-luxury":"kwame-mensah",
+ "23-sage-blush-floral":"priya-nair",
+ "24-navy-copper-moroccan-tin":"yasmin-al-najjar",
+ "25-kraft-gray-natural":"aminata-diallo",
 }
 
 PALETTE = {  # collection stem -> accent for card gradients
@@ -217,15 +209,15 @@ def artist_for_product(slug):
 # Which artists plausibly suit each product category (every artist appears >=1x),
 # used to keep zero-keyword products on-style while balancing the load.
 CATEGORY_ARTISTS = {
-    "bags":       ["layla-haddad","fatima-zahra","noor-al-rashid","rami-khoury","diego-reyes"],
-    "boxes":      ["omar-farouk","elena-petrova","hana-kim","rami-khoury","diego-reyes"],
-    "mailer":     ["liam-obrien","yuki-tanaka"],
-    "food":       ["hana-kim","sofia-marchetti","isabella-santos","liam-obrien"],
-    "beauty":     ["fatima-zahra","hana-kim","layla-haddad"],
-    "jewellery":  ["layla-haddad","fatima-zahra","elena-petrova"],
-    "tubes":      ["noor-al-rashid","omar-farouk","rami-khoury"],
-    "floral":     ["amara-okafor","sofia-marchetti","isabella-santos"],
-    "stationery": ["yuki-tanaka","liam-obrien","sofia-marchetti"],
+    "bags":       ["yasmin-al-najjar","mateo-herrera","amina-yusuf","aminata-diallo"],
+    "boxes":      ["hana-lee","kwame-mensah","henrik-sorensen","kenji-sato"],
+    "mailer":     ["henrik-sorensen","aminata-diallo"],
+    "food":       ["hana-lee","aminata-diallo","kenji-sato","priya-nair"],
+    "beauty":     ["yasmin-al-najjar","hana-lee","priya-nair"],
+    "jewellery":  ["kwame-mensah","hana-lee","yasmin-al-najjar"],
+    "tubes":      ["yasmin-al-najjar","mateo-herrera","aminata-diallo"],
+    "floral":     ["priya-nair","aminata-diallo","kenji-sato"],
+    "stationery": ["henrik-sorensen","kenji-sato","priya-nair"],
 }
 
 def assign_artists(prods):
@@ -357,9 +349,14 @@ def main():
     bag_assets=[]
     for i,src in enumerate(bag_imgs,1):
         dst=f"assets/bags/bag-{i}.jpg"; shutil.copyfile(src, os.path.join(ROOT,dst)); bag_assets.append(dst)
-    # coffee-cup render (staged from the coffee zip; otherwise keep existing committed asset)
-    _cof='/tmp/coffee/coffee.jpg'
-    if os.path.exists(_cof): shutil.copyfile(_cof, os.path.join(ROOT,'assets/products/coffee-cup.jpg'))
+    # coffee-cup renders (hero -> lifestyle order), staged from the Cup zip if present;
+    # otherwise keep the already-committed coffee-cup-1..5.jpg.
+    _cuporder = ['32e13640-df45-4385-8e0e-51be3478c00c','cf3dbc9d-7ccd-4049-9283-e601cd4c801e',
+                 'b09a8450-e424-4274-9eaf-8282c1bde720','b5d4eb1e-b567-47a6-ba38-6ac474b0ac50',
+                 '174ac45e-88b4-4d9b-a0b3-395216259f3f']
+    for i,h_ in enumerate(_cuporder,1):
+        s_=f'/tmp/cupz/Cup/{h_}.jpeg'
+        if os.path.exists(s_): shutil.copyfile(s_, os.path.join(ROOT,f'assets/products/coffee-cup-{i}.jpg'))
 
     # Collections
     col_imgs = find_imgs('Collections')
@@ -422,15 +419,16 @@ def main():
         "id":HONEYLOOM_SLUG,"name":"Honeyloom Gift Bag","category":"bags",
         "image":"templates/renders/honey-gift-bag-1.jpg",
         "gallery":["templates/renders/honey-gift-bag-1.jpg","templates/renders/honey-gift-bag-2.jpg","templates/renders/honey-gift-bag-3.jpg"],
-        "artist":"layla-haddad","makers":["imprint-atelier","crescent-press","najm-packaging"],
+        "artist":"yasmin-al-najjar","makers":["imprint-atelier","crescent-press","najm-packaging"],
         "price":12.5,"tags":["foil","hot","editors"],"rating":5.0,"reviews":63,
         "blurb":"A foil honeycomb bottle bag with editable wordmark — the flagship Imprint template. Fully customisable in 3D.",
         "featured":True,"template":"honey-gift-bag","href":f"{HONEYLOOM_SLUG}/","rich":True,
     }
     coffee = {
         "id":"coffee-cup","name":"Artisan Coffee Cup","category":"food",
-        "image":"assets/products/coffee-cup.jpg","gallery":["assets/products/coffee-cup.jpg"],
-        "artist":"liam-obrien","makers":["imprint-atelier","marina-pack","gulf-print"],
+        "image":"assets/products/coffee-cup-1.jpg",
+        "gallery":["assets/products/coffee-cup-1.jpg","assets/products/coffee-cup-2.jpg","assets/products/coffee-cup-3.jpg","assets/products/coffee-cup-4.jpg","assets/products/coffee-cup-5.jpg"],
+        "artist":"henrik-sorensen","makers":["imprint-atelier","marina-pack","gulf-print"],
         "price":1.8,"tags":["new","hot","eco"],"rating":4.9,"reviews":21,
         "blurb":"A double-wall paper coffee cup you can brand across the body, sleeve and base in real-time 3D — the lid stays clean. A ready Imprint template with its own cup studio.",
         "featured":True,"template":"coffee-cup","configurator":"configurator-cup.html","href":"coffee-cup/","size":"M",

@@ -116,7 +116,7 @@ window.IMPRINT_CATALOG = {
      "h": 723
     }
    ],
-   "artist": "layla-haddad",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "crescent-press",
@@ -141,22 +141,50 @@ window.IMPRINT_CATALOG = {
    "name": "Artisan Coffee Cup",
    "category": "food",
    "image": {
-    "l": "assets/products/coffee-cup-l.webp",
-    "s": "assets/products/coffee-cup-s.webp",
-    "lw": 960,
+    "l": "assets/products/coffee-cup-1-l.webp",
+    "s": "assets/products/coffee-cup-1-s.webp",
+    "lw": 1024,
     "sw": 480,
-    "h": 960
+    "h": 617
    },
    "gallery": [
     {
-     "l": "assets/products/coffee-cup-l.webp",
-     "s": "assets/products/coffee-cup-s.webp",
-     "lw": 960,
+     "l": "assets/products/coffee-cup-1-l.webp",
+     "s": "assets/products/coffee-cup-1-s.webp",
+     "lw": 1024,
      "sw": 480,
-     "h": 960
+     "h": 617
+    },
+    {
+     "l": "assets/products/coffee-cup-2-l.webp",
+     "s": "assets/products/coffee-cup-2-s.webp",
+     "lw": 1024,
+     "sw": 480,
+     "h": 617
+    },
+    {
+     "l": "assets/products/coffee-cup-3-l.webp",
+     "s": "assets/products/coffee-cup-3-s.webp",
+     "lw": 1024,
+     "sw": 480,
+     "h": 617
+    },
+    {
+     "l": "assets/products/coffee-cup-4-l.webp",
+     "s": "assets/products/coffee-cup-4-s.webp",
+     "lw": 1024,
+     "sw": 480,
+     "h": 617
+    },
+    {
+     "l": "assets/products/coffee-cup-5-l.webp",
+     "s": "assets/products/coffee-cup-5-s.webp",
+     "lw": 1024,
+     "sw": 480,
+     "h": 617
     }
    ],
-   "artist": "liam-obrien",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -188,7 +216,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "layla-haddad",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -225,7 +253,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Gold Mandala Paper Gift Bag — a designer template by Layla Haddad. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Gold Mandala Paper Gift Bag — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "gold-mandala-paper-gift-bag/"
   },
   {
@@ -239,7 +267,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "hana-kim",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -275,7 +303,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Navy Gold Floral Rigid Box — a designer template by Hana Kim. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Navy Gold Floral Rigid Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "navy-gold-floral-rigid-box/"
   },
   {
@@ -289,7 +317,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "fatima-zahra",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -326,7 +354,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Ivory Gold Ornate Book Box — a designer template by Fatima Zahra. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Ivory Gold Ornate Book Box — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "ivory-gold-ornate-book-box/"
   },
   {
@@ -340,7 +368,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "hana-kim",
+   "artist": "kwame-mensah",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -374,7 +402,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Burgundy Chocolate Gift Box — a designer template by Hana Kim. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Burgundy Chocolate Gift Box — a designer template by Kwame Mensah. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "burgundy-chocolate-gift-box/"
   },
   {
@@ -388,7 +416,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "liam-obrien",
+   "artist": "aminata-diallo",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -426,7 +454,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Kraft Mailer Box Gold Emblem — a designer template by Liam O'Brien. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Kraft Mailer Box Gold Emblem — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "kraft-mailer-box-gold-emblem/"
   },
   {
@@ -440,7 +468,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "yuki-tanaka",
+   "artist": "kenji-sato",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -474,7 +502,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "White Cake Box — a designer template by Yuki Tanaka. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "White Cake Box — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "white-cake-box/"
   },
   {
@@ -488,7 +516,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "liam-obrien",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "gulf-print"
@@ -525,7 +553,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Kraft Cylinder Tube — a designer template by Liam O'Brien. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Kraft Cylinder Tube — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "kraft-cylinder-tube/"
   },
   {
@@ -539,7 +567,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "amara-okafor",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -576,7 +604,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Blush Pink Round Gift Box — a designer template by Amara Okafor. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Blush Pink Round Gift Box — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "blush-pink-round-gift-box/"
   },
   {
@@ -590,7 +618,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "layla-haddad",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -626,7 +654,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Ivory Jewelry Box Velvet — a designer template by Layla Haddad. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Ivory Jewelry Box Velvet — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "ivory-jewelry-box-velvet/"
   },
   {
@@ -640,7 +668,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "fatima-zahra",
+   "artist": "mateo-herrera",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -676,7 +704,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Black Garment Bag — a designer template by Fatima Zahra. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Black Garment Bag — a designer template by Mateo Herrera. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "black-garment-bag/"
   },
   {
@@ -690,7 +718,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "fatima-zahra",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -726,7 +754,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Black Perfume Box — a designer template by Fatima Zahra. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Black Perfume Box — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "black-perfume-box/"
   },
   {
@@ -740,7 +768,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "hana-kim",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -776,7 +804,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Dark Chocolate Truffle Box — a designer template by Hana Kim. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Dark Chocolate Truffle Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "dark-chocolate-truffle-box/"
   },
   {
@@ -790,7 +818,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "elena-petrova",
+   "artist": "kwame-mensah",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -826,7 +854,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Green Geometric Paper Gift Bag — a designer template by Elena Petrova. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Green Geometric Paper Gift Bag — a designer template by Kwame Mensah. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "green-geometric-paper-gift-bag/"
   },
   {
@@ -840,7 +868,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "isabella-santos",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -876,7 +904,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Cream Ribbon Magnetic Gift Box — a designer template by Isabella Santos. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Cream Ribbon Magnetic Gift Box — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "cream-ribbon-magnetic-gift-box/"
   },
   {
@@ -890,7 +918,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "liam-obrien",
+   "artist": "aminata-diallo",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -926,7 +954,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Black Patterned Mailer Box — a designer template by Liam O'Brien. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Black Patterned Mailer Box — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "black-patterned-mailer-box/"
   },
   {
@@ -940,7 +968,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "noor-al-rashid",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -974,7 +1002,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Navy Velvet Ring Box — a designer template by Noor Al-Rashid. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Navy Velvet Ring Box — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "navy-velvet-ring-box/"
   },
   {
@@ -988,7 +1016,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "yuki-tanaka",
+   "artist": "kenji-sato",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1022,7 +1050,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "White Window Gift Box Ribbon — a designer template by Yuki Tanaka. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "White Window Gift Box Ribbon — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "white-window-gift-box-ribbon/"
   },
   {
@@ -1036,7 +1064,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "omar-farouk",
+   "artist": "mateo-herrera",
    "makers": [
     "imprint-atelier",
     "gulf-print"
@@ -1069,7 +1097,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Terracotta Cylinder Tube — a designer template by Omar Farouk. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Terracotta Cylinder Tube — a designer template by Mateo Herrera. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "terracotta-cylinder-tube/"
   },
   {
@@ -1083,7 +1111,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "fatima-zahra",
+   "artist": "kwame-mensah",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1119,7 +1147,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Burgundy Rigid Lid Box — a designer template by Fatima Zahra. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Burgundy Rigid Lid Box — a designer template by Kwame Mensah. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "burgundy-rigid-lid-box/"
   },
   {
@@ -1133,7 +1161,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "amara-okafor",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1169,7 +1197,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Blush Pink Bouquet Wrap — a designer template by Amara Okafor. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Blush Pink Bouquet Wrap — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "blush-pink-bouquet-wrap/"
   },
   {
@@ -1183,7 +1211,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "liam-obrien",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1219,7 +1247,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Gray Garment Bag — a designer template by Liam O'Brien. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Gray Garment Bag — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "gray-garment-bag/"
   },
   {
@@ -1233,7 +1261,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "fatima-zahra",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1269,7 +1297,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Black Perfume Drawer Box — a designer template by Fatima Zahra. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Black Perfume Drawer Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "black-perfume-drawer-box/"
   },
   {
@@ -1283,7 +1311,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "noor-al-rashid",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1319,7 +1347,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Navy Tall Bottle Box — a designer template by Noor Al-Rashid. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Navy Tall Bottle Box — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "navy-tall-bottle-box/"
   },
   {
@@ -1333,7 +1361,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "layla-haddad",
+   "artist": "kenji-sato",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1369,7 +1397,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Ivory Cube Favor Boxes — a designer template by Layla Haddad. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Ivory Cube Favor Boxes — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "ivory-cube-favor-boxes/"
   },
   {
@@ -1383,7 +1411,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "diego-reyes",
+   "artist": "amina-yusuf",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -1419,7 +1447,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "AB Monogram Navy Chocolate Box — a designer template by Diego Reyes. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "AB Monogram Navy Chocolate Box — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "ab-monogram-navy-chocolate-box/"
   },
   {
@@ -1433,7 +1461,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "sofia-marchetti",
+   "artist": "amina-yusuf",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1470,7 +1498,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "La Petite Boutique Pink Bags — a designer template by Sofia Marchetti. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "La Petite Boutique Pink Bags — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "la-petite-boutique-pink-bags/"
   },
   {
@@ -1484,7 +1512,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "noor-al-rashid",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -1520,7 +1548,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Artisan Coffee Green Tin — a designer template by Noor Al-Rashid. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Artisan Coffee Green Tin — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "artisan-coffee-green-tin/"
   },
   {
@@ -1534,7 +1562,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "isabella-santos",
+   "artist": "aminata-diallo",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -1568,7 +1596,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Sugar & Spice Bakery Box — a designer template by Isabella Santos. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Sugar & Spice Bakery Box — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "sugar-and-spice-bakery-box/"
   },
   {
@@ -1582,7 +1610,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "elena-petrova",
+   "artist": "kwame-mensah",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1616,7 +1644,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Fine Jewels Green Ring Box — a designer template by Elena Petrova. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Fine Jewels Green Ring Box — a designer template by Kwame Mensah. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "fine-jewels-green-ring-box/"
   },
   {
@@ -1630,7 +1658,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "omar-farouk",
+   "artist": "amina-yusuf",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -1667,7 +1695,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Curated Beauty Co. Mailer Box — a designer template by Omar Farouk. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Curated Beauty Co. Mailer Box — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "curated-beauty-co-mailer-box/"
   },
   {
@@ -1681,7 +1709,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "fatima-zahra",
+   "artist": "mateo-herrera",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1715,7 +1743,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Haute Abaya Black Shopping Bag — a designer template by Fatima Zahra. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Haute Abaya Black Shopping Bag — a designer template by Mateo Herrera. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "haute-abaya-black-shopping-bag/"
   },
   {
@@ -1729,7 +1757,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "sofia-marchetti",
+   "artist": "aminata-diallo",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1763,7 +1791,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Bloom & Petal Bouquet — a designer template by Sofia Marchetti. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Bloom & Petal Bouquet — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "bloom-and-petal-bouquet/"
   },
   {
@@ -1777,7 +1805,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "hana-kim",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -1811,7 +1839,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Chocolate Atelier Truffle Box — a designer template by Hana Kim. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Chocolate Atelier Truffle Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "chocolate-atelier-truffle-box/"
   },
   {
@@ -1825,7 +1853,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "isabella-santos",
+   "artist": "kenji-sato",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -1862,7 +1890,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Cafe Noir Coffee Cups — a designer template by Isabella Santos. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Cafe Noir Coffee Cups — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "cafe-noir-coffee-cups/"
   },
   {
@@ -1876,7 +1904,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "layla-haddad",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -1912,7 +1940,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Elara Cosmetics Perfume Set — a designer template by Layla Haddad. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Elara Cosmetics Perfume Set — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "elara-cosmetics-perfume-set/"
   },
   {
@@ -1926,7 +1954,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "yuki-tanaka",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "gulf-print"
@@ -1961,7 +1989,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Personalized Stationery Set — a designer template by Yuki Tanaka. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Personalized Stationery Set — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "personalized-stationery-set/"
   },
   {
@@ -1975,7 +2003,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "layla-haddad",
+   "artist": "amina-yusuf",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -2009,7 +2037,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Luxury Paper Gift Bag — a designer template by Layla Haddad. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Luxury Paper Gift Bag — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "luxury-paper-gift-bag/"
   },
   {
@@ -2023,7 +2051,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "rami-khoury",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -2059,7 +2087,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Personalized Magnetic Box — a designer template by Rami Khoury. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Personalized Magnetic Box — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "personalized-magnetic-box/"
   },
   {
@@ -2073,7 +2101,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "liam-obrien",
+   "artist": "aminata-diallo",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -2110,7 +2138,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Custom Printed Cardboard Mailer Box — a designer template by Liam O'Brien. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Custom Printed Cardboard Mailer Box — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "custom-printed-cardboard-mailer-box/"
   },
   {
@@ -2124,7 +2152,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "rami-khoury",
+   "artist": "mateo-herrera",
    "makers": [
     "imprint-atelier",
     "gulf-print"
@@ -2157,7 +2185,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Cosmetic Tube — a designer template by Rami Khoury. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Cosmetic Tube — a designer template by Mateo Herrera. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "cosmetic-tube/"
   },
   {
@@ -2171,7 +2199,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "sofia-marchetti",
+   "artist": "kenji-sato",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -2205,7 +2233,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Bakery Box — a designer template by Sofia Marchetti. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Bakery Box — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "bakery-box/"
   },
   {
@@ -2219,7 +2247,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "sofia-marchetti",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -2255,7 +2283,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Luxury Flower Bouquet Box — a designer template by Sofia Marchetti. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Luxury Flower Bouquet Box — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "luxury-flower-bouquet-box/"
   },
   {
@@ -2269,7 +2297,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "elena-petrova",
+   "artist": "kwame-mensah",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -2305,7 +2333,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Jewelry Keepsake Box — a designer template by Elena Petrova. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Jewelry Keepsake Box — a designer template by Kwame Mensah. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "jewelry-keepsake-box/"
   },
   {
@@ -2319,7 +2347,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "diego-reyes",
+   "artist": "henrik-sorensen",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -2353,7 +2381,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Custom Designed Folding Carton — a designer template by Diego Reyes. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Custom Designed Folding Carton — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "custom-designed-folding-carton/"
   },
   {
@@ -2367,7 +2395,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "yuki-tanaka",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "gulf-print"
@@ -2403,7 +2431,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Personalized Stationery Set 2 — a designer template by Yuki Tanaka. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Personalized Stationery Set 2 — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "personalized-stationery-set-2/"
   },
   {
@@ -2417,7 +2445,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "hana-kim",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -2453,7 +2481,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Premium Rigid Chocolate Box — a designer template by Hana Kim. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Premium Rigid Chocolate Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "premium-rigid-chocolate-box/"
   },
   {
@@ -2467,7 +2495,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "rami-khoury",
+   "artist": "amina-yusuf",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -2503,7 +2531,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Custom Branded Garment Bag — a designer template by Rami Khoury. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Custom Branded Garment Bag — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "custom-branded-garment-bag/"
   },
   {
@@ -2517,7 +2545,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "layla-haddad",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -2553,194 +2581,140 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Luxury Candle Gift Box — a designer template by Layla Haddad. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Luxury Candle Gift Box — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "luxury-candle-gift-box/"
   }
  ],
  "artists": [
   {
-   "id": "layla-haddad",
-   "name": "Layla Haddad",
-   "studio": "Atelier Haddad",
-   "country": "AE",
-   "flag": "🇦🇪",
-   "style": "Gilded Ornament",
+   "id": "aminata-diallo",
+   "name": "Aminata Diallo",
+   "studio": "Atelier Sahel",
+   "country": "SN",
+   "flag": "🇸🇳",
+   "style": "Heritage Textile",
    "styleTags": [
-    "luxury",
-    "gold",
-    "ornate",
-    "mandala",
-    "ivory"
+    "kraft",
+    "natural",
+    "neutral",
+    "taupe",
+    "woodland",
+    "botanical",
+    "earth"
    ],
-   "bio": "Layla turns Khaleeji ornament into modern gold-foil packaging — mandalas, lattices and lotus motifs rendered with restraint.",
+   "bio": "Aminata translates West-African textile heritage — mudcloth geometry, indigo and warm earth tones — into modern, tactile packaging.",
    "avatar": {
-    "l": "assets/artists/layla-haddad-l.webp",
-    "s": "assets/artists/layla-haddad-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
+    "l": "assets/artists/aminata-diallo-l.webp",
+    "s": "assets/artists/aminata-diallo-s.webp",
+    "lw": 683,
+    "sw": 480,
+    "h": 683
    },
-   "since": 2018,
-   "followers": 1400,
+   "since": 2019,
+   "followers": 6245,
    "products": [
-    "honeyloom-gift-bag",
-    "gold-mandala-paper-gift-bag",
-    "ivory-jewelry-box-velvet",
-    "ivory-cube-favor-boxes",
-    "elara-cosmetics-perfume-set",
-    "luxury-paper-gift-bag",
-    "luxury-candle-gift-box"
+    "kraft-mailer-box-gold-emblem",
+    "black-patterned-mailer-box",
+    "sugar-and-spice-bakery-box",
+    "bloom-and-petal-bouquet",
+    "custom-printed-cardboard-mailer-box"
    ],
    "collections": [
-    "ivory-gold-lotus-luxury"
+    "neutral-taupe-botanical",
+    "woodland-botanical-cream",
+    "kraft-gray-natural"
    ],
    "rating": 4.5
   },
   {
-   "id": "yuki-tanaka",
-   "name": "Yuki Tanaka",
-   "studio": "Studio Mu",
+   "id": "kenji-sato",
+   "name": "Kenji Sato",
+   "studio": "Studio Sumi",
    "country": "JP",
    "flag": "🇯🇵",
-   "style": "Quiet Minimal",
+   "style": "Quiet Line Work",
    "styleTags": [
     "minimal",
     "white",
     "silver",
-    "clean"
+    "clean",
+    "illustrated",
+    "line",
+    "fox"
    ],
-   "bio": "Yuki designs in negative space. White, bone and brushed silver, with a single deliberate mark — packaging that whispers.",
+   "bio": "Kenji draws in fine ink lines and negative space — restrained, botanical-leaning illustration with a calm Japanese sensibility.",
    "avatar": {
-    "l": "assets/artists/yuki-tanaka-l.webp",
-    "s": "assets/artists/yuki-tanaka-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
+    "l": "assets/artists/kenji-sato-l.webp",
+    "s": "assets/artists/kenji-sato-s.webp",
+    "lw": 682,
+    "sw": 480,
+    "h": 683
    },
-   "since": 2018,
-   "followers": 9024,
+   "since": 2019,
+   "followers": 5114,
    "products": [
     "white-cake-box",
     "white-window-gift-box-ribbon",
-    "personalized-stationery-set",
+    "ivory-cube-favor-boxes",
+    "cafe-noir-coffee-cups",
+    "bakery-box"
+   ],
+   "collections": [
+    "floral-fox-woodland",
+    "white-silver-minimal",
+    "sage-wildflower-illustrated"
+   ],
+   "rating": 4.9
+  },
+  {
+   "id": "priya-nair",
+   "name": "Priya Nair",
+   "studio": "Marigold Studio",
+   "country": "IN",
+   "flag": "🇮🇳",
+   "style": "Vibrant Floral",
+   "styleTags": [
+    "floral",
+    "blush",
+    "pink",
+    "sage",
+    "soft",
+    "vibrant",
+    "botanical",
+    "wildflower"
+   ],
+   "bio": "Priya bursts with colour — marigolds, paisley and joyful florals from South-Indian craft, tuned for celebration and gifting.",
+   "avatar": {
+    "l": "assets/artists/priya-nair-l.webp",
+    "s": "assets/artists/priya-nair-s.webp",
+    "lw": 683,
+    "sw": 480,
+    "h": 683
+   },
+   "since": 2017,
+   "followers": 7491,
+   "products": [
+    "blush-pink-round-gift-box",
+    "black-perfume-box",
+    "blush-pink-bouquet-wrap",
+    "elara-cosmetics-perfume-set",
+    "luxury-flower-bouquet-box",
     "personalized-stationery-set-2"
    ],
    "collections": [
-    "white-gold-minimal",
-    "white-silver-minimal"
+    "blush-kraft-natural",
+    "blush-pink-floral",
+    "sage-blush-floral"
    ],
-   "rating": 4.9
+   "rating": 4.6
   },
   {
-   "id": "omar-farouk",
-   "name": "Omar Farouk",
-   "studio": "Cairo Deco",
-   "country": "EG",
-   "flag": "🇪🇬",
-   "style": "Art Deco",
-   "styleTags": [
-    "deco",
-    "geometric",
-    "diamond",
-    "copper"
-   ],
-   "bio": "Omar revives 1920s Cairo glamour: stepped fans, diamond lattices and copper line-work with architectural precision.",
-   "avatar": {
-    "l": "assets/artists/omar-farouk-l.webp",
-    "s": "assets/artists/omar-farouk-s.webp",
-    "lw": 204,
-    "sw": 204,
-    "h": 186
-   },
-   "since": 2017,
-   "followers": 8589,
-   "products": [
-    "terracotta-cylinder-tube",
-    "curated-beauty-co-mailer-box"
-   ],
-   "collections": [
-    "charcoal-copper-geometric"
-   ],
-   "rating": 4.9
-  },
-  {
-   "id": "sofia-marchetti",
-   "name": "Sofia Marchetti",
-   "studio": "Foglia Studio",
-   "country": "IT",
-   "flag": "🇮🇹",
-   "style": "Botanical Ink",
-   "styleTags": [
-    "botanical",
-    "floral",
-    "woodland",
-    "wildflower",
-    "illustrated"
-   ],
-   "bio": "Sofia hand-inks ferns, wildflowers and orchard branches — heritage botanical illustration for gourmet and beauty brands.",
-   "avatar": {
-    "l": "assets/artists/sofia-marchetti-l.webp",
-    "s": "assets/artists/sofia-marchetti-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
-   },
-   "since": 2018,
-   "followers": 3138,
-   "products": [
-    "la-petite-boutique-pink-bags",
-    "bloom-and-petal-bouquet",
-    "bakery-box",
-    "luxury-flower-bouquet-box"
-   ],
-   "collections": [
-    "woodland-botanical-cream",
-    "sage-wildflower-illustrated"
-   ],
-   "rating": 4.8
-  },
-  {
-   "id": "noor-al-rashid",
-   "name": "Noor Al-Rashid",
-   "studio": "Najma Pattern Co.",
-   "country": "AE",
-   "flag": "🇦🇪",
-   "style": "Arabesque Geo",
-   "styleTags": [
-    "moroccan",
-    "arabesque",
-    "navy",
-    "copper",
-    "tin"
-   ],
-   "bio": "Noor builds tessellating Moorish geometry — zellige stars and navy-and-copper arabesque that wraps seamlessly.",
-   "avatar": {
-    "l": "assets/artists/noor-al-rashid-l.webp",
-    "s": "assets/artists/noor-al-rashid-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
-   },
-   "since": 2021,
-   "followers": 2727,
-   "products": [
-    "navy-velvet-ring-box",
-    "navy-tall-bottle-box",
-    "artisan-coffee-green-tin"
-   ],
-   "collections": [
-    "navy-copper-moroccan",
-    "navy-copper-moroccan-tin"
-   ],
-   "rating": 4.7
-  },
-  {
-   "id": "diego-reyes",
-   "name": "Diego Reyes",
-   "studio": "Reyes Color Lab",
+   "id": "mateo-herrera",
+   "name": "Mateo Herrera",
+   "studio": "Taller Herrera",
    "country": "MX",
    "flag": "🇲🇽",
-   "style": "Maximal Abstract",
+   "style": "Folk Maximalist",
    "styleTags": [
     "abstract",
     "multicolor",
@@ -2749,276 +2723,229 @@ window.IMPRINT_CATALOG = {
     "bold",
     "colorful"
    ],
-   "bio": "Diego is loud on purpose — saturated abstract colour-blocks and painterly shapes that pop on a shelf from across the room.",
+   "bio": "Mateo is loud and proud — saturated folk-art colour blocks and papel-picado energy that leap off the shelf.",
    "avatar": {
-    "l": "assets/artists/diego-reyes-l.webp",
-    "s": "assets/artists/diego-reyes-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
+    "l": "assets/artists/mateo-herrera-l.webp",
+    "s": "assets/artists/mateo-herrera-s.webp",
+    "lw": 683,
+    "sw": 480,
+    "h": 682
    },
-   "since": 2016,
-   "followers": 1449,
+   "since": 2022,
+   "followers": 3333,
    "products": [
-    "ab-monogram-navy-chocolate-box",
-    "custom-designed-folding-carton"
+    "black-garment-bag",
+    "terracotta-cylinder-tube",
+    "haute-abaya-black-shopping-bag",
+    "cosmetic-tube"
    ],
    "collections": [
     "playful-abstract-multicolor",
-    "bold-abstract-colorful",
-    "vibrant-multicolor-abstract"
-   ],
-   "rating": 4.9
-  },
-  {
-   "id": "amara-okafor",
-   "name": "Amara Okafor",
-   "studio": "Bloom & Blush",
-   "country": "NG",
-   "flag": "🇳🇬",
-   "style": "Soft Floral",
-   "styleTags": [
-    "blush",
-    "pink",
-    "floral",
-    "sage",
-    "soft"
-   ],
-   "bio": "Amara works in blush, sage and powder tones — soft botanical florals for bridal, beauty and boutique gifting.",
-   "avatar": {
-    "l": "assets/artists/amara-okafor-l.webp",
-    "s": "assets/artists/amara-okafor-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
-   },
-   "since": 2018,
-   "followers": 4528,
-   "products": [
-    "blush-pink-round-gift-box",
-    "blush-pink-bouquet-wrap"
-   ],
-   "collections": [
-    "blush-kraft-natural",
-    "blush-pink-floral",
-    "sage-blush-floral"
+    "bold-abstract-colorful"
    ],
    "rating": 4.8
   },
   {
-   "id": "liam-obrien",
-   "name": "Liam O'Brien",
-   "studio": "Kraft & Co.",
-   "country": "IE",
-   "flag": "🇮🇪",
-   "style": "Natural Kraft",
+   "id": "yasmin-al-najjar",
+   "name": "Yasmin Al-Najjar",
+   "studio": "Najma Studio",
+   "country": "AE",
+   "flag": "🇦🇪",
+   "style": "Arabesque",
    "styleTags": [
-    "kraft",
-    "natural",
-    "neutral",
-    "taupe",
-    "gray",
-    "mailer"
+    "moroccan",
+    "arabesque",
+    "navy",
+    "copper",
+    "tin",
+    "ornate",
+    "gold",
+    "geometric"
    ],
-   "bio": "Liam champions honest materials — uncoated kraft, taupe and recycled board with understated typographic marks.",
+   "bio": "Yasmin builds tessellating Khaleeji geometry — zellige stars, gold lattices and arabesque borders that wrap seamlessly.",
    "avatar": {
-    "l": "assets/artists/liam-obrien-l.webp",
-    "s": "assets/artists/liam-obrien-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
+    "l": "assets/artists/yasmin-al-najjar-l.webp",
+    "s": "assets/artists/yasmin-al-najjar-s.webp",
+    "lw": 682,
+    "sw": 480,
+    "h": 682
    },
-   "since": 2023,
-   "followers": 3301,
+   "since": 2019,
+   "followers": 9706,
    "products": [
-    "coffee-cup",
-    "kraft-mailer-box-gold-emblem",
-    "kraft-cylinder-tube",
-    "black-patterned-mailer-box",
-    "gray-garment-bag",
-    "custom-printed-cardboard-mailer-box"
+    "honeyloom-gift-bag",
+    "gold-mandala-paper-gift-bag",
+    "ivory-gold-ornate-book-box",
+    "navy-velvet-ring-box",
+    "navy-tall-bottle-box",
+    "artisan-coffee-green-tin",
+    "luxury-candle-gift-box"
    ],
    "collections": [
-    "cream-kraft-minimal",
-    "neutral-taupe-botanical",
-    "gray-kraft-mailer",
-    "kraft-gray-natural"
+    "navy-copper-moroccan",
+    "navy-copper-moroccan-tin"
    ],
    "rating": 4.6
   },
   {
-   "id": "hana-kim",
-   "name": "Hana Kim",
-   "studio": "Seoul Lux",
+   "id": "henrik-sorensen",
+   "name": "Henrik Sørensen",
+   "studio": "Linea Nord",
+   "country": "DK",
+   "flag": "🇩🇰",
+   "style": "Scandinavian Minimal",
+   "styleTags": [
+    "minimal",
+    "white",
+    "silver",
+    "clean",
+    "kraft",
+    "neutral",
+    "gray"
+   ],
+   "bio": "Henrik designs in a whisper — bone, brushed silver and uncoated kraft with one deliberate mark. Packaging that lets the product speak.",
+   "avatar": {
+    "l": "assets/artists/henrik-sorensen-l.webp",
+    "s": "assets/artists/henrik-sorensen-s.webp",
+    "lw": 683,
+    "sw": 480,
+    "h": 682
+   },
+   "since": 2016,
+   "followers": 4916,
+   "products": [
+    "coffee-cup",
+    "kraft-cylinder-tube",
+    "cream-ribbon-magnetic-gift-box",
+    "gray-garment-bag",
+    "personalized-stationery-set",
+    "personalized-magnetic-box",
+    "custom-designed-folding-carton"
+   ],
+   "collections": [
+    "cream-kraft-minimal",
+    "white-gold-minimal",
+    "gray-kraft-mailer"
+   ],
+   "rating": 4.6
+  },
+  {
+   "id": "amina-yusuf",
+   "name": "Amina Yusuf",
+   "studio": "Lagos Colour Lab",
+   "country": "NG",
+   "flag": "🇳🇬",
+   "style": "Bold Abstract",
+   "styleTags": [
+    "abstract",
+    "multicolor",
+    "vibrant",
+    "bold",
+    "colorful",
+    "playful"
+   ],
+   "bio": "Amina channels Lagos energy — bold abstract colour and pattern with fearless contrast, made to be seen across a room.",
+   "avatar": {
+    "l": "assets/artists/amina-yusuf-l.webp",
+    "s": "assets/artists/amina-yusuf-s.webp",
+    "lw": 683,
+    "sw": 480,
+    "h": 683
+   },
+   "since": 2018,
+   "followers": 9106,
+   "products": [
+    "ab-monogram-navy-chocolate-box",
+    "la-petite-boutique-pink-bags",
+    "curated-beauty-co-mailer-box",
+    "luxury-paper-gift-bag",
+    "custom-branded-garment-bag"
+   ],
+   "collections": [
+    "vibrant-multicolor-abstract"
+   ],
+   "rating": 4.6
+  },
+  {
+   "id": "hana-lee",
+   "name": "Hana Lee",
+   "studio": "Seoul Atelier",
    "country": "KR",
    "flag": "🇰🇷",
    "style": "Emerald Deco",
    "styleTags": [
-    "emerald",
     "deco",
+    "geometric",
+    "diamond",
+    "copper",
+    "emerald",
     "gold",
+    "teal",
     "chocolate"
    ],
-   "bio": "Hana pairs deep emerald with warm gold foil — jewel-toned deco built for chocolate, patisserie and fine fragrance.",
+   "bio": "Hana pairs jewel-toned emerald and teal with warm gold foil — crisp deco geometry for confectionery and fine fragrance.",
    "avatar": {
-    "l": "assets/artists/hana-kim-l.webp",
-    "s": "assets/artists/hana-kim-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
+    "l": "assets/artists/hana-lee-l.webp",
+    "s": "assets/artists/hana-lee-s.webp",
+    "lw": 682,
+    "sw": 480,
+    "h": 683
    },
-   "since": 2017,
-   "followers": 1612,
+   "since": 2021,
+   "followers": 9992,
    "products": [
     "navy-gold-floral-rigid-box",
-    "burgundy-chocolate-gift-box",
+    "ivory-jewelry-box-velvet",
     "dark-chocolate-truffle-box",
+    "black-perfume-drawer-box",
     "chocolate-atelier-truffle-box",
     "premium-rigid-chocolate-box"
    ],
    "collections": [
+    "teal-gold-geometric",
     "emerald-gold-deco-chocolate",
     "emerald-copper-deco"
    ],
    "rating": 4.7
   },
   {
-   "id": "fatima-zahra",
-   "name": "Fatima Zahra",
-   "studio": "Maison Zahra",
-   "country": "MA",
-   "flag": "🇲🇦",
-   "style": "Ornate Burgundy",
+   "id": "kwame-mensah",
+   "name": "Kwame Mensah",
+   "studio": "Accra Geometric",
+   "country": "GH",
+   "flag": "🇬🇭",
+   "style": "Geometric Luxe",
    "styleTags": [
-    "burgundy",
-    "ornate",
-    "gold",
-    "luxury",
-    "black"
+    "geometric",
+    "charcoal",
+    "diamond",
+    "burgundy"
    ],
-   "bio": "Fatima designs after-dark luxury — burgundy, jet black and ornate gold filigree for perfume and couture houses.",
+   "bio": "Kwame fuses kente-inspired geometry with deep luxe palettes — charcoal, burgundy and gold for jewellery, spirits and couture.",
    "avatar": {
-    "l": "assets/artists/fatima-zahra-l.webp",
-    "s": "assets/artists/fatima-zahra-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
+    "l": "assets/artists/kwame-mensah-l.webp",
+    "s": "assets/artists/kwame-mensah-s.webp",
+    "lw": 683,
+    "sw": 480,
+    "h": 683
    },
    "since": 2021,
-   "followers": 8784,
+   "followers": 2159,
    "products": [
-    "ivory-gold-ornate-book-box",
-    "black-garment-bag",
-    "black-perfume-box",
-    "burgundy-rigid-lid-box",
-    "black-perfume-drawer-box",
-    "haute-abaya-black-shopping-bag"
-   ],
-   "collections": [
-    "burgundy-gold-ornate",
-    "black-burgundy-gold-luxury"
-   ],
-   "rating": 4.9
-  },
-  {
-   "id": "elena-petrova",
-   "name": "Elena Petrova",
-   "studio": "Linea Nordica",
-   "country": "FR",
-   "flag": "🇫🇷",
-   "style": "Charcoal Geometry",
-   "styleTags": [
-    "charcoal",
-    "copper",
-    "geometric",
-    "diamond"
-   ],
-   "bio": "Elena draws crisp charcoal-and-copper grids — confident geometric systems for modern menswear and tech-lux brands.",
-   "avatar": {
-    "l": "assets/artists/elena-petrova-l.webp",
-    "s": "assets/artists/elena-petrova-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
-   },
-   "since": 2016,
-   "followers": 1588,
-   "products": [
+    "burgundy-chocolate-gift-box",
     "green-geometric-paper-gift-bag",
+    "burgundy-rigid-lid-box",
     "fine-jewels-green-ring-box",
     "jewelry-keepsake-box"
    ],
    "collections": [
-    "charcoal-copper-diamond"
+    "ivory-gold-lotus-luxury",
+    "charcoal-copper-geometric",
+    "charcoal-copper-diamond",
+    "burgundy-gold-ornate",
+    "black-burgundy-gold-luxury"
    ],
-   "rating": 4.8
-  },
-  {
-   "id": "rami-khoury",
-   "name": "Rami Khoury",
-   "studio": "Beirut Modern",
-   "country": "LB",
-   "flag": "🇱🇧",
-   "style": "Teal Modern",
-   "styleTags": [
-    "teal",
-    "gold",
-    "geometric",
-    "modern"
-   ],
-   "bio": "Rami balances teal and gold in clean modern geometry — contemporary luxury with a Levantine accent.",
-   "avatar": {
-    "l": "assets/artists/rami-khoury-l.webp",
-    "s": "assets/artists/rami-khoury-s.webp",
-    "lw": 204,
-    "sw": 204,
-    "h": 186
-   },
-   "since": 2019,
-   "followers": 1392,
-   "products": [
-    "personalized-magnetic-box",
-    "cosmetic-tube",
-    "custom-branded-garment-bag"
-   ],
-   "collections": [
-    "teal-gold-geometric"
-   ],
-   "rating": 4.7
-  },
-  {
-   "id": "isabella-santos",
-   "name": "Isabella Santos",
-   "studio": "Raposa Atelier",
-   "country": "BR",
-   "flag": "🇧🇷",
-   "style": "Woodland Whimsy",
-   "styleTags": [
-    "woodland",
-    "fox",
-    "whimsy",
-    "illustrated",
-    "cream"
-   ],
-   "bio": "Isabella tells little forest stories — foxes, foliage and cream backdrops with a warm, collectible, storybook charm.",
-   "avatar": {
-    "l": "assets/artists/isabella-santos-l.webp",
-    "s": "assets/artists/isabella-santos-s.webp",
-    "lw": 205,
-    "sw": 205,
-    "h": 186
-   },
-   "since": 2021,
-   "followers": 3927,
-   "products": [
-    "cream-ribbon-magnetic-gift-box",
-    "sugar-and-spice-bakery-box",
-    "cafe-noir-coffee-cups"
-   ],
-   "collections": [
-    "floral-fox-woodland"
-   ],
-   "rating": 4.7
+   "rating": 4.9
   }
  ],
  "makers": [
@@ -3374,7 +3301,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "diego-reyes",
+   "artist": "mateo-herrera",
    "accent": "#e0556b",
    "items": 7,
    "tags": [
@@ -3391,7 +3318,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "layla-haddad",
+   "artist": "kwame-mensah",
    "accent": "#c79a63",
    "items": 6,
    "tags": []
@@ -3406,7 +3333,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "isabella-santos",
+   "artist": "kenji-sato",
    "accent": "#cf7a92",
    "items": 7,
    "tags": [
@@ -3423,7 +3350,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "rami-khoury",
+   "artist": "hana-lee",
    "accent": "#c79a63",
    "items": 12,
    "tags": []
@@ -3438,7 +3365,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "hana-kim",
+   "artist": "hana-lee",
    "accent": "#c79a63",
    "items": 10,
    "tags": [
@@ -3455,7 +3382,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "liam-obrien",
+   "artist": "henrik-sorensen",
    "accent": "#b9996a",
    "items": 6,
    "tags": []
@@ -3470,7 +3397,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "amara-okafor",
+   "artist": "priya-nair",
    "accent": "#b9996a",
    "items": 13,
    "tags": []
@@ -3485,7 +3412,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "hana-kim",
+   "artist": "hana-lee",
    "accent": "#1f7a5a",
    "items": 7,
    "tags": []
@@ -3500,7 +3427,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "liam-obrien",
+   "artist": "aminata-diallo",
    "accent": "#7a8a6a",
    "items": 11,
    "tags": [
@@ -3517,7 +3444,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "yuki-tanaka",
+   "artist": "henrik-sorensen",
    "accent": "#c79a63",
    "items": 7,
    "tags": [
@@ -3534,7 +3461,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "sofia-marchetti",
+   "artist": "aminata-diallo",
    "accent": "#8a6b4a",
    "items": 12,
    "tags": []
@@ -3549,7 +3476,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "omar-farouk",
+   "artist": "kwame-mensah",
    "accent": "#4a4a52",
    "items": 6,
    "tags": [
@@ -3566,7 +3493,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "diego-reyes",
+   "artist": "mateo-herrera",
    "accent": "#e0556b",
    "items": 10,
    "tags": []
@@ -3581,7 +3508,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "yuki-tanaka",
+   "artist": "kenji-sato",
    "accent": "#9a958c",
    "items": 7,
    "tags": [
@@ -3598,7 +3525,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "sofia-marchetti",
+   "artist": "kenji-sato",
    "accent": "#8a9a7a",
    "items": 10,
    "tags": []
@@ -3613,7 +3540,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "elena-petrova",
+   "artist": "kwame-mensah",
    "accent": "#4a4a52",
    "items": 8,
    "tags": []
@@ -3628,7 +3555,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "diego-reyes",
+   "artist": "amina-yusuf",
    "accent": "#e0556b",
    "items": 6,
    "tags": [
@@ -3645,7 +3572,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "fatima-zahra",
+   "artist": "kwame-mensah",
    "accent": "#c79a63",
    "items": 15,
    "tags": []
@@ -3660,7 +3587,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "amara-okafor",
+   "artist": "priya-nair",
    "accent": "#cf7a92",
    "items": 13,
    "tags": [
@@ -3677,7 +3604,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "noor-al-rashid",
+   "artist": "yasmin-al-najjar",
    "accent": "#b87333",
    "items": 14,
    "tags": []
@@ -3692,7 +3619,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "liam-obrien",
+   "artist": "henrik-sorensen",
    "accent": "#b9996a",
    "items": 10,
    "tags": []
@@ -3707,7 +3634,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "fatima-zahra",
+   "artist": "kwame-mensah",
    "accent": "#c79a63",
    "items": 7,
    "tags": []
@@ -3722,7 +3649,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "amara-okafor",
+   "artist": "priya-nair",
    "accent": "#cf7a92",
    "items": 7,
    "tags": []
@@ -3737,7 +3664,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "noor-al-rashid",
+   "artist": "yasmin-al-najjar",
    "accent": "#b87333",
    "items": 8,
    "tags": []
@@ -3752,7 +3679,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 512
    },
-   "artist": "liam-obrien",
+   "artist": "aminata-diallo",
    "accent": "#b9996a",
    "items": 12,
    "tags": []
