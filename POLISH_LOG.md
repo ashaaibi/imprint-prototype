@@ -14,6 +14,9 @@ Each entry is one focused improvement. Newest first.
   the params, loads that size, pre-selects the quantity, applies the manufacturer price multiplier, and
   lands on the **Design** step; Start still lets you change size/qty). "Add to cart" → `setCart()` →
   `checkout.html`.
+- **Reviews**: ~13 per manufacturer (52 total). Some include vector photo placeholders (`miniBagSVG`),
+  with a subset framed as **Ordered / Received** pairs (`pics` / `compare` fields). A "Show all reviews"
+  toggle keeps the section tidy; the header review-count sums the makers' counts.
 
 ## 2026-06-13 (batch 7)
 - **Tiled-layer colour fix**: `_drawTiledCell` now caps the staging-canvas area (~2048²). A whole-bag-fit

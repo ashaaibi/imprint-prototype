@@ -116,6 +116,12 @@
     .pdp-rev-stars { color: var(--imp-gold); font-size: 13px; letter-spacing: 1px; margin-bottom: 5px; }
     .pdp-rev-text { font-size: 13.5px; color: var(--imp-fg-2); line-height: 1.55; }
     .pdp-rev-help { font-size: 11px; color: var(--imp-fg-3); margin-top: 7px; }
+    .pdp-rev-pics { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .pdp-rev-pic { margin: 0; }
+    .pdp-rev-pic svg { width: 64px; height: 64px; border-radius: 8px; border: 1px solid var(--imp-border); display: block; }
+    .pdp-rev-pic figcaption { font-size: 9.5px; font-weight: 600; color: var(--imp-fg-3); text-align: center; margin-top: 3px; }
+    .pdp-rev-more { width: 100%; margin-top: 10px; padding: 11px; border: 1px solid var(--imp-border); border-radius: var(--imp-r-md); background: var(--imp-surface); color: var(--imp-fg); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .pdp-rev-more:hover { border-color: var(--imp-border-hover); }
 
     @media (max-width: 880px) {
       .pdp { padding: 20px 18px 56px; }
@@ -235,7 +241,17 @@ var MFRS = [
     reviews:[
       { name:'Sara Al-Balushi', rating:5, date:'12 May 2026', text:'The soft-touch finish feels genuinely premium and the foil logo came out crisp. Reordered twice for our boutique.', helpful:23 },
       { name:'Omar Khalfan', rating:5, date:'28 Apr 2026', text:'Fast turnaround for a 1,000-unit run and the kraft is thick — handles never tear. Exactly the colour we approved in the 3D preview.', helpful:17 },
-      { name:'Lina Haddad', rating:4, date:'9 Apr 2026', text:'Great print quality. One box arrived a day late but support sorted it immediately.', helpful:8 }
+      { name:'Lina Haddad', rating:4, date:'9 Apr 2026', text:'Great print quality. One box arrived a day late but support sorted it immediately.', helpful:8 },
+      { name:'Aisha Al-Lawati', rating:5, date:'6 May 2026', text:'Ordered 500 in the Gift size — the deboss on our logo is subtle and classy. Packed flat, super easy to assemble.', helpful:15, pics:2, compare:true },
+      { name:'Daniel Okonkwo', rating:5, date:'2 May 2026', text:'Print matched the on-screen 3D preview almost exactly. Colours are rich on the kraft stock.', helpful:9, pics:1 },
+      { name:'Fatma Al-Hinai', rating:4, date:'24 Apr 2026', text:'Lovely bags. Wish the handles were a touch longer, but the quality is absolutely there.', helpful:6 },
+      { name:'Marcus Bauer', rating:5, date:'18 Apr 2026', text:'Shipped to Sohar in a week. The soft-touch finish is addictive to hold — clients keep mentioning it.', helpful:11 },
+      { name:'Huda Al-Saadi', rating:5, date:'11 Apr 2026', text:'Third reorder now. Consistency between batches is exactly why we stay with Imprint.', helpful:13, pics:2 },
+      { name:'Priya Nair', rating:5, date:'5 Apr 2026', text:'Foil stamp on matte black = stunning. Customers keep asking where we get our bags made.', helpful:20, pics:1 },
+      { name:'Salim Al-Maamari', rating:3, date:'29 Mar 2026', text:'Good bags, but the first proof had a slight colour shift; the second was perfect. Cost us a couple of extra days.', helpful:4 },
+      { name:'Grace Mendoza', rating:5, date:'22 Mar 2026', text:'Thick and premium — not flimsy at all. Exactly what a boutique needs for the unboxing moment.', helpful:7 },
+      { name:'Yousef Al-Habsi', rating:4, date:'15 Mar 2026', text:'Great value for the quality. Emboss depth came out just right on our crest.', helpful:5, pics:1 },
+      { name:'Chloé Martin', rating:5, date:'8 Mar 2026', text:'From design to doorstep in 8 days. The bags I received are identical to the mockup I approved.', helpful:12, pics:2, compare:true }
     ] },
   { key:'gulf', name:'Gulf Print Co.', color:'#3f6fb0', location:'Dubai, UAE', rating:4.6, reviewCount:187,
     lead:'5–7 days', leadDays:6, priceMul:1.12, badges:['Fastest','Premium'],
@@ -243,7 +259,17 @@ var MFRS = [
     reviews:[
       { name:'Khalid Mansoori', rating:5, date:'3 May 2026', text:'Quickest of all the makers we tried — 6 days door to door in Dubai. Colours pop on the coated stock.', helpful:19 },
       { name:'Reem Saeed', rating:4, date:'21 Apr 2026', text:'Premium feel, slightly pricier, but the spot-UV detail was worth it for our gifting line.', helpful:11 },
-      { name:'Tariq Nour', rating:5, date:'2 Apr 2026', text:'Account manager was responsive and the proof matched the final bag perfectly.', helpful:6 }
+      { name:'Tariq Nour', rating:5, date:'2 Apr 2026', text:'Account manager was responsive and the proof matched the final bag perfectly.', helpful:6 },
+      { name:'Hessa Al-Mazrouei', rating:5, date:'5 May 2026', text:'Fastest turnaround in the UAE, hands down — 6 days for 1,000 coated-white bags.', helpful:14, pics:1 },
+      { name:'Rohan Mehta', rating:5, date:'30 Apr 2026', text:'Spot-UV on our monogram looks luxe against the matte. Worth every dirham of the premium.', helpful:18, pics:2, compare:true },
+      { name:'Latifa Buhumaid', rating:4, date:'23 Apr 2026', text:'Crisp offset print. A little pricey, but the delivery speed saved our store launch.', helpful:8 },
+      { name:'James Whitfield', rating:5, date:'17 Apr 2026', text:'Reordered for our Dubai pop-up. Flawless registration every single time.', helpful:6 },
+      { name:'Mariam Al-Suwaidi', rating:5, date:'10 Apr 2026', text:'Colours are vivid and the white stock is genuinely bright, not cream. Loved the result.', helpful:10, pics:1 },
+      { name:'Arjun Patel', rating:4, date:'3 Apr 2026', text:'Good quality. The 250-unit MOQ is a bit high when you just want to test a design.', helpful:5 },
+      { name:'Noor Abdulla', rating:5, date:'27 Mar 2026', text:'Proof approval was quick and the finished bag matched it exactly — no surprises.', helpful:9, pics:2 },
+      { name:'Sophie Laurent', rating:5, date:'20 Mar 2026', text:'Premium feel, premium print. Our perfume line finally has bags to match the product.', helpful:12, pics:1 },
+      { name:'Abdulrahman Saleh', rating:3, date:'13 Mar 2026', text:'Print is great, but one bundle had a slightly off-square fold. They replaced it on request.', helpful:4 },
+      { name:'Tanya Ivanova', rating:5, date:'6 Mar 2026', text:'Express delivery plus great support. Will use them for all our UAE drops.', helpful:7 }
     ] },
   { key:'najm', name:'Najm Packaging', color:'#2f8f72', location:'Riyadh, KSA', rating:4.4, reviewCount:96,
     lead:'8–11 days', leadDays:10, priceMul:0.92, badges:['High volume','Value'],
@@ -251,7 +277,17 @@ var MFRS = [
     reviews:[
       { name:'Fahad Al-Otaibi', rating:5, date:'30 Apr 2026', text:'Best price we found for 2,000+ units. Kraft is honest and sturdy — perfect for our grocery brand.', helpful:14 },
       { name:'Noura Al-Qahtani', rating:4, date:'16 Apr 2026', text:'Great value at volume. Flexo print is simple but clean; not for fine gradients.', helpful:9 },
-      { name:'Yazeed Harbi', rating:4, date:'27 Mar 2026', text:'Lead time was a bit long but communication was clear throughout.', helpful:5 }
+      { name:'Yazeed Harbi', rating:4, date:'27 Mar 2026', text:'Lead time was a bit long but communication was clear throughout.', helpful:5 },
+      { name:'Bandar Al-Dossari', rating:5, date:'4 May 2026', text:'Unbeatable on a 2,000-unit run. Honest kraft, sturdy handles — does the job at the best price.', helpful:16, pics:1 },
+      { name:'Hind Al-Shammari', rating:4, date:'28 Apr 2026', text:'Great price. Flexo is fine for our 2-colour logo; I wouldn’t use it for photo prints though.', helpful:9, pics:2, compare:true },
+      { name:'Mohammed Iqbal', rating:5, date:'21 Apr 2026', text:'Bulk grocery bags for our chain — consistent and cheap. Exactly what we needed at volume.', helpful:11 },
+      { name:'Reem Al-Ghamdi', rating:4, date:'14 Apr 2026', text:'Solid value. Lead time was 10 days exactly as stated, no surprises.', helpful:5 },
+      { name:'Victor Santos', rating:5, date:'7 Apr 2026', text:'Ordered 5,000, all perfect. The deboss looks more premium than the price would suggest.', helpful:13, pics:1 },
+      { name:'Aaliyah Hassan', rating:3, date:'31 Mar 2026', text:'Good for the price, but the kraft shade varied a little between boxes. Noticeable side by side.', helpful:6, pics:2, compare:true },
+      { name:'Khaled Nasser', rating:5, date:'24 Mar 2026', text:'Najm handled a rush volume order better than makers charging twice as much.', helpful:8 },
+      { name:'Deepa Krishnan', rating:4, date:'17 Mar 2026', text:'Reliable and affordable. Handles are strong enough for real grocery weight.', helpful:4 },
+      { name:'Sultan Al-Harbi', rating:5, date:'10 Mar 2026', text:'Best value for high volume in KSA that I’ve found. Will reorder for sure.', helpful:10, pics:1 },
+      { name:'Emma Schmidt', rating:4, date:'3 Mar 2026', text:'Simple, clean, and cheap at scale. Flexo registration was good on our order.', helpful:5 }
     ] },
   { key:'levant', name:'Levant Press', color:'#9a5ba6', location:'Amman, Jordan', rating:4.5, reviewCount:142,
     lead:'10–14 days', leadDays:12, priceMul:0.85, badges:['Best value','Eco'],
@@ -259,12 +295,22 @@ var MFRS = [
     reviews:[
       { name:'Maya Khoury', rating:5, date:'7 May 2026', text:'100% recycled and it shows in the best way — customers love the texture. Cheapest per-unit too.', helpful:21 },
       { name:'Sami Darwish', rating:4, date:'19 Apr 2026', text:'Eco credentials are real (FSC recycled). Worth the longer wait for the price.', helpful:10 },
-      { name:'Hana Aboud', rating:5, date:'1 Apr 2026', text:'Lovely matte finish on recycled stock. Will use again for our zero-waste store.', helpful:7 }
+      { name:'Hana Aboud', rating:5, date:'1 Apr 2026', text:'Lovely matte finish on recycled stock. Will use again for our zero-waste store.', helpful:7 },
+      { name:'Layla Mansour', rating:5, date:'7 May 2026', text:'100% recycled and customers comment on the texture. Lowest per-unit we could find anywhere.', helpful:17, pics:2, compare:true },
+      { name:'Omar Zaatari', rating:5, date:'1 May 2026', text:'Carbon-neutral shipping sealed it for our eco store. Print is clean on the recycled stock.', helpful:12, pics:1 },
+      { name:'Hana Bishara', rating:4, date:'24 Apr 2026', text:'Worth the wait for the price and the eco credentials. The matte finish is really lovely.', helpful:7 },
+      { name:'Tom Bradley', rating:5, date:'18 Apr 2026', text:'Recycled kraft with a premium look — a rare combo. Highly recommend for sustainable brands.', helpful:9, pics:1 },
+      { name:'Dana Haddad', rating:5, date:'11 Apr 2026', text:'Our zero-waste brand finally has bags that match our values AND look genuinely good.', helpful:14, pics:2 },
+      { name:'Karim Fares', rating:3, date:'4 Apr 2026', text:'Great value, but the lead time stretched to the full 14 days. Plan ahead and you’re fine.', helpful:5 },
+      { name:'Isabella Rossi', rating:5, date:'28 Mar 2026', text:'The bags I received matched the proof and the recycled texture is gorgeous in person.', helpful:11, pics:2, compare:true },
+      { name:'Ziad Khoury', rating:4, date:'21 Mar 2026', text:'Cheapest option and the quality held up. Emboss came out surprisingly clean.', helpful:6, pics:1 },
+      { name:'Mona Saliba', rating:5, date:'14 Mar 2026', text:'Eco, affordable, and good print — three boxes, all consistent. No complaints.', helpful:8 },
+      { name:'Lucas Meyer', rating:4, date:'7 Mar 2026', text:'Solid recycled bags. Slightly longer wait, but the price and ethics win it for us.', helpful:4 }
     ] }
 ];
 
 /* ─── STATE ─── */
-var sel = { size:'gift', tier:2, mfr:'imprint' };   /* defaults: Gift, 1000 units, Imprint */
+var sel = { size:'gift', tier:2, mfr:'imprint', allRev:false };   /* defaults: Gift, 1000 units, Imprint */
 
 function getSize(){ return SIZES.filter(function(s){return s.key===sel.size;})[0] || SIZES[0]; }
 function getMfr(){ return MFRS.filter(function(m){return m.key===sel.mfr;})[0] || MFRS[0]; }
@@ -366,6 +412,40 @@ function render(){
 
   renderDetails();
 }
+/* ─── Review photo placeholders (vector) — a printed-bag thumbnail, tinted per review ─── */
+function _shade(hex, amt){
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.max(0, Math.min(255, (n >> 16) + amt));
+  var g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amt));
+  var b = Math.max(0, Math.min(255, (n & 255) + amt));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+function miniBagSVG(body, acc){
+  return '<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="80" height="80" rx="6" fill="#f0ede8"/>' +
+    '<path d="M31 25 Q31 15 40 15 Q49 15 49 25" fill="none" stroke="'+acc+'" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<path d="M22 27 L58 24 L62 29 L64 67 L26 71 Z" fill="'+_shade(body,-16)+'"/>' +
+    '<path d="M20 29 L58 24 L58 69 L20 71 Z" fill="'+body+'"/>' +
+    '<rect x="29" y="41" width="23" height="16" rx="2" fill="#ffffff" opacity="0.92"/>' +
+    '<rect x="32" y="45" width="17" height="3" rx="1.5" fill="'+acc+'"/>' +
+    '<rect x="32" y="50" width="10" height="3" rx="1.5" fill="'+acc+'" opacity="0.55"/>' +
+  '</svg>';
+}
+function reviewPics(r){
+  if (!r.pics) return '';
+  var tones   = ['#c79a63','#f1ede7','#16b8a6','#e7b6c9','#2a2a2e','#d8b24a','#8fae5d','#6f7fc0'];
+  var accents = ['#6b4f2e','#b9b2a7','#0b6b62','#a23b6a','#caa96f','#7a5c33','#3f5a1f','#2a3a78'];
+  var s = (r.name.charCodeAt(0) || 65) + r.name.length;
+  var h = '<div class="pdp-rev-pics">';
+  for (var i = 0; i < r.pics; i++){
+    var tone = tones[(s + i*3) % tones.length], acc = accents[(s + i*5 + 2) % accents.length];
+    /* "received" tone drifts slightly to hint at real-world variance */
+    if (r.compare && i === 1) tone = _shade(tone, -10);
+    var cap = r.compare ? (i === 0 ? 'Ordered' : 'Received') : '';
+    h += '<figure class="pdp-rev-pic">' + miniBagSVG(tone, acc) + (cap ? '<figcaption>'+cap+'</figcaption>' : '') + '</figure>';
+  }
+  return h + '</div>';
+}
 function renderDetails(){
   var m=getMfr();
   document.getElementById('pdp-spec-mfr').textContent=m.name;
@@ -376,20 +456,26 @@ function renderDetails(){
   document.getElementById('pdp-rev-avg').textContent=m.rating.toFixed(1);
   document.getElementById('pdp-rev-avg-stars').textContent=starStr(m.rating);
   document.getElementById('pdp-rev-count').textContent='Based on '+m.reviewCount+' verified orders';
-  document.getElementById('pdp-reviews').innerHTML = m.reviews.map(function(r){
+  var revs = m.reviews, lim = sel.allRev ? revs.length : Math.min(5, revs.length);
+  var html = revs.slice(0, lim).map(function(r){
     return '<div class="pdp-review"><div class="pdp-rev-head">' +
       '<div class="pdp-rev-av" style="background:'+m.color+'">'+initials(r.name)+'</div>' +
       '<div><div class="pdp-rev-name">'+r.name+'</div><div class="pdp-rev-meta">'+r.date+' · <span class="pdp-rev-verified">✓ Verified order</span></div></div></div>' +
       '<div class="pdp-rev-stars">'+starStr(r.rating)+'</div>' +
       '<div class="pdp-rev-text">'+r.text+'</div>' +
-      '<div class="pdp-rev-help">'+r.helpful+' people found this helpful</div></div>';
+      reviewPics(r) +
+      '<div class="pdp-rev-help">👍 '+r.helpful+' found this helpful</div></div>';
   }).join('');
+  if (!sel.allRev && revs.length > lim) {
+    html += '<button class="pdp-rev-more" onclick="sel.allRev=true;renderDetails();">Show all ' + revs.length + ' reviews</button>';
+  }
+  document.getElementById('pdp-reviews').innerHTML = html;
 }
 
 /* ─── INTERACTIONS ─── */
 function pickSize(k){ sel.size=k; var n=getSize().tiers.length; if(sel.tier>n-1) sel.tier=n-1; render(); }
 function pickTier(i){ sel.tier=i; render(); }
-function pickMfr(k){ sel.mfr=k; render(); }
+function pickMfr(k){ sel.mfr=k; sel.allRev=false; render(); }
 
 function goCustomize(){
   var t=getTier(), m=getMfr();
@@ -409,6 +495,8 @@ document.addEventListener('DOMContentLoaded', function(){
     breadcrumb:'<a href="index.html">Home</a><span class="sep">/</span><a href="products.html">Products</a><span class="sep">/</span><strong>Paper bag</strong>',
     showCart:true
   });
+  var _tr = document.getElementById('pdp-total-reviews');
+  if (_tr) _tr.textContent = MFRS.reduce(function(a,m){ return a + m.reviewCount; }, 0).toLocaleString();
   renderGallery();
   render();
   document.addEventListener('imprint:langchange', render);   /* currency/lang change → re-price */
