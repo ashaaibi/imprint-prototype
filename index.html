@@ -37,6 +37,18 @@
     .join-card .btn { background:#fff; color:#1a1a1a; border:none; }
     @media (max-width:800px){ .three-sided,.join-grid{grid-template-columns:1fr 1fr;} .statstrip{grid-template-columns:1fr 1fr;} }
     @media (max-width:560px){ .three-sided,.join-grid{grid-template-columns:1fr;} }
+    /* Desktop: nudge the hero text block up (top-align with the collage instead of centering). */
+    .lhero-grid { align-items: start; }
+    /* Mobile landing: more breathing room from the screen edges. */
+    @media (max-width: 640px){
+      .imp-wrap { padding-left: 26px; padding-right: 26px; }
+      .lhero { padding-top: 30px; padding-bottom: 18px; }
+      .lhero h1 { font-size: clamp(30px, 8vw, 42px); line-height: 1.08; }
+      .lhero p { font-size: 15.5px; }
+      .lhero-cta { gap: 10px; }
+      .sec, .sec.tight { padding-top: 30px; padding-bottom: 30px; }
+      .statstrip { padding: 22px 0; }
+    }
   </style>
 </head>
 <body>
