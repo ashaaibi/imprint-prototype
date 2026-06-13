@@ -6727,45 +6727,49 @@ function buildLayerBodyHTML(L) {
     if (L.kind === 'logo') _colorSec += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
   }
 
-  /* Material finish / Emboss / Layout — offered on Logo & Text only (Graphic & Background omit). */
+  /* Material finish (gloss/matte/soft-touch/foil + Advanced PBR) — offered on ALL layer types now.
+     Emboss/Deboss + Layout stay on Logo & Text only. */
+  var _fl = kindLabel + ' Finish';
+  var _finishHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
+    '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
+    '<div class="advanced-body" id="lyr-' + id + '-adv">' +
+      sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
+      sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
+      sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
+    '</div>';
   var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
-  var _extrasHTML = '';
-  if (!_isGraphic && !L.isBackground) {
-    var _fl = kindLabel + ' Finish';
-    _extrasHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
-      '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
-      '<div class="advanced-body" id="lyr-' + id + '-adv">' +
-        sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
-        sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
-        sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
-      '</div>' +
-      '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
+  var _embossLayoutHTML = '';
+  if (!_isGraphic && !L.isBackground) {   /* Emboss/Deboss + Layout: Logo & Text only */
+    _embossLayoutHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
       _embossSegHTML(id, L) +
       '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>' +
       _layoutPickerHTML(id, L);
-    if (L.tiled) _extrasHTML += _tiledControlsHTML(id, L);
+    if (L.tiled) _embossLayoutHTML += _tiledControlsHTML(id, L);
   }
 
   if (L.isBackground) {
-    /* Background: Density (+ Feather) → Opacity → Areas → Recolor. (No Gap, no Move.) */
+    /* Background: Density (+ Feather) → Opacity → Areas → Recolor → Finish. (No Gap, no Move/Emboss/Layout.) */
     h += _bgTiledControlsHTML(id, L);
     h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
     h += _areasSectionHTML(id, L);
     h += _colorSec;
+    h += _finishHTML;
   } else if (L.kind === 'text') {
-    /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → (Finish/Emboss/Layout). */
+    /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → Finish → Emboss/Layout. */
     h += _transformHTML(id, L, true);
     h += _colorSec;
     h += _moveSectionHTML(id, L);
     h += _areasSectionHTML(id, L);
-    h += _extrasHTML;
+    h += _finishHTML;
+    h += _embossLayoutHTML;
   } else {
-    /* Logo / Graphic: Scale → Opacity → Rotation → Move → Areas → Recolor → (extras: Logo only). */
+    /* Logo / Graphic: Scale → Opacity → Rotation → Move → Areas → Recolor → Finish → (Emboss/Layout: Logo only). */
     h += _transformHTML(id, L);
     h += _moveSectionHTML(id, L);
     h += _areasSectionHTML(id, L);
     h += _colorSec;
-    h += _extrasHTML;
+    h += _finishHTML;
+    h += _embossLayoutHTML;
   }
   return h;
 }

@@ -61,7 +61,8 @@ Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (al
   Text uses a hue picker, not recolor). SVG layers extract their palette from the **vector source**
   (`extractSvgColors`, before rasterizing); rasters via `extractStickerColors` (`_extractLayerColors` picks).
   Recolor keeps the colour-count selector + wheel + shuffle/reset. Layer body order: kind controls →
-  **Scale/Opacity/Rotation** → **Move** → **Areas** → **Adjust/Recolor** → (Finish/Emboss/Layout only on Logo & Text).
+  **Scale/Opacity/Rotation** → **Move** → **Areas** → **Adjust/Recolor** → **Finish** (all layer types) →
+  (Emboss/Deboss + Layout only on Logo & Text).
 
 **Per-layer transform & per-face visibility**
 - `_transformHTML` = Scale (font-size for text) / Opacity / Rotation sliders. `onLayerScale` maps Scale.
@@ -85,8 +86,8 @@ Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (al
 **Background specifics**
 - Created with grid layout (`patStack:'vertical'`), density **3** / gap **0**, box covering the
   **exterior+interior union**, **Inside faces hidden by default** (toggle on → no resize needed).
-- Panel order: **Density/Feather → Opacity → Areas → Recolor** (via `_bgTiledControlsHTML`; **Gap removed**;
-  no Scale/Rotation/Move/Finish/Emboss/Layout). `L.gap` stays 0 so tiles pack tight.
+- Panel order: **Density/Feather → Opacity → Areas → Recolor → Finish** (via `_bgTiledControlsHTML`; **Gap
+  removed**; no Scale/Rotation/Move/Emboss/Layout — but material **Finish** is now offered). `L.gap` stays 0 so tiles pack tight.
 - **Locked by default. Background "lock" = MOVE-LOCK ONLY** — resize/crop handles, duplicate, delete and all
   panel controls still work; only body drag is blocked (pans instead). Other layer types = full lock.
 - Pattern crop/fade masks the **whole pattern region across enabled faces as one** (union bbox), not per tile.

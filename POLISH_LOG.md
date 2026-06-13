@@ -3,6 +3,12 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 10)
+- **Material finish restored for Graphic & Background layers.** The finish grid (gloss/matte/soft-touch/foil)
+  + Advanced PBR is now its own `_finishHTML` shown on **all** layer types; Emboss/Deboss + Layout
+  (`_embossLayoutHTML`) stay Logo & Text only. (The per-layer finish was already supported by
+  `overlayArtworkPBR` — it was just hidden in the UI for those two types.)
+
 ## 2026-06-13 (batch 9)
 - **Template + designer system.** New unlisted `designer/` portal → opens the configurator in **designer mode**
   (`?designer=1`): full studio + Testing panel + a Designer bar (Locks / Capture render / Export template) +
