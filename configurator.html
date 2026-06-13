@@ -12284,6 +12284,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       '<button type="button" onclick="document.getElementById(\'imp-locks\').classList.toggle(\'open\')">🔒 Locks</button>' +
       '<button type="button" onclick="IMPRINT_captureRender()">📷 Render</button>' +
       '<button type="button" onclick="IMPRINT_exportTemplate()">⬇ Export template</button>' +
+      '<button type="button" onclick="IMPRINT_importTemplate()">⬆ Import JSON</button>' +
       '<button type="button" onclick="IMPRINT_previewAsClient()">👁 Preview as client ↗</button>';
     document.body.appendChild(bar);
     var lk=document.createElement('div'); lk.id='imp-locks';
@@ -12317,6 +12318,17 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       localStorage.setItem('imprint_import_tpl', JSON.stringify(tpl));
       window.open(location.pathname + '?template=__imported', '_blank');
     } catch(e){ alert('Could not preview as client: ' + e.message); }
+  };
+  /* Import a .template.json into the CURRENT studio (designer mode). */
+  window.IMPRINT_importTemplate = function(){
+    var inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+    inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(!f) return; var r=new FileReader();
+      r.onload=function(){ var tpl; try{ tpl=JSON.parse(r.result); }catch(e){ alert('That file is not valid JSON.'); return; }
+        if(!tpl||!tpl.snapshot){ alert('Not an Imprint template (no "snapshot").'); return; }
+        window._tplPending=true; setTimeout(function(){ if(window._tplPending){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } },9000);
+        if(typeof _loadTplDesigner==='function') _loadTplDesigner(tpl); };
+      r.readAsText(f); };
+    inp.click();
   };
   /* Load a template's design into the DESIGNER studio (full tools, no client locks) — "view as designer". */
   function _loadTplDesigner(tpl){

@@ -1702,9 +1702,9 @@
         <div class="cstep-pills" id="cstep-pills">
           <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Start" data-ar="ابدأ">Start</span></button>
           <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Design" data-ar="التصميم">Design</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Exterior" data-ar="الخارج">Exterior</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Interior" data-ar="الداخل">Interior</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Handles" data-ar="المقابض">Handles</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Cup" data-ar="الكوب">Cup</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(4)" data-cstep-pill="4"><span class="cstep-pill-num">4</span><span data-en="Sleeve" data-ar="الغلاف">Sleeve</span></button>
+          <button class="cstep-pill" onclick="goConfigStep(5)" data-cstep-pill="5"><span class="cstep-pill-num">5</span><span data-en="Base" data-ar="القاعدة">Base</span></button>
           <button class="cstep-pill" onclick="goConfigStep(6)" data-cstep-pill="6"><span class="cstep-pill-num">6</span><span data-en="Review" data-ar="مراجعة">Review</span></button>
         </div>
       </div>
@@ -1751,7 +1751,7 @@
 
     <!-- Bag Exterior -->
     <div class="cs bag-section config-step" id="bag-exterior-section" data-cstep="3">
-      <label class="cl"><span data-en="Exterior" data-ar="الخارج">Exterior</span></label>
+      <label class="cl"><span data-en="Cup" data-ar="الكوب">Cup</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
       <div class="hue-slider-wrap">
@@ -1812,7 +1812,7 @@
 
     <!-- Bag Interior -->
     <div class="cs bag-section config-step" id="bag-interior-section" data-cstep="4">
-      <label class="cl"><span data-en="Interior" data-ar="الداخل">Interior</span></label>
+      <label class="cl"><span data-en="Sleeve" data-ar="الغلاف">Sleeve</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
       <div class="hue-slider-wrap">
@@ -1872,7 +1872,7 @@
 
     <!-- Handles -->
     <div class="cs bag-section config-step" id="bag-handles-section" data-cstep="5">
-      <label class="cl"><span data-en="Handles" data-ar="المقابض">Handles</span></label>
+      <label class="cl"><span data-en="Base" data-ar="القاعدة">Base</span></label>
       
       <div class="ctrl-color-label" style="margin-bottom:12px"><span data-en="Material Color" data-ar="لون المادة">Material Color</span></div>
       <div class="hue-slider-wrap">
@@ -6867,7 +6867,7 @@ function _areasSectionHTML(id, L) {
   var chev = '<svg class="arh-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
   var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:2px"' + _arAttr('Areas') + '>Areas</div>' +
     '<div id="lyr-' + id + '-areas">';
-  [['exterior', 'Outside'], ['interior', 'Inside']].forEach(function(rg) {
+  [['exterior', 'Cup & base'], ['interior', 'Sleeve & lid']].forEach(function(rg) {
     var region = rg[0], title = rg[1];
     var faces = BAG_FACES[region] || {}, keys = Object.keys(faces); if (!keys.length) return;
     var allOn = keys.every(function(f){ return !(L.faceHide && L.faceHide[region + '_' + f]); });
@@ -12287,6 +12287,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       '<button type="button" onclick="document.getElementById(\'imp-locks\').classList.toggle(\'open\')">🔒 Locks</button>' +
       '<button type="button" onclick="IMPRINT_captureRender()">📷 Render</button>' +
       '<button type="button" onclick="IMPRINT_exportTemplate()">⬇ Export template</button>' +
+      '<button type="button" onclick="IMPRINT_importTemplate()">⬆ Import JSON</button>' +
       '<button type="button" onclick="IMPRINT_previewAsClient()">👁 Preview as client ↗</button>';
     document.body.appendChild(bar);
     var lk=document.createElement('div'); lk.id='imp-locks';
@@ -12320,6 +12321,17 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       localStorage.setItem('imprint_import_tpl', JSON.stringify(tpl));
       window.open(location.pathname + '?template=__imported', '_blank');
     } catch(e){ alert('Could not preview as client: ' + e.message); }
+  };
+  /* Import a .template.json into the CURRENT studio (designer mode). */
+  window.IMPRINT_importTemplate = function(){
+    var inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+    inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(!f) return; var r=new FileReader();
+      r.onload=function(){ var tpl; try{ tpl=JSON.parse(r.result); }catch(e){ alert('That file is not valid JSON.'); return; }
+        if(!tpl||!tpl.snapshot){ alert('Not an Imprint template (no "snapshot").'); return; }
+        window._tplPending=true; setTimeout(function(){ if(window._tplPending){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } },9000);
+        if(typeof _loadTplDesigner==='function') _loadTplDesigner(tpl); };
+      r.readAsText(f); };
+    inp.click();
   };
   /* Load a template's design into the DESIGNER studio (full tools, no client locks) — "view as designer". */
   function _loadTplDesigner(tpl){
