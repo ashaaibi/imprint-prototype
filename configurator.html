@@ -4409,6 +4409,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
     ctx.translate(cx2, cy2);
     ctx.rotate(L.rotation * Math.PI / 180);
     ctx.scale(corr.x, -corr.y);
+    if (L.stretchX && L.stretchX !== 1) ctx.scale(L.stretchX, 1);   /* Shift-resize horizontal stretch */
     if (L.cropBoxL||L.cropBoxR||L.cropBoxT||L.cropBoxB){
       var _tfs=L.fontSize*ms, _tl=L.content.split('\n'), _tml=_tl.reduce(function(m,s){return Math.max(m,s.length);},1);
       _applyBoxCrop(ctx, L, Math.max(20,_tml*_tfs*0.30)*2, Math.max(_tfs*0.6,_tl.length*_tfs*0.68)*2);
@@ -6454,53 +6455,92 @@ function _editLayerIn2D(id) {
 }
 /* Areas — toggle which exterior/interior faces the layer prints on (uses L.faceHide).
    Each region has a parent checkbox that toggles all its faces at once. */
+/* Isometric mini-cube with one face highlighted (used by the Areas face toggles). */
+function _faceCubeSVG(face) {
+  var P = { FTL:[8,16], FTR:[40,16], FBR:[40,48], FBL:[8,48], BTL:[20,6], BTR:[52,6], BBR:[52,38], BBL:[20,38] };
+  var F = { front:['FTL','FTR','FBR','FBL'], back:['BTL','BTR','BBR','BBL'], base:['FBL','FBR','BBR','BBL'], left:['FTL','FBL','BBL','BTL'], right:['FTR','FBR','BBR','BTR'], top:['FTL','FTR','BTR','BTL'] };
+  var E = [['FTL','FTR'],['FTR','FBR'],['FBR','FBL'],['FBL','FTL'],['BTL','BTR'],['BTR','BBR'],['BBR','BBL'],['BBL','BTL'],['FTL','BTL'],['FTR','BTR'],['FBR','BBR'],['FBL','BBL']];
+  var pts = (F[face] || []).map(function(k){ return P[k].join(','); }).join(' ');
+  var hl = pts ? '<polygon points="' + pts + '" fill="#2f6bff"/>' : '';
+  var e = E.map(function(s){ return '<line x1="' + P[s[0]][0] + '" y1="' + P[s[0]][1] + '" x2="' + P[s[1]][0] + '" y2="' + P[s[1]][1] + '"/>'; }).join('');
+  return '<svg class="acube" viewBox="0 0 60 56" width="36" height="34">' + hl + '<g fill="none" stroke="#222" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">' + e + '</g></svg>';
+}
+function _ensureAreaCSS() {
+  if (document.getElementById('area-cube-css')) return;
+  var s = document.createElement('style'); s.id = 'area-cube-css';
+  s.textContent =
+    '.area-region-head{display:flex;align-items:center;gap:9px;margin:11px 0 7px;cursor:pointer;user-select:none;}' +
+    '.area-region-head .arh-title{font-size:10px;font-weight:700;color:var(--imp-fg-2,#666);text-transform:uppercase;letter-spacing:0.04em;flex:1;}' +
+    '.area-region-head .arh-chev{transition:transform .15s;color:var(--imp-fg-3,#999);}' +
+    '.area-region.collapsed .arh-chev{transform:rotate(-90deg);}' +
+    '.area-region.collapsed .area-cube-grid{display:none;}' +
+    '.area-all{width:34px;height:18px;border-radius:10px;border:1px solid var(--imp-border,#ddd);background:var(--imp-surface-2,#eee);position:relative;cursor:pointer;flex:0 0 auto;transition:background .15s,border-color .15s;}' +
+    '.area-all .knob{position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.25);transition:left .15s;}' +
+    '.area-all.on{background:var(--imp-accent,#c8a96e);border-color:var(--imp-accent,#c8a96e);}' +
+    '.area-all.on .knob{left:17px;}' +
+    '.area-cube-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding-left:2px;}' +
+    '.area-cube{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:var(--imp-surface,#fff);cursor:pointer;font-family:inherit;font-size:9.5px;font-weight:600;color:var(--imp-fg-2,#888);transition:border-color .12s,background .12s,color .12s;}' +
+    '.area-cube .acube{opacity:0.30;transition:opacity .12s;}' +
+    '.area-cube.on{border-color:var(--imp-accent,#c8a96e);background:var(--imp-accent-weak,rgba(200,169,110,0.12));color:var(--imp-fg,#111);}' +
+    '.area-cube.on .acube{opacity:1;}';
+  document.head.appendChild(s);
+}
 function _areasSectionHTML(id, L) {
   if (typeof BAG_FACES === 'undefined' || !BAG_FACES.exterior) return '';
+  _ensureAreaCSS();
   var FN = { front:'Front', back:'Back', left:'Left', right:'Right', base:'Base' };
-  var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:6px"' + _arAttr('Areas') + '>Areas</div>' +
+  var chev = '<svg class="arh-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+  var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:2px"' + _arAttr('Areas') + '>Areas</div>' +
     '<div id="lyr-' + id + '-areas">';
-  ['exterior', 'interior'].forEach(function(region) {
+  [['exterior', 'Outside'], ['interior', 'Inside']].forEach(function(rg) {
+    var region = rg[0], title = rg[1];
     var faces = BAG_FACES[region] || {}, keys = Object.keys(faces); if (!keys.length) return;
-    var onCount = keys.filter(function(f){ return !(L.faceHide && L.faceHide[region + '_' + f]); }).length;
-    var allOn = onCount === keys.length, noneOn = onCount === 0;
-    h += '<label style="display:inline-flex;align-items:center;gap:6px;margin:8px 0 4px;cursor:pointer;font-size:10px;font-weight:700;color:var(--imp-fg-2);text-transform:uppercase;letter-spacing:0.04em;">' +
-      '<input type="checkbox" data-region="' + region + '" ' + (allOn ? 'checked' : '') + ' onchange="onLayerAreaGroup(' + id + ',&#39;' + region + '&#39;,this.checked)" style="accent-color:var(--imp-accent,#c8a96e);width:15px;height:15px;"> ' +
-      (region === 'exterior' ? 'Exterior' : 'Interior') + '</label>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;padding-left:4px;">';
+    var allOn = keys.every(function(f){ return !(L.faceHide && L.faceHide[region + '_' + f]); });
+    h += '<div class="area-region" data-region="' + region + '">' +
+      '<div class="area-region-head" onclick="toggleAreaCollapse(this)">' +
+        '<span class="area-all' + (allOn ? ' on' : '') + '" data-region="' + region + '" onclick="event.stopPropagation();onLayerAreaGroup(' + id + ',&#39;' + region + '&#39;)" title="Toggle all"><span class="knob"></span></span>' +
+        '<span class="arh-title"' + _arAttr(title) + '>' + title + '</span>' + chev +
+      '</div><div class="area-cube-grid">';
     keys.forEach(function(f) {
       var on = !(L.faceHide && L.faceHide[region + '_' + f]);
-      h += '<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--imp-fg);cursor:pointer;"><input type="checkbox" data-region="' + region + '" data-face="' + f + '" ' + (on ? 'checked' : '') + ' onchange="onLayerArea(' + id + ',&#39;' + region + '&#39;,&#39;' + f + '&#39;,this.checked)" style="accent-color:var(--imp-accent,#c8a96e);width:14px;height:14px;"> ' + (FN[f] || f) + '</label>';
+      h += '<button type="button" class="area-cube' + (on ? ' on' : '') + '" data-region="' + region + '" data-face="' + f + '" onclick="toggleLayerArea(' + id + ',&#39;' + region + '&#39;,&#39;' + f + '&#39;)" title="' + (FN[f] || f) + '">' + _faceCubeSVG(f) + '<span>' + (FN[f] || f) + '</span></button>';
     });
-    h += '</div>';
+    h += '</div></div>';
   });
   return h + '</div>';
 }
-/* Reflect child face state onto the region's parent checkbox (checked / indeterminate). */
+function toggleAreaCollapse(headEl) {
+  var reg = headEl && headEl.closest('.area-region'); if (reg) reg.classList.toggle('collapsed');
+}
+/* Reflect child face state onto the region's "All" toggle. */
 function _syncAreaParent(id, region) {
   var box = document.getElementById('lyr-' + id + '-areas'); if (!box) return;
-  var parent = box.querySelector('input[data-region="' + region + '"]:not([data-face])');
-  var kids = box.querySelectorAll('input[data-region="' + region + '"][data-face]');
-  if (!parent || !kids.length) return;
-  var on = 0; kids.forEach(function(cb){ if (cb.checked) on++; });
-  parent.checked = on === kids.length;
-  parent.indeterminate = on > 0 && on < kids.length;
+  var all = box.querySelector('.area-all[data-region="' + region + '"]');
+  var cubes = box.querySelectorAll('.area-cube[data-region="' + region + '"]');
+  if (!all || !cubes.length) return;
+  var onCount = 0; cubes.forEach(function(c){ if (c.classList.contains('on')) onCount++; });
+  all.classList.toggle('on', onCount === cubes.length);
 }
-function onLayerArea(id, region, face, on) {
+function toggleLayerArea(id, region, face) {
   var L = getLayer(id); if (!L) return;
   L.faceHide = L.faceHide || {};
-  var k = region + '_' + face;
-  if (on) delete L.faceHide[k]; else L.faceHide[k] = true;
+  var k = region + '_' + face, on = !L.faceHide[k];   /* currently shown? */
+  if (on) L.faceHide[k] = true; else delete L.faceHide[k];   /* flip */
+  var box = document.getElementById('lyr-' + id + '-areas');
+  var btn = box && box.querySelector('.area-cube[data-region="' + region + '"][data-face="' + face + '"]');
+  if (btn) btn.classList.toggle('on', !on);
   _syncAreaParent(id, region);
   if (typeof drawBagTexture === 'function') drawBagTexture();
 }
-function onLayerAreaGroup(id, region, on) {
+function onLayerAreaGroup(id, region) {
   var L = getLayer(id); if (!L) return;
   L.faceHide = L.faceHide || {};
-  Object.keys(BAG_FACES[region] || {}).forEach(function(f) {
-    var k = region + '_' + f; if (on) delete L.faceHide[k]; else L.faceHide[k] = true;
-  });
+  var keys = Object.keys(BAG_FACES[region] || {});
+  var allOn = keys.every(function(f){ return !L.faceHide[region + '_' + f]; });
+  var turnOn = !allOn;   /* all on → turn all off; otherwise turn all on */
+  keys.forEach(function(f){ var k = region + '_' + f; if (turnOn) delete L.faceHide[k]; else L.faceHide[k] = true; });
   var box = document.getElementById('lyr-' + id + '-areas');
-  if (box) box.querySelectorAll('input[data-region="' + region + '"][data-face]').forEach(function(cb){ cb.checked = on; });
+  if (box) box.querySelectorAll('.area-cube[data-region="' + region + '"]').forEach(function(c){ c.classList.toggle('on', turnOn); });
   _syncAreaParent(id, region);
   if (typeof drawBagTexture === 'function') drawBagTexture();
 }
@@ -6751,11 +6791,11 @@ function deleteLayer(id) {
   renderLayersList(); drawBagTexture();
 }
 function duplicateLayer(id) {
-  var L = getLayer(id); if (!L || L.locked) return;
+  var L = getLayer(id); if (!L || (L.locked && !L.isBackground)) return;
   var copy = Object.assign({}, L);
   copy.id = BAG.artwork.nextId++;
   copy.isDefault = false;
-  copy.locked = false;
+  copy.locked = !!L.isBackground;   /* a duplicated background stays move-locked like the original */
   copy.visible = true;
   if (L.areas)   copy.areas   = Object.assign({}, L.areas);
   if (L.surface) copy.surface = L.surface;
@@ -10483,7 +10523,7 @@ function rlmSfxUpload(key, input){
 }
 function rlmSfxClear(key){ _sfx[key] = null; var lbl=document.getElementById('sfx-'+key+'-name'); if(lbl) lbl.textContent='(synth default)'; var inp=document.getElementById('sfx-'+key+'-file'); if(inp) inp.value=''; }
 var _hoverSfxEl = null;
-var _sfxHoverSel = 'button, .bag-sopt, .finish-card, .mono-swatch-wrap, .cstep-pill, .layer-icon-btn, .qopt, [data-sound]';
+var _sfxHoverSel = 'button, .bag-sopt, .finish-card, .mono-swatch-wrap, .cstep-pill, .layer-icon-btn, .qopt, .a2dc-btn, .preset-thumb, .preset-font, .preset-social, ._as-btn, ._al-card, .area-cube, .add-layer-btn, .preset-more-btn, [data-sound], [onclick]';
 document.addEventListener('click', function(e){
   var el = (e.target && e.target.closest) ? e.target.closest(_sfxHoverSel) : null;
   if (el && !el.disabled) playUISound(el.matches('.mono-swatch-wrap, .finish-card, .qopt, .bag-sopt') ? 'pop' : 'click');
@@ -10653,7 +10693,7 @@ var _layerClipboard = null;
 document.addEventListener('keydown', function(e){
   var t=e.target; if (t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
   var L = a2d.sel, meta = e.metaKey||e.ctrlKey, k=(e.key||'').toLowerCase();
-  if ((e.key==='Delete'||e.key==='Backspace') && L && !L.locked){ e.preventDefault(); var id=L.id; a2d.sel=null; deleteLayer(id); }
+  if ((e.key==='Delete'||e.key==='Backspace') && L && (!L.locked || L.isBackground)){ e.preventDefault(); var id=L.id; a2d.sel=null; deleteLayer(id); }
   else if (meta && k==='c' && L){ e.preventDefault(); _layerClipboard=L.id; }
   else if (meta && k==='v' && _layerClipboard!=null){ e.preventDefault(); duplicateLayer(_layerClipboard); }
   else if (meta && k==='d' && L){ e.preventDefault(); duplicateLayer(L.id); }
@@ -10712,7 +10752,7 @@ function _layerBox(L){
   var e=(typeof layerBBox==='function')?layerBBox(L):_exuv(), cx=e.x+e.w*(L.posU/100), cy=e.y+e.h*(L.posV/100), hw, hh;
   var sref=(typeof _layerScaleRef==='function')?_layerScaleRef():e.w;
   if (L.tiled){ hw=sref*((L.scale||40)/100)/2; hh=sref*(((L.scaleH!=null?L.scaleH:L.scale)||40)/100)/2; }  /* tiled box (incl. tiled text) — independent w/h */
-  else if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); if (L.social && L.social.platform) hw += fs*0.7; }
+  else if (L.kind==='text'){ var fs=L.fontSize||100, ls=(L.content||'').split('\n'), ml=ls.reduce(function(m,s){return Math.max(m,s.length);},1); hw=Math.max(20,ml*fs*0.30); hh=Math.max(fs*0.6, ls.length*fs*0.68); if (L.social && L.social.platform) hw += fs*0.7; hw *= (L.stretchX||1); }
   else { var asp=(L.img&&L.img.naturalWidth)?L.img.naturalWidth/L.img.naturalHeight:1; var w=sref*((L.scale||18)/100); hw=w/2; hh=L.freeAspect?sref*(((L.scaleH!=null?L.scaleH:L.scale)||18)/100)/2:(w/asp)/2; }   /* freeAspect = Shift-resized independently */
   /* match the art-correction scale used when DRAWING (drawLayerContent scales by corr) so the
      box hugs the actual content instead of leaving a gap. */
@@ -10734,7 +10774,7 @@ function _layerCropBox(b, L){
 }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerCropBox(_layerBox(L), L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
-  var L=a2d.sel; if(!L || L.locked) return null; var b=_layerCropBox(_layerBox(L), L);  /* locked layers expose no resize/rotate/crop handles */
+  var L=a2d.sel; if(!L || (L.locked && !L.isBackground)) return null; var b=_layerCropBox(_layerBox(L), L);  /* a locked background still exposes resize/crop handles (only its MOVE is locked) */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
   /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
   var order=[ ['rotate',0,1.6],
@@ -10762,11 +10802,12 @@ function _aDown(e){
   if (hh){ a2d.op=hh; _a2dDragging=true;
     var _selR=a2d.sel, _aspR=(_selR.img&&_selR.img.naturalWidth)?_selR.img.naturalWidth/_selR.img.naturalHeight:1;
     var _startScaleH=(_selR.kind!=='text'&&!_selR.tiled&&!_selR.freeAspect)?((_selR.scale||18)/_aspR):_selR.scaleH;   /* seed from visual height for seamless first Shift-resize */
-    a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:_startScaleH, fontSize:a2d.sel.fontSize, rot:a2d.sel.rotation, box:_layerBox(a2d.sel), vbox:_layerCropBox(_layerBox(a2d.sel), a2d.sel) };
+    a2d.start={ sp:sp, scale:a2d.sel.scale, scaleH:_startScaleH, fontSize:a2d.sel.fontSize, stretchX:(a2d.sel.stretchX||1), rot:a2d.sel.rotation, box:_layerBox(a2d.sel), vbox:_layerCropBox(_layerBox(a2d.sel), a2d.sel) };
     if(a2d.canvas) a2d.canvas.style.cursor=(hh.indexOf('sc-')===0)?((hh==='sc-tr'||hh==='sc-bl')?'nwse-resize':'nesw-resize'):(hh.indexOf('cr-')===0)?'crosshair':'grabbing'; return; }
   /* clicked a colour icon or a per-face hide toggle (these sit on top of everything) */
   var ui=(typeof _hitUi==='function')?_hitUi(sp):null;
   if (ui){
+    if (typeof playUISound==='function') playUISound(ui.type==='facetoggle'?'pop':'click');   /* sub-label / face-toggle / colour-icon click feedback */
     if (ui.type==='facetoggle'){
       var _sel=a2d.sel;
       if (_sel){ _sel.faceHide=_sel.faceHide||{};
@@ -10787,8 +10828,9 @@ function _aDown(e){
   /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
   if (L && L.locked){
-    /* Locked (e.g. a background): a click-DRAG pans the canvas (the layer is ignored), and a
-       plain click selects + unlocks it. Lets you pan freely without grabbing the pattern. */
+    /* Locked: the BODY can't be dragged (a body click-drag pans instead); a click just selects
+       it (toolbar shows). Backgrounds are move-locked only — their resize/crop handles still work
+       (handled above via _hitHandle), so this branch is only reached on a body hit. */
     a2d.sel=L; _ctxBarFor=null;
     a2d.op='pan'; a2d.start={ sp:sp, panX:a2d.panX, panY:a2d.panY, lockedLayer:L };
     if(a2d.canvas) a2d.canvas.style.cursor='grabbing';
@@ -10855,12 +10897,19 @@ function _aMove(e){
       var rW=fullW/(2*(vb.hw||1)), rH=fullH/(2*(vb.hh||1));
       L.scale  = Math.max(_MIN, Math.min(400, (a2d.start.scale!=null?a2d.start.scale:40) * rW));
       L.scaleH = Math.max(_MIN, Math.min(400, (a2d.start.scaleH!=null?a2d.start.scaleH:40) * rH));
-    } else if (L.kind!=='text' && e.shiftKey){
-      /* Shift = free (non-proportional) resize of a graphic: width & height move independently. */
-      L.freeAspect=true;
+    } else if (e.shiftKey){
+      /* Shift = free (non-proportional) resize: width & height move independently. */
       var rWf=fullW/(2*(vb.hw||1)), rHf=fullH/(2*(vb.hh||1));
-      L.scale  = Math.max(_MIN, Math.min(200, (a2d.start.scale||18) * rWf));
-      L.scaleH = Math.max(_MIN, Math.min(200, (a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18)) * rHf));
+      if (L.kind==='text'){
+        /* text: height drives font size, width drives a horizontal stretch factor */
+        L.freeAspect=true;
+        L.fontSize = Math.max(8, Math.min(800, (a2d.start.fontSize||100) * rHf));
+        L.stretchX = Math.max(0.2, Math.min(6, (a2d.start.stretchX||1) * (rWf/(rHf||1))));
+      } else {
+        L.freeAspect=true;
+        L.scale  = Math.max(_MIN, Math.min(200, (a2d.start.scale||18) * rWf));
+        L.scaleH = Math.max(_MIN, Math.min(200, (a2d.start.scaleH!=null?a2d.start.scaleH:(a2d.start.scale||18)) * rHf));
+      }
     } else {
       var f=Math.max(0.01, fullW/(2*(vb.hw||1)));   /* uniform factor from cropped width */
       if (L.kind==='text') L.fontSize=Math.max(20,Math.min(800,(a2d.start.fontSize||100)*f));
@@ -11183,7 +11232,7 @@ function atlas2dRender(){
     ctx.setLineDash(sel?[6*D,5*D]:(hov?[5*D,4*D]:[]));
     ctx.beginPath(); ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y); ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y); ctx.closePath(); ctx.stroke();
     ctx.setLineDash([]);
-    if (sel && !L.locked){   /* locked layers show only the box — no transform handles */
+    if (sel && (!L.locked || L.isBackground)){   /* locked non-backgrounds show only the box; a locked background still shows resize/crop handles */
       /* rotate stick at the visual TOP, 4 corner resize dots, 4 edge crop BARS (lines) */
       var rh=_boxLocalToScreen(b,0,1.6), topMid={x:(bl.x+br.x)/2,y:(bl.y+br.y)/2};
       ctx.strokeStyle=HC; ctx.lineWidth=1.6*D;
