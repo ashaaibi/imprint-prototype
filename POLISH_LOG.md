@@ -3,6 +3,22 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-13 (batch 14) — Perf, PDP parity, configurator fixes, new artists, cup duplicate
+- **Image performance (#1–7):** responsive **WebP** pipeline in `build_catalog.py` (sm 480 / lg 1200, q80) +
+  `IMP.img` srcset/sizes/width/height/lazy + eager hero LCP. Image payload ~36 MB → ~6 MB.
+- **All product PDPs now match the Honeyloom layout** via shared `pdp.css` + a rewritten `product.js`
+  (gallery, sizes, quantity tiers, manufacturer picker, live price, artist+Follow, specs, "You may also
+  like"). Placeholders keep **all sizes unlocked** and a **"Customise — soon"** CTA ("not available yet").
+- **Honeyloom PDP:** size-lock now survives re-renders (changing maker/qty no longer unlocks sizes), added
+  the artist + Follow + "You may also like".
+- **Configurator:** client template load no longer flashes the Start step (full-screen loader held until it
+  lands on Design); template bar no longer overflows the viewport (fits all screen sizes). Favicon added to
+  every page + generated stub.
+- **Artists replaced** with 9 new ones, named to match the photos (gender/region/look); collections + products
+  re-mapped to their styles, balanced 4–7 each. New cup renders (5).
+- **Cup configurator** rebuilt as a **full duplicate** of the bag studio with only the model swapped
+  (material-rename trick → cup flows through the bag's atlas pipeline). Unverified in-browser — see CLAUDE.md.
+
 ## 2026-06-13 (batch 13) — Marketplace + cup studio + configurator fixes
 - **Turned the site into a three-sided marketplace** (artists · brands · manufacturers), driven by a
   generated `catalog.js` (`tools/build_catalog.py`): 50 products, 13 artists, 6 manufacturers, 25

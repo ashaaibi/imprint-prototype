@@ -30,8 +30,8 @@ mangling files/folders.
 - `search.html` — full filter engine (category/tag/artist/maker + sort + text). `favourites.html`,
   `account.html`, `orders.html` — localStorage favourites/follows, mock dashboard, order tracking.
 - `configurator.html` — **the bag 3D configurator (centerpiece, ~2.5 MB)**
-- `configurator-cup.html` — **lean coffee-cup 3D studio** (separate, self-contained; Three r128 via CDN;
-  loads `paper_cup/paper_cup.glb`, 4 materials, lid print-area hidden). v1 — see "Coffee cup studio".
+- `configurator-cup.html` — **coffee-cup 3D studio = a full duplicate of `configurator.html`** with only the
+  model swapped (loads `paper_cup/paper_cup_imprint.glb`; 2D faces = cup/base/sleeve/lid). See "Coffee cup studio".
 - `checkout.html` · `confirmation.html` — order flow
 - `admin.html` — testing controls · `factory/` — demo stubs
 - `designer/index.html` — **unlisted designer portal** (build/publish bag **and** cup templates)
@@ -72,15 +72,19 @@ python3 tools/build_catalog.py    # re-run after editing the data or assets
 - `catalog.css` reuses `shared.css` tokens (dark-mode aware). Adding it to the rich Honeyloom page is safe
   because that page's inline `<style>` loads after it and wins all `.pdp-*` collisions.
 
-## Coffee cup studio (`configurator-cup.html`)  — v1, verify in a real browser
-A **separate, self-contained** Three r128 studio (Three + GLTFLoader + OrbitControls from jsDelivr CDN),
-deliberately **isolated from the bag configurator**. Loads `paper_cup/paper_cup.glb` (one mesh, 4 prims/
-materials: `M_cup`/`M_base`/`M_sleeve`/`M_lid`). Per-material colour + finish, proportional sizes (8–24oz),
-brand text baked to a CanvasTexture on cup/sleeve, **lid print-area hidden** in the flat material tabs,
-`?designer=1` export, `?template=coffee-cup` load. Replaces each material with a controlled
-`MeshStandardMaterial`. **Not feature-parity with the bag** and **not WebGL-verified in the headless build** —
-needs live testing/iteration. Full parity would mean re-architecting the bag's single-2048-atlas pipeline
-for 4 materials.
+## Coffee cup studio (`configurator-cup.html`)  — full bag duplicate, verify in a browser
+`configurator-cup.html` is a **duplicate of `configurator.html`** (so it has the bag's full control set:
+artwork layers, finishes, fonts, graphics, backgrounds, 2D editor, testing, templates) with **only the
+model swapped**. The enabler: the bag loader is **material-name-convention-driven** — it groups GLB prims by
+`M_ext*` / `M_int*` prefixes and auto-derives the atlas UV regions + 2D faces from the geometry. So the cup
+just needs bag-convention names: `tools/` rewrote `paper_cup/paper_cup.glb` → **`paper_cup/paper_cup_imprint.glb`**
+renaming `M_cup→M_ext_cup`, `M_base→M_ext_base`, `M_sleeve→M_int_sleeve`, `M_lid→M_int_lid`. The cup's 4 UV
+islands are non-overlapping in one 0-1 space (verified), so the single 2048 atlas maps each material correctly;
+2D-editor faces become **cup / base / sleeve / lid**. `BAG_MODELS` = proportional cup sizes (8/12/16 oz, one
+GLB); title/breadcrumb/size-picker relabelled. **Not WebGL-verified in the headless build** — needs a live
+pass to confirm the atlas lands on each material, hide the lid print area, and tune sizes. Isolated file →
+can't affect the bag configurator or marketplace. (To re-make the renamed GLB, see the material-rename
+snippet in git history / re-run the rename on `paper_cup.glb`.)
 
 ## The 3D configurator (`configurator.html` + `realism-engine.js`)
 - Three.js r128, **inlined** into the HTML, plus the GLB bag model and the **studio3 HDRI**
