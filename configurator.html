@@ -2106,6 +2106,10 @@
                oninput="onIdleDelaySlider(this.value)">
       </div>
 
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Wayfinding pulse</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" id="pulse-toggle" onchange="onPulseToggle(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div>
+        <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Off by default. When on, the active step's part gently pulses on the 3D model to show what you're editing.</div></div>
+
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Pulse speed</span>
@@ -5462,6 +5466,9 @@ function buildPaperBagMesh() {
     /* Nudge default-driven controls so their values apply on load (e.g. colour hue
        sliders sit at their default but their handler must fire to paint the material). */
     if (typeof _applyDefaultControls === 'function') _applyDefaultControls();
+    /* Re-apply default material finishes now realism + meshes are ready (handle/ribbon
+       finish didn't render until clicked otherwise). Once now + once after realism settles. */
+    if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 120); }
     /* Model ready → hide the premium loader and play the intro 360° spin */
     finishConfigLoading();
   }, undefined, function(err) {
@@ -10053,6 +10060,17 @@ function onIdleDelaySlider(v) {
 }
 function onHueAnimSpeed(v) { _hueAnimSpeed = parseFloat(v); var el=document.getElementById('hue-anim-speed-val'); if(el) el.textContent = _hueAnimSpeed.toFixed(3); }
 function onPulseFps(v) { _pulseFps = Math.max(1, parseFloat(v)||10); var el=document.getElementById('pulse-fps-val'); if(el) el.textContent = Math.round(_pulseFps); }
+function onPulseToggle(on){ _pulseOn = !!on; if (!_pulseOn && typeof stopHueGuide==='function') stopHueGuide(true); else if (_pulseOn && typeof _curConfigStep!=='undefined' && typeof STEP_PART!=='undefined' && typeof startHueGuide==='function') startHueGuide(STEP_PART[_curConfigStep]||null); }
+/* Re-apply the default material finishes (and ribbon/rivet colour) AFTER realism + meshes
+   are ready — without this the handle/ribbon finish doesn't render until clicked. */
+function _nudgeOnLoad(){
+  ['exterior','interior','ribbon'].forEach(function(rg){
+    if (BAG[rg] && BAG[rg].finish && typeof applyBagFinish==='function') applyBagFinish(rg, BAG[rg].finish, null, true);
+  });
+  if (typeof applyRibbonColor==='function') applyRibbonColor();
+  if (typeof applyRivetColor==='function') applyRivetColor();
+  if (typeof drawBagTexture==='function') drawBagTexture();
+}
 function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
 function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
 function onAnimOpMax(v)    { _animOpMax = parseFloat(v); var el=document.getElementById('anim-opmax-val'); if(el) el.textContent = _animOpMax.toFixed(2); }
@@ -11013,6 +11031,7 @@ var _animColor    = '#ff0000';
 var _animOpMin    = 0.80;
 var _animOpMax    = 1.00;
 var _hueAnim = { region:null, raf:0, t0:0, last:0 };
+var _pulseOn = false;   /* wayfinding pulse is OFF by default (client + designer); Testing → "Wayfinding pulse" turns it on */
 /* Blend two #hex colours → "#rrggbb" at t∈[0,1]. */
 function _lerpHexStr(a, b, t){
   var A=_hexToRgb(a), B=_hexToRgb(b);
@@ -11051,6 +11070,7 @@ function stopHueGuide(restore){
 }
 function startHueGuide(region){
   stopHueGuide(true);
+  if (!_pulseOn) return;   /* pulse disabled by default — no wayfinding highlight */
   if (!region || _partTouched[region] || !bagMeshRef) return;
   _hueAnim.region = region; _hueAnim.t0 = (typeof performance!=='undefined'?performance.now():Date.now()); _hueAnim.last = 0;
   var loop = function(now){
