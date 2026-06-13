@@ -50,8 +50,11 @@
   <div class="dp-cta-row">
     <a class="dp-btn primary" href="../configurator.html?designer=1">✦ New bag template</a>
     <a class="dp-btn primary" href="../configurator-cup.html?designer=1">☕ New cup template</a>
+    <button class="dp-btn" type="button" onclick="document.getElementById('tpl-import').click()">⬆ Import template JSON</button>
+    <input type="file" id="tpl-import" accept=".json,application/json" style="display:none" onchange="importTemplateFile(this)">
     <a class="dp-btn" href="../products.html" target="_blank">View the marketplace</a>
   </div>
+  <p class="dp-sub" style="margin-top:10px;font-size:13px">Tip: open any template <strong>as designer</strong> (edit &amp; see locks) or <strong>as client</strong> (locked preview) below to switch and compare the two.</p>
 
   <div class="dp-steps">
     <div class="dp-step"><div class="n">1</div><h3>Design</h3><p>Build the bag in designer mode — size, colours, finishes, text, logos, graphics, social layers.</p></div>
@@ -75,15 +78,28 @@ function bagSVG(body,side,handle){
     '<path d="M40 70 L150 56 L162 70 L52 84 Z" fill="'+side+'" opacity="0.85"/>' +
   '</svg>';
 }
-fetch('../templates/index.json', { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
-  var box = document.getElementById('dp-templates');
+function importTemplateFile(input){
+  var file = input.files && input.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    var tpl; try { tpl = JSON.parse(reader.result); } catch(e){ alert('That file is not valid JSON.'); return; }
+    if(!tpl || !tpl.snapshot){ alert('This doesn’t look like an Imprint template (no "snapshot").'); return; }
+    try { localStorage.setItem('imprint_import_tpl', reader.result); } catch(e){ alert('Could not store the template (too large for this browser).'); return; }
+    var isCup = tpl.snapshot && /cup/.test(tpl.snapshot.model || '');
+    var base = isCup ? '../configurator-cup.html' : '../configurator.html';
+    window.open(base + '?template=__imported&designer=1', '_blank');   /* opens the imported design in the studio */
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+fetch('../templates/index.json', { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(list){  var box = document.getElementById('dp-templates');
   if (!list || !list.length){ box.innerHTML = '<div class="dp-empty">No templates published yet — click <strong>New template</strong> above to create your first.</div>'; return; }
   box.innerHTML = '<div class="dp-tpl-grid">' + list.map(function(t){
     var acc=t.accent||'#c79a63';
     var thumb = t.render ? '<img src="../'+t.render+'" alt="'+t.name+'">' : bagSVG(acc,_shade(acc,-24),_shade(acc,46));
     return '<div class="dp-tpl"><div class="dp-tpl-stage" style="background:linear-gradient(160deg,'+_shade(acc,66)+','+_shade(acc,34)+')">'+thumb+'</div>' +
       '<div class="dp-tpl-body"><div class="dp-tpl-name">'+t.name+'</div><div class="dp-tpl-cat">'+(t.category||'')+'</div>' +
-      '<div class="dp-tpl-links"><a href="../'+(t.configurator||'configurator.html')+'?template='+encodeURIComponent(t.id)+'" target="_blank">Preview as client</a><a href="../'+(t.configurator||'configurator.html')+'?designer=1" target="_blank">New from studio</a></div></div></div>';
+      '<div class="dp-tpl-links"><a href="../'+(t.configurator||'configurator.html')+'?template='+encodeURIComponent(t.id)+'" target="_blank">View as client</a><a href="../'+(t.configurator||'configurator.html')+'?template='+encodeURIComponent(t.id)+'&designer=1" target="_blank">View as designer</a></div></div></div>';
   }).join('') + '</div>';
 }).catch(function(){ document.getElementById('dp-templates').innerHTML='<div class="dp-empty">Could not load templates/index.json.</div>'; });
 </script>

@@ -12212,11 +12212,10 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       if (typeof renderLayersList==='function') renderLayersList();
       if (typeof drawBagTexture==='function') drawBagTexture();   /* single full-quality bake now everything has settled */
       _applyLocks();
+      /* Nudge everything to its restored value now meshes + realism are ready. */
+      if (typeof _applyDefaultControls === 'function') { try { _applyDefaultControls(); } catch(e){} }
+      if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 140); }
       if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
-      var b=document.createElement('div'); b.id='imp-tplbar';
-      b.textContent = 'Editing template: ' + ((tpl.meta&&tpl.meta.name)||'') + ' — change the text, colours & handles; the layout is set by the designer.';
-      document.body.appendChild(b);
-      document.body.classList.add('imp-has-tplbar');   /* shift the layout below the bar so nothing overflows */
       window._tplPending = false;
       if (typeof finishConfigLoading === 'function') finishConfigLoading();   /* reveal now — lands straight on Design, no Start-step flash */
     }
@@ -12232,7 +12231,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
   function _applyLocks(){
     if (!LOCKS) return;
     if (LOCKS.sizes && LOCKS.sizes.length){
-      document.querySelectorAll('.bag-sopt').forEach(function(b){ var oc=b.getAttribute('onclick')||''; b.style.display = LOCKS.sizes.some(function(s){return oc.indexOf("'"+s+"'")>=0;}) ? '' : 'none'; });
+      document.querySelectorAll('.bag-sopt').forEach(function(b){ var oc=b.getAttribute('onclick')||''; if (!LOCKS.sizes.some(function(s){return oc.indexOf("'"+s+"'")>=0;})) b.remove(); });
     }
     (LOCKS.hideSteps||[]).forEach(function(n){ var p=document.querySelector('[data-cstep-pill="'+n+'"]'); if(p) p.style.display='none'; });
     var al=document.querySelector('.add-layer-btn'); if (al) al.style.display = (LOCKS.edit && LOCKS.edit.graphics) ? '' : 'none';
@@ -12284,7 +12283,8 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     bar.innerHTML='<span class="dtag">Designer</span>' +
       '<button type="button" onclick="document.getElementById(\'imp-locks\').classList.toggle(\'open\')">🔒 Locks</button>' +
       '<button type="button" onclick="IMPRINT_captureRender()">📷 Render</button>' +
-      '<button type="button" onclick="IMPRINT_exportTemplate()">⬇ Export template</button>';
+      '<button type="button" onclick="IMPRINT_exportTemplate()">⬇ Export template</button>' +
+      '<button type="button" onclick="IMPRINT_previewAsClient()">👁 Preview as client ↗</button>';
     document.body.appendChild(bar);
     var lk=document.createElement('div'); lk.id='imp-locks';
     lk.innerHTML = '<h4>What clients can change</h4>' +
@@ -12310,17 +12310,56 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     LK.addLayer = !(LK.edit && LK.edit.graphics);
   }
 
+  /* Preview the CURRENT design as a client would (opens a locked client tab to compare). */
+  window.IMPRINT_previewAsClient = function(){
+    try {
+      var tpl = serializeTemplate({ id:'__imported', name:'Live preview', designer:'You', created:new Date().toISOString().slice(0,10) });
+      localStorage.setItem('imprint_import_tpl', JSON.stringify(tpl));
+      window.open(location.pathname + '?template=__imported', '_blank');
+    } catch(e){ alert('Could not preview as client: ' + e.message); }
+  };
+  /* Load a template's design into the DESIGNER studio (full tools, no client locks) — "view as designer". */
+  function _loadTplDesigner(tpl){
+    var snap = tpl && tpl.snapshot; if(!snap){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); return; }
+    window._tplRestoring = true;
+    try { _restoreState(snap); } catch(e){ console.warn('tpl restore (designer)', e); }
+    var stickers=(BAG.artwork.layers||[]).filter(function(L){ return L.kind==='sticker' && L.srcImg && typeof _rebuildStickerCutAndRecolor==='function'; });
+    var settled=false;
+    function done(){ if(settled)return; settled=true; window._tplRestoring=false;
+      if(typeof renderLayersList==='function') renderLayersList();
+      if(typeof drawBagTexture==='function') drawBagTexture();
+      if(typeof _applyDefaultControls==='function'){ try{_applyDefaultControls();}catch(e){} }
+      if(typeof _nudgeOnLoad==='function'){ _nudgeOnLoad(); setTimeout(_nudgeOnLoad,140); }
+      if(typeof goConfigStep==='function') goConfigStep(2);
+      window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading();
+    }
+    if(!stickers.length){ done(); return; }
+    var pending=stickers.length; setTimeout(done,4000);
+    stickers.forEach(function(L){ try{ _rebuildStickerCutAndRecolor(L,function(){ if(--pending<=0) done(); }); }catch(e){ if(--pending<=0) done(); } });
+  }
+  /* Fetch a template by id, or read an imported one from localStorage (id "__imported"). */
+  function _getTpl(id){
+    if (id === '__imported'){ try { var j=localStorage.getItem('imprint_import_tpl'); return Promise.resolve(j?JSON.parse(j):null); } catch(e){ return Promise.resolve(null); } }
+    return fetch('templates/'+id+'.template.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); });
+  }
+
   /* ===== Boot ===== */
   document.addEventListener('DOMContentLoaded', function(){
-    if (_designerMode){ document.body.classList.add('imp-designer'); buildDesignerUI(); return; }
-    try {
-      var tid = new URLSearchParams(location.search).get('template');
-      if (tid){ _templateId=tid; window._tplPending=true; document.body.classList.add('imp-client-tpl');
+    var tid=null; try { tid=new URLSearchParams(location.search).get('template'); } catch(e){}
+    if (_designerMode){
+      document.body.classList.add('imp-designer'); buildDesignerUI();
+      if (tid){ window._tplPending=true;
         setTimeout(function(){ if(window._tplPending){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } }, 9000);
-        fetch('templates/'+tid+'.template.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
-          .then(function(tpl){ IMPRINT_loadTemplate(tpl); })
-          .catch(function(){ console.warn('Template not found:', tid); window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); }); }
-    } catch(e){ window._tplPending=false; }
+        _getTpl(tid).then(function(tpl){ if(tpl) _loadTplDesigner(tpl); else { window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } })
+          .catch(function(){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); });
+      }
+      return;
+    }
+    if (tid){ _templateId=tid; window._tplPending=true; document.body.classList.add('imp-client-tpl');
+      setTimeout(function(){ if(window._tplPending){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } }, 9000);
+      _getTpl(tid).then(function(tpl){ if(tpl) IMPRINT_loadTemplate(tpl); else { window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } })
+        .catch(function(){ console.warn('Template not found:', tid); window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); });
+    }
   });
 })();
 </script>
