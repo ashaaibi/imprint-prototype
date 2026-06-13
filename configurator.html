@@ -2204,8 +2204,8 @@
         <label style="position:relative;display:inline-block;width:34px;height:20px;cursor:pointer;"><input type="checkbox" checked onchange="onA2Dtog('showUnselectedBox',this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:var(--border);border-radius:20px;"></span></label></div></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label size</span><span class="slider-val" id="a2d-subLabelSize-val">12</span></div>
         <input type="range" class="test-slider" min="6" max="36" step="1" value="12" oninput="onA2Dnum('subLabelSize',this.value,false)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label opacity</span><span class="slider-val" id="a2d-subLabelOpacity-val">100%</span></div>
-        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="1" oninput="onSubLabelOpacity(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label opacity</span><span class="slider-val" id="a2d-subLabelOpacity-val">60%</span></div>
+        <input type="range" class="test-slider" min="0" max="1" step="0.05" value="0.6" oninput="onSubLabelOpacity(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Sub-label color</span><span class="slider-val" id="a2d-subLabelColor-val">#333333</span></div>
         <input type="color" value="#333333" style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;" oninput="onA2Dcol('subLabelColor',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Invert label in dark</span>
@@ -10622,7 +10622,7 @@ var A2D = {
   showUnselectedBox:false,                     /* draw the faint bounding box on ALL unselected layers (else only the hovered one) */
   labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
-  subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:1,    /* per-face sub-label size + colour + opacity */
+  subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:0.6,    /* per-face sub-label size + colour + opacity */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
   snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
