@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Customise the Artisan Coffee Cup in 3D — colour, finish and branding across cup, sleeve and base. Lid stays clean.">
+  <title>Coffee Cup Studio — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    body{margin:0;overflow:hidden;}
+    .cup-top{height:var(--imp-header-h);display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--imp-border);background:var(--imp-surface);}
+    .cup-top a.logo{font-family:var(--imp-font-display,'Inter');font-weight:800;letter-spacing:.02em;font-size:18px;color:var(--imp-fg);text-decoration:none;}
+    .cup-top .sp{flex:1;}
+    .cup-top .badge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--imp-gold);}
+    .cup-top a.back{font-size:13px;color:var(--imp-fg-2);text-decoration:none;border:1px solid var(--imp-border);border-radius:var(--imp-r-pill);padding:7px 13px;}
+    .cup-wrap{display:flex;height:calc(100vh - var(--imp-header-h));}
+    .cup-stage{flex:1;position:relative;background:radial-gradient(120% 100% at 50% 0%, #f3efe8, #e7ddcd);}
+    html[data-theme="dark"] .cup-stage{background:radial-gradient(120% 100% at 50% 0%, #20201e, #131311);}
+    #cup-canvas{width:100%;height:100%;display:block;}
+    .cup-loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:var(--imp-bg);z-index:5;color:var(--imp-fg-2);font-size:13px;}
+    .cup-loader .ring{width:34px;height:34px;border:3px solid var(--imp-border);border-top-color:var(--imp-gold);border-radius:50%;animation:cspin 1s linear infinite;}
+    @keyframes cspin{to{transform:rotate(360deg);}}
+    .cup-panel{width:340px;flex:0 0 340px;border-left:1px solid var(--imp-border);background:var(--imp-surface);overflow-y:auto;padding:18px 18px 60px;}
+    .cup-panel h2{font-size:18px;margin:0 0 2px;}
+    .cup-panel .sub{font-size:12.5px;color:var(--imp-fg-3);margin:0 0 16px;}
+    .grp{border-top:1px solid var(--imp-border);padding:15px 0;}
+    .grp h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--imp-fg-3);margin:0 0 10px;}
+    .mat-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+    .mat-tab{font-size:11.5px;font-weight:600;padding:9px 4px;border:1px solid var(--imp-border);border-radius:var(--imp-r-md);background:var(--imp-surface);color:var(--imp-fg-2);cursor:pointer;text-align:center;position:relative;}
+    .mat-tab.on{border-color:var(--imp-fg);color:var(--imp-fg);background:var(--imp-surface-2);}
+    .mat-tab.locked{opacity:.5;cursor:not-allowed;}
+    .mat-tab .lk{display:block;font-size:8.5px;color:var(--imp-fg-3);margin-top:1px;}
+    .sizes{display:flex;gap:7px;}
+    .size-b{flex:1;font-size:12.5px;font-weight:600;padding:9px 0;border:1px solid var(--imp-border);border-radius:var(--imp-r-md);background:var(--imp-surface);color:var(--imp-fg-2);cursor:pointer;text-align:center;}
+    .size-b.on{border-color:var(--imp-fg);color:var(--imp-fg);background:var(--imp-surface-2);}
+    .size-b.locked{opacity:.4;cursor:not-allowed;}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px;}
+    .row label{font-size:13px;color:var(--imp-fg-2);}
+    input[type=color]{width:44px;height:30px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;}
+    select,input[type=text]{font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--imp-border);border-radius:var(--imp-r-md);background:var(--imp-surface);color:var(--imp-fg);width:100%;}
+    .swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+    .sw{width:26px;height:26px;border-radius:50%;border:1px solid var(--imp-border);cursor:pointer;}
+    .cup-cta{position:sticky;bottom:0;background:var(--imp-surface);padding-top:12px;margin-top:8px;border-top:1px solid var(--imp-border);}
+    .btn{font:inherit;font-size:14px;font-weight:600;padding:12px;border-radius:var(--imp-r-md);cursor:pointer;border:1px solid var(--imp-border);background:var(--imp-fg);color:var(--imp-bg);width:100%;text-align:center;text-decoration:none;display:block;}
+    .btn.ghost{background:var(--imp-surface);color:var(--imp-fg);margin-top:8px;}
+    .hint{font-size:11px;color:var(--imp-fg-3);line-height:1.45;margin-top:8px;}
+    .lid-note{font-size:11px;color:var(--imp-warning);background:var(--imp-warning-bg);border-radius:6px;padding:8px 10px;margin-top:8px;}
+    @media (max-width:760px){ .cup-wrap{flex-direction:column;height:auto;} .cup-stage{height:46vh;} .cup-panel{width:auto;flex:none;border-left:none;border-top:1px solid var(--imp-border);} }
+  </style>
+</head>
+<body>
+<div class="cup-top">
+  <a class="logo" href="index.html">IMPRINT<span style="color:var(--imp-gold)">®</span></a>
+  <span class="badge" id="mode-badge"></span>
+  <span class="sp"></span>
+  <a class="back" href="coffee-cup/">← Back to product</a>
+</div>
+<div class="cup-wrap">
+  <div class="cup-stage">
+    <div class="cup-loader" id="cup-loader"><div class="ring"></div><div>Loading the cup studio…</div></div>
+    <canvas id="cup-canvas"></canvas>
+  </div>
+  <aside class="cup-panel">
+    <h2>Artisan Coffee Cup</h2>
+    <p class="sub">Brand the body, sleeve and base. The lid stays clean — its print area is hidden.</p>
+
+    <div class="grp"><h3>Size</h3><div class="sizes" id="sizes"></div></div>
+
+    <div class="grp"><h3>Editing surface</h3>
+      <div class="mat-tabs" id="mat-tabs"></div>
+      <div class="lid-note" id="lid-note" style="display:none">The lid print area is hidden — lids are supplied clean. You can still set its colour &amp; finish.</div>
+    </div>
+
+    <div class="grp"><h3>Colour &amp; finish</h3>
+      <div class="row"><label>Colour</label><input type="color" id="mat-color"></div>
+      <div class="swatches" id="swatches"></div>
+      <div class="row" style="margin-top:12px"><label>Finish</label>
+        <select id="mat-finish" style="width:160px">
+          <option value="gloss">Gloss</option><option value="matte">Matte</option>
+          <option value="softtouch">Soft-touch</option><option value="kraft">Kraft</option><option value="foil">Foil</option>
+        </select></div>
+    </div>
+
+    <div class="grp" id="brand-grp"><h3>Branding</h3>
+      <input type="text" id="brand-text" placeholder="Your brand name" maxlength="18">
+      <div class="row" style="margin-top:10px"><label>Text colour</label><input type="color" id="brand-color" value="#ffffff"></div>
+      <div class="hint">Applied to the selected surface (cup or sleeve). Lid is excluded.</div>
+    </div>
+
+    <div class="cup-cta">
+      <a class="btn" href="checkout.html" id="cta-order">Add to cart</a>
+      <button class="btn ghost" id="cta-export" style="display:none">⬇ Export cup template</button>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="shared.js"></script>
+<script>
+(function(){
+  applyThemeOnLoad && applyThemeOnLoad();
+  var DESIGNER = false; try { DESIGNER = new URLSearchParams(location.search).get('designer')==='1'; } catch(e){}
+  document.getElementById('mode-badge').textContent = DESIGNER ? 'Designer mode' : '';
+  if (DESIGNER) document.getElementById('cta-export').style.display='block';
+
+  var FINISH = { gloss:{r:0.08,m:0.0}, matte:{r:0.85,m:0.0}, softtouch:{r:0.6,m:0.0}, kraft:{r:0.95,m:0.0}, foil:{r:0.2,m:0.9} };
+  var SIZE_SCALE = { S:0.82, M:1.0, L:1.16, XL:1.34 };
+  var SIZE_LABEL = { S:'8 oz', M:'12 oz', L:'16 oz', XL:'24 oz' };
+  var MAT_LABEL = { M_cup:'Cup', M_sleeve:'Sleeve', M_base:'Base', M_lid:'Lid' };
+  var MAT_ORDER = ['M_cup','M_sleeve','M_base','M_lid'];
+  var SWATCHES = ['#d8c4a0','#1f6f63','#2a2a2a','#7a2738','#2a3a5a','#b87333','#f0e9da','#c8a96e','#3f6f5f','#8a3b2e'];
+
+  var state = {
+    target:'M_cup', size:'M', lidHidden:true, lockedSizes:[],
+    mat:{ M_cup:{color:'#d8c4a0',finish:'kraft',text:'',textColor:'#3a2a18'},
+          M_sleeve:{color:'#1f6f63',finish:'matte',text:'CAFÉ',textColor:'#ffffff'},
+          M_base:{color:'#cbb892',finish:'kraft'},
+          M_lid:{color:'#2a2a2a',finish:'matte'} }
+  };
+
+  /* ── three.js scene ── */
+  var canvas=document.getElementById('cup-canvas'), stage=canvas.parentElement;
+  var renderer, scene, camera, controls, cupRoot, MATS={}, ready=false;
+  function initThree(){
+    if (typeof THREE==='undefined'){ fail('3D library failed to load (check your connection).'); return false; }
+    renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
+    renderer.setSize(stage.clientWidth, stage.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.outputEncoding=THREE.sRGBEncoding; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(38, stage.clientWidth/stage.clientHeight, 0.1, 100);
+    camera.position.set(0,0.6,4.2);
+    controls=new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping=true; controls.dampingFactor=0.08; controls.minDistance=2.2; controls.maxDistance=8; controls.target.set(0,0.3,0);
+    // lighting
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x9a8e7a, 0.95));
+    var key=new THREE.DirectionalLight(0xffffff,1.15); key.position.set(3,5,4); scene.add(key);
+    var fill=new THREE.DirectionalLight(0xffffff,0.5); fill.position.set(-4,2,-2); scene.add(fill);
+    var rim=new THREE.DirectionalLight(0xfff2dd,0.7); rim.position.set(0,3,-5); scene.add(rim);
+    scene.add(new THREE.AmbientLight(0xffffff,0.25));
+    // simple PMREM environment for believable reflections (esp. foil)
+    try { var pmrem=new THREE.PMREMGenerator(renderer); var envScene=new THREE.Scene();
+      envScene.background=new THREE.Color(0xeae3d6);
+      var eg=new THREE.Mesh(new THREE.SphereGeometry(10,16,16), new THREE.MeshBasicMaterial({color:0xf2ece0,side:THREE.BackSide}));
+      envScene.add(eg); var el=new THREE.DirectionalLight(0xffffff,2); el.position.set(2,4,3); envScene.add(el);
+      scene.environment=pmrem.fromScene(envScene,0.04).texture; } catch(e){}
+    window.addEventListener('resize', onResize);
+    return true;
+  }
+  function onResize(){ if(!renderer) return; renderer.setSize(stage.clientWidth, stage.clientHeight); camera.aspect=stage.clientWidth/stage.clientHeight; camera.updateProjectionMatrix(); }
+  function loop(){ requestAnimationFrame(loop); if(controls) controls.update(); if(renderer) renderer.render(scene,camera); }
+  function fail(msg){ var l=document.getElementById('cup-loader'); if(l){ l.innerHTML='<div style="max-width:240px;text-align:center;color:var(--imp-error)">'+msg+'</div>'; } }
+
+  function loadCup(){
+    var loader=new THREE.GLTFLoader();
+    loader.load('paper_cup/paper_cup.glb', function(gltf){
+      cupRoot=gltf.scene;
+      cupRoot.traverse(function(o){
+        if(o.isMesh && o.material){
+          var ms=Array.isArray(o.material)?o.material:[o.material];
+          ms.forEach(function(m){ if(m && m.name){ // replace with standard PBR we control
+            var nm=new THREE.MeshStandardMaterial({color:new THREE.Color('#ffffff'), roughness:0.7, metalness:0.0, name:m.name});
+            MATS[m.name]=nm; }
+          });
+          // reassign
+          if(Array.isArray(o.material)) o.material=o.material.map(function(m){return MATS[m.name]||m;});
+          else if(o.material.name && MATS[o.material.name]) o.material=MATS[o.material.name];
+        }
+      });
+      // center + scale to a comfortable height
+      var box=new THREE.Box3().setFromObject(cupRoot), size=new THREE.Vector3(); box.getSize(size);
+      var c=new THREE.Vector3(); box.getCenter(c); cupRoot.position.sub(c);
+      var base=1.7/Math.max(size.y||1,0.0001); cupRoot.scale.setScalar(base);
+      cupRoot.userData.baseScale=base;
+      var holder=new THREE.Group(); holder.add(cupRoot); holder.position.y=0.15; scene.add(holder); cupRoot.__holder=holder;
+      ready=true;
+      applyTemplateThenApplyAll();
+      var l=document.getElementById('cup-loader'); if(l) l.style.display='none';
+    }, undefined, function(err){ console.error(err); fail('Could not load the cup model.'); });
+  }
+
+  /* ── apply state to materials ── */
+  function applySize(){ if(!cupRoot) return; var s=(cupRoot.userData.baseScale||1)*(SIZE_SCALE[state.size]||1); cupRoot.scale.setScalar(s); }
+  function bakeText(name){
+    var m=MATS[name]; if(!m) return; var d=state.mat[name];
+    var cv=document.createElement('canvas'); cv.width=1024; cv.height=512; var x=cv.getContext('2d');
+    x.fillStyle=d.color; x.fillRect(0,0,1024,512);
+    if(name!=='M_lid' && d.text){
+      x.fillStyle=d.textColor||'#fff'; x.font='700 120px Inter, sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+      x.fillText(d.text, 512, 256);
+    }
+    var tex=new THREE.CanvasTexture(cv); tex.anisotropy=8; if(m.map) m.map.dispose(); m.map=tex; m.needsUpdate=true;
+  }
+  function applyMat(name){
+    var m=MATS[name]; if(!m) return; var d=state.mat[name]; var f=FINISH[d.finish]||FINISH.matte;
+    m.color.set('#ffffff'); m.roughness=f.r; m.metalness=f.m;
+    bakeText(name);   // map carries the colour (+ text for body parts)
+  }
+  function applyAll(){ MAT_ORDER.forEach(function(n){ if(MATS[n]) applyMat(n); }); applySize(); }
+
+  /* ── UI ── */
+  function buildUI(){
+    document.getElementById('sizes').innerHTML = Object.keys(SIZE_SCALE).map(function(k){
+      var locked=state.lockedSizes.indexOf(k)>=0;
+      return '<div class="size-b'+(k===state.size?' on':'')+(locked?' locked':'')+'" data-size="'+k+'">'+k+'<div style="font-size:9px;color:var(--imp-fg-3)">'+SIZE_LABEL[k]+'</div></div>';
+    }).join('');
+    document.getElementById('mat-tabs').innerHTML = MAT_ORDER.map(function(n){
+      var lidLock=(n==='M_lid' && state.lidHidden);
+      return '<div class="mat-tab'+(n===state.target?' on':'')+'" data-mat="'+n+'">'+MAT_LABEL[n]+(lidLock?'<span class="lk">no print</span>':'')+'</div>';
+    }).join('');
+    document.getElementById('swatches').innerHTML = SWATCHES.map(function(c){ return '<div class="sw" data-sw="'+c+'" style="background:'+c+'"></div>'; }).join('');
+    syncControls();
+  }
+  function syncControls(){
+    var d=state.mat[state.target];
+    document.getElementById('mat-color').value = toHex(d.color);
+    document.getElementById('mat-finish').value = d.finish;
+    var isLid = state.target==='M_lid';
+    document.getElementById('brand-grp').style.display = (isLid && state.lidHidden) ? 'none' : '';
+    document.getElementById('lid-note').style.display = (isLid && state.lidHidden) ? 'block' : 'none';
+    if(!isLid){ document.getElementById('brand-text').value = d.text||''; document.getElementById('brand-color').value = toHex(d.textColor||'#ffffff'); }
+    document.querySelectorAll('.mat-tab').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-mat')===state.target); });
+    document.querySelectorAll('.size-b').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-size')===state.size); });
+  }
+  function toHex(c){ try{ return '#'+new THREE.Color(c).getHexString(); }catch(e){ return c; } }
+
+  document.getElementById('sizes').addEventListener('click', function(e){ var b=e.target.closest('.size-b'); if(!b||b.classList.contains('locked'))return; state.size=b.getAttribute('data-size'); applySize(); syncControls(); });
+  document.getElementById('mat-tabs').addEventListener('click', function(e){ var t=e.target.closest('.mat-tab'); if(!t)return; state.target=t.getAttribute('data-mat'); syncControls(); });
+  document.getElementById('mat-color').addEventListener('input', function(e){ state.mat[state.target].color=e.target.value; applyMat(state.target); var sw=document.getElementById('swatches'); });
+  document.getElementById('mat-finish').addEventListener('change', function(e){ state.mat[state.target].finish=e.target.value; applyMat(state.target); });
+  document.getElementById('swatches').addEventListener('click', function(e){ var s=e.target.closest('.sw'); if(!s)return; var c=s.getAttribute('data-sw'); state.mat[state.target].color=c; document.getElementById('mat-color').value=toHex(c); applyMat(state.target); });
+  document.getElementById('brand-text').addEventListener('input', function(e){ if(state.target!=='M_lid'){ state.mat[state.target].text=e.target.value; applyMat(state.target); } });
+  document.getElementById('brand-color').addEventListener('input', function(e){ if(state.target!=='M_lid'){ state.mat[state.target].textColor=e.target.value; applyMat(state.target); } });
+
+  document.getElementById('cta-order').addEventListener('click', function(){
+    try { setCart({ product:'Artisan Coffee Cup', size:SIZE_LABEL[state.size], sizeKey:state.size, qty:1000, perUnit:1.8, baseTotal:1800, manufacturer:'Imprint Atelier', finish:state.mat.M_cup.finish, hasArtwork:!!(state.mat.M_cup.text||state.mat.M_sleeve.text) }); } catch(e){}
+  });
+  document.getElementById('cta-export').addEventListener('click', function(){
+    var tpl={ v:1, type:'cup', meta:{id:'coffee-cup',name:'Artisan Coffee Cup',designer:'Imprint'}, size:state.size, lockedSizes:state.lockedSizes, lidHidden:state.lidHidden, materials:state.mat };
+    var b=new Blob([JSON.stringify(tpl,null,1)],{type:'application/json'}); var a=document.createElement('a');
+    a.href=URL.createObjectURL(b); a.download='coffee-cup.template.json'; a.click();
+  });
+
+  /* ── template load ── */
+  function applyTemplateThenApplyAll(){
+    var tid=null; try{ tid=new URLSearchParams(location.search).get('template'); }catch(e){}
+    if(!tid){ buildUI(); applyAll(); return; }
+    fetch('templates/'+tid+'.template.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(tpl){
+      if(tpl){ if(tpl.size) state.size=tpl.size; if(tpl.lockedSizes) state.lockedSizes=tpl.lockedSizes; if('lidHidden' in tpl) state.lidHidden=tpl.lidHidden;
+        if(tpl.materials){ Object.keys(tpl.materials).forEach(function(k){ state.mat[k]=Object.assign(state.mat[k]||{}, tpl.materials[k]); }); } }
+      buildUI(); applyAll();
+    }).catch(function(){ buildUI(); applyAll(); });
+  }
+
+  // boot
+  if(initThree()){ loop(); loadCup(); }
+})();
+</script>
+</body>
+</html>

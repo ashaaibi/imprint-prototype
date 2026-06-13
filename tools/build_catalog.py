@@ -308,6 +308,9 @@ def main():
     bag_assets=[]
     for i,src in enumerate(bag_imgs,1):
         dst=f"assets/bags/bag-{i}.jpg"; shutil.copyfile(src, os.path.join(ROOT,dst)); bag_assets.append(dst)
+    # coffee-cup render (staged from the coffee zip; otherwise keep existing committed asset)
+    _cof='/tmp/coffee/coffee.jpg'
+    if os.path.exists(_cof): shutil.copyfile(_cof, os.path.join(ROOT,'assets/products/coffee-cup.jpg'))
 
     # Collections
     col_imgs = find_imgs('Collections')
@@ -375,13 +378,21 @@ def main():
         "blurb":"A foil honeycomb bottle bag with editable wordmark — the flagship Imprint template. Fully customisable in 3D.",
         "featured":True,"template":"honey-gift-bag","href":f"{HONEYLOOM_SLUG}/","rich":True,
     }
+    coffee = {
+        "id":"coffee-cup","name":"Artisan Coffee Cup","category":"food",
+        "image":"assets/products/coffee-cup.jpg","gallery":["assets/products/coffee-cup.jpg"],
+        "artist":"liam-obrien","makers":["imprint-atelier","marina-pack","gulf-print"],
+        "price":1.8,"tags":["new","hot","eco"],"rating":4.9,"reviews":21,
+        "blurb":"A double-wall paper coffee cup you can brand across the body, sleeve and base in real-time 3D — the lid stays clean. A ready Imprint template with its own cup studio.",
+        "featured":True,"template":"coffee-cup","configurator":"configurator-cup.html","href":"coffee-cup/","size":"M",
+    }
 
     # Curate a handful of featured products for the landing
     feat_pool=[p for p in products if p['tags']]
     for p in sorted(products, key=lambda x:-x['rating'])[:6]:
         p['featured']=True
 
-    all_products=[honey]+products
+    all_products=[honey, coffee]+products
     # attach product href (clean folder URL)
     for p in all_products:
         p.setdefault("href", f"{p['id']}/")
@@ -439,6 +450,11 @@ def main():
             '<script src="app.js"></script><script src="product.js"></script></body></html>')
     n_stub=0
     for p in products:
+        d=os.path.join(ROOT,p['id']); ensure(d)
+        with open(os.path.join(d,"index.html"),"w",encoding="utf-8") as f:
+            f.write(stub.format(title=p['name'], slug=p['id']))
+        n_stub+=1
+    for p in [coffee]:                       # cup uses the lean PDP + its own cup studio
         d=os.path.join(ROOT,p['id']); ensure(d)
         with open(os.path.join(d,"index.html"),"w",encoding="utf-8") as f:
             f.write(stub.format(title=p['name'], slug=p['id']))

@@ -48,8 +48,9 @@
   <p class="dp-sub">Open the studio in <strong>designer mode</strong> — you get the full configurator plus the Testing panel, a Locks panel (choose what clients may change), a render-capture button, and Export. Clients only ever see the locked template.</p>
 
   <div class="dp-cta-row">
-    <a class="dp-btn primary" href="../configurator.html?designer=1">✦ New template (open builder)</a>
-    <a class="dp-btn" href="../product.html" target="_blank">View the live product page</a>
+    <a class="dp-btn primary" href="../configurator.html?designer=1">✦ New bag template</a>
+    <a class="dp-btn primary" href="../configurator-cup.html?designer=1">☕ New cup template</a>
+    <a class="dp-btn" href="../products.html" target="_blank">View the marketplace</a>
   </div>
 
   <div class="dp-steps">
@@ -82,7 +83,7 @@ fetch('../templates/index.json', { cache:'no-store' }).then(function(r){ return 
     var thumb = t.render ? '<img src="../'+t.render+'" alt="'+t.name+'">' : bagSVG(acc,_shade(acc,-24),_shade(acc,46));
     return '<div class="dp-tpl"><div class="dp-tpl-stage" style="background:linear-gradient(160deg,'+_shade(acc,66)+','+_shade(acc,34)+')">'+thumb+'</div>' +
       '<div class="dp-tpl-body"><div class="dp-tpl-name">'+t.name+'</div><div class="dp-tpl-cat">'+(t.category||'')+'</div>' +
-      '<div class="dp-tpl-links"><a href="../configurator.html?template='+encodeURIComponent(t.id)+'" target="_blank">Preview as client</a><a href="../configurator.html?designer=1" target="_blank">New from studio</a></div></div></div>';
+      '<div class="dp-tpl-links"><a href="../'+(t.configurator||'configurator.html')+'?template='+encodeURIComponent(t.id)+'" target="_blank">Preview as client</a><a href="../'+(t.configurator||'configurator.html')+'?designer=1" target="_blank">New from studio</a></div></div></div>';
   }).join('') + '</div>';
 }).catch(function(){ document.getElementById('dp-templates').innerHTML='<div class="dp-empty">Could not load templates/index.json.</div>'; });
 </script>

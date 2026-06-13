@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "cup",
+  "meta": { "id": "coffee-cup", "name": "Artisan Coffee Cup", "designer": "Imprint", "created": "2026-06-13" },
+  "size": "M",
+  "lockedSizes": [],
+  "lidHidden": true,
+  "materials": {
+    "M_cup":    { "color": "#d8c4a0", "finish": "kraft", "text": "", "textColor": "#3a2a18" },
+    "M_sleeve": { "color": "#1f6f63", "finish": "matte", "text": "CAFÉ", "textColor": "#ffffff" },
+    "M_base":   { "color": "#cbb892", "finish": "kraft" },
+    "M_lid":    { "color": "#2a2a2a", "finish": "matte" }
+  }
+}

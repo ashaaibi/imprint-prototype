@@ -113,6 +113,35 @@ window.IMPRINT_CATALOG = {
    "rich": true
   },
   {
+   "id": "coffee-cup",
+   "name": "Artisan Coffee Cup",
+   "category": "food",
+   "image": "assets/products/coffee-cup.jpg",
+   "gallery": [
+    "assets/products/coffee-cup.jpg"
+   ],
+   "artist": "liam-obrien",
+   "makers": [
+    "imprint-atelier",
+    "marina-pack",
+    "gulf-print"
+   ],
+   "price": 1.8,
+   "tags": [
+    "new",
+    "hot",
+    "eco"
+   ],
+   "rating": 4.9,
+   "reviews": 21,
+   "blurb": "A double-wall paper coffee cup you can brand across the body, sleeve and base in real-time 3D — the lid stays clean. A ready Imprint template with its own cup studio.",
+   "featured": true,
+   "template": "coffee-cup",
+   "configurator": "configurator-cup.html",
+   "href": "coffee-cup/",
+   "size": "M"
+  },
+  {
    "id": "gold-mandala-paper-gift-bag",
    "name": "Gold Mandala Paper Gift Bag",
    "category": "bags",
@@ -1566,6 +1595,7 @@ window.IMPRINT_CATALOG = {
    "since": 2023,
    "followers": 3301,
    "products": [
+    "coffee-cup",
     "kraft-mailer-box-gold-emblem",
     "kraft-cylinder-tube",
     "black-patterned-mailer-box",
@@ -1760,6 +1790,7 @@ window.IMPRINT_CATALOG = {
    "bio": "Imprint's flagship atelier in Dubai — the house standard for foil, emboss and rigid-box finishing, and the default for featured templates.",
    "products": [
     "honeyloom-gift-bag",
+    "coffee-cup",
     "gold-mandala-paper-gift-bag",
     "navy-gold-floral-rigid-box",
     "ivory-gold-ornate-book-box",
@@ -1839,6 +1870,7 @@ window.IMPRINT_CATALOG = {
    ],
    "bio": "A Sharjah high-volume house — sharp pricing at scale for retail rollouts and seasonal campaigns.",
    "products": [
+    "coffee-cup",
     "gold-mandala-paper-gift-bag",
     "burgundy-chocolate-gift-box",
     "kraft-mailer-box-gold-emblem",
@@ -2057,6 +2089,7 @@ window.IMPRINT_CATALOG = {
    ],
    "bio": "Doha's sustainability-forward mailer house — recycled, mono-material and plastic-free e-commerce packaging.",
    "products": [
+    "coffee-cup",
     "kraft-mailer-box-gold-emblem",
     "black-patterned-mailer-box",
     "curated-beauty-co-mailer-box",

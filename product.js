@@ -41,7 +41,7 @@
         s[1] + (locked ? ' ' + lockSVG() : '') + '</span>';
     }).join('');
 
-    var ctaHref = p.template ? ('configurator.html?template=' + encodeURIComponent(p.template)) : 'configurator.html';
+    var ctaHref = p.template ? ((p.configurator || 'configurator.html') + '?template=' + encodeURIComponent(p.template)) : 'configurator.html';
 
     root.innerHTML =
       '<div class="imp-wrap pdp">' +
