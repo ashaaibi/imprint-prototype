@@ -3,482 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="theme-color" content="#111111">
-  <meta name="description" content="Design premium custom paper bags in 3D — colours, finishes, artwork & instant pricing. Made for the GCC.">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="IMPRINT®">
-  <meta property="og:title" content="IMPRINT® — Premium custom paper bags">
-  <meta property="og:description" content="Design premium custom paper bags in 3D — colours, finishes, artwork & instant pricing. Made for the GCC.">
+  <meta name="description" content="IMPRINT is the packaging marketplace connecting independent artists, brands, and vetted manufacturers — design, customise in 3D, and produce premium packaging in one automated flow.">
+  <meta property="og:title" content="IMPRINT® — The packaging marketplace">
+  <meta property="og:description" content="Where artists, brands and manufacturers meet. Customise designer packaging in 3D and produce it automatically.">
   <meta property="og:url" content="https://ashaaibi.github.io/imprint-prototype/">
   <meta property="og:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="IMPRINT® — Premium custom paper bags">
-  <meta name="twitter:description" content="Design premium custom paper bags in 3D — colours, finishes, artwork & instant pricing. Made for the GCC.">
-  <meta name="twitter:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMPRINT® — Premium packaging. Made simple.</title>
+  <title>IMPRINT® — The packaging marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="catalog.css">
   <style>
-    /* ─── HERO ────────────────────────────────────── */
-    .hero {
-      min-height: calc(100vh - var(--imp-header-h));
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 80px 32px;
-      position: relative;
-      overflow: hidden;
-      background: var(--imp-bg);
-    }
-    .hero-eyebrow {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--imp-fg-3);
-      margin-bottom: 28px;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--imp-gold); }
-    .hero-title {
-      font-family: var(--imp-font);
-      font-size: clamp(48px, 7vw, 88px);
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      line-height: 1.02;
-      color: var(--imp-fg);
-      margin-bottom: 24px;
-      max-width: 900px;
-    }
-    .hero-sub {
-      font-size: 18px;
-      color: var(--imp-fg-2);
-      line-height: 1.6;
-      max-width: 540px;
-      margin-bottom: 40px;
-      font-weight: 400;
-    }
-    .hero-cta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .hero-note {
-      font-size: 13px;
-      color: var(--imp-fg-3);
-      margin-top: 32px;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .hero-bg-grad {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 50% at 50% 110%, var(--imp-gold-soft) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    /* ─── STATS STRIP ─────────────────────────────── */
-    .stats-strip {
-      background: var(--imp-surface);
-      border-top: 1px solid var(--imp-border);
-      border-bottom: 1px solid var(--imp-border);
-      padding: 36px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 80px;
-      flex-wrap: wrap;
-    }
-    .stat { text-align: center; }
-    .stat-num {
-      font-family: var(--imp-font);
-      font-size: 32px;
-      font-weight: 600;
-      color: var(--imp-fg);
-      line-height: 1;
-      margin-bottom: 6px;
-      letter-spacing: -0.02em;
-    }
-    .stat-label {
-      font-size: 12px;
-      color: var(--imp-fg-3);
-      font-weight: 500;
-    }
-
-    /* ─── HOW IT WORKS ────────────────────────────── */
-    .how-section {
-      padding: 120px 32px;
-      max-width: var(--imp-max-w);
-      margin: 0 auto;
-    }
-    .how-header {
-      text-align: center;
-      margin-bottom: 64px;
-    }
-    .section-title {
-      font-family: var(--imp-font);
-      font-size: clamp(32px, 4vw, 48px);
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      color: var(--imp-fg);
-      max-width: 700px;
-      margin: 12px auto 0;
-    }
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-    .step-card {
-      background: var(--imp-surface);
-      border: 1px solid var(--imp-border);
-      border-radius: var(--imp-r-lg);
-      padding: 32px;
-      box-shadow: var(--imp-shadow-xs);
-      transition: box-shadow 0.18s var(--imp-ease), border-color 0.18s var(--imp-ease);
-    }
-    .step-card:hover { box-shadow: var(--imp-shadow-sm); border-color: var(--imp-border-hover); }
-    .step-number {
-      font-family: var(--imp-font);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--imp-gold);
-      letter-spacing: 0.08em;
-      margin-bottom: 24px;
-    }
-    .step-icon {
-      width: 32px; height: 32px;
-      margin-bottom: 20px;
-      color: var(--imp-fg);
-    }
-    .step-title {
-      font-family: var(--imp-font);
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--imp-fg);
-      letter-spacing: -0.01em;
-    }
-    .step-desc {
-      font-size: 14px;
-      color: var(--imp-fg-2);
-      line-height: 1.6;
-    }
-
-    /* ─── WHY SECTION (dark inversion) ────────────── */
-    .why-section {
-      background: var(--imp-fg);
-      color: var(--imp-surface);
-      padding: 120px 32px;
-    }
-    html[data-theme="dark"] .why-section { background: var(--imp-surface); border-top: 1px solid var(--imp-border); border-bottom: 1px solid var(--imp-border); }
-    .why-inner {
-      max-width: var(--imp-max-w);
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      gap: 80px;
-      align-items: center;
-    }
-    .why-title {
-      font-family: var(--imp-font);
-      font-size: clamp(32px, 4vw, 48px);
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-bottom: 24px;
-    }
-    .why-title .accent { color: var(--imp-gold); }
-    .why-desc {
-      font-size: 16px;
-      line-height: 1.7;
-      color: rgba(255,255,255,0.65);
-      margin-bottom: 32px;
-    }
-    html[data-theme="dark"] .why-desc { color: var(--imp-fg-2); }
-    .why-points {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .why-point {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      font-size: 14px;
-      color: rgba(255,255,255,0.85);
-      line-height: 1.5;
-    }
-    html[data-theme="dark"] .why-point { color: var(--imp-fg); }
-    .why-point-icon {
-      width: 18px; height: 18px;
-      flex-shrink: 0;
-      color: var(--imp-gold);
-      margin-top: 1px;
-    }
-    .why-visual {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .why-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: var(--imp-r-lg);
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .why-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
-    html[data-theme="dark"] .why-card { background: var(--imp-bg); border-color: var(--imp-border); }
-    .why-card-icon {
-      width: 32px; height: 32px;
-      flex-shrink: 0;
-      border-radius: var(--imp-r-md);
-      background: rgba(255,255,255,0.06);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--imp-gold);
-    }
-    .why-card-icon svg { width: 16px; height: 16px; }
-    .why-card-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 3px;
-      color: #fff;
-      letter-spacing: -0.01em;
-    }
-    html[data-theme="dark"] .why-card-title { color: var(--imp-fg); }
-    .why-card-sub {
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
-    }
-    html[data-theme="dark"] .why-card-sub { color: var(--imp-fg-3); }
-
-    /* ─── CTA BANNER ──────────────────────────────── */
-    .cta-banner {
-      padding: 120px 32px;
-      text-align: center;
-      background: var(--imp-bg);
-    }
-    .cta-banner-title {
-      font-family: var(--imp-font);
-      font-size: clamp(36px, 5vw, 56px);
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      color: var(--imp-fg);
-      margin-bottom: 16px;
-      line-height: 1.1;
-    }
-    .cta-banner-sub {
-      font-size: 16px;
-      color: var(--imp-fg-2);
-      margin-bottom: 32px;
-    }
-
-    /* ─── RESPONSIVE ──────────────────────────────── */
-    @media (max-width: 900px) {
-      .hero { padding: 60px 20px; min-height: auto; padding-top: 80px; padding-bottom: 80px; }
-      .stats-strip { padding: 24px; gap: 32px; }
-      .how-section { padding: 80px 20px; }
-      .steps-grid { grid-template-columns: 1fr; gap: 12px; }
-      .why-section { padding: 80px 20px; }
-      .why-inner { grid-template-columns: 1fr; gap: 40px; }
-      .cta-banner { padding: 80px 20px; }
-    }
-    @media (max-width: 480px) {
-      .stats-strip { gap: 18px; }
-      .stat-num { font-size: 24px; }
-    }
+    .hero-badges { display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; }
+    .hero-badge { font-size:12.5px; color:var(--imp-fg-2); display:flex; align-items:center; gap:7px; }
+    .hero-badge .d { width:7px; height:7px; border-radius:50%; background:var(--imp-gold); }
+    .three-sided { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .ts-card { border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); padding:24px; background:var(--imp-surface); }
+    .ts-card .k { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--imp-gold); }
+    .ts-card h3 { font-size:19px; margin:8px 0 8px; color:var(--imp-fg); }
+    .ts-card p { font-size:13.5px; color:var(--imp-fg-2); line-height:1.6; margin:0 0 14px; }
+    .ts-card a { font-size:13px; font-weight:600; color:var(--imp-fg); text-decoration:none; border-bottom:1px solid var(--imp-fg); }
+    .statstrip { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; border-top:1px solid var(--imp-border); border-bottom:1px solid var(--imp-border); padding:26px 0; }
+    .statstrip .v { font-size:30px; font-weight:700; letter-spacing:-0.02em; color:var(--imp-fg); font-family:'Cormorant Garamond',serif; }
+    .statstrip .l { font-size:12px; color:var(--imp-fg-3); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+    .join-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .join-card { border-radius:var(--imp-r-xl); padding:34px; color:#fff; position:relative; overflow:hidden; }
+    .join-card h3 { font-size:24px; margin:0 0 8px; font-family:'Cormorant Garamond',serif; font-weight:600; }
+    .join-card p { font-size:14px; opacity:.9; line-height:1.6; margin:0 0 18px; max-width:380px; }
+    .join-card .btn { background:#fff; color:#1a1a1a; border:none; }
+    @media (max-width:800px){ .three-sided,.join-grid{grid-template-columns:1fr 1fr;} .statstrip{grid-template-columns:1fr 1fr;} }
+    @media (max-width:560px){ .three-sided,.join-grid{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
-
 <div id="site-header"></div>
+<div id="site-nav"></div>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="hero-bg-grad"></div>
-  <p class="hero-eyebrow"><span class="dot"></span><span data-i18n="home.eyebrow">Custom packaging · made simple</span></p>
-  <h1 class="hero-title" data-i18n="home.hero.title" data-i18n-html>Premium packaging.<br>Made simple.</h1>
-  <p class="hero-sub" data-i18n="home.hero.sub">Configure, price, and order custom packaging — in minutes. Real factories. Live pricing. No middlemen.</p>
-  <div class="hero-cta">
-    <a href="products.html" class="btn btn-primary btn-lg">
-      <span data-i18n="home.hero.cta">Start designing</span>
-      <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </a>
-    <a href="products.html" class="btn btn-outline btn-lg" data-i18n="home.hero.ghost">View products</a>
+<section class="imp-wrap lhero">
+  <div class="lhero-grid">
+    <div>
+      <p class="eyebrow">The packaging marketplace</p>
+      <h1>Where artists, brands &amp; makers meet.</h1>
+      <p>IMPRINT isn't a print shop. It's the platform that connects independent <b>artists</b>, the <b>brands</b> who love their work, and vetted <b>manufacturers</b> — so a design becomes a finished, shippable product in one automated, seamless flow. Customise any design in real-time 3D, and we route it to production for you.</p>
+      <div class="lhero-cta">
+        <a class="btn btn-primary" href="products.html" style="flex:0 0 auto">Browse the marketplace</a>
+        <a class="btn" href="index.html#how">How it works</a>
+      </div>
+      <div class="hero-badges">
+        <span class="hero-badge"><span class="d"></span>Designer templates, ready to customise</span>
+        <span class="hero-badge"><span class="d"></span>Live 3D preview &amp; pricing</span>
+        <span class="hero-badge"><span class="d"></span>Auto-routed to vetted makers</span>
+      </div>
+    </div>
+    <div class="lhero-collage" id="hero-collage"></div>
   </div>
-  <p class="hero-note" data-i18n="home.hero.note">No account needed · Instant pricing · Ships across the GCC</p>
 </section>
 
-<!-- STATS -->
-<div class="stats-strip">
-  <div class="stat">
-    <div class="stat-num">8</div>
-    <div class="stat-label" data-i18n="home.stat.products">Product types</div>
-  </div>
-  <div class="stat">
-    <div class="stat-num">6</div>
-    <div class="stat-label" data-i18n="home.stat.countries">GCC countries</div>
-  </div>
-  <div class="stat">
-    <div class="stat-num">200+</div>
-    <div class="stat-label" data-i18n="home.stat.factories">Factories</div>
-  </div>
-  <div class="stat">
-    <div class="stat-num">3 days</div>
-    <div class="stat-label" data-i18n="home.stat.lead">Fastest lead time</div>
-  </div>
-</div>
+<section class="imp-wrap tight"><div class="statstrip" id="statstrip"></div></section>
+
+<!-- FEATURED PRODUCTS -->
+<section class="imp-wrap sec">
+  <div class="sec-head"><div><p class="eyebrow">Featured</p><h2 class="sec-title">Trending designer templates</h2><p class="sec-sub">Hand-picked, ready-to-customise designs from artists across the network.</p></div><a class="sec-link" href="products.html">All products →</a></div>
+  <div class="pgrid" id="feat-products"></div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="imp-wrap sec tight">
+  <div class="sec-head"><div><h2 class="sec-title">Shop by category</h2></div><a class="sec-link" href="products.html">See all →</a></div>
+  <div class="catrow" id="home-cats"></div>
+</section>
+
+<!-- ARTISTS -->
+<section class="imp-wrap sec">
+  <div class="sec-head"><div><p class="eyebrow">The network</p><h2 class="sec-title">Featured artists</h2><p class="sec-sub">Independent designers with a signature style. Follow them and shop their collections.</p></div><a class="sec-link" href="artists.html">All artists →</a></div>
+  <div class="agrid" id="feat-artists"></div>
+</section>
+
+<!-- COLLECTIONS -->
+<section class="imp-wrap sec tight">
+  <div class="sec-head"><div><h2 class="sec-title">Trending collections</h2></div><a class="sec-link" href="collections.html">All collections →</a></div>
+  <div class="colgrid" id="feat-collections"></div>
+</section>
 
 <!-- HOW IT WORKS -->
-<section class="how-section">
-  <div class="how-header">
-    <p class="eyebrow" data-i18n="home.how.eyebrow">How it works</p>
-    <h2 class="section-title" data-i18n="home.how.title">From idea to production in three steps.</h2>
-  </div>
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-number">01</div>
-      <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7h18M3 12h18M3 17h12"/>
-        <circle cx="19" cy="17" r="3"/>
-      </svg>
-      <div class="step-title" data-i18n="home.how.1.title">Configure</div>
-      <p class="step-desc" data-i18n="home.how.1.desc">Choose your product, upload your logo or type your brand name, pick a finish and size. See exactly what you'll receive — in 3D, in real time.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-number">02</div>
-      <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 12h3M19 12h3M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
-        <circle cx="12" cy="12" r="4"/>
-      </svg>
-      <div class="step-title" data-i18n="home.how.2.title">Choose your factory</div>
-      <p class="step-desc" data-i18n="home.how.2.desc">Compare factories by price, quality rating, lead time, and finish capabilities. Pick what fits your budget and timeline.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-number">03</div>
-      <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-5 9 5v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-        <path d="M3 9l9 5 9-5M12 14v8"/>
-      </svg>
-      <div class="step-title" data-i18n="home.how.3.title">Receive your order</div>
-      <p class="step-desc" data-i18n="home.how.3.desc">Production files are generated automatically. Track your order through every stage — from production to delivery.</p>
-    </div>
+<section class="imp-wrap sec" id="how">
+  <div class="sec-head"><div><p class="eyebrow">How it works</p><h2 class="sec-title">One platform. Three sides. Zero friction.</h2></div></div>
+  <div class="three-sided">
+    <div class="ts-card"><div class="k">For artists</div><h3>Design &amp; earn</h3><p>Upload artwork, build a locked template, set what clients can change. Earn a royalty every time it sells — production is handled for you.</p><a href="designer/index.html">Open the designer portal →</a></div>
+    <div class="ts-card"><div class="k">For brands</div><h3>Customise in 3D</h3><p>Pick a designer template, swap your text, colours and logo in real-time 3D, see live pricing, and order — no design skills, no quotes, no waiting.</p><a href="products.html">Browse templates →</a></div>
+    <div class="ts-card"><div class="k">For manufacturers</div><h3>Receive print-ready jobs</h3><p>Production files are generated automatically and routed to the maker the customer chose. You print, finish, and ship — we handle the rest.</p><a href="manufacturers.html">Meet the makers →</a></div>
   </div>
 </section>
 
-<!-- WHY IMPRINT -->
-<section class="why-section">
-  <div class="why-inner">
-    <div>
-      <h2 class="why-title">
-        <span data-i18n="home.why.title">The operating system for </span><span class="accent">packaging.</span>
-      </h2>
-      <p class="why-desc" data-i18n="home.why.desc">Ordering branded packaging traditionally means emails, spreadsheets, and weeks of waiting. Imprint automates the entire process — from design to print-ready file to factory floor.</p>
-      <ul class="why-points">
-        <li class="why-point">
-          <svg class="why-point-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <span data-i18n="home.why.1">Instant, accurate pricing. No quotes. No waiting.</span>
-        </li>
-        <li class="why-point">
-          <svg class="why-point-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <span data-i18n="home.why.2">Production files generated automatically — no designer required.</span>
-        </li>
-        <li class="why-point">
-          <svg class="why-point-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <span data-i18n="home.why.3">Multiple vetted factories. You choose the trade-off.</span>
-        </li>
-        <li class="why-point">
-          <svg class="why-point-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <span data-i18n="home.why.4">Full order tracking from confirmation to delivery.</span>
-        </li>
-      </ul>
-    </div>
-    <div class="why-visual">
-      <div class="why-card">
-        <div class="why-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        </div>
-        <div>
-          <div class="why-card-title">Live 3D preview</div>
-          <div class="why-card-sub">See your packaging in photorealistic 3D as you design</div>
-        </div>
-      </div>
-      <div class="why-card">
-        <div class="why-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V8l4 3V8l6 4V8l6 4V8l4 3v9z"/></svg>
-        </div>
-        <div>
-          <div class="why-card-title">Factory network</div>
-          <div class="why-card-sub">UAE · KSA · China · Egypt — pick your factory</div>
-        </div>
-      </div>
-      <div class="why-card">
-        <div class="why-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
-        </div>
-        <div>
-          <div class="why-card-title">GCC-wide delivery</div>
-          <div class="why-card-sub">UAE · KSA · Kuwait · Bahrain · Qatar · Oman</div>
-        </div>
-      </div>
-      <div class="why-card">
-        <div class="why-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>
-        </div>
-        <div>
-          <div class="why-card-title">Auto production files</div>
-          <div class="why-card-sub">Print-ready PDF with bleed, crop marks &amp; CMYK</div>
-        </div>
-      </div>
-    </div>
+<!-- MANUFACTURERS -->
+<section class="imp-wrap sec tight">
+  <div class="sec-head"><div><h2 class="sec-title">Vetted manufacturers</h2><p class="sec-sub">Compare price, quality, lead time and finishes — you choose the trade-off at checkout.</p></div><a class="sec-link" href="manufacturers.html">All makers →</a></div>
+  <div class="mgrid" id="feat-makers"></div>
+</section>
+
+<!-- JOIN -->
+<section class="imp-wrap sec">
+  <div class="join-grid">
+    <div class="join-card" style="background:linear-gradient(150deg,#2a2118,#473522)"><h3>Are you an artist?</h3><p>Turn your style into a catalogue of sellable, customisable products. We handle 3D, pricing, production and fulfilment.</p><a class="btn" href="designer/index.html">Join as an artist</a></div>
+    <div class="join-card" style="background:linear-gradient(150deg,#16302c,#0f4339)"><h3>Run a print house?</h3><p>Get a steady feed of print-ready, pre-paid jobs matched to your capabilities and capacity. No sales team required.</p><a class="btn" href="manufacturers.html">Become a maker</a></div>
   </div>
 </section>
 
-<!-- CTA -->
-<section class="cta-banner">
-  <h2 class="cta-banner-title" data-i18n="home.cta.title">Ready to see it in action?</h2>
-  <p class="cta-banner-sub" data-i18n="home.cta.sub">Explore the paper bag configurator — no account needed.</p>
-  <a href="products.html" class="btn btn-primary btn-lg">
-    <span data-i18n="home.hero.cta">Start designing</span>
-    <svg class="imp-flip-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-  </a>
-</section>
-
-<!-- FOOTER -->
-<footer class="site-footer">
-  <span data-i18n="common.copyright">© 2026 IMPRINT. All rights reserved.</span>
-  <span class="site-footer-links">
-    <a href="#" data-i18n="common.terms">Terms</a>
-    <a href="#" data-i18n="common.privacy">Privacy</a>
-    <a href="#" data-i18n="common.contact">Contact</a>
-  </span>
-</footer>
+<div id="site-footer"></div>
 
 <script src="shared.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    initSiteHeader({ activePage: 'home', showCart: false });
-  });
+(function(){
+  IMP.initAppHeader({ activePage:'home' });
+  var C = IMP.cat();
+  function pick(arr,n){ return arr.slice(0,n); }
+
+  var hero = [].concat(['templates/renders/honey-gift-bag-1.jpg'],
+    pick(C.products.filter(function(p){return p.id!=='honeyloom-gift-bag';}),3).map(function(p){return p.image;}));
+  document.getElementById('hero-collage').innerHTML = hero.map(function(src){ return '<img src="'+src+'" alt="" loading="lazy">'; }).join('');
+
+  document.getElementById('statstrip').innerHTML = [
+    [C.products.length, 'Designer templates'],
+    [C.artists.length, 'Independent artists'],
+    [C.makers.length, 'Vetted manufacturers'],
+    ['6', 'GCC countries served']
+  ].map(function(s){ return '<div><div class="v">'+s[0]+'</div><div class="l">'+s[1]+'</div></div>'; }).join('');
+
+  var feats = C.products.filter(function(p){return p.featured;});
+  var honey = C.products.filter(function(p){return p.id==='honeyloom-gift-bag';});
+  var ordered = honey.concat(feats.filter(function(p){return p.id!=='honeyloom-gift-bag';}));
+  document.getElementById('feat-products').innerHTML = pick(ordered,8).map(IMP.productCard).join('');
+
+  document.getElementById('home-cats').innerHTML = C.categories.map(function(cat){
+    var n = C.products.filter(function(p){return p.category===cat.id;}).length;
+    return '<a class="catcard" href="products.html#'+cat.id+'"><div class="cc-name">'+cat.name+'</div><div class="cc-count">'+n+' designs</div></a>';
+  }).join('');
+
+  var artists = C.artists.slice().sort(function(a,b){return b.followers-a.followers;});
+  document.getElementById('feat-artists').innerHTML = pick(artists,4).map(IMP.artistCard).join('');
+
+  var cols = C.collections.slice().sort(function(a,b){return (b.tags.length)-(a.tags.length);});
+  document.getElementById('feat-collections').innerHTML = pick(cols,5).map(IMP.collectionCard).join('');
+
+  var makers = C.makers.slice().sort(function(a,b){return b.rating-a.rating;});
+  document.getElementById('feat-makers').innerHTML = pick(makers,3).map(IMP.makerCard).join('');
+})();
 </script>
 </body>
 </html>
