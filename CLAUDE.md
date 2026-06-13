@@ -31,18 +31,51 @@ mangling files/folders.
 ## The 3D configurator (`configurator.html` + `realism-engine.js`)
 - Three.js r128, **inlined** into the HTML, plus the GLB bag model and the **studio3 HDRI**
   embedded as **base64** (that's most of the file size). Only studio3 is kept (other HDRIs removed to save memory).
-- `realism-engine.js` is loaded with a cache-bust query: `<script src="realism-engine.js?v=9">`.
+- `realism-engine.js` is loaded with a cache-bust query: `<script src="realism-engine.js?v=15">`.
   **Bump `?v=N` whenever you edit realism-engine.js**, or the browser serves a stale copy.
 - `REALISM` config object lives in **configurator.html** (~line 3215); the engine reads it as a global.
 
 ### Artwork layer system
-`BAG.artwork.layers[]`. Layer kinds:
-- **Graphic** (internal `kind:'sticker'`, `tiled:false`) and **Pattern** (`kind:'sticker'`, `tiled:true`) — share the upload/cutout/recolor pipeline.
-- **Text** — per-layer fonts via the FontFace API.
-- Adding a Graphic/Pattern/Text opens an **add-source prompt** (Upload / Choose from artist library; fonts have no AI option).
-- **Edit-background modal** (the cutout modal) holds: background removal, a **draggable crop box**, and a **PDF page selector** (multi-page PDFs).
-- **Recolor** is an optional toggle in the layer body (default OFF = keep original colors); up to **10** detected colors; neutral-snap default **0**.
-- Pattern crop/fade masks the **whole pattern region across all enabled faces as one** (union bbox), not per tile.
+`BAG.artwork.layers[]`. **Add Layer** opens a centered **popup modal** (`openAddLayerModal`) — Text /
+Logo / Graphic / Background cards (no dropdown, no "AI" option). Layer kinds (all `kind` plus flags):
+- **Text** (`kind:'text'`) — per-layer fonts via FontFace API. Default fontSize **45**, font **inter**.
+- **Logo** (`kind:'sticker', isLogo:true`) — single upload, keeps full Finish/Emboss/Layout.
+- **Graphic** (`kind:'sticker'`) — upload or shape presets.
+- **Background** (`kind:'sticker', isBackground:true, tiled:true`) — a tiled pattern.
+- Adding Graphic/Logo/Text/Background opens the **add-source prompt** (Upload / Presets; fonts no AI).
+- **Edit-background modal** (cutout): bg removal, **draggable crop box**, **PDF page selector**.
+- **Recolor** = optional toggle (default OFF). Layer body order: kind controls → **Scale/Rotation/Opacity**
+  → **Colour/Recolor** → **Move** → **Areas** → (Finish/Emboss/Layout only on Logo & Text).
+
+**Per-layer transform & per-face visibility**
+- `_transformHTML` = Scale (font-size for text) / Rotation / Opacity sliders. `onLayerScale` maps Scale.
+- **Move** section = a button that opens the full 2D editor focused on the layer (no embedded mini-editor).
+- **Areas** = per-face show/hide via `L.faceHide` (`{region}_{face}`, region=exterior|interior, faces from
+  `BAG_FACES`). UI = collapsible **Outside/Inside** sections with **isometric cube icons** (`_faceCubeSVG`)
+  + an "All" toggle (`onLayerAreaGroup`). `toggleLayerArea` flips one face. **Collapsed by default.**
+- **2D editor resize**: hold **Shift** = non-proportional (graphics/logos via `L.freeAspect`+scaleH; text via
+  `L.stretchX`). Min size = `MIN_LAYER_SCALE` (Testing, default 0.5%).
+- **Emboss/Deboss** (`L.extrude`) and the finish's paper-grain share the material's ONE bump slot. Emboss
+  claims it when active via `window._embossActive` (set in `overlayArtworkBump`); `realism-engine.js`
+  `applyFinishCustomMaps` respects it. Without this, the finish hides emboss.
+
+**Background specifics**
+- Created with grid layout (`patStack:'vertical'`), density **3** / gap **0**, box covering the
+  **exterior+interior union**, **Inside faces hidden by default** (toggle on → no resize needed).
+- Panel shows Opacity + Density/Gap/Feather only (no Scale/Rotation/Move/Finish/Emboss/Layout).
+- **Locked by default. Background "lock" = MOVE-LOCK ONLY** — resize/crop handles, duplicate, delete and all
+  panel controls still work; only body drag is blocked (pans instead). Other layer types = full lock.
+- Pattern crop/fade masks the **whole pattern region across enabled faces as one** (union bbox), not per tile.
+
+### Social-media text templates
+The Text preset picker injects a synthetic **"Social Media"** collection (after the artist collections).
+Picking a platform sets `L.social={platform}` + a starter handle; the text renderer draws the platform glyph
+left of the handle. Icons + example placeholders live in `SOCIAL_ICONS` / `SOCIAL_PLACEHOLDER` in
+`configurator.html` (trademark-safe marks — swap in real brand SVGs there). WhatsApp/Phone placeholder = `9123 4567`.
+
+### Config steps (left panel)
+6 steps: **Start · Exterior · Interior · Handles · Design · Review** (`CONFIG_STEP_COUNT=6`, `goConfigStep`,
+`applyStepCamera`, `STEP_PART`). The active pill auto-centers in the scrollable pill row.
 
 ## Presets folders + manifests  ⚠️ IMPORTANT
 The "Presets" picker reads three TYPE folders, each holding COLLECTION sub-folders:
@@ -59,6 +92,14 @@ text/        graphic/        background/      ← layer types
   loading thumbnails left-to-right with a skeleton placeholder.
 - Collection order: `System_Presets` first, then the rest A→Z.
 - Each TYPE folder has a `README.txt` with the same instructions.
+
+**Current collections (regenerate manifests after any change):**
+- `text/`: **System_Presets** = 9 basic fonts (Inter, Roboto, Montserrat, Lora, Playfair Display, Oswald,
+  Poppins, Merriweather, Dancing Script); **Artists_Collection_1** = display fonts. ("Social Media" is
+  synthetic — NOT a folder; see SOCIAL_ICONS.) Preset font labels show `_`→space.
+- `graphic/`: **System_Presets** = 30 solid-colour shapes (square, circle, line, then the rest), each SVG
+  with a **tight auto-cropped viewBox** so the layer bounding box hugs the shape; **Artists_Collection_1** = stock art.
+- `background/`: **System_Presets** + **Spring_Collection** + **Summer_Collection** + **Super_Nova_Collection**.
 
 **When you add/rename/delete any file or collection, regenerate the manifests** (Pages has
 no directory listing, so the picker reads `text|graphic|background/index.json`):
@@ -81,12 +122,28 @@ PY
 ```
 (The legacy region-pattern feature still reads `background/System_Presets/pattern_N.svg`.)
 
+## 2D-editor performance (important)
+The 2D editor shows the flat bag; the 3D view shrinks to a small **"Live preview"** (bottom-right).
+- The 3D scene (incl. post-FX) is **throttled while in 2D**, NOT paused — `animate()` re-renders it every
+  `A2D.previewInterval` s (Testing "Live preview update", default **0.5s**; 0 = real-time). This is what keeps
+  drag FPS high while the preview still updates/rotates. **Don't revert to a full pause** (froze the preview).
+- During a drag: the atlas re-bake is **coalesced to one per rAF** (`a2d._bakeDirty` consumed in the 2D loop),
+  finishes/bump/history are skipped (`_a2dDragging`), the filtered backdrop is cached when idle, and the canvas
+  rect is cached (`a2d._rect`).
+
 ## Testing / admin defaults (current)
 - Finishes default to **soft-touch** (ext/int/handles). HDRI env = **studio3**, intensity ~1.10.
 - Floor: roughness **1.00**, reflectivity (env) **0.00**. **Bloom OFF, FXAA OFF.**
+- 2D-editor labels: **Label size 16**, **Sub-label size 12**, **Sub-label opacity 60%** (`A2D.subLabelOpacity`).
+  Sub-labels sit at each face's bottom-centre. Removed controls: 2D-editor resolution, Atlas edge padding,
+  Label/Sub-label bold. Added: **Min layer size** (`MIN_LAYER_SCALE`), **Live preview update** (`previewInterval`),
+  **Sub-label opacity**.
+- **UI sound**: `_uiSoundOn` (default on), `playUISound`, optional uploaded `_sfx` samples; broad click feedback
+  via `_sfxHoverSel` + canvas sub-label/face-toggle clicks.
 - "Export current setup as defaults" writes to **localStorage** and overrides the code
   defaults on that browser. If new code defaults don't show, click **Reset Defaults**
   (or clear site data). Fresh visitors always get the code defaults.
+- **`POLISH_LOG.md`** = running changelog of small UI/UX polish passes.
 
 ## Gotchas (read before editing)
 - **`configurator.html` is multi-MB** → the Read tool fails on it. Use `grep -n` and
