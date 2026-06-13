@@ -78,13 +78,16 @@ artwork layers, finishes, fonts, graphics, backgrounds, 2D editor, testing, temp
 model swapped**. The enabler: the bag loader is **material-name-convention-driven** — it groups GLB prims by
 `M_ext*` / `M_int*` prefixes and auto-derives the atlas UV regions + 2D faces from the geometry. So the cup
 just needs bag-convention names: `tools/` rewrote `paper_cup/paper_cup.glb` → **`paper_cup/paper_cup_imprint.glb`**
-renaming `M_cup→M_ext_cup`, `M_base→M_ext_base`, `M_sleeve→M_int_sleeve`, `M_lid→M_int_lid`. The cup's 4 UV
-islands are non-overlapping in one 0-1 space (verified), so the single 2048 atlas maps each material correctly;
-2D-editor faces become **cup / base / sleeve / lid**. `BAG_MODELS` = proportional cup sizes (8/12/16 oz, one
-GLB); title/breadcrumb/size-picker relabelled. **Not WebGL-verified in the headless build** — needs a live
-pass to confirm the atlas lands on each material, hide the lid print area, and tune sizes. Isolated file →
-can't affect the bag configurator or marketplace. (To re-make the renamed GLB, see the material-rename
-snippet in git history / re-run the rename on `paper_cup.glb`.)
+mapping **one part per region** so each is an independent step/colour: `M_cup→M_ext_cup` (exterior),
+`M_sleeve→M_int_sleeve` (interior), `M_base→M_handle_base` (handle/ribbon), `M_lid→M_rivet_lid` (rivet) — and
+`applyRibbonColor`'s rivet=ribbon colour tie is removed in the cup file so the lid is independent. The cup runs a
+**7-step flow**: Start · Design · **Cup · Sleeve · Base · Lid** · Review (`CONFIG_STEP_COUNT=7`, pills, sections,
+`STEP_PART={3:exterior,4:interior,5:ribbon,6:rivet}` all updated; the Lid step is a cloned rivet-region panel).
+Per-step camera (`applyStepCamera`): Cup/Sleeve→front, Base→look-up, Lid→top. New layers drop on the sleeve UV
+centre-top. `BAG_MODELS` = proportional cup sizes (8/12/16 oz, one GLB); title/breadcrumb/size-picker relabelled.
+**Not WebGL-verified in the headless build** — needs a live pass to confirm base/lid **finish** paints via the
+atlas, and to finish the 2D-label cosmetics (drop exterior/interior pills, sub-labels→labels w/ recolour+finish,
+colour sync, cup-only-on default). Isolated file → can't affect the bag configurator or marketplace.
 
 ## The 3D configurator (`configurator.html` + `realism-engine.js`)
 - **Heavy assets are EXTERNAL (not inlined)** so they cache + are shared with the cup studio: Three.js r128 →
