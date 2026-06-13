@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="The vetted manufacturers on IMPRINT — compare price, quality, lead time, finishes and certifications. You choose the trade-off.">
+  <title>Manufacturers — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main id="makers-root" class="imp-wrap"></main>
+<div id="site-footer"></div>
+
+<script src="shared.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'makers' });
+  var C = IMP.cat();
+  var root = document.getElementById('makers-root');
+  var mid = null; try { mid = new URLSearchParams(location.search).get('m'); } catch(e){}
+  if (mid) renderProfile(mid); else renderList();
+
+  function renderList(){
+    document.title = 'Manufacturers — IMPRINT®';
+    var makers = C.makers.slice().sort(function(a,b){return b.rating-a.rating;});
+    root.innerHTML =
+      '<div class="pagehead"><h1>Vetted manufacturers</h1><p>Every order is auto-routed to the maker you pick at checkout. Compare them on price, quality, lead time, finishes and certifications — you choose the trade-off, we send the print-ready files.</p></div>' +
+      '<div class="sec"><div class="mgrid">' + makers.map(IMP.makerCard).join('') + '</div></div>' +
+      '<div class="sec tight"><div class="ts-card" style="border:1px solid var(--imp-border);border-radius:var(--imp-r-lg);padding:24px;background:var(--imp-surface)">' +
+        '<h3 style="margin:0 0 8px">How production routing works</h3>' +
+        '<p style="font-size:13.5px;color:var(--imp-fg-2);line-height:1.6;margin:0">When a customer customises a template and checks out, IMPRINT generates a print-ready production file and routes the job to their chosen manufacturer automatically — with the finish, size and quantity locked in. Makers receive a clean queue of pre-paid jobs matched to their capabilities. No quotes, no email threads, no back-and-forth.</p>' +
+      '</div></div>';
+  }
+
+  function renderProfile(id){
+    var m = IMP.maker(id);
+    if (!m){ renderList(); return; }
+    document.title = m.name + ' — IMPRINT®';
+    var prods = (m.products||[]).map(IMP.product).filter(Boolean);
+    function chips(arr){ return (arr||[]).map(function(x){return '<span class="chip-sm">'+IMP.esc(x)+'</span>';}).join(''); }
+    root.innerHTML =
+      '<div class="pdp-bc"><a href="index.html">Home</a><span class="sep">/</span><a href="manufacturers.html">Manufacturers</a><span class="sep">/</span>'+IMP.esc(m.name)+'</div>' +
+      '<div class="artist-hero">' +
+        '<div class="m-logo" style="width:108px;height:108px;border-radius:var(--imp-r-lg);font-size:30px;background:'+m.color+'">'+IMP.initials(m.name)+'</div>' +
+        '<div style="flex:1;min-width:260px">' +
+          '<div class="ah-name imp-display">'+IMP.esc(m.name)+'</div>' +
+          '<div class="ah-style">'+(m.flag||'')+' '+IMP.esc(m.country)+' · established '+m.since+'</div>' +
+          '<p class="ah-bio">'+IMP.esc(m.bio)+'</p>' +
+          '<div class="statline">' +
+            '<div><div class="sv">★ '+m.rating+'</div><div class="sl">Quality</div></div>' +
+            '<div><div class="sv">'+m.leadDays+' days</div><div class="sl">Lead time</div></div>' +
+            '<div><div class="sv">'+m.moq+'</div><div class="sl">Min order</div></div>' +
+            '<div><div class="sv">'+Math.round((m.priceMul-1)*100)+'%</div><div class="sl">Price vs base</div></div>' +
+            '<div><div class="sv">'+m.reviews+'</div><div class="sl">Reviews</div></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;margin-top:18px">' +
+            '<a class="btn btn-primary" href="products.html" style="flex:0 0 auto">Browse products they make</a>' +
+            '<button class="btn btn-icon" data-share="manufacturers.html?m='+m.id+'" data-share-title="'+IMP.esc(m.name)+' on IMPRINT" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sec tight"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">' +
+        '<div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--imp-fg-3);margin:0 0 10px">Capabilities</h4><div class="chips-sm">'+chips(m.capabilities)+'</div></div>' +
+        '<div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--imp-fg-3);margin:0 0 10px">Finishes</h4><div class="chips-sm">'+chips(m.finishes)+'</div></div>' +
+        '<div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--imp-fg-3);margin:0 0 10px">Certifications</h4><div class="chips-sm">'+chips(m.certs)+'</div></div>' +
+      '</div></div>' +
+      (prods.length ? '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">Produced by '+IMP.esc(m.name)+'</h2><p class="sec-sub">'+prods.length+' templates can be produced here.</p></div></div><div class="pgrid">'+prods.slice(0,12).map(IMP.productCard).join('')+'</div></div>' : '') +
+      '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">Other manufacturers</h2></div><a class="sec-link" href="manufacturers.html">All makers →</a></div><div class="mgrid">' +
+        C.makers.filter(function(x){return x.id!==m.id;}).slice(0,3).map(IMP.makerCard).join('') + '</div></div>';
+  }
+})();
+</script>
+</body>
+</html>

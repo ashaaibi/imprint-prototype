@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Meet the independent artists behind IMPRINT — follow your favourites and shop their signature packaging templates and collections.">
+  <title>Artists — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main id="artists-root" class="imp-wrap"></main>
+<div id="site-footer"></div>
+
+<script src="shared.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'artists' });
+  var C = IMP.cat();
+  var root = document.getElementById('artists-root');
+  var aid = null; try { aid = new URLSearchParams(location.search).get('a'); } catch(e){}
+
+  if (aid) { renderProfile(aid); } else { renderList(); }
+
+  function renderList(){
+    document.title = 'Artists — IMPRINT®';
+    var artists = C.artists.slice().sort(function(a,b){return b.followers-a.followers;});
+    root.innerHTML =
+      '<div class="pagehead"><h1>The artists</h1><p>Independent designers from around the world, each with a signature style. Follow them, shop their templates, and we handle production.</p></div>' +
+      '<div class="sec"><div class="agrid">' + artists.map(IMP.artistCard).join('') + '</div></div>';
+  }
+
+  function renderProfile(id){
+    var a = IMP.artist(id);
+    if (!a){ renderList(); return; }
+    document.title = a.name + ' — IMPRINT®';
+    var prods = (a.products||[]).map(IMP.product).filter(Boolean);
+    var cols  = (a.collections||[]).map(IMP.collection).filter(Boolean);
+    var following = IMP.isFollowing(a.id);
+    root.innerHTML =
+      '<div class="pdp-bc"><a href="index.html">Home</a><span class="sep">/</span><a href="artists.html">Artists</a><span class="sep">/</span>'+IMP.esc(a.name)+'</div>' +
+      '<div class="artist-hero">' +
+        '<img class="ah-avatar" src="'+IMP.esc(a.avatar)+'" alt="'+IMP.esc(a.name)+'">' +
+        '<div style="flex:1;min-width:260px">' +
+          '<div class="ah-name imp-display">'+IMP.esc(a.name)+' '+(a.flag||'')+'</div>' +
+          '<div class="ah-style">'+IMP.esc(a.style)+' · '+IMP.esc(a.studio)+'</div>' +
+          '<p class="ah-bio">'+IMP.esc(a.bio)+'</p>' +
+          '<div class="statline">' +
+            '<div><div class="sv">'+prods.length+'</div><div class="sl">Designs</div></div>' +
+            '<div><div class="sv">'+cols.length+'</div><div class="sl">Collections</div></div>' +
+            '<div><div class="sv">'+IMP.fmtK(a.followers)+'</div><div class="sl">Followers</div></div>' +
+            '<div><div class="sv">★ '+a.rating+'</div><div class="sl">Rating</div></div>' +
+            '<div><div class="sv">'+a.since+'</div><div class="sl">On Imprint</div></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;margin-top:18px">' +
+            '<button class="follow-btn'+(following?' following':'')+'" data-follow="'+a.id+'" data-name="'+IMP.esc(a.name)+'">'+(following?'Following':'Follow')+'</button>' +
+            '<button class="btn btn-icon" data-share="artists.html?a='+a.id+'" data-share-title="'+IMP.esc(a.name)+' on IMPRINT" aria-label="Share" title="Share">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      (prods.length ? '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">Designs by '+IMP.esc(a.name)+'</h2></div></div><div class="pgrid">'+prods.map(IMP.productCard).join('')+'</div></div>' : '') +
+      (cols.length ? '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">Collections</h2><p class="sec-sub">Coordinated design sets in '+IMP.esc(a.name)+'’s signature style.</p></div></div><div class="colgrid">'+cols.map(IMP.collectionCard).join('')+'</div></div>' : '') +
+      '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">More artists</h2></div><a class="sec-link" href="artists.html">All artists →</a></div><div class="agrid">' +
+        C.artists.filter(function(x){return x.id!==a.id;}).slice(0,4).map(IMP.artistCard).join('') + '</div></div>';
+  }
+})();
+</script>
+</body>
+</html>

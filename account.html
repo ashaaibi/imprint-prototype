@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css"><link rel="stylesheet" href="catalog.css">
+  <style>
+    .acct-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 8px;}
+    .acct-stat{border:1px solid var(--imp-border);border-radius:var(--imp-r-lg);padding:18px;background:var(--imp-surface);}
+    .acct-stat .v{font-size:26px;font-weight:700;color:var(--imp-fg);font-family:'Cormorant Garamond',serif;}
+    .acct-stat .l{font-size:12px;color:var(--imp-fg-3);}
+    .acct-prof{display:flex;align-items:center;gap:16px;border:1px solid var(--imp-border);border-radius:var(--imp-r-lg);padding:20px;background:var(--imp-surface);}
+    .acct-prof .av{width:64px;height:64px;border-radius:50%;background:var(--imp-fg);color:var(--imp-bg);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;}
+    .acct-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+    .acct-menu a{border:1px solid var(--imp-border);border-radius:var(--imp-r-md);padding:14px;text-decoration:none;color:var(--imp-fg);font-size:13.5px;font-weight:600;background:var(--imp-surface);}
+    .acct-menu a:hover{border-color:var(--imp-fg);}
+    .acct-menu a span{display:block;font-size:11.5px;color:var(--imp-fg-3);font-weight:400;margin-top:3px;}
+    @media(max-width:700px){.acct-grid,.acct-menu{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main class="imp-wrap">
+  <div class="pagehead"><h1>My account</h1></div>
+  <div class="sec tight">
+    <div class="acct-prof">
+      <div class="av" id="acct-av">G</div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:700" id="acct-name">Guest user</div>
+        <div style="font-size:13px;color:var(--imp-fg-3)" id="acct-email">guest@imprint.example · <span id="acct-country"></span></div>
+      </div>
+      <a class="btn" href="checkout.html">View cart</a>
+    </div>
+    <div class="acct-grid" id="acct-stats"></div>
+    <div class="acct-menu" style="margin-top:14px">
+      <a href="orders.html">Orders<span>Track & reorder</span></a>
+      <a href="favourites.html">Favourites<span id="m-fav">0 saved</span></a>
+      <a href="#" onclick="return false">Addresses<span>GCC delivery</span></a>
+      <a href="#" onclick="return false">Payment<span>Cards & wallets</span></a>
+    </div>
+  </div>
+  <div class="sec tight" id="acct-follow-sec"><div class="sec-head"><div><h2 class="sec-title">Artists you follow</h2></div><a class="sec-link" href="artists.html">Discover →</a></div><div class="agrid" id="acct-follow"></div></div>
+  <div class="sec tight" id="acct-fav-sec"><div class="sec-head"><div><h2 class="sec-title">Recently saved</h2></div><a class="sec-link" href="favourites.html">All favourites →</a></div><div class="pgrid" id="acct-fav"></div></div>
+</main>
+<div id="site-footer"></div>
+<script src="shared.js"></script><script src="catalog.js"></script><script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'' });
+  var favs = IMP.favs().map(IMP.product).filter(Boolean);
+  var fol = IMP.follows().map(IMP.artist).filter(Boolean);
+  var c = (typeof getCountry==='function') ? getCountry() : {name:'UAE',flag:'🇦🇪'};
+  document.getElementById('acct-country').textContent = (c.flag||'') + ' ' + (c.name||'');
+  document.getElementById('acct-stats').innerHTML = [
+    [favs.length,'Saved designs'],[fol.length,'Following'],[ (IMP.cat().products.length),'Templates to explore']
+  ].map(function(s){return '<div class="acct-stat"><div class="v">'+s[0]+'</div><div class="l">'+s[1]+'</div></div>';}).join('');
+  document.getElementById('m-fav').textContent = favs.length + ' saved';
+  var fs=document.getElementById('acct-follow-sec');
+  if(fol.length){ document.getElementById('acct-follow').innerHTML = fol.slice(0,4).map(IMP.artistCard).join(''); } else fs.style.display='none';
+  var vs=document.getElementById('acct-fav-sec');
+  if(favs.length){ document.getElementById('acct-fav').innerHTML = favs.slice(0,4).map(IMP.productCard).join(''); } else vs.style.display='none';
+})();
+</script>
+</body>
+</html>

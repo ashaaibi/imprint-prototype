@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favourites — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css"><link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main class="imp-wrap">
+  <div class="pagehead"><h1>Your favourites</h1><p>Designs you’ve hearted and artists you follow. Saved on this device.</p></div>
+  <div class="sec" id="fav-products-sec"><div class="sec-head"><div><h2 class="sec-title">Saved designs</h2></div></div><div class="pgrid" id="fav-products"></div></div>
+  <div class="sec tight" id="fav-artists-sec"><div class="sec-head"><div><h2 class="sec-title">Artists you follow</h2></div><a class="sec-link" href="artists.html">Discover more →</a></div><div class="agrid" id="fav-artists"></div></div>
+</main>
+<div id="site-footer"></div>
+<script src="shared.js"></script><script src="catalog.js"></script><script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'' });
+  function render(){
+    var favs = IMP.favs().map(IMP.product).filter(Boolean);
+    var fol = IMP.follows().map(IMP.artist).filter(Boolean);
+    document.getElementById('fav-products').innerHTML = favs.length ? favs.map(IMP.productCard).join('') :
+      '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg><h3>No favourites yet</h3><p>Tap the heart on any design to save it here. <a href="products.html">Browse products →</a></p></div>';
+    var as=document.getElementById('fav-artists-sec');
+    if(fol.length){ as.style.display=''; document.getElementById('fav-artists').innerHTML = fol.map(IMP.artistCard).join(''); }
+    else as.style.display='none';
+  }
+  render();
+  document.addEventListener('imprint:favchange', render);
+})();
+</script>
+</body>
+</html>

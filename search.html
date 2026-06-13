@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search and filter IMPRINT's packaging templates by category, artist, style tag, manufacturer and price.">
+  <title>Search — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+
+<section class="imp-wrap pagehead">
+  <h1>Search the marketplace</h1>
+  <div class="an-search" style="max-width:560px;margin-top:14px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="search" id="q" placeholder="Search products, artists, styles…" aria-label="Search">
+  </div>
+</section>
+
+<div class="imp-wrap search-layout">
+  <aside class="filters" id="filters"></aside>
+  <div>
+    <div class="sortbar">
+      <span class="fcount" id="result-count">—</span>
+      <label style="font-size:13px;color:var(--imp-fg-3)">Sort
+        <select id="sort">
+          <option value="relevance">Relevance</option>
+          <option value="rating">Top rated</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </label>
+    </div>
+    <div id="active-banner"></div>
+    <div class="pgrid" id="results"></div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="shared.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'' });
+  var C = IMP.cat();
+  var P = new URLSearchParams(location.search);
+  var state = { q: P.get('q')||'', cats:new Set(), artists:new Set(), tags:new Set(), makers:new Set(), sort:'relevance', collection:P.get('collection')||'' };
+  if (P.get('category')) state.cats.add(P.get('category'));
+  if (P.get('tag')) state.tags.add(P.get('tag'));
+  if (state.collection){ var col=IMP.collection(state.collection); if(col && col.artist) state.artists.add(col.artist); }
+
+  var qEl = document.getElementById('q'); qEl.value = state.q;
+
+  // build filters
+  function group(title, items){ return '<div class="filter-group"><h4>'+title+'</h4>'+items+'</div>'; }
+  function opt(kind,val,label,count){ return '<label class="fopt"><input type="checkbox" data-kind="'+kind+'" value="'+IMP.esc(val)+'">'+IMP.esc(label)+(count!=null?' <span style="color:var(--imp-fg-3)">('+count+')</span>':'')+'</label>'; }
+  function countBy(fn){ var m={}; C.products.forEach(function(p){ var k=fn(p); (Array.isArray(k)?k:[k]).forEach(function(x){ if(x) m[x]=(m[x]||0)+1; }); }); return m; }
+  var catCount=countBy(function(p){return p.category;}), tagCount=countBy(function(p){return p.tags;}), artCount=countBy(function(p){return p.artist;}), mkCount=countBy(function(p){return p.makers;});
+
+  var T=C.tags;
+  document.getElementById('filters').innerHTML =
+    group('Category', C.categories.map(function(c){return opt('cat',c.id,c.name,catCount[c.id]||0);}).join('')) +
+    group('Style tag', Object.keys(T).map(function(t){return opt('tag',t,T[t].label,tagCount[t]||0);}).join('')) +
+    group('Artist', C.artists.slice().sort(function(a,b){return (artCount[b.id]||0)-(artCount[a.id]||0);}).map(function(a){return opt('artist',a.id,a.name,artCount[a.id]||0);}).join('')) +
+    group('Manufacturer', C.makers.map(function(m){return opt('maker',m.id,m.name,mkCount[m.id]||0);}).join('')) +
+    '<div class="filter-group"><button class="btn" id="clear" style="width:100%;font-size:13px;padding:9px">Clear all filters</button></div>';
+
+  // restore checks from state
+  function syncChecks(){
+    document.querySelectorAll('#filters input[type=checkbox]').forEach(function(cb){
+      var k=cb.getAttribute('data-kind'), set={cat:state.cats,tag:state.tags,artist:state.artists,maker:state.makers}[k];
+      cb.checked = set.has(cb.value);
+    });
+  }
+  syncChecks();
+
+  function match(p){
+    if (state.cats.size && !state.cats.has(p.category)) return false;
+    if (state.makers.size && !(p.makers||[]).some(function(m){return state.makers.has(m);})) return false;
+    if (state.artists.size && !state.artists.has(p.artist)) return false;
+    if (state.tags.size && !(p.tags||[]).some(function(t){return state.tags.has(t);})) return false;
+    if (state.q){ var hay=(p.name+' '+IMP.artistName(p.artist)+' '+(IMP.category(p.category)||{}).name+' '+(p.tags||[]).join(' ')+' '+(p.blurb||'')).toLowerCase();
+      if (state.q.toLowerCase().split(/\s+/).some(function(w){return hay.indexOf(w)<0;})) return false; }
+    return true;
+  }
+  function sortFn(a,b){
+    switch(state.sort){
+      case 'rating': return b.rating-a.rating;
+      case 'price-asc': return a.price-b.price;
+      case 'price-desc': return b.price-a.price;
+      case 'name': return a.name.localeCompare(b.name);
+      default: return (b.featured?1:0)-(a.featured?1:0) || b.rating-a.rating;
+    }
+  }
+  function apply(){
+    var res = C.products.filter(match).sort(sortFn);
+    document.getElementById('results').innerHTML = res.length ? res.map(IMP.productCard).join('') :
+      '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><h3>No matches</h3><p>Try removing a filter or searching something broader.</p></div>';
+    document.getElementById('result-count').textContent = res.length + ' result' + (res.length===1?'':'s');
+    // active banner
+    var bits=[];
+    if(state.q) bits.push('“'+IMP.esc(state.q)+'”');
+    if(state.collection){ var col=IMP.collection(state.collection); if(col) bits.push('Collection: '+IMP.esc(col.name)); }
+    document.getElementById('active-banner').innerHTML = bits.length ? '<div style="font-size:13px;color:var(--imp-fg-3);margin-bottom:14px">Showing results for '+bits.join(' · ')+'</div>' : '';
+  }
+
+  document.getElementById('filters').addEventListener('change', function(e){
+    var cb=e.target; if(cb.type!=='checkbox') return;
+    var k=cb.getAttribute('data-kind'), set={cat:state.cats,tag:state.tags,artist:state.artists,maker:state.makers}[k];
+    if(cb.checked) set.add(cb.value); else set.delete(cb.value);
+    apply();
+  });
+  document.getElementById('clear').addEventListener('click', function(){ state.cats.clear();state.tags.clear();state.artists.clear();state.makers.clear();state.q='';state.collection=''; qEl.value=''; syncChecks(); apply(); });
+  document.getElementById('sort').addEventListener('change', function(e){ state.sort=e.target.value; apply(); });
+  var qt; qEl.addEventListener('input', function(){ clearTimeout(qt); qt=setTimeout(function(){ state.q=qEl.value.trim(); apply(); },180); });
+
+  apply();
+})();
+</script>
+</body>
+</html>

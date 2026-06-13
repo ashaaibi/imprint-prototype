@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Curated design collections from IMPRINT artists — coordinated style sets you can apply across products.">
+  <title>Collections — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css"><link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main class="imp-wrap">
+  <div class="pagehead"><h1>Collections</h1><p>Coordinated design sets — each one a single artist’s signature style across colours, patterns and motifs. Open a collection to shop everything in that look.</p></div>
+  <div class="sec"><div class="colgrid" id="cols"></div></div>
+</main>
+<div id="site-footer"></div>
+<script src="shared.js"></script><script src="catalog.js"></script><script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'collections' });
+  var C = IMP.cat();
+  var cols = C.collections.slice().sort(function(a,b){ return (b.tags.length)-(a.tags.length); });
+  document.getElementById('cols').innerHTML = cols.map(IMP.collectionCard).join('');
+})();
+</script>
+</body>
+</html>
