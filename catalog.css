@@ -6,6 +6,13 @@
 ═══════════════════════════════════════════════════════════ */
 
 .imp-wrap { max-width: var(--imp-max-w); margin: 0 auto; padding: 0 24px; }
+/* Tablet (641–1024px): more breathing room from the screen edges, site-wide — extends the
+   mobile edge-padding treatment up to tablets so content/nav/footer never hug the bezel.
+   Content, secondary nav and footer share the same edge anchor, so they stay aligned. */
+@media (min-width: 641px) and (max-width: 1024px){
+  .imp-wrap, .an-inner { padding-left: 40px; padding-right: 40px; }
+  .af-inner { padding-left: 40px; padding-right: 40px; }
+}
 .imp-display { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
 main { min-height: 60vh; }
 a { color: inherit; }

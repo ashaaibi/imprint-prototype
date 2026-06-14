@@ -728,6 +728,11 @@ html[dir="rtl"] .imp-table th { text-align: right; }
   .content-wrap { padding: 32px 20px; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
 }
+/* Tablet: widen the sticky header's edge padding to line up with the content/nav/footer
+   (catalog.css gives those 40px on 641–1024px). Placed after the ≤900px rule so it wins. */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .site-header { padding: 0 40px; }
+}
 @media (max-width: 600px) {
   .site-header { padding: 0 14px; }
   .site-footer { padding: 24px 20px; flex-direction: column; gap: 14px; text-align: center; }
