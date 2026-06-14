@@ -1,0 +1,25 @@
+{
+  "name": "imprint-promo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cinematic brand promo for the IMPRINT packaging marketplace, built with Remotion. Render locally — needs a browser + ffmpeg, which Remotion installs for you.",
+  "scripts": {
+    "dev": "remotion studio",
+    "render:hero": "remotion render HeroLoop out/hero.mp4",
+    "render": "remotion render Promo out/imprint-promo.mp4",
+    "render:square": "remotion render PromoSquare out/imprint-promo-square.mp4",
+    "still": "remotion still Promo out/poster.png --frame=120",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/google-fonts": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "typescript": "^5.4.5"
+  }
+}

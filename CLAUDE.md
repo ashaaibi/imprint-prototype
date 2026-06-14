@@ -37,8 +37,15 @@ mangling files/folders.
 - `designer/index.html` — **unlisted designer portal** (build/publish bag **and** cup templates)
 - `templates/` — **template JSONs** (`<id>.template.json`) + `index.json` manifest (designer portal reads it)
 - `tools/build_catalog.py` — **catalog source of truth** (see "Marketplace") · `paper_cup/` — cup GLB
-- `promo/` — **Remotion project** for the cinematic brand promo video (`npm i && npx remotion render` —
-  needs a local browser/ffmpeg, so it can't render in the headless sandbox; `node_modules`/`out` gitignored).
+- `promo/` — **Remotion project** for brand videos (`npm i && npx remotion render` — needs a local
+  browser/ffmpeg; can't render in the headless sandbox, and the egress allowlist blocks Remotion's
+  browser download host `remotion.media`). Comps: **`HeroLoop`** (10s muted 16:9 landing-hero loop of
+  the 3D customiser — plays captured footage `public/hero-3d.webm`, Ken-Burns fallback) + `Promo`/
+  `PromoSquare` (18s general film). `node_modules`/`out` gitignored.
+- **Hero 3D footage** is captured in-browser: the configurator Designer bar's **● Record clip**
+  (`IMPRINT_recordClip`, MediaRecorder on the WebGL canvas) records a seamless 360° spin+recolour WebM.
+  Drop it at `assets/promo/hero.webm` (the landing hero autoplays it muted+looping, collage fallback) or
+  feed it to Remotion's `HeroLoop`. WebGL can't run headless, so this only works in a real browser.
 - `catalog.js` (generated · `window.IMPRINT_CATALOG`) · `catalog.css` (marketplace styles + the **motion**
   block: reveals/page-fade/shimmer/typewriter caret/bento/card-sheen) ·
   `app.js` (nav/footer, favourites/follow/share, card render helpers, **`IMP.initMotion`** = scroll reveals +

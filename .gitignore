@@ -10,6 +10,7 @@
 Imprint_PRD_v1.1.md
 Imprint_Phase1_PRD_v1.0.pdf
 Imprint_Prototype_Spec_v1.0.pdf
+# Node deps / lockfiles (the promo/ Remotion project keeps its own package.json tracked,
+# but its node_modules + lockfile stay local — see promo/.gitignore).
 node_modules/
-package.json
 package-lock.json

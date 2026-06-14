@@ -3,6 +3,18 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-14 (batch 17) — Landing hero video loop + in-browser 3D recorder
+- **Configurator "● Record clip"** (both studios, Designer bar → `IMPRINT_recordClip`): MediaRecorder
+  captures the live WebGL canvas to a muted **WebM** while the product spins a seamless 360° and
+  recolours (ends on the original → loops cleanly). Browser-only (the headless sandbox has no WebGL).
+  The clip is usable as the hero loop directly, or as the 3D footage for the Remotion promo.
+- **Landing hero video loop:** the index hero autoplays `assets/promo/hero.(mp4|webm)` muted + looping
+  when present (progressive enhancement — the video loads off-DOM and swaps in only on success, so a
+  missing file never breaks the page; phones + reduced-motion keep the lightweight collage).
+- **Remotion `HeroLoop` composition:** a 10 s 16:9 muted loop of the 3D customiser — plays the captured
+  footage (`public/hero-3d.webm`) with a rotating "Customise _colour / finish / logo / in 3D_" caption +
+  wordmark, and a Ken-Burns render fallback so it previews without footage. Typechecks clean.
+
 ## 2026-06-14 (batch 16) — Marketplace motion, template export/import fixes, Remotion promo
 - **Native animations (fast, reduced-motion-aware), scoped to the marketplace** (`app.js` + `catalog.css`,
   which don't load on the 3D studios). Everything degrades to the final visible state if JS fails:

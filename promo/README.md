@@ -1,11 +1,30 @@
 # IMPRINT — brand promo (Remotion)
 
-A short, cinematic brand film for the IMPRINT packaging marketplace, built with
+Brand films for the IMPRINT packaging marketplace, built with
 [Remotion](https://www.remotion.dev/) (animations defined in React, rendered to MP4).
 
-It mirrors the live-site motion: a logo reveal → the **typewriter tagline**
-("Where _artists / brands / makers_ meet.") → a real product showcase → a closing CTA.
-~18 s, exported in 16:9 (1920×1080) and a 1:1 social cut.
+Compositions:
+- **`HeroLoop`** — the landing-page hero loop (**the main deliverable**): a muted, seamless 10 s
+  16:9 clip of the **3D customiser** — a product spinning while it recolours — with a rotating
+  "Customise _colour / the finish / your logo / in 3D_" caption. Plays the **real 3D footage** you
+  capture in the configurator; falls back to a Ken-Burns render dissolve so it always previews.
+- **`Promo`** / **`PromoSquare`** — an 18 s general brand film (logo → typewriter tagline →
+  product showcase → CTA), 16:9 + 1:1.
+
+## Landing hero loop — the pipeline
+The live 3D can't be rendered in CI (no WebGL/GPU), so the 3D footage is captured in a real
+browser, then Remotion composites the polish on top:
+
+1. Open the configurator in **designer mode** (`configurator.html?designer=1`) and click
+   **● Record clip** in the Designer bar → downloads a seamless 360° spin + recolour as `.webm`.
+2. **Quick path:** drop that file straight into the site as `assets/promo/hero.webm` — the landing
+   hero autoplays it immediately (no Remotion needed).
+3. **Polished path:** save it here as `public/hero-3d.webm`, then render the `HeroLoop` with the
+   footage wired in:
+   ```bash
+   npx remotion render HeroLoop out/hero.mp4 --props='{"footage":"hero-3d.webm"}'
+   ```
+   Drop `out/hero.mp4` into the site as `assets/promo/hero.mp4` (preferred over the raw webm).
 
 > **Why a separate project?** Remotion renders *video files*, which are heavy to autoplay on a
 > fast marketplace. So the live site uses lightweight CSS/JS animations, and this folder produces

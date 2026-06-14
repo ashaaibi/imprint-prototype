@@ -12223,6 +12223,56 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       cv.toBlob(function(b){ if (b) dl('render-'+Date.now()+'.png', b); else alert('Capture failed — try rotating the bag and retry.'); }, 'image/png');
     } catch(e){ alert('Could not capture render: '+e.message); }
   };
+  /* Record a seamless-looping hero clip: spin the product a full 360° while cycling the
+     exterior colour (ends on the original → loops cleanly) and capture the live WebGL canvas
+     to a muted WebM via MediaRecorder. Usable as the landing hero loop directly, or as the
+     3D-footage input for the Remotion promo (promo/public/). Runs in the user's browser (the
+     headless sandbox has no WebGL). */
+  window.IMPRINT_recordClip = function(secs){
+    secs = secs || 8;
+    try {
+      var cv = document.getElementById('three-canvas');
+      if (!cv || !cv.captureStream || typeof MediaRecorder === 'undefined') { alert('This browser can’t record the canvas — try Chrome or Edge.'); return; }
+      var mimes = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'], mime='';
+      for (var i=0;i<mimes.length;i++){ if (MediaRecorder.isTypeSupported(mimes[i])){ mime=mimes[i]; break; } }
+      if (!mime){ alert('WebM recording isn’t supported in this browser.'); return; }
+      var stream = cv.captureStream(30);
+      var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 16000000 });
+      var chunks = [];
+      rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+      var saved = { theta: orbit.theta, autoSpin: orbit.autoSpin, ext: JSON.parse(JSON.stringify(BAG.exterior)) };
+      var pal = ['#00E6D2','#E14B4B','#1F6F63','#D29B35', saved.ext.color];   /* last = original → loop-safe */
+      function setExt(hex){ BAG.exterior.color=hex; BAG.exterior.customHex=hex; BAG.exterior.swatchName='Custom';
+        try { if (typeof renderBagSwatches==='function') renderBagSwatches('exterior',0,hex); } catch(e){}
+        if (typeof drawBagTexture==='function') drawBagTexture(); }
+      var btn = document.getElementById('imp-rec-btn');
+      try { if (typeof intro!=='undefined' && intro) intro.active=false; } catch(e){}
+      try { camTween=null; } catch(e){}
+      orbit.autoSpin=false; try { spinFactor=0; spinTarget=0; spinRamp=null; } catch(e){}
+      window._impRecording=true;
+      if (btn){ btn.textContent='● Recording…'; btn.style.color='#e14b4b'; }
+      var t0=performance.now(), totalMs=secs*1000, lastStep=-1;
+      rec.onstop = function(){
+        window._impRecording=false;
+        orbit.theta=saved.theta; orbit.autoSpin=saved.autoSpin;
+        for (var k in saved.ext) BAG.exterior[k]=saved.ext[k];
+        try { if (typeof renderBagSwatches==='function') renderBagSwatches('exterior',0,saved.ext.color); } catch(e){}
+        if (typeof drawBagTexture==='function') drawBagTexture();
+        if (btn){ btn.textContent='● Record clip'; btn.style.color=''; }
+        dl('imprint-hero-'+Date.now()+'.webm', new Blob(chunks, { type:'video/webm' }));
+      };
+      function drive(){
+        if (!window._impRecording) return;
+        var p=(performance.now()-t0)/totalMs;
+        if (p>=1){ orbit.theta=saved.theta+Math.PI*2; try{ rec.stop(); }catch(e){} return; }
+        orbit.theta = saved.theta + p*Math.PI*2;                 /* full turn → seamless loop */
+        var step = Math.min(pal.length-1, Math.floor(p*pal.length));
+        if (step!==lastStep){ lastStep=step; setExt(pal[step]); }
+        requestAnimationFrame(drive);
+      }
+      setExt(pal[0]); rec.start(); requestAnimationFrame(drive);
+    } catch(e){ alert('Recording failed: '+e.message); window._impRecording=false; }
+  };
 
   /* Re-register custom fonts embedded in a template (so text renders in the saved face). */
   function _registerTplFonts(tpl, cb){
@@ -12337,6 +12387,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     bar.innerHTML='<span class="dtag">Designer</span>' +
       '<button type="button" onclick="document.getElementById(\'imp-locks\').classList.toggle(\'open\')">🔒 Locks</button>' +
       '<button type="button" onclick="IMPRINT_captureRender()">📷 Render</button>' +
+      '<button type="button" id="imp-rec-btn" onclick="IMPRINT_recordClip(8)" title="Record a seamless 360° spin + recolour as a muted WebM — usable as the hero loop or as Remotion 3D footage">● Record clip</button>' +
       '<button type="button" onclick="IMPRINT_exportTemplate()">⬇ Export template</button>' +
       '<button type="button" onclick="IMPRINT_importTemplate()">⬆ Import JSON</button>' +
       '<button type="button" onclick="IMPRINT_previewAsClient()">👁 Preview as client ↗</button>';

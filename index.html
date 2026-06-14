@@ -224,6 +224,27 @@
       if ('requestIdleCallback' in window) requestIdleCallback(start,{timeout:2500}); else setTimeout(start,1800);
     })();
   } catch(e){}
+  try {
+    /* Hero video loop: if assets/promo/hero.(mp4|webm) exists, autoplay it muted+looping as the
+       hero; otherwise the bento collage stays. Phones + reduced-motion keep the light collage.
+       The video loads off-DOM and only swaps in on success, so a missing file never breaks the page. */
+    (function(){
+      var box=document.getElementById('hero-collage'); if(!box) return;
+      var reduce=false, narrow=false;
+      try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+      try{ narrow=matchMedia('(max-width: 760px)').matches; }catch(e){}
+      if (reduce || narrow) return;
+      var v=document.createElement('video');
+      v.muted=true; v.loop=true; v.autoplay=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
+      v.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:var(--imp-r-lg);box-shadow:var(--imp-shadow-md);display:block;aspect-ratio:1/1;background:var(--imp-surface-2)';
+      var mp4=document.createElement('source'); mp4.src='assets/promo/hero.mp4'; mp4.type='video/mp4';
+      var webm=document.createElement('source'); webm.src='assets/promo/hero.webm'; webm.type='video/webm';
+      v.appendChild(mp4); v.appendChild(webm);
+      var swapped=false;
+      v.addEventListener('loadeddata', function(){ if(swapped) return; swapped=true; box.innerHTML=''; box.appendChild(v); box.classList.add('has-hero-video'); var p=v.play(); if(p&&p.catch) p.catch(function(){}); });
+      v.load();   /* if every source 404s the video just never fires loadeddata → collage stays */
+    })();
+  } catch(e){}
 })();
 </script>
 </body>
