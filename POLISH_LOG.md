@@ -3,6 +3,30 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-14 (batch 15) — Stuck-loader fix, cup lid finish, per-step cameras, tablet padding
+- **CRITICAL — stuck configurator loader:** both studios could hang forever on the loader while the
+  designer bar still showed. Cause: `GLTFLoader.js`/`RGBELoader.js` were the only Three add-ons still
+  loaded from a **CDN** (`cdn.jsdelivr.net`) — when that request fails (CSP/blocker/policy/CDN hiccup),
+  `THREE.GLTFLoader` is undefined and `buildPaperBagMesh()` throws before `finishConfigLoading()`.
+  **Vendored both locally** into `vendor/three128/` (same-origin per CLAUDE.md) + repointed both
+  configurators. Added two **defensive guards**: bail-with-cleared-loader if `THREE.GLTFLoader` is
+  missing, and a **try/catch around the whole GLB onload** so any exception still clears the loader.
+- **Cup material finishes — lid (rivet) now works:** the lid is its own mesh but no region wired its
+  finish. Added `rivet` to `BAG_PBR`, to `onBagRoughness`/`onBagMetalness` (applies straight to
+  `bagRivetRef`) and to `tickFinishTweens`; removed the bag-leftover ribbon→rivet finish tie so base &
+  lid are independent; lid finish is applied on load. Cup-only (bag has no Lid step).
+- **Cup per-step camera angles (Testing):** new **STEP_CAM** table + Testing → *"Step camera angles"*
+  with **X (tilt) / Y (turn)** sliders for each of **Cup / Sleeve / Base / Lid**. `applyStepCamera` reads
+  STEP_CAM; edits **preview live** when you're on that step. Defaults reproduce the old hardcoded views.
+- **Client handle finish nudge:** added `_nudgeHandleFinish(3)` on the client template-load path (bag +
+  cup) — re-presses the handle/base finish **3×, staggered**, so the default **Soft-Touch** handle finish
+  definitely renders (uses the restored finish, so chosen finishes are respected).
+- **Artisan Coffee Cup template replaced** with the uploaded design (a real v1 snapshot — the old file
+  was a stub with no `snapshot` and couldn't load as a client). Fixed the gallery render path to the real
+  file (`coffee-cup-1.jpg`); renders otherwise unchanged.
+- **Tablet padding:** the mobile edge-padding treatment now extends to **tablets (641–1024px)** site-wide —
+  content/nav/footer get 40px side padding and the sticky header lines up with them.
+
 ## 2026-06-13 (batch 14) — Perf, PDP parity, configurator fixes, new artists, cup duplicate
 - **Image performance (#1–7):** responsive **WebP** pipeline in `build_catalog.py` (sm 480 / lg 1200, q80) +
   `IMP.img` srcset/sizes/width/height/lazy + eager hero LCP. Image payload ~36 MB → ~6 MB.

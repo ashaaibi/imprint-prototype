@@ -80,14 +80,20 @@ model swapped**. The enabler: the bag loader is **material-name-convention-drive
 just needs bag-convention names: `tools/` rewrote `paper_cup/paper_cup.glb` → **`paper_cup/paper_cup_imprint.glb`**
 mapping **one part per region** so each is an independent step/colour: `M_cup→M_ext_cup` (exterior),
 `M_sleeve→M_int_sleeve` (interior), `M_base→M_handle_base` (handle/ribbon), `M_lid→M_rivet_lid` (rivet) — and
-`applyRibbonColor`'s rivet=ribbon colour tie is removed in the cup file so the lid is independent. The cup runs a
+both the rivet=ribbon **colour** tie (`applyRibbonColor`) **and** the rivet=ribbon **finish** tie (`applyBagFinish`)
+are removed in the cup file so the lid is fully independent. The cup runs a
 **7-step flow**: Start · Design · **Cup · Sleeve · Base · Lid** · Review (`CONFIG_STEP_COUNT=7`, pills, sections,
 `STEP_PART={3:exterior,4:interior,5:ribbon,6:rivet}` all updated; the Lid step is a cloned rivet-region panel).
-Per-step camera (`applyStepCamera`): Cup/Sleeve→front, Base→look-up, Lid→top. New layers drop on the sleeve UV
+- **Lid (rivet) finish** is wired like the base: `BAG_PBR.rivet` + a `rivet` branch in `onBagRoughness` /
+  `onBagMetalness` / `tickFinishTweens` apply roughness/metalness straight to `bagRivetRef` (its own mesh; the
+  body atlas PBR only covers cup+sleeve). Cup-only — the bag has no Lid step so its rivet still follows the handle.
+- **Per-step camera** = `applyStepCamera(n)` reads a **`STEP_CAM`** table (theta=turntable/Y, phi=tilt/X, radians).
+  Testing → *"Step camera angles"* has **X/Y sliders per step** (Cup/Sleeve/Base/Lid) via `onStepCamAngle` (degrees;
+  previews live on the current step). Defaults: Cup/Sleeve front, Base look-up, Lid top.
+New layers drop on the sleeve UV
 centre-top. `BAG_MODELS` = proportional cup sizes (8/12/16 oz, one GLB); title/breadcrumb/size-picker relabelled.
-**Not WebGL-verified in the headless build** — needs a live pass to confirm base/lid **finish** paints via the
-atlas, and to finish the 2D-label cosmetics (drop exterior/interior pills, sub-labels→labels w/ recolour+finish,
-colour sync, cup-only-on default). Isolated file → can't affect the bag configurator or marketplace.
+**Still WebGL-verify in a real browser** (headless can't do WebGL): confirm ext/int/base/lid **finishes** paint and
+the per-step cameras land right. Isolated file → can't affect the bag configurator or marketplace.
 
 ## The 3D configurator (`configurator.html` + `realism-engine.js`)
 - **Heavy assets are EXTERNAL (not inlined)** so they cache + are shared with the cup studio: Three.js r128 →
@@ -95,6 +101,11 @@ colour sync, cup-only-on default). Isolated file → can't affect the bag config
   (1024×512), kraft grain → `materials/kraft1.jpg`. These **must stay committed + same-origin** (a `file://`
   open would taint the kraft canvas; the dev server / Pages are same-origin so it's fine). The GLB models load
   from `paper_bag/*.glb` (bag) / `paper_cup/*.glb` (cup). Each configurator HTML is now ~0.7 MB (was ~2.9 MB).
+- **`GLTFLoader.js` + `RGBELoader.js` are now VENDORED** in `vendor/three128/` (r128 classic global builds) —
+  NOT a CDN. They used to load from `cdn.jsdelivr.net`; when that failed the GLB loader was undefined and the
+  studio **hung on the loader forever** (designer bar showed, 3D never cleared). **Never point Three add-ons at
+  a CDN.** `buildPaperBagMesh` also guards: if `THREE.GLTFLoader` is missing OR the GLB onload throws, it calls
+  `finishConfigLoading()` so the loader always clears instead of hanging.
 - `realism-engine.js` is loaded with a cache-bust query: `<script src="realism-engine.js?v=15">`.
   **Bump `?v=N` whenever you edit realism-engine.js**, or the browser serves a stale copy.
 - `REALISM` config object lives in **configurator.html** (~line 3215); the engine reads it as a global.
