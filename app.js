@@ -236,7 +236,94 @@
     if (sh) { e.preventDefault(); IMP.share(sh.getAttribute('data-share-title') || document.title, sh.getAttribute('data-share') || location.href); }
   });
 
-  document.addEventListener('DOMContentLoaded', function () { IMP.initFooter(); updateBadges(); });
+  /* ══ Motion: scroll reveals · stat count-up · page transitions ══════════
+     Progressive enhancement + reduced-motion aware. Every effect degrades to
+     the final visible state, so nothing here can hide content if it fails. */
+  function prefersReduce() {
+    try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+  }
+  IMP.initMotion = function () {
+    var reduce = prefersReduce();
+    var hasIO = ('IntersectionObserver' in window);
+
+    /* ── Scroll reveals ── (only hide content when we can reliably reveal it) */
+    if (!reduce && hasIO) {
+      var sel = '.sec-head, .statstrip, .three-sided > *, .join-grid > *, ' +
+                '.pgrid > *, .agrid > *, .colgrid > *, .mgrid > *, .catrow > *, ' +
+                '.trio > *, .pdp-related .pcard, .pdp-specs, .reviews';
+      var nodes = [];
+      try { nodes = Array.prototype.slice.call(document.querySelectorAll(sel)); } catch (e) { nodes = []; }
+      if (nodes.length) {
+        var ioR = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); ioR.unobserve(en.target); } });
+        }, { rootMargin: '0px 0px -7% 0px', threshold: 0.03 });
+        nodes.forEach(function (n, i) {
+          if (n.closest && n.closest('.lhero')) return;   /* never hide the above-the-fold hero (LCP) */
+          n.classList.add('reveal');
+          var d = (i % 6) * 45; if (d) n.style.setProperty('--reveal-d', d + 'ms');
+          ioR.observe(n);
+        });
+        /* Failsafe: if anything is still hidden after 2.4s (e.g. observer never fired), show it. */
+        setTimeout(function () { nodes.forEach(function (n) { if (!n.classList.contains('in')) { var r = n.getBoundingClientRect(); if (r.top < (window.innerHeight || 0)) n.classList.add('in'); } }); }, 2400);
+      }
+    }
+
+    /* ── Stat count-up ── */
+    var counters = [];
+    try { counters = Array.prototype.slice.call(document.querySelectorAll('.statstrip .v, [data-count]')); } catch (e) { counters = []; }
+    function runCount(el) {
+      var raw = (el.getAttribute('data-count') || el.textContent || '').trim();
+      var m = raw.match(/^([^\d]*)(\d[\d,]*)(.*)$/);
+      if (!m) return;
+      var pre = m[1], suf = m[3], target = parseInt(m[2].replace(/,/g, ''), 10);
+      if (!isFinite(target)) return;
+      if (reduce) { el.textContent = pre + target.toLocaleString() + suf; return; }
+      var t0 = null, dur = 1100;
+      (function frame(ts) {
+        if (t0 === null) t0 = ts;
+        var p = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = pre + Math.round(target * e).toLocaleString() + suf;
+        if (p < 1) requestAnimationFrame(frame);
+      });
+    }
+    if (counters.length) {
+      if (reduce || !hasIO) { counters.forEach(runCount); }
+      else {
+        var ioC = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) { if (en.isIntersecting) { requestAnimationFrame(function(){ runCount(en.target); }); ioC.unobserve(en.target); } });
+        }, { threshold: 0.6 });
+        counters.forEach(function (el) { ioC.observe(el); });
+      }
+    }
+
+    /* ── Page transitions: fade out + gold shimmer when leaving to an internal page ── */
+    if (!reduce) {
+      var bar = null;
+      document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target.closest && e.target.closest('a'); if (!a) return;
+        var href = a.getAttribute('href') || '';
+        if (!href || href.charAt(0) === '#' || a.target === '_blank' || a.hasAttribute('download')) return;
+        if (/^(mailto:|tel:|javascript:)/i.test(href)) return;
+        if (a.hasAttribute('data-no-transition') || a.hasAttribute('data-fav') || a.hasAttribute('data-follow') || a.hasAttribute('data-share')) return;
+        var url; try { url = new URL(a.href, location.href); } catch (_) { return; }
+        if (url.origin !== location.origin) return;                                  /* external link */
+        if (url.pathname === location.pathname && (url.hash || url.search === location.search)) return; /* same page */
+        e.preventDefault();
+        if (!bar) { bar = document.createElement('div'); bar.className = 'route-shimmer'; }
+        if (!bar.parentNode) document.body.appendChild(bar);
+        document.documentElement.classList.add('is-leaving');
+        var dest = a.href, done = false;
+        function go() { if (done) return; done = true; location.href = dest; }
+        setTimeout(go, 210);   /* navigate just after the fade */
+        setTimeout(go, 650);   /* safety fallback */
+      }, false);
+      /* bfcache restore → clear the leaving state so the page isn't stuck faded out */
+      window.addEventListener('pageshow', function () { document.documentElement.classList.remove('is-leaving'); if (bar && bar.parentNode) bar.parentNode.removeChild(bar); });
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function () { IMP.initFooter(); updateBadges(); try { IMP.initMotion(); } catch (e) {} });
   document.addEventListener('imprint:langchange', updateBadges);
 
   window.IMP = IMP;

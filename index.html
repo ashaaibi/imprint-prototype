@@ -60,7 +60,7 @@
   <div class="lhero-grid">
     <div>
       <p class="eyebrow">The packaging marketplace</p>
-      <h1>Where artists, brands &amp; makers meet.</h1>
+      <h1 data-tw>Where artists, brands &amp; makers meet.</h1>
       <p>IMPRINT isn't a print shop. It's the platform that connects independent <b>artists</b>, the <b>brands</b> who love their work, and vetted <b>manufacturers</b> — so a design becomes a finished, shippable product in one automated, seamless flow. Customise any design in real-time 3D, and we route it to production for you.</p>
       <div class="lhero-cta">
         <a class="btn btn-primary" href="products.html" style="flex:0 0 auto">Browse the marketplace</a>
@@ -138,8 +138,14 @@
   function pick(arr,n){ return arr.slice(0,n); }
 
   var honeyImg = (IMP.product('honeyloom-gift-bag')||{}).image;
-  var hero = [honeyImg].concat(pick(C.products.filter(function(p){return p.id!=='honeyloom-gift-bag';}),3).map(function(p){return p.image;}));
-  document.getElementById('hero-collage').innerHTML = hero.map(function(o,i){ return IMP.img(o, '(max-width:800px) 50vw, 280px', {eager:i===0}); }).join('');
+  var hero = [honeyImg].concat(pick(C.products.filter(function(p){return p.id!=='honeyloom-gift-bag' && p.image;}),3).map(function(p){return p.image;}));
+  /* Bento tiles: two stacked <img> layers each so designs can crossfade in/out. */
+  document.getElementById('hero-collage').innerHTML = hero.map(function(o,i){
+    return '<div class="bento">' +
+      '<img class="show" src="'+IMP.src(o)+'" alt="" '+(i===0?'fetchpriority="high"':'loading="lazy"')+' decoding="async">' +
+      '<img alt="" loading="lazy" decoding="async">' +
+    '</div>';
+  }).join('');
 
   document.getElementById('statstrip').innerHTML = [
     [C.products.length, 'Designer templates'],
@@ -166,6 +172,58 @@
 
   var makers = C.makers.slice().sort(function(a,b){return b.rating-a.rating;});
   document.getElementById('feat-makers').innerHTML = pick(makers,3).map(IMP.makerCard).join('');
+
+  /* ── Hero enhancements (run AFTER all content renders; wrapped so a failure here
+        can never block the page). Both are no-ops under prefers-reduced-motion. ── */
+  try {
+    /* Typewriter: cycle the one rotating word — type → backspace → next.
+       No-JS / reduced-motion keeps the full static headline. */
+    (function(){
+      var h1 = document.querySelector('.lhero h1[data-tw]'); if(!h1) return;
+      var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+      if (reduce) return;
+      var words=['artists','brands','makers'];
+      h1.innerHTML = 'Where <span class="tw-word" id="tw-word"></span><span class="tw-caret"></span> meet.';
+      var el=document.getElementById('tw-word'), wi=0, ci=0, del=false;
+      function tick(){
+        var w=words[wi];
+        if(!del){ ci++; el.textContent=w.slice(0,ci); if(ci>=w.length){ del=true; return setTimeout(tick,1500); } }
+        else    { ci--; el.textContent=w.slice(0,ci); if(ci<=0){ del=false; wi=(wi+1)%words.length; return setTimeout(tick,340); } }
+        setTimeout(tick, del?55:95);
+      }
+      setTimeout(tick, 800);
+    })();
+  } catch(e){}
+  try {
+    /* Bento crossfade: each tile fades through real product designs.
+       Pauses on hover + when scrolled out of view; off under reduced-motion. */
+    (function(){
+      var box=document.getElementById('hero-collage'); if(!box) return;
+      var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+      var pool=C.products.filter(function(p){return p.image;}).map(function(p){return p.image;});
+      if (reduce || pool.length<6) return;
+      var tiles=Array.prototype.slice.call(box.querySelectorAll('.bento'));
+      var paused=false, visible=true;
+      box.addEventListener('mouseenter',function(){paused=true;});
+      box.addEventListener('mouseleave',function(){paused=false;});
+      if ('IntersectionObserver' in window){
+        new IntersectionObserver(function(es){ es.forEach(function(en){ visible=en.isIntersecting; }); },{threshold:0.15}).observe(box);
+      }
+      var idx=tiles.map(function(_,i){ return (i*7)%pool.length; });
+      function cycle(ti){
+        if(paused||!visible) return;
+        var t=tiles[ti], imgs=t.querySelectorAll('img');
+        var front=imgs[0].classList.contains('show')?imgs[0]:imgs[1], back=front===imgs[0]?imgs[1]:imgs[0];
+        idx[ti]=(idx[ti]+tiles.length)%pool.length;
+        var url=IMP.src(pool[idx[ti]]); if(!url) return;
+        var pre=new Image();
+        pre.onload=function(){ back.src=url; back.classList.add('show'); front.classList.remove('show'); };
+        pre.src=url;
+      }
+      function start(){ tiles.forEach(function(_,ti){ setInterval(function(){ cycle(ti); }, 4200+ti*650); }); }
+      if ('requestIdleCallback' in window) requestIdleCallback(start,{timeout:2500}); else setTimeout(start,1800);
+    })();
+  } catch(e){}
 })();
 </script>
 </body>
