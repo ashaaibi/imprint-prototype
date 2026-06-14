@@ -5334,7 +5334,10 @@ function buildUVGuide() {
   bagUVGuideCanvas = cv;
 }
 
+var _bagBuildSeq = 0;   /* guards against overlapping async GLB builds (e.g. the default-size
+                           load racing a template restore that switches size) stacking two cups */
 function buildPaperBagMesh() {
+  var _mySeq = ++_bagBuildSeq;
   if (typeof setBagLoading === 'function') setBagLoading(true);
   // Dispose old bag group
   if (T.box && T.box === bagGroup) {
@@ -5374,6 +5377,7 @@ function buildPaperBagMesh() {
   // Real file URL (same-origin on Pages/dev-server) — load() handles it directly
   loader.load(model.file, function(gltf) {
    try {
+    if (_mySeq !== _bagBuildSeq) { return; }   /* a newer build started — drop this stale result so two cups never stack */
     bagGroup = new THREE.Group();
 
     /* Build body / handles / rivets. New models (e.g. wide) are authored as separate
@@ -12303,6 +12307,12 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
   /* ===== Designer: export template + capture render ===== */
   function serializeTemplate(meta){
     var snap = _snapshotState();
+    /* Bake every region's colour to an explicit hex (swatchName→'Custom', customHex=color).
+       Preset swatches are otherwise re-resolved from the (unsaved) hue slider on import, losing
+       the exact colour. As a 'Custom' hex it restores verbatim. */
+    ['exterior','interior','ribbon','rivet'].forEach(function(rg){
+      if (snap[rg] && snap[rg].color){ snap[rg].customHex = snap[rg].color; snap[rg].swatchName = 'Custom'; }
+    });
     function _embedImg(img){ if(!img) return null; var s=img.src||'';
       if(s.indexOf('data:')===0) return s;
       if(s.indexOf('blob:')===0){ try{ return img.toDataURL('image/png'); }catch(e){ return null; } }
