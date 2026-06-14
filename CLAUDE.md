@@ -37,8 +37,13 @@ mangling files/folders.
 - `designer/index.html` — **unlisted designer portal** (build/publish bag **and** cup templates)
 - `templates/` — **template JSONs** (`<id>.template.json`) + `index.json` manifest (designer portal reads it)
 - `tools/build_catalog.py` — **catalog source of truth** (see "Marketplace") · `paper_cup/` — cup GLB
-- `catalog.js` (generated · `window.IMPRINT_CATALOG`) · `catalog.css` (marketplace styles) ·
-  `app.js` (nav/footer, favourites/follow/share, card render helpers) · `product.js` (lean PDP)
+- `promo/` — **Remotion project** for the cinematic brand promo video (`npm i && npx remotion render` —
+  needs a local browser/ffmpeg, so it can't render in the headless sandbox; `node_modules`/`out` gitignored).
+- `catalog.js` (generated · `window.IMPRINT_CATALOG`) · `catalog.css` (marketplace styles + the **motion**
+  block: reveals/page-fade/shimmer/typewriter caret/bento/card-sheen) ·
+  `app.js` (nav/footer, favourites/follow/share, card render helpers, **`IMP.initMotion`** = scroll reveals +
+  stat count-up + page transitions) · `product.js` (lean PDP). **Marketplace animations are native CSS/JS,
+  reduced-motion-aware, and scoped to catalog.css/app.js (NOT loaded on the 3D studios). Keep them fast.**
 - `assets/{products,collections,artists,bags}/` — curated marketplace imagery
 - `shared.css` / `shared.js` — header, GCC country/currency state, helpers
 - `realism-engine.js` — 3D realism (post-processing, lighting, floor, per-finish PBR)
@@ -181,9 +186,14 @@ so they return original output when `LOCKS` is null.
 - **Designer mode** = `?designer=1` (reached only via the unlisted `designer/` portal). Shows the **Testing
   panel** (hidden for everyone else — `#testing-panel{display:none}` + `body.imp-designer`), a **Designer bar**
   (`🔒 Locks` / `📷 Render` / `⬇ Export template`), and the **Locks panel** (`LK`).
-- **Export** (`IMPRINT_exportTemplate`) = `_snapshotState()` (layer images serialized to `_imgSrc`/`_srcImgSrc`)
-  + `locks` + `meta` → downloaded `<id>.template.json`. `📷 Render` (`IMPRINT_captureRender`) downloads a PNG of
-  the 3D canvas. Commit both to `templates/` + add to `templates/index.json`.
+- **Export** (`IMPRINT_exportTemplate`) = `_snapshotState()` (layer images serialized to `_imgSrc`/`_srcImgSrc`;
+  fonts embedded in `tpl.fonts`) + `locks` + `meta` → downloaded `<id>.template.json`. `serializeTemplate`
+  **bakes every region colour to an explicit hex** (swatchName→`Custom`) — a preset swatch (Rose Red…) is
+  otherwise re-resolved from the unsaved hue slider on import and the exact colour is lost. `📷 Render`
+  (`IMPRINT_captureRender`) downloads a PNG of the 3D canvas. Commit both to `templates/` + `templates/index.json`.
+- **Loader race guard:** `buildPaperBagMesh` uses a build-sequence token (`_bagBuildSeq`/`_mySeq`) so an async
+  GLB onload that's been superseded (e.g. the default-size load racing a template restore that switches size)
+  **drops its result instead of `scene.add`-ing a second bag** — without this, unlocked-size imports stacked two bags.
 - **Client** = `?template=<id>` → fetch `templates/<id>.template.json` → rebuild layer images → `_restoreState`
   → mark layers `_tplLock` → `_applyLocks()` (hide locked sizes/steps/add-layer + lock layers) → land on Design.
   `_tplLock` layers get a **minimal panel** (`_clientPanel`: only the designer-allowed text / colour / social);

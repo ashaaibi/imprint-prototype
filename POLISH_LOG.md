@@ -3,6 +3,30 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-14 (batch 16) — Marketplace motion, template export/import fixes, Remotion promo
+- **Native animations (fast, reduced-motion-aware), scoped to the marketplace** (`app.js` + `catalog.css`,
+  which don't load on the 3D studios). Everything degrades to the final visible state if JS fails:
+  - **Hero typewriter** — the rotating word types → backspaces → types the next (artists/brands/makers)
+    with a blinking gold caret. No-JS/reduced-motion keeps the full static headline.
+  - **Hero bento crossfade** — each collage tile fades through real product designs (preloads first;
+    pauses on hover + off-screen; starts on idle so it never delays load).
+  - **Scroll reveals** — section headings + grid cards fade-and-rise on scroll (IntersectionObserver,
+    staggered). Uses the `translate` property so card-hover `transform` still composes on top.
+  - **Stat count-up**, **page transitions** (fade-out + slim gold top shimmer on internal nav; fade-in on
+    load; skips modifier-clicks/new-tab/downloads/hashes/fav-follow-share), **richer card hover** (gold sheen).
+  - Hero enhancements run after content renders, wrapped in try/catch so they can't block the page.
+- **Template export/import bug fixes (bag + cup):**
+  - **Preset colours** (Rose Red, Vivid Red…) were lost — only custom hex survived. `serializeTemplate`
+    now bakes each region's colour to an explicit hex (swatchName→Custom) so it restores verbatim (the
+    rebuild's `onBagHue` was otherwise re-resolving the swatch from the unsaved hue slider).
+  - **Stacked sizes on import** (unlocked): the restore rebuilds for the template's size while the default
+    GLB load is still in flight → two bags. Added a **build-sequence guard** (`_bagBuildSeq`/`_mySeq`) so a
+    superseded GLB onload drops its result; only the latest build is added.
+  - **Finishes** now render (they were the stale stacked bag showing through).
+- **Remotion promo** (`promo/`): a runnable Remotion project for a ~18s cinematic brand film (logo →
+  typewriter tagline → product showcase → CTA, 16:9 + 1:1). Render locally (`npm i && npx remotion render`);
+  can't render in the headless sandbox (no Chrome/ffmpeg).
+
 ## 2026-06-14 (batch 15) — Stuck-loader fix, cup lid finish, per-step cameras, tablet padding
 - **CRITICAL — stuck configurator loader:** both studios could hang forever on the loader while the
   designer bar still showed. Cause: `GLTFLoader.js`/`RGBELoader.js` were the only Three add-ons still
