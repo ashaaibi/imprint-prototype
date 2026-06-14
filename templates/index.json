@@ -1,4 +1,4 @@
 [
   { "id": "honey-gift-bag", "name": "Honeyloom Gift Bag", "category": "Gourmet", "tags": ["Foil", "Editable text", "Bottle bag"], "render": "templates/renders/honey-gift-bag-1.jpg", "renders": ["templates/renders/honey-gift-bag-1.jpg", "templates/renders/honey-gift-bag-2.jpg", "templates/renders/honey-gift-bag-3.jpg"], "accent": "#d29b35", "designer": "Imprint", "product": "honeyloom-gift-bag", "configurator": "configurator.html" },
-  { "id": "coffee-cup", "name": "Artisan Coffee Cup", "category": "Café", "tags": ["New", "Cup studio", "4 materials"], "render": "assets/products/coffee-cup.jpg", "accent": "#1f6f63", "designer": "Imprint", "product": "coffee-cup", "configurator": "configurator-cup.html" }
+  { "id": "coffee-cup", "name": "Artisan Coffee Cup", "category": "Café", "tags": ["New", "Cup studio", "4 materials"], "render": "assets/products/coffee-cup-1.jpg", "accent": "#1f6f63", "designer": "Imprint", "product": "coffee-cup", "configurator": "configurator-cup.html" }
 ]
