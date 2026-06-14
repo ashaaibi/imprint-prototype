@@ -10073,6 +10073,19 @@ function _nudgeOnLoad(){
   if (typeof applyRivetColor==='function') applyRivetColor();
   if (typeof drawBagTexture==='function') drawBagTexture();
 }
+/* Re-press the handle (ribbon) finish N times, staggered, so the default Soft-Touch handle
+   finish definitely renders on load (it can fail to paint on the very first bake). Uses the
+   RESTORED finish so a template that chose another handle finish is respected. */
+function _nudgeHandleFinish(times){
+  times = times || 3;
+  var delays = [0, 250, 600, 1000, 1500];
+  for (var i = 0; i < times; i++){
+    (function(){ setTimeout(function(){
+      var fin = (BAG.ribbon && BAG.ribbon.finish) || 'softtouch';
+      if (typeof applyBagFinish === 'function') applyBagFinish('ribbon', fin, null, true);
+    }, delays[i] != null ? delays[i] : (600 + i*400)); })();
+  }
+}
 function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
 function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
 function onAnimOpMax(v)    { _animOpMax = parseFloat(v); var el=document.getElementById('anim-opmax-val'); if(el) el.textContent = _animOpMax.toFixed(2); }
@@ -12242,6 +12255,9 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       _applyLocks();
       /* Re-apply the RESTORED finishes/colours (NOT defaults — defaults would wipe the template). */
       if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 140); }
+      /* Client bag: the handle (ribbon) Soft-Touch finish sometimes doesn't paint until it's
+         clicked — re-press the handle finish 3× (staggered) on load so it definitely renders. */
+      if (typeof _nudgeHandleFinish === 'function') _nudgeHandleFinish(3);
       if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
       window._tplPending = false;
       if (typeof finishConfigLoading === 'function') finishConfigLoading();   /* reveal now — lands straight on Design, no Start-step flash */

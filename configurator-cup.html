@@ -2708,6 +2708,30 @@
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Supersamples the whole 3D view (renderer pixel-ratio ×). Higher = sharper edges &amp; metallic reflections, lower = faster. Clamped to keep the buffer safe.</div>
 
+      <!-- Step camera angles (cup / sleeve / base / lid) -->
+      <div style="margin-top:18px;margin-bottom:6px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Step camera angles</div>
+      <div style="font-size:10px;color:var(--secondary);margin:0 0 10px;line-height:1.4;">The angle the camera eases to when each step opens. <strong>Y</strong> turns around the cup (turntable), <strong>X</strong> tilts up / down. Changes preview live while you're on that step.</div>
+      <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:2px 0 6px;">Cup step</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Y rotation (turn)</span><span class="slider-val" id="stepcam-3-y-val">344°</span></div>
+        <input type="range" class="test-slider" id="stepcam-3-y" min="0" max="360" step="1" value="344" oninput="onStepCamAngle(3,'y',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">X rotation (tilt)</span><span class="slider-val" id="stepcam-3-x-val">66°</span></div>
+        <input type="range" class="test-slider" id="stepcam-3-x" min="5" max="175" step="1" value="66" oninput="onStepCamAngle(3,'x',this.value)"></div>
+      <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:8px 0 6px;">Sleeve step</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Y rotation (turn)</span><span class="slider-val" id="stepcam-4-y-val">344°</span></div>
+        <input type="range" class="test-slider" id="stepcam-4-y" min="0" max="360" step="1" value="344" oninput="onStepCamAngle(4,'y',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">X rotation (tilt)</span><span class="slider-val" id="stepcam-4-x-val">66°</span></div>
+        <input type="range" class="test-slider" id="stepcam-4-x" min="5" max="175" step="1" value="66" oninput="onStepCamAngle(4,'x',this.value)"></div>
+      <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:8px 0 6px;">Base step</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Y rotation (turn)</span><span class="slider-val" id="stepcam-5-y-val">344°</span></div>
+        <input type="range" class="test-slider" id="stepcam-5-y" min="0" max="360" step="1" value="344" oninput="onStepCamAngle(5,'y',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">X rotation (tilt)</span><span class="slider-val" id="stepcam-5-x-val">132°</span></div>
+        <input type="range" class="test-slider" id="stepcam-5-x" min="5" max="175" step="1" value="132" oninput="onStepCamAngle(5,'x',this.value)"></div>
+      <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:8px 0 6px;">Lid step</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Y rotation (turn)</span><span class="slider-val" id="stepcam-6-y-val">344°</span></div>
+        <input type="range" class="test-slider" id="stepcam-6-y" min="0" max="360" step="1" value="344" oninput="onStepCamAngle(6,'y',this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">X rotation (tilt)</span><span class="slider-val" id="stepcam-6-x-val">17°</span></div>
+        <input type="range" class="test-slider" id="stepcam-6-x" min="5" max="175" step="1" value="17" oninput="onStepCamAngle(6,'x',this.value)"></div>
+
       <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:2px 0 6px;">Neutral snap (per layer type)</div>
       <div class="slider-row">
         <div class="slider-top"><span class="slider-name">Text</span><span class="slider-val" id="neutral-snap-text-val">1%</span></div>
@@ -3108,7 +3132,7 @@ const BAG = {
   exterior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   interior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
-  rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
+  rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF', finish: 'softtouch' },
   artwork: {
     type: 'none',  /* tab highlight only — rendering is driven by each layer's .visible */
     nextId: 100,   /* id source for user-added layers */
@@ -5518,6 +5542,7 @@ function buildPaperBagMesh() {
     applyBagFinish('exterior', 'softtouch', null, true);
     applyBagFinish('interior', 'softtouch', null, true);
     applyBagFinish('ribbon',   'softtouch', null, true);
+    applyBagFinish('rivet',    (BAG.rivet && BAG.rivet.finish) || 'softtouch', null, true);  /* cup lid finish on load */
     if (typeof initRealismBag === 'function') initRealismBag();
     drawBagTexture();
     if (typeof renderLayersList === 'function') renderLayersList(); /* Layers panel is the only artwork UI now */
@@ -8428,6 +8453,7 @@ var BAG_PBR = {
   exterior: { roughness: 0.20, metalness: 0.17, transmission: 0.00, opacity: 1.00 },
   interior: { roughness: 0.20, metalness: 0.17, transmission: 0.00, opacity: 1.00 },
   ribbon:   { roughness: 0.20, metalness: 0.17, transmission: 0.00, opacity: 1.00 },
+  rivet:    { roughness: 0.20, metalness: 0.17, transmission: 0.00, opacity: 1.00 },  /* cup lid — its own independent finish */
 };
 /* PBR_MAX — the testing panel controls how far each per-section slider can reach.
    Roughness  : 0–1  mapped to  0–PBR_MAX.roughness
@@ -8696,11 +8722,9 @@ function applyBagFinish(region, key, btn, instant) {
   } else {
     startFinishTween(region, targetR, targetM);
   }
-  /* Rivets share the handles' finish (the Rivets step was removed). */
-  if (region === 'ribbon' && typeof bagRivetRef !== 'undefined' && bagRivetRef && bagRivetRef.material) {
-    if (BAG.rivet) BAG.rivet.finish = key;
-    bagRivetRef.material.roughness = targetR; bagRivetRef.material.metalness = targetM; bagRivetRef.material.needsUpdate = true;
-  }
+  /* Cup: the lid (rivet) is its OWN step with an independent finish — NOT tied to the base
+     (ribbon) anymore. applyBagFinish('rivet', …) drives bagRivetRef directly via
+     onBagRoughness/onBagMetalness + tickFinishTweens. */
 
   /* Kraft paints a kraft-tan base color (#c49345) + a hidden kraft1.png overlay.
      The user may still recolor or overlay patterns afterwards. The colour eases
@@ -8777,7 +8801,7 @@ function startFinishTween(region, toR, toM) {
 /* Advance all active finish tweens — called each frame from animate() */
 function tickFinishTweens(now) {
   var needRebuild = false;
-  ['exterior', 'interior', 'ribbon'].forEach(function(rg) {
+  ['exterior', 'interior', 'ribbon', 'rivet'].forEach(function(rg) {
     var tw = finishTweens[rg];
     if (!tw) return;
     var t = (now - tw.start) / tw.dur;
@@ -8789,6 +8813,9 @@ function tickFinishTweens(now) {
       [bagFrontRef, bagBackRef].forEach(function(m) {
         if (m && m.material) { m.material.roughness = rgh; m.material.metalness = mtl; m.material.needsUpdate = true; }
       });
+    } else if (rg === 'rivet') {                          /* cup lid mesh — direct material, not the atlas */
+      if (BAG_PBR.rivet) { BAG_PBR.rivet.roughness = rgh; BAG_PBR.rivet.metalness = mtl; }
+      if (bagRivetRef && bagRivetRef.material) { bagRivetRef.material.roughness = rgh; bagRivetRef.material.metalness = mtl; bagRivetRef.material.needsUpdate = true; }
     } else {
       BAG_PBR[rg].roughness = rgh;
       BAG_PBR[rg].metalness = mtl;
@@ -8840,6 +8867,9 @@ function onBagRoughness(region, v) {
     [bagFrontRef, bagBackRef].forEach(function(m) {
       if (m) { m.material.roughness = actual; m.material.needsUpdate = true; }
     });
+  } else if (region === 'rivet') {                       /* cup lid = its own mesh (bagRivetRef) */
+    BAG_PBR.rivet.roughness = actual;
+    if (bagRivetRef && bagRivetRef.material) { bagRivetRef.material.roughness = actual; bagRivetRef.material.needsUpdate = true; }
   }
 }
 
@@ -8856,6 +8886,9 @@ function onBagMetalness(region, v) {
     [bagFrontRef, bagBackRef].forEach(function(m) {
       if (m) { m.material.metalness = 1 - actual; m.material.needsUpdate = true; }
     });
+  } else if (region === 'rivet') {                       /* cup lid = its own mesh (bagRivetRef) */
+    BAG_PBR.rivet.metalness = actual;
+    if (bagRivetRef && bagRivetRef.material) { bagRivetRef.material.metalness = actual; bagRivetRef.material.needsUpdate = true; }
   }
 }
 
@@ -9657,6 +9690,15 @@ function startColorTween(region, toHex) {
 
 function viewThetaRad(view) { return (viewAnglesDeg[view] || 0) * Math.PI / 180; }
 function frontTheta() { return viewThetaRad('front'); }
+/* Per-step entry camera angles (Testing → "Step camera angles"). theta = turntable (Y),
+   phi = tilt (X), both in RADIANS; the Testing sliders edit DEGREES. Defaults reproduce
+   the original hardcoded per-step views: Cup/Sleeve front, Base looks up, Lid looks down. */
+var STEP_CAM = {
+  3: { theta: viewThetaRad('front'), phi: 1.15 },   /* Cup    → front */
+  4: { theta: viewThetaRad('front'), phi: 1.15 },   /* Sleeve → front */
+  5: { theta: viewThetaRad('front'), phi: 2.30 },   /* Base   → look up from below */
+  6: { theta: viewThetaRad('front'), phi: 0.30 }    /* Lid    → look down from top */
+};
 function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
 function easeInCubic(t)  { return t*t*t; }                         /* slow → fast (resume) */
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }        /* fast → slow (interaction) */
@@ -10136,6 +10178,19 @@ function _nudgeOnLoad(){
   if (typeof applyRibbonColor==='function') applyRibbonColor();
   if (typeof applyRivetColor==='function') applyRivetColor();
   if (typeof drawBagTexture==='function') drawBagTexture();
+}
+/* Re-press the handle/base (ribbon) finish N times, staggered, so the default Soft-Touch
+   finish definitely renders on load (it can fail to paint on the very first bake). Uses the
+   RESTORED finish so a template that chose another finish is respected. */
+function _nudgeHandleFinish(times){
+  times = times || 3;
+  var delays = [0, 250, 600, 1000, 1500];
+  for (var i = 0; i < times; i++){
+    (function(){ setTimeout(function(){
+      var fin = (BAG.ribbon && BAG.ribbon.finish) || 'softtouch';
+      if (typeof applyBagFinish === 'function') applyBagFinish('ribbon', fin, null, true);
+    }, delays[i] != null ? delays[i] : (600 + i*400)); })();
+  }
 }
 function onAnimColor(v)    { _animColor = v; var el=document.getElementById('anim-color-val'); if(el) el.textContent = v; }
 function onAnimOpMin(v)    { _animOpMin = parseFloat(v); var el=document.getElementById('anim-opmin-val'); if(el) el.textContent = _animOpMin.toFixed(2); }
@@ -11016,14 +11071,29 @@ document.addEventListener('imprint:countrychange', function() {
 
 var INTERIOR_VIEW_PHI = 0.60;   /* smaller phi = more top-down: look down into the open bag */
 function applyStepCamera(n){
-  /* steps: 1 Start, 2 Design, 3 Exterior, 4 Interior, 5 Handles, 6 Review */
+  /* steps: 1 Start, 2 Design, 3 Cup, 4 Sleeve, 5 Base, 6 Lid, 7 Review */
   var artwork = (n === 2);
   spinAllowed = !artwork;
   if (artwork) { spinFactor = 0; spinTarget = 0; spinRamp = null; if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false; }
   if (typeof orbit === 'undefined' || !orbit || !T || !T.box) return;
-  if (n === 3 || n === 4) startCamTween(viewThetaRad('front'), VIEW_PHI);   /* Cup / Sleeve → front view */
-  else if (n === 5) startCamTween(viewThetaRad('front'), 2.30);             /* Base → look up from below */
-  else if (n === 6) startCamTween(viewThetaRad('front'), 0.30);             /* Lid → look down from top */
+  /* Per-step entry angle comes from STEP_CAM (editable in Testing → "Step camera angles"). */
+  if (STEP_CAM[n]) startCamTween(STEP_CAM[n].theta, STEP_CAM[n].phi);
+}
+/* Testing: live-edit a step's entry camera angle (axis 'y' = turntable/theta, 'x' = tilt/phi).
+   Slider values are DEGREES; STEP_CAM stores RADIANS. Previews live if on that step. */
+function onStepCamAngle(step, axis, val){
+  val = parseFloat(val);
+  if (!STEP_CAM[step]) STEP_CAM[step] = { theta: viewThetaRad('front'), phi: VIEW_PHI };
+  var rad = val * Math.PI / 180;
+  if (axis === 'y') STEP_CAM[step].theta = rad;
+  else STEP_CAM[step].phi = Math.max(0.087, Math.min(Math.PI - 0.087, rad));   /* clamp ~5°..175° */
+  var lbl = document.getElementById('stepcam-' + step + '-' + axis + '-val');
+  if (lbl) lbl.textContent = Math.round(val) + '°';
+  /* Live preview: if the user is currently on that step, ease to the new angle now. */
+  if (typeof currentConfigStep !== 'undefined' && currentConfigStep === step && typeof startCamTween === 'function') {
+    if (typeof orbit !== 'undefined' && orbit) orbit.autoSpin = false;   /* hold the angle so the preview is honest */
+    startCamTween(STEP_CAM[step].theta, STEP_CAM[step].phi);
+  }
 }
 
 /* ─── STEPPED FLOW (Nike By You style) ─── */
@@ -12307,6 +12377,8 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       _applyLocks();
       /* Re-apply the RESTORED finishes/colours (NOT defaults — defaults would wipe the template). */
       if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 140); }
+      /* Client: re-press the handle/base Soft-Touch finish 3× (staggered) so it definitely renders. */
+      if (typeof _nudgeHandleFinish === 'function') _nudgeHandleFinish(3);
       if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
       window._tplPending = false;
       if (typeof finishConfigLoading === 'function') finishConfigLoading();   /* reveal now — lands straight on Design, no Start-step flash */
