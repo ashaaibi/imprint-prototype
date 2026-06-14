@@ -5864,7 +5864,7 @@ function textFontString(size) {
    Built-in fonts live in FONT_OPTIONS by name; uploaded & fonts/-folder fonts are
    loaded on demand and registered under a generated family key, so the canvas text
    renderer (layerFontString) keeps working unchanged — L.font just holds the key. */
-var _fontSeq = 0, _fontUrlCache = {};
+var _fontSeq = 0, _fontUrlCache = {}, _fontDataByKey = {};
 function _loadFontFromUrl(url, displayName, cb) {
   if (_fontUrlCache[url] && FONT_OPTIONS[_fontUrlCache[url]]) { cb(_fontUrlCache[url]); return; }
   var family = 'impf' + (_fontSeq++);
@@ -5874,6 +5874,7 @@ function _loadFontFromUrl(url, displayName, cb) {
       document.fonts.add(loaded);
       FONT_OPTIONS[family] = { weight: '400', css: "'" + family + "'", custom: true, label: displayName };
       _fontUrlCache[url] = family;
+      try { fetch(url).then(function(r){return r.blob();}).then(function(b){ var _rd=new FileReader(); _rd.onload=function(){ _fontDataByKey[family]=_rd.result; }; _rd.readAsDataURL(b); }).catch(function(){}); } catch(e){}
       cb(family);
     }).catch(function(e) { console.warn('Font load failed:', displayName, e); cb(null); });
   } catch (e) { console.warn('Font load error:', displayName, e); cb(null); }
@@ -10058,7 +10059,7 @@ function onPulseToggle(on){ _pulseOn = !!on; if (!_pulseOn && typeof stopHueGuid
 /* Re-apply the default material finishes (and ribbon/rivet colour) AFTER realism + meshes
    are ready — without this the handle/ribbon finish doesn't render until clicked. */
 function _nudgeOnLoad(){
-  ['exterior','interior','ribbon'].forEach(function(rg){
+  ['exterior','interior','ribbon','rivet'].forEach(function(rg){
     if (BAG[rg] && BAG[rg].finish && typeof applyBagFinish==='function') applyBagFinish(rg, BAG[rg].finish, null, true);
   });
   if (typeof applyRibbonColor==='function') applyRibbonColor();
@@ -12160,13 +12161,20 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
   /* ===== Designer: export template + capture render ===== */
   function serializeTemplate(meta){
     var snap = _snapshotState();
+    function _embedImg(img){ if(!img) return null; var s=img.src||'';
+      if(s.indexOf('data:')===0) return s;
+      if(s.indexOf('blob:')===0){ try{ return img.toDataURL('image/png'); }catch(e){ return null; } }
+      return s || (function(){ try{ return img.toDataURL('image/png'); }catch(e){ return null; } })(); }
+    var _tplFonts = {};
     snap.layers = snap.layers.map(function(L){
       var o={}; for (var k in L){ if (k==='img'||k==='srcImg'||k==='cutCanvas') continue; o[k]=L[k]; }
-      try { if (L.srcImg) o._srcImgSrc = L.srcImg.src || (L.srcImg.toDataURL && L.srcImg.toDataURL('image/png')); } catch(e){}
-      try { if (!o._srcImgSrc && L.img) o._imgSrc = L.img.src || (L.img.toDataURL && L.img.toDataURL('image/png')); } catch(e){}
+      o._srcImgSrc = _embedImg(L.srcImg);
+      if (!o._srcImgSrc) o._imgSrc = _embedImg(L.img);
+      if (L.kind==='text' && L.font && typeof FONT_OPTIONS!=='undefined' && FONT_OPTIONS[L.font] && FONT_OPTIONS[L.font].custom && _fontDataByKey[L.font])
+        _tplFonts[L.font] = { label: FONT_OPTIONS[L.font].label||L.font, data: _fontDataByKey[L.font] };
       return o;
     });
-    return { v:1, meta:meta, locks: JSON.parse(JSON.stringify(LK)), snapshot: snap };
+    return { v:1, meta:meta, locks: JSON.parse(JSON.stringify(LK)), snapshot: snap, fonts: _tplFonts };
   }
   window.IMPRINT_exportTemplate = function(){
     var name = prompt('Template name', 'My template'); if (!name) return;
@@ -12185,8 +12193,20 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     } catch(e){ alert('Could not capture render: '+e.message); }
   };
 
+  /* Re-register custom fonts embedded in a template (so text renders in the saved face). */
+  function _registerTplFonts(tpl, cb){
+    var fonts=(tpl&&tpl.fonts)||{}, keys=Object.keys(fonts); if(!keys.length){ cb(); return; }
+    var pending=keys.length; function one(){ if(--pending<=0) cb(); }
+    keys.forEach(function(key){
+      if(typeof FONT_OPTIONS!=='undefined' && FONT_OPTIONS[key]){ one(); return; }
+      try { var ff=new FontFace(key,'url("'+fonts[key].data+'")');
+        ff.load().then(function(loaded){ try{ document.fonts.add(loaded); FONT_OPTIONS[key]={weight:'400',css:"'"+key+"'",custom:true,label:(fonts[key].label||key)}; }catch(e){} one(); }).catch(one);
+      } catch(e){ one(); }
+    });
+  }
   /* ===== Client: load a template + enforce locks ===== */
   window.IMPRINT_loadTemplate = function(tpl){
+   _registerTplFonts(tpl, function(){
     LOCKS = tpl.locks || {}; _templateId = (tpl.meta && tpl.meta.id) || null;
     var snap = tpl.snapshot; (snap.layers||[]).forEach(function(L){ L._tplLock = true; });
     var withImg = (snap.layers||[]).filter(function(L){ return L._srcImgSrc || L._imgSrc; });
@@ -12197,6 +12217,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       im.onload = im.onerror = function(){ if (im.naturalWidth) { L.srcImg = im; L.img = im; } if (--pending<=0) _finishTpl(snap, tpl); };
       im.src = L._srcImgSrc || L._imgSrc;
     });
+   });
   };
   function _finishTpl(snap, tpl){
     window._tplRestoring = true;   /* swallow the restore + per-sticker recolor bakes; one bake at the end */
@@ -12212,8 +12233,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       if (typeof renderLayersList==='function') renderLayersList();
       if (typeof drawBagTexture==='function') drawBagTexture();   /* single full-quality bake now everything has settled */
       _applyLocks();
-      /* Nudge everything to its restored value now meshes + realism are ready. */
-      if (typeof _applyDefaultControls === 'function') { try { _applyDefaultControls(); } catch(e){} }
+      /* Re-apply the RESTORED finishes/colours (NOT defaults — defaults would wipe the template). */
       if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 140); }
       if (typeof goConfigStep==='function') goConfigStep(2);   /* land clients on Design */
       window._tplPending = false;
@@ -12333,21 +12353,28 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
   /* Load a template's design into the DESIGNER studio (full tools, no client locks) — "view as designer". */
   function _loadTplDesigner(tpl){
     var snap = tpl && tpl.snapshot; if(!snap){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); return; }
-    window._tplRestoring = true;
-    try { _restoreState(snap); } catch(e){ console.warn('tpl restore (designer)', e); }
-    var stickers=(BAG.artwork.layers||[]).filter(function(L){ return L.kind==='sticker' && L.srcImg && typeof _rebuildStickerCutAndRecolor==='function'; });
-    var settled=false;
-    function done(){ if(settled)return; settled=true; window._tplRestoring=false;
-      if(typeof renderLayersList==='function') renderLayersList();
-      if(typeof drawBagTexture==='function') drawBagTexture();
-      if(typeof _applyDefaultControls==='function'){ try{_applyDefaultControls();}catch(e){} }
-      if(typeof _nudgeOnLoad==='function'){ _nudgeOnLoad(); setTimeout(_nudgeOnLoad,140); }
-      if(typeof goConfigStep==='function') goConfigStep(2);
-      window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading();
-    }
-    if(!stickers.length){ done(); return; }
-    var pending=stickers.length; setTimeout(done,4000);
-    stickers.forEach(function(L){ try{ _rebuildStickerCutAndRecolor(L,function(){ if(--pending<=0) done(); }); }catch(e){ if(--pending<=0) done(); } });
+    _registerTplFonts(tpl, function(){
+      var withImg=(snap.layers||[]).filter(function(L){ return L._srcImgSrc || L._imgSrc; });
+      function proceed(){
+        window._tplRestoring = true;
+        try { _restoreState(snap); } catch(e){ console.warn('tpl restore (designer)', e); }
+        var stickers=(BAG.artwork.layers||[]).filter(function(L){ return L.kind==='sticker' && L.srcImg && typeof _rebuildStickerCutAndRecolor==='function'; });
+        var settled=false;
+        function done(){ if(settled)return; settled=true; window._tplRestoring=false;
+          if(typeof renderLayersList==='function') renderLayersList();
+          if(typeof drawBagTexture==='function') drawBagTexture();
+          if(typeof _nudgeOnLoad==='function'){ _nudgeOnLoad(); setTimeout(_nudgeOnLoad,140); }
+          if(typeof goConfigStep==='function') goConfigStep(2);
+          window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading();
+        }
+        if(!stickers.length){ done(); return; }
+        var pend2=stickers.length; setTimeout(done,4000);
+        stickers.forEach(function(L){ try{ _rebuildStickerCutAndRecolor(L,function(){ if(--pend2<=0) done(); }); }catch(e){ if(--pend2<=0) done(); } });
+      }
+      if(!withImg.length){ proceed(); return; }
+      var pending=withImg.length;
+      withImg.forEach(function(L){ var im=new Image(); im.crossOrigin='anonymous'; im.onload=im.onerror=function(){ if(im.naturalWidth){ L.srcImg=im; L.img=im; } if(--pending<=0) proceed(); }; im.src=L._srcImgSrc||L._imgSrc; });
+    });
   }
   /* Fetch a template by id, or read an imported one from localStorage (id "__imported"). */
   function _getTpl(id){
