@@ -3045,8 +3045,8 @@
 })();
 </script>
 <script src="vendor/three128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
+<script src="vendor/three128/GLTFLoader.js"></script>
+<script src="vendor/three128/RGBELoader.js"></script>
 <!-- ─── Realism: vendored three r128 post-processing add-ons (local, offline-safe) ─── -->
 <script src="vendor/three128/CopyShader.js"></script>
 <script src="vendor/three128/LuminosityHighPassShader.js"></script>
@@ -5335,6 +5335,11 @@ function buildPaperBagMesh() {
   if (typeof rlmResetBag === 'function') rlmResetBag();
   initBagTexture();
 
+  if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader !== 'function') {
+    console.error('THREE.GLTFLoader unavailable — cannot load the 3D model (check vendor/three128/GLTFLoader.js loaded). Clearing loader.');
+    if (typeof finishConfigLoading === 'function') finishConfigLoading();
+    return;
+  }
   var loader = new THREE.GLTFLoader();
   var model = BAG_MODELS[currentBagModel] || BAG_MODELS.cup12;
   setBagUVForModel(currentBagModel);
@@ -5344,6 +5349,7 @@ function buildPaperBagMesh() {
   var _pill=document.getElementById('dim-pill'); if(_pill && typeof _customSize!=='undefined' && !_customSize.on && model.dims) _pill.textContent=model.dims;
   // Real file URL (same-origin on Pages/dev-server) — load() handles it directly
   loader.load(model.file, function(gltf) {
+   try {
     bagGroup = new THREE.Group();
 
     /* Build body / handles / rivets. New models (e.g. wide) are authored as separate
@@ -5525,6 +5531,7 @@ function buildPaperBagMesh() {
     if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 120); }
     /* Model ready → hide the premium loader and play the intro 360° spin */
     finishConfigLoading();
+   } catch(err){ console.error('Cup build threw — clearing loader so the studio is usable', err); finishConfigLoading(); }
   }, undefined, function(err) {
     console.error('GLB load error', err);
     finishConfigLoading();
