@@ -216,24 +216,7 @@
   </div>
 
 
-  <!-- ── DETAILS: specs + reviews for the selected manufacturer ── -->
-  <div class="pdp-details">
-    <div>
-      <h2 class="pdp-sec-title">Specifications — <span id="pdp-spec-mfr">Imprint</span></h2>
-      <table class="pdp-specs-tbl" id="pdp-specs"></table>
-    </div>
-    <div>
-      <h2 class="pdp-sec-title">Reviews — <span id="pdp-rev-mfr">Imprint</span></h2>
-      <div class="pdp-rev-summary">
-        <div class="pdp-rev-big" id="pdp-rev-avg">4.8</div>
-        <div>
-          <div class="pdp-rev-stars" id="pdp-rev-avg-stars">★★★★★</div>
-          <div class="pdp-rev-meta" id="pdp-rev-count">Based on 214 verified orders</div>
-        </div>
-      </div>
-      <div id="pdp-reviews"></div>
-    </div>
-  </div>
+  <!-- Specifications + manufacturer reviews now live only on the checkout "Choose your factory" step. -->
 </main>
 
 <footer class="site-footer">
@@ -443,8 +426,6 @@ function render(){
   var opt={day:'numeric',month:'short'};
   document.getElementById('pdp-deliv-date').textContent = d1.toLocaleDateString('en-GB',opt)+' – '+d2.toLocaleDateString('en-GB',opt);
   document.getElementById('pdp-deliv-note').textContent = '· ships across the GCC';
-
-  renderDetails();
 }
 /* ─── Review photo placeholders (vector) — a printed-bag thumbnail, tinted per review ─── */
 function _shade(hex, amt){

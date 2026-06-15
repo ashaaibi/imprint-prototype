@@ -105,7 +105,7 @@
         IMP.img(p.image, '(max-width:640px) 46vw, 240px', { alt: p.name }) + '</div>' +
       '<div class="pcard-body">' +
         '<div class="pcard-name">' + esc(p.name) + '</div>' +
-        (a ? '<div class="pcard-by">by <b>' + esc(a.name) + '</b></div>' : '') +
+        (a ? '<div class="pcard-by">' + (a.avatar ? '<img class="by-av" src="' + IMP.src(a.avatar) + '" alt="" loading="lazy" decoding="async">' : '') + 'by <b>' + esc(a.name) + '</b></div>' : '') +
         '<div class="pcard-foot">' +
           '<span class="pcard-price">' + IMP.price(p.price) + ' <span>/ unit</span></span>' +
           '<span class="pcard-rate"><span class="s">★</span>' + (p.rating || '') + '</span>' +
@@ -115,16 +115,7 @@
 
   IMP.artistCard = function (a) {
     if (!a) return '';
-    /* Profile-first: avatar + name + Shop/Follow on top, then up to 3 of the artist's own
-       templates (their "work") as a strip underneath. Falls back to collections, then a tint. */
-    var work = (a.products || []).map(function (pid) { return IMP.product(pid); })
-                 .filter(function (p) { return p && p.image; });
-    if (!work.length) work = (a.collections || []).map(function (cid) { return IMP.collection(cid); })
-                 .filter(function (c) { return c && c.image; });
-    work = work.slice(0, 3);
-    var below = work.length
-      ? '<div class="acard-work">' + work.map(function (p) { return IMP.img(p.image, '160px', { alt: '' }); }).join('') + '</div>'
-      : '<div class="acard-work acard-work-empty" style="background:linear-gradient(150deg,' + esc(a.accent || '#c79a63') + ',#1b1916)"></div>';
+    /* Profile-only card: avatar + name + style + stats + Shop/Follow. Their work lives on their shop page. */
     var av = a.avatar ? IMP.img(a.avatar, '76px', { alt: a.name }) : '';
     var following = IMP.isFollowing(a.id);
     return '<div class="acard">' +
@@ -138,7 +129,6 @@
           '<button class="acard-follow' + (following ? ' following' : '') + '" data-follow="' + esc(a.id) + '" data-name="' + esc(a.name) + '">' + (following ? 'Following' : 'Follow') + '</button>' +
         '</div>' +
       '</div>' +
-      below +
     '</div>';
   };
 
@@ -148,7 +138,7 @@
     return '<a class="colcard" href="search.html?collection=' + esc(c.id) + '" style="background:' + esc(c.accent || '#c79a63') + '">' +
       IMP.img(c.image, '(max-width:640px) 46vw, 220px', { alt: c.name }) + '<div class="col-grad"></div>' +
       '<div class="col-body"><div class="col-name">' + esc(c.name) + '</div>' +
-      (a ? '<div class="col-by">by ' + esc(a.name) + '</div>' : '') + '</div></a>';
+      (a ? '<div class="col-by">' + (a.avatar ? '<img class="by-av" src="' + IMP.src(a.avatar) + '" alt="" loading="lazy" decoding="async">' : '') + 'by ' + esc(a.name) + '</div>' : '') + '</div></a>';
   };
 
   IMP.storeCard = function (s) {
