@@ -2585,6 +2585,56 @@ window.IMPRINT_CATALOG = {
    "href": "luxury-candle-gift-box/"
   },
   {
+   "id": "bold-type-culture-shopping-bag",
+   "name": "Bold Type Culture Shopping Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/bold-type-culture-shopping-bag-l.webp",
+    "s": "assets/products/bold-type-culture-shopping-bag-s.webp",
+    "lw": 1132,
+    "sw": 480,
+    "h": 1600
+   },
+   "artist": "brooke-sanders",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 7.2,
+   "tags": [
+    "new"
+   ],
+   "rating": 4.6,
+   "reviews": 107,
+   "gallery": [
+    {
+     "l": "assets/products/bold-type-culture-shopping-bag-l.webp",
+     "s": "assets/products/bold-type-culture-shopping-bag-s.webp",
+     "lw": 1132,
+     "sw": 480,
+     "h": 1600
+    },
+    {
+     "l": "assets/bags/bag-6-l.webp",
+     "s": "assets/bags/bag-6-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-8-l.webp",
+     "s": "assets/bags/bag-8-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Bold Type Culture Shopping Bag — a designer template by Brooke Sanders. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "bold-type-culture-shopping-bag/"
+  },
+  {
    "id": "coral-pattern-takeout-bag",
    "name": "Coral Pattern Takeout Bag",
    "category": "bags",
@@ -2633,6 +2683,106 @@ window.IMPRINT_CATALOG = {
    "featured": false,
    "blurb": "Coral Pattern Takeout Bag — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "coral-pattern-takeout-bag/"
+  },
+  {
+   "id": "kakahu-tiger-coffee-cup",
+   "name": "Kakahu Tiger Coffee Cup",
+   "category": "food",
+   "image": {
+    "l": "assets/products/kakahu-tiger-coffee-cup-l.webp",
+    "s": "assets/products/kakahu-tiger-coffee-cup-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1600
+   },
+   "artist": "rory-quinn",
+   "makers": [
+    "imprint-atelier",
+    "levant-press",
+    "gulf-print"
+   ],
+   "price": 8.8,
+   "tags": [
+    "trending"
+   ],
+   "rating": 4.9,
+   "reviews": 154,
+   "gallery": [
+    {
+     "l": "assets/products/kakahu-tiger-coffee-cup-l.webp",
+     "s": "assets/products/kakahu-tiger-coffee-cup-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1600
+    },
+    {
+     "l": "assets/bags/bag-9-l.webp",
+     "s": "assets/bags/bag-9-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-12-l.webp",
+     "s": "assets/bags/bag-12-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Kakahu Tiger Coffee Cup — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "kakahu-tiger-coffee-cup/"
+  },
+  {
+   "id": "kawaii-character-merch-bag",
+   "name": "Kawaii Character Merch Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/kawaii-character-merch-bag-l.webp",
+    "s": "assets/products/kawaii-character-merch-bag-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1440
+   },
+   "artist": "mai-nguyen",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 7.8,
+   "tags": [
+    "hot"
+   ],
+   "rating": 4.8,
+   "reviews": 117,
+   "gallery": [
+    {
+     "l": "assets/products/kawaii-character-merch-bag-l.webp",
+     "s": "assets/products/kawaii-character-merch-bag-s.webp",
+     "lw": 1080,
+     "sw": 480,
+     "h": 1440
+    },
+    {
+     "l": "assets/bags/bag-3-l.webp",
+     "s": "assets/bags/bag-3-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-4-l.webp",
+     "s": "assets/bags/bag-4-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Kawaii Character Merch Bag — a designer template by Mai Nguyen. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "kawaii-character-merch-bag/"
   },
   {
    "id": "kraft-luxe-shopping-bag",
@@ -2911,6 +3061,7 @@ window.IMPRINT_CATALOG = {
    "since": 2019,
    "followers": 10996,
    "products": [
+    "kakahu-tiger-coffee-cup",
     "white-cake-box",
     "dark-chocolate-truffle-box",
     "ab-monogram-navy-chocolate-box",
@@ -2957,9 +3108,9 @@ window.IMPRINT_CATALOG = {
    "followers": 10377,
    "products": [
     "honeyloom-gift-bag",
-    "navy-gold-floral-rigid-box",
     "black-perfume-box",
     "navy-velvet-ring-box",
+    "navy-gold-floral-rigid-box",
     "ivory-cube-favor-boxes",
     "bloom-and-petal-bouquet",
     "luxury-flower-bouquet-box",
@@ -3000,6 +3151,7 @@ window.IMPRINT_CATALOG = {
    "followers": 16305,
    "products": [
     "burgundy-chocolate-gift-box",
+    "bold-type-culture-shopping-bag",
     "black-garment-bag",
     "burgundy-rigid-lid-box",
     "navy-tall-bottle-box",
@@ -3043,9 +3195,9 @@ window.IMPRINT_CATALOG = {
    "followers": 10545,
    "products": [
     "coffee-cup",
+    "terracotta-cylinder-tube",
     "kraft-mailer-box-gold-emblem",
     "green-geometric-paper-gift-bag",
-    "terracotta-cylinder-tube",
     "la-petite-boutique-pink-bags",
     "cafe-noir-coffee-cups",
     "personalized-stationery-set",
@@ -3086,8 +3238,9 @@ window.IMPRINT_CATALOG = {
    "followers": 16680,
    "products": [
     "ivory-gold-ornate-book-box",
-    "cream-ribbon-magnetic-gift-box",
     "black-patterned-mailer-box",
+    "kawaii-character-merch-bag",
+    "cream-ribbon-magnetic-gift-box",
     "blush-pink-bouquet-wrap",
     "elara-cosmetics-perfume-set",
     "jewelry-keepsake-box",
@@ -3275,7 +3428,10 @@ window.IMPRINT_CATALOG = {
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
     "luxury-candle-gift-box",
+    "bold-type-culture-shopping-bag",
     "coral-pattern-takeout-bag",
+    "kakahu-tiger-coffee-cup",
+    "kawaii-character-merch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
     "sage-shopper-tote-bag",
@@ -3343,7 +3499,10 @@ window.IMPRINT_CATALOG = {
     "personalized-stationery-set-2",
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
+    "bold-type-culture-shopping-bag",
     "coral-pattern-takeout-bag",
+    "kakahu-tiger-coffee-cup",
+    "kawaii-character-merch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
     "sage-shopper-tote-bag",
@@ -3462,7 +3621,10 @@ window.IMPRINT_CATALOG = {
     "custom-designed-folding-carton",
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
+    "bold-type-culture-shopping-bag",
     "coral-pattern-takeout-bag",
+    "kakahu-tiger-coffee-cup",
+    "kawaii-character-merch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
     "sage-shopper-tote-bag",
@@ -4193,13 +4355,13 @@ window.IMPRINT_CATALOG = {
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
     "luxury-candle-gift-box",
+    "bold-type-culture-shopping-bag",
     "coral-pattern-takeout-bag",
+    "kakahu-tiger-coffee-cup",
+    "kawaii-character-merch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
-    "sage-shopper-tote-bag",
-    "statement-type-shopping-bag",
-    "taupe-handle-gift-box",
-    "honeyloom-gift-bag"
+    "sage-shopper-tote-bag"
    ]
   },
   {
@@ -4213,6 +4375,9 @@ window.IMPRINT_CATALOG = {
    },
    "href": "store.html?store=monster-jam",
    "products": [
+    "kraft-luxe-shopping-bag",
+    "kraft-takeaway-food-bag",
+    "sage-shopper-tote-bag",
     "statement-type-shopping-bag",
     "taupe-handle-gift-box",
     "honeyloom-gift-bag",
@@ -4221,10 +4386,7 @@ window.IMPRINT_CATALOG = {
     "navy-gold-floral-rigid-box",
     "ivory-gold-ornate-book-box",
     "burgundy-chocolate-gift-box",
-    "kraft-mailer-box-gold-emblem",
-    "white-cake-box",
-    "kraft-cylinder-tube",
-    "blush-pink-round-gift-box"
+    "kraft-mailer-box-gold-emblem"
    ]
   },
   {
@@ -4238,6 +4400,9 @@ window.IMPRINT_CATALOG = {
    },
    "href": "store.html?store=wizarding-world",
    "products": [
+    "ivory-gold-ornate-book-box",
+    "burgundy-chocolate-gift-box",
+    "kraft-mailer-box-gold-emblem",
     "white-cake-box",
     "kraft-cylinder-tube",
     "blush-pink-round-gift-box",
@@ -4246,10 +4411,7 @@ window.IMPRINT_CATALOG = {
     "black-perfume-box",
     "dark-chocolate-truffle-box",
     "green-geometric-paper-gift-bag",
-    "cream-ribbon-magnetic-gift-box",
-    "black-patterned-mailer-box",
-    "navy-velvet-ring-box",
-    "white-window-gift-box-ribbon"
+    "cream-ribbon-magnetic-gift-box"
    ]
   }
  ],

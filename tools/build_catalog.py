@@ -201,7 +201,13 @@ PRODUCT_ARTIST = {
  "kraft-takeaway-food-bag":"lin-xiang",
  "sage-shopper-tote-bag":"mai-nguyen",
  "taupe-handle-gift-box":"emma-larsson",
+ # new branded-suite mockups (Archive) -> each to a top-5 featured artist matching its style
+ "kakahu-tiger-coffee-cup":"rory-quinn",        # playful orange doodle
+ "kawaii-character-merch-bag":"mai-nguyen",      # kawaii pink/blue
+ "bold-type-culture-shopping-bag":"brooke-sanders",  # bold monochrome typographic
 }
+# Always-featured product slugs (surface on the landing's featured row + lead the artist's montage)
+FEATURED_PRODUCTS = {"kakahu-tiger-coffee-cup","kawaii-character-merch-bag","bold-type-culture-shopping-bag"}
 
 # "Officially Licensed Stores" — real-world brands (CONCEPT placeholders for an investor demo; tiles
 # are wordmark SVGs in assets/stores/<id>.svg via tools/make_store_tiles.py — swap in real licensed art later).
@@ -483,6 +489,8 @@ def main():
     feat_pool=[p for p in products if p['tags']]
     for p in sorted(products, key=lambda x:-x['rating'])[:6]:
         p['featured']=True
+    for p in products:                          # always-feature the new branded-suite mockups
+        if p['id'] in FEATURED_PRODUCTS: p['featured']=True
 
     all_products=[honey, coffee]+products
     # attach product href (clean folder URL)
@@ -497,7 +505,9 @@ def main():
     # link artists -> their products/collections
     artists=[]
     for (aid,nm,studio,cc,flag,styleName,tags,bio) in ARTISTS:
-        pids=[p['id'] for p in all_products if p.get('artist')==aid]
+        _ap=[p for p in all_products if p.get('artist')==aid]
+        _ap.sort(key=lambda p: 0 if p.get('featured') else 1)   # featured work leads the montage
+        pids=[p['id'] for p in _ap]
         cids=[c['id'] for c in collections if c.get('artist')==aid]
         artists.append({
             "id":aid,"name":nm,"studio":studio,"country":cc,"flag":flag,
