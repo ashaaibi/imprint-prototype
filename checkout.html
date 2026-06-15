@@ -139,10 +139,18 @@
     .frev-stars { color: var(--imp-gold); font-size: 12px; }
     .frev-verified { font-size: 11px; color: #2e8b57; font-weight: 600; }
     .frev-text { font-size: 12.5px; color: var(--imp-fg-2); font-style: italic; line-height: 1.5; margin: 7px 0 11px; }
-    .frev-compare { display: flex; gap: 12px; }
-    .frev-compare figure { margin: 0; flex: 1; }
-    .frev-pic { display: block; aspect-ratio: 4/3; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+    .frev-compare { display: flex; gap: 10px; margin-top: 2px; }
+    .frev-compare figure { margin: 0; }
+    .frev-thumb { display: block; width: 88px; height: 66px; object-fit: cover; border-radius: 8px; cursor: zoom-in; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); transition: transform .12s; }
+    .frev-thumb:hover { transform: scale(1.05); }
     .frev-compare figcaption { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--imp-fg-3); text-align: center; margin-top: 5px; }
+    .frev-extra { display: none; }
+    .factory-rev-panel.show-all .frev-extra { display: block; }
+    .frev-more { margin-top: 14px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--imp-fg); background: none; border: none; cursor: pointer; padding: 4px 0; text-decoration: underline; text-underline-offset: 3px; }
+    .frev-more:hover { color: var(--imp-gold); }
+    #imp-lightbox { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.82); display: none; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
+    #imp-lightbox.open { display: flex; }
+    #imp-lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
 
     /* ─── PAYMENT TABS ───────────────────── */
     .payment-tabs {
@@ -501,11 +509,13 @@
   </span>
 </footer>
 
+<div id="imp-lightbox" onclick="this.classList.remove('open')"><img src="" alt="review photo"></div>
+
 <script src="shared.js"></script>
 <script>
   /* ─── FACTORIES ─── */
   var FACTORIES = [
-    { id: 'imprint', nameEn: 'Imprint Studio', nameAr: 'إمبرنت ستوديو', flag: '🟡', locationEn: 'In-house · GCC', locationAr: 'داخلي · الخليج', priceAed: 0, lead: '4–6', rating: 5, reviews: 312,
+    { id: 'imprint', nameEn: 'Imprint Studio', nameAr: 'إمبرنت ستوديو', flag: '🇦🇪', locationEn: 'Dubai, UAE', locationAr: 'دبي، الإمارات', priceAed: 0, lead: '4–6', rating: 5, reviews: 312,
       tagsEn: ['In-house','All finishes','Emboss','Foil','Pantone-matched','Eco stock'], tagsAr: ['داخلي','كل التشطيبات','بروز','رقائق','مطابقة بانتون','ورق صديق للبيئة'],
       quoteEn: 'Imprint’s own line — colour-matched to your 3D preview, guaranteed.', quoteAr: 'خط إمبرنت الخاص — مطابقة لونية لمعاينتك ثلاثية الأبعاد، مضمونة.',
       finishesEn: 'All finishes + emboss + foil', finishesAr: 'كل التشطيبات + بروز + رقائق', avail: 'available', recommended: true, supportsEmboss: true,
@@ -540,6 +550,19 @@
       reviewList: [
         { n:'Yara M.',   r:4, tEn:'Good matte boxes, fair price. One arrived a day late.', tAr:'علب مطفية جيدة وسعر عادل. وصلت إحداها متأخرة يومًا.', o:'#b9996a', c:'#b59365' },
         { n:'Tarek S.',  r:3, tEn:'Colour was close to ordered; packaging could be sturdier.', tAr:'اللون قريب من المطلوب؛ التغليف يحتاج متانة أكثر.', o:'#cf7a92', c:'#c8748b' } ] },
+  ];
+
+  /* Shared review pool (concept placeholders, reused across makers). before*=ordered design, after*=received photo. */
+  var REVIEWS = [
+    { n:'Layla Hassan',    r:5, tEn:'What I designed in 3D is exactly what arrived — the foil matches the preview.', tAr:'ما صممته ثلاثي الأبعاد وصل تمامًا — الرقائق تطابق المعاينة.', b:'before',  a:'after'  },
+    { n:'Omar Said',       r:5, tEn:'Zero colour drift across 2,000 bags — reordered twice already.', tAr:'لا انحراف لوني عبر 2000 كيس — أعدت الطلب مرتين.', b:null, a:null },
+    { n:'Sara Al-Balushi', r:5, tEn:'Soft-touch feels premium and the logo came out crisp.', tAr:'الملمس الناعم فاخر والشعار ظهر واضحًا.', b:'before2', a:'after2' },
+    { n:'Khalid Mansoori', r:5, tEn:'Best price we found for a 5,000-unit run, and quality held up.', tAr:'أفضل سعر لطلب 5000 وحدة والجودة ثابتة.', b:null, a:null },
+    { n:'Noura Qasim',     r:4, tEn:'Slight sheen difference vs the mockup, but well within spec.', tAr:'فرق لمعان بسيط عن النموذج لكنه ضمن المواصفات.', b:'before3', a:'after3' },
+    { n:'Daniel Reyes',    r:5, tEn:'Received exactly matched what I ordered — handles are sturdy.', tAr:'المستلم طابق ما طلبته — المقابض متينة.', b:'before2', a:'after2' },
+    { n:'Mei Lin',         r:4, tEn:'Matte came a touch lighter than ordered but acceptable.', tAr:'المطفي جاء أفتح قليلًا لكنه مقبول.', b:null, a:null },
+    { n:'Yara Mansour',    r:5, tEn:'Reordered three times now — consistent every single batch.', tAr:'أعدت الطلب ثلاث مرات — ثابت في كل دفعة.', b:'before', a:'after' },
+    { n:'Tarek Salem',     r:5, tEn:'Colours popped exactly as approved in the 3D preview.', tAr:'الألوان مطابقة تمامًا لما اعتُمد في المعاينة.', b:null, a:null },
   ];
 
   /* ─── STATE ─── */
@@ -612,18 +635,21 @@
         '</div>' +
         '<div class="factory-tags">' + ((isAr ? f.tagsAr : f.tagsEn) || []).map(function(tg){ return '<span class="ftag">' + tg + '</span>'; }).join('') + '</div>' +
         '<div class="factory-quote">“' + (isAr ? f.quoteAr : f.quoteEn) + '”</div>' +
-        '<button type="button" class="factory-rev-toggle" onclick="event.stopPropagation();toggleFactoryReviews(\'' + f.id + '\')">★ ' + f.rating.toFixed(1) + ' · ' + f.reviews + (isAr ? ' تقييم — المطلوب مقابل المستلم' : ' reviews — ordered vs received') + ' <span class="frev-caret">▾</span></button>' +
+        '<button type="button" class="factory-rev-toggle" onclick="event.stopPropagation();toggleFactoryReviews(\'' + f.id + '\')">★ ' + f.rating.toFixed(1) + ' · ' + f.reviews + (isAr ? ' تقييم — اعرض المطلوب مقابل المستلم' : ' reviews — see ordered vs received') + ' <span class="frev-caret">▾</span></button>' +
         '<div class="factory-rev-panel" id="frev-' + f.id + '" onclick="event.stopPropagation()">' +
-          (f.reviewList || []).map(function(rv){
-            return '<div class="frev">' +
+          REVIEWS.map(function(rv, i){
+            var pics = (rv.b && rv.a) ?
+              '<div class="frev-compare">' +
+                '<figure><img class="frev-thumb" src="assets/reviews/' + rv.b + '.jpeg" alt="ordered design" loading="lazy" onclick="event.stopPropagation();impLightbox(this.src)"><figcaption>' + (isAr ? 'المطلوب' : 'Ordered') + '</figcaption></figure>' +
+                '<figure><img class="frev-thumb" src="assets/reviews/' + rv.a + '.jpeg" alt="received product" loading="lazy" onclick="event.stopPropagation();impLightbox(this.src)"><figcaption>' + (isAr ? 'المستلم' : 'Received') + '</figcaption></figure>' +
+              '</div>' : '';
+            return '<div class="frev' + (i >= 3 ? ' frev-extra' : '') + '">' +
               '<div class="frev-head"><b>' + rv.n + '</b><span class="frev-stars">' + renderStars(rv.r) + '</span><span class="frev-verified">' + (isAr ? '✓ طلب موثّق' : '✓ Verified order') + '</span></div>' +
               '<div class="frev-text">“' + (isAr ? rv.tAr : rv.tEn) + '”</div>' +
-              '<div class="frev-compare">' +
-                '<figure><span class="frev-pic" style="background:' + rv.o + '"></span><figcaption>' + (isAr ? 'المطلوب' : 'Ordered') + '</figcaption></figure>' +
-                '<figure><span class="frev-pic" style="background:' + rv.c + '"></span><figcaption>' + (isAr ? 'المستلم' : 'Received') + '</figcaption></figure>' +
-              '</div>' +
+              pics +
             '</div>';
           }).join('') +
+          '<button type="button" class="frev-more" onclick="event.stopPropagation();showAllReviews(\'' + f.id + '\')">' + (isAr ? ('عرض كل ' + f.reviews + ' تقييم') : ('Show all ' + f.reviews + ' reviews')) + '</button>' +
         '</div>' +
       '</div>';
     });
@@ -635,6 +661,19 @@
     var open = el.classList.toggle('open');
     var caret = el.previousElementSibling && el.previousElementSibling.querySelector('.frev-caret');
     if (caret) caret.textContent = open ? '▴' : '▾';
+  }
+  function showAllReviews(id) {
+    var el = document.getElementById('frev-' + id);
+    if (!el) return;
+    el.classList.add('show-all');
+    var more = el.querySelector('.frev-more');
+    if (more) more.style.display = 'none';
+  }
+  function impLightbox(src) {
+    var lb = document.getElementById('imp-lightbox');
+    if (!lb) return;
+    lb.querySelector('img').src = src;
+    lb.classList.add('open');
   }
   function selectFactory(id) {
     selectedFactory = id;

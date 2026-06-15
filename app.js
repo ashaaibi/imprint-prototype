@@ -137,8 +137,10 @@
     var a = IMP.artist(c.artist);
     return '<a class="colcard" href="search.html?collection=' + esc(c.id) + '" style="background:' + esc(c.accent || '#c79a63') + '">' +
       IMP.img(c.image, '(max-width:640px) 46vw, 220px', { alt: c.name }) + '<div class="col-grad"></div>' +
+      '<span class="col-tag">Collection</span>' +
       '<div class="col-body"><div class="col-name">' + esc(c.name) + '</div>' +
-      (a ? '<div class="col-by">' + (a.avatar ? '<img class="by-av" src="' + IMP.src(a.avatar) + '" alt="" loading="lazy" decoding="async">' : '') + 'by ' + esc(a.name) + '</div>' : '') + '</div></a>';
+      (a ? '<div class="col-by">' + (a.avatar ? '<img class="by-av" src="' + IMP.src(a.avatar) + '" alt="" loading="lazy" decoding="async">' : '') + 'by ' + esc(a.name) + '</div>' : '') +
+      '<div class="col-items">' + (c.items || 0) + ' designs in this set</div></div></a>';
   };
 
   IMP.storeCard = function (s) {

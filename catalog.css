@@ -149,6 +149,8 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 .colcard .col-name { font-size: 16px; font-weight: 700; }
 .colcard .col-by { font-size: 12px; opacity: .9; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
 .colcard .col-by .by-av { box-shadow: 0 0 0 1px rgba(255,255,255,.5); }
+.colcard .col-items { font-size: 11px; opacity: .8; margin-top: 4px; }
+.colcard .col-tag { position: absolute; top: 10px; left: 10px; z-index: 2; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.42); backdrop-filter: blur(4px); padding: 4px 9px; border-radius: var(--imp-r-pill); }
 
 /* ── Maker cards / profile ───────────────────────────────── */
 .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 18px; }
