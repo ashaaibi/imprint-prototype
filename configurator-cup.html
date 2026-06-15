@@ -2307,8 +2307,8 @@
           <option value="top">Top center</option>
           <option value="topleft">Top left</option>
         </select></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">2.5</span></div>
-        <input type="range" class="test-slider" min="0" max="10" step="0.5" value="2.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">0.5</span></div>
+        <input type="range" class="test-slider" min="0" max="10" step="0.5" value="0.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MIN (at 0%)</span><span class="slider-val" id="a2d-gapMin-val">0</span></div>
         <input type="range" class="test-slider" min="-1" max="1" step="0.01" value="0" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MAX (at 100%)</span><span class="slider-val" id="a2d-gapMax-val">100</span></div>
@@ -11245,7 +11245,7 @@ var A2D = {
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
   subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:0.6,    /* per-face sub-label size + colour + opacity */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
-  snapDist:2.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
+  snapDist:0.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
