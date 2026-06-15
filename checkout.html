@@ -124,12 +124,25 @@
     }
     .factory-finishes strong { color: var(--imp-fg); font-weight: 500; }
     /* maker reviews + recent-work samples (shown in the Choose-factory step) */
-    .factory-reviews { font-size: 12px; font-weight: 600; color: var(--imp-fg-2); margin-top: 10px; }
-    .factory-reviews::first-letter { color: var(--imp-gold); }
-    .factory-quote { font-size: 12.5px; color: var(--imp-fg-2); font-style: italic; line-height: 1.5; margin-top: 4px; }
-    .factory-worklabel { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--imp-fg-3); margin-top: 12px; }
-    .factory-work { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
-    .factory-work .fwork { display: block; aspect-ratio: 1/1; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+    /* capability tags */
+    .factory-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--imp-border); }
+    .ftag { font-size: 11px; font-weight: 600; color: var(--imp-fg-2); background: var(--imp-surface-2); border: 1px solid var(--imp-border); border-radius: var(--imp-r-pill); padding: 4px 10px; }
+    .factory-quote { font-size: 12.5px; color: var(--imp-fg-2); font-style: italic; line-height: 1.5; margin-top: 12px; }
+    /* expandable reviews with ordered-vs-received pictures */
+    .factory-rev-toggle { margin-top: 12px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--imp-fg); background: none; border: none; padding: 4px 0; cursor: pointer; text-align: start; }
+    .factory-rev-toggle:hover { color: var(--imp-gold); }
+    .frev-caret { color: var(--imp-fg-3); }
+    .factory-rev-panel { max-height: 0; overflow: hidden; transition: max-height .32s var(--imp-ease); }
+    .factory-rev-panel.open { max-height: 1400px; }
+    .frev { padding: 14px 0 4px; border-top: 1px solid var(--imp-border); margin-top: 12px; }
+    .frev-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--imp-fg); }
+    .frev-stars { color: var(--imp-gold); font-size: 12px; }
+    .frev-verified { font-size: 11px; color: #2e8b57; font-weight: 600; }
+    .frev-text { font-size: 12.5px; color: var(--imp-fg-2); font-style: italic; line-height: 1.5; margin: 7px 0 11px; }
+    .frev-compare { display: flex; gap: 12px; }
+    .frev-compare figure { margin: 0; flex: 1; }
+    .frev-pic { display: block; aspect-ratio: 4/3; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+    .frev-compare figcaption { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--imp-fg-3); text-align: center; margin-top: 5px; }
 
     /* ─── PAYMENT TABS ───────────────────── */
     .payment-tabs {
@@ -492,15 +505,46 @@
 <script>
   /* ─── FACTORIES ─── */
   var FACTORIES = [
-    { id: 'artis',   nameEn: 'Artis Pack',     nameAr: 'أرتيس باك',     flag: '🇦🇪', locationEn: 'Dubai, UAE',         locationAr: 'دبي، الإمارات',     priceAed: 0.80,  lead: '3–5',   rating: 5, reviews: 187, quoteEn: 'Fastest turnaround in the UAE — flawless foil and colour every run.', quoteAr: 'أسرع تنفيذ في الإمارات — رقائق وألوان مثالية في كل طلب.', work: ['#caa96f','#7a5c33','#e7d8b8'], finishesEn: 'All finishes + emboss', finishesAr: 'جميع التشطيبات + بروز', avail: 'available', recommended: true,  supportsEmboss: true },
-    { id: 'gulf',    nameEn: 'Gulf Print Co.', nameAr: 'غلف برنت',      flag: '🇸🇦', locationEn: 'Jeddah, KSA',       locationAr: 'جدة، السعودية',    priceAed: 0.20,  lead: '7–10',  rating: 4, reviews: 142, quoteEn: 'Excellent value at volume — colours always on-brand.', quoteAr: 'قيمة ممتازة بالكميات — ألوان مطابقة للهوية دائمًا.', work: ['#2a3a5a','#b87333','#d8e0ea'], finishesEn: 'Standard + emboss',    finishesAr: 'قياسي + بروز',          avail: 'available', recommended: false, supportsEmboss: true },
-    { id: 'eastpack',nameEn: 'EastPack Ltd.',  nameAr: 'إيست باك',      flag: '🇨🇳', locationEn: 'Shenzhen, China',   locationAr: 'شينزن، الصين',     priceAed: -1.50, lead: '18–22', rating: 4, reviews: 98,  quoteEn: 'Unbeatable unit cost for large international runs.', quoteAr: 'تكلفة وحدة لا تُنافَس للطلبات الكبيرة.', work: ['#7a2738','#1f7a5a','#e0d2c2'], finishesEn: 'Standard only (no emboss)', finishesAr: 'قياسي فقط (بدون بروز)', avail: 'limited',   recommended: false, supportsEmboss: false },
-    { id: 'nile',    nameEn: 'Nile Box Co.',   nameAr: 'نايل بوكس',     flag: '🇪🇬', locationEn: 'Cairo, Egypt',      locationAr: 'القاهرة، مصر',     priceAed: -0.30, lead: '10–14', rating: 3, reviews: 64,  quoteEn: 'Reliable matte finish and fair pricing on repeat orders.', quoteAr: 'تشطيب مطفي موثوق وأسعار عادلة للطلبات المتكررة.', work: ['#b9996a','#4a4a52','#cf7a92'], finishesEn: 'Standard + matte',     finishesAr: 'قياسي + مطفي',           avail: 'available', recommended: false, supportsEmboss: false },
+    { id: 'imprint', nameEn: 'Imprint Studio', nameAr: 'إمبرنت ستوديو', flag: '🟡', locationEn: 'In-house · GCC', locationAr: 'داخلي · الخليج', priceAed: 0, lead: '4–6', rating: 5, reviews: 312,
+      tagsEn: ['In-house','All finishes','Emboss','Foil','Pantone-matched','Eco stock'], tagsAr: ['داخلي','كل التشطيبات','بروز','رقائق','مطابقة بانتون','ورق صديق للبيئة'],
+      quoteEn: 'Imprint’s own line — colour-matched to your 3D preview, guaranteed.', quoteAr: 'خط إمبرنت الخاص — مطابقة لونية لمعاينتك ثلاثية الأبعاد، مضمونة.',
+      finishesEn: 'All finishes + emboss + foil', finishesAr: 'كل التشطيبات + بروز + رقائق', avail: 'available', recommended: true, supportsEmboss: true,
+      reviewList: [
+        { n:'Layla Hassan',  r:5, tEn:'What I designed in 3D is exactly what arrived — the foil matches the preview perfectly.', tAr:'ما صممته ثلاثي الأبعاد وصل تمامًا — الرقائق تطابق المعاينة.', o:'#c79a63', c:'#c4975f' },
+        { n:'Omar Said',     r:5, tEn:'In-house QC is unreal — zero colour drift across 2,000 bags.', tAr:'رقابة جودة داخلية مذهلة — لا انحراف لوني عبر 2000 كيس.', o:'#1f1d1b', c:'#232120' } ] },
+    { id: 'artis',   nameEn: 'Artis Pack',     nameAr: 'أرتيس باك',     flag: '🇦🇪', locationEn: 'Dubai, UAE',         locationAr: 'دبي، الإمارات',     priceAed: 0.80,  lead: '3–5',   rating: 5, reviews: 187,
+      tagsEn: ['Foil','Emboss','Pantone','Fast 3–5 days'], tagsAr: ['رقائق','بروز','بانتون','سريع ٣–٥ أيام'],
+      quoteEn: 'Fastest turnaround in the UAE — flawless foil and colour every run.', quoteAr: 'أسرع تنفيذ في الإمارات — رقائق وألوان مثالية في كل طلب.',
+      finishesEn: 'All finishes + emboss', finishesAr: 'جميع التشطيبات + بروز', avail: 'available', recommended: false, supportsEmboss: true,
+      reviewList: [
+        { n:'Sara Al-Balushi', r:5, tEn:'Soft-touch feels premium and the foil logo came out crisp.', tAr:'الملمس الناعم فاخر والشعار بالرقائق ظهر واضحًا.', o:'#caa96f', c:'#c2935f' },
+        { n:'Hessa Ahmed',     r:5, tEn:'6 days door-to-door in Dubai. Colours pop exactly as approved.', tAr:'٦ أيام حتى الباب في دبي. الألوان مطابقة للمعتمد.', o:'#7a5c33', c:'#7e6038' } ] },
+    { id: 'gulf',    nameEn: 'Gulf Print Co.', nameAr: 'غلف برنت',      flag: '🇸🇦', locationEn: 'Jeddah, KSA',       locationAr: 'جدة، السعودية',    priceAed: 0.20,  lead: '7–10',  rating: 4, reviews: 142,
+      tagsEn: ['Emboss','Great at volume','Pantone'], tagsAr: ['بروز','ممتاز للكميات','بانتون'],
+      quoteEn: 'Excellent value at volume — colours always on-brand.', quoteAr: 'قيمة ممتازة بالكميات — ألوان مطابقة للهوية دائمًا.',
+      finishesEn: 'Standard + emboss', finishesAr: 'قياسي + بروز', avail: 'available', recommended: false, supportsEmboss: true,
+      reviewList: [
+        { n:'Khalid Mansoori', r:5, tEn:'Best price we found for 5,000 units and quality held up.', tAr:'أفضل سعر لـ٥٠٠٠ وحدة والجودة ثابتة.', o:'#2a3a5a', c:'#2d3d5d' },
+        { n:'Noura Q.',        r:4, tEn:'Slight sheen difference vs the mockup but well within spec.', tAr:'فرق لمعان بسيط عن النموذج لكن ضمن المواصفات.', o:'#b87333', c:'#b06d30' } ] },
+    { id: 'eastpack',nameEn: 'EastPack Ltd.',  nameAr: 'إيست باك',      flag: '🇨🇳', locationEn: 'Shenzhen, China',   locationAr: 'شينزن، الصين',     priceAed: -1.50, lead: '18–22', rating: 4, reviews: 98,
+      tagsEn: ['Lowest cost','Large runs','Standard only'], tagsAr: ['أقل تكلفة','طلبات كبيرة','قياسي فقط'],
+      quoteEn: 'Unbeatable unit cost for large international runs.', quoteAr: 'تكلفة وحدة لا تُنافَس للطلبات الكبيرة.',
+      finishesEn: 'Standard only (no emboss)', finishesAr: 'قياسي فقط (بدون بروز)', avail: 'limited', recommended: false, supportsEmboss: false,
+      reviewList: [
+        { n:'Daniel R.',  r:5, tEn:'Half the cost of local for a 10k run — minor lead time trade-off.', tAr:'نصف التكلفة المحلية لـ١٠ آلاف — مقابل وقت أطول.', o:'#7a2738', c:'#732536' },
+        { n:'Mei L.',     r:4, tEn:'Matte came a touch lighter than ordered but acceptable.', tAr:'المطفي جاء أفتح قليلًا لكنه مقبول.', o:'#1f7a5a', c:'#1d7257' } ] },
+    { id: 'nile',    nameEn: 'Nile Box Co.',   nameAr: 'نايل بوكس',     flag: '🇪🇬', locationEn: 'Cairo, Egypt',      locationAr: 'القاهرة، مصر',     priceAed: -0.30, lead: '10–14', rating: 3, reviews: 64,
+      tagsEn: ['Matte','Budget','Standard'], tagsAr: ['مطفي','اقتصادي','قياسي'],
+      quoteEn: 'Reliable matte finish and fair pricing on repeat orders.', quoteAr: 'تشطيب مطفي موثوق وأسعار عادلة للطلبات المتكررة.',
+      finishesEn: 'Standard + matte', finishesAr: 'قياسي + مطفي', avail: 'available', recommended: false, supportsEmboss: false,
+      reviewList: [
+        { n:'Yara M.',   r:4, tEn:'Good matte boxes, fair price. One arrived a day late.', tAr:'علب مطفية جيدة وسعر عادل. وصلت إحداها متأخرة يومًا.', o:'#b9996a', c:'#b59365' },
+        { n:'Tarek S.',  r:3, tEn:'Colour was close to ordered; packaging could be sturdier.', tAr:'اللون قريب من المطلوب؛ التغليف يحتاج متانة أكثر.', o:'#cf7a92', c:'#c8748b' } ] },
   ];
 
   /* ─── STATE ─── */
   var CART = getCart() || { size: 'M · Classic', qty: 1000, perUnit: 2.90, baseTotal: 2900, finish: 'matte', emboss: false, hasArtwork: true };
-  var selectedFactory = 'artis';
+  var selectedFactory = 'imprint';
   var selectedPayment = 'card';
   var currentStep = 'factory';
 
@@ -566,14 +610,31 @@
           '<div><div class="fmeta-label">' + t('co.factory.quality') + '</div><div class="fmeta-val">' + renderStars(f.rating) + '</div></div>' +
           '<div><div class="fmeta-label">' + t('co.factory.finishes') + '</div><div class="fmeta-val" style="font-size:12px;font-weight:500;">' + (f.supportsEmboss ? '✓ Emboss' : '— No emboss') + '</div></div>' +
         '</div>' +
-        '<div class="factory-finishes"><strong>' + t('co.factory.finishes') + ':</strong> ' + (isAr ? f.finishesAr : f.finishesEn) + '</div>' +
-        '<div class="factory-reviews">★ ' + f.rating.toFixed(1) + ' · ' + f.reviews + (isAr ? ' تقييم' : ' reviews') + '</div>' +
+        '<div class="factory-tags">' + ((isAr ? f.tagsAr : f.tagsEn) || []).map(function(tg){ return '<span class="ftag">' + tg + '</span>'; }).join('') + '</div>' +
         '<div class="factory-quote">“' + (isAr ? f.quoteAr : f.quoteEn) + '”</div>' +
-        '<div class="factory-worklabel">' + (isAr ? 'أعمال حديثة' : 'Recent work') + '</div>' +
-        '<div class="factory-work">' + (f.work || []).map(function(c){ return '<span class="fwork" style="background:linear-gradient(135deg,' + c + ',' + c + '88)"></span>'; }).join('') + '</div>' +
+        '<button type="button" class="factory-rev-toggle" onclick="event.stopPropagation();toggleFactoryReviews(\'' + f.id + '\')">★ ' + f.rating.toFixed(1) + ' · ' + f.reviews + (isAr ? ' تقييم — المطلوب مقابل المستلم' : ' reviews — ordered vs received') + ' <span class="frev-caret">▾</span></button>' +
+        '<div class="factory-rev-panel" id="frev-' + f.id + '" onclick="event.stopPropagation()">' +
+          (f.reviewList || []).map(function(rv){
+            return '<div class="frev">' +
+              '<div class="frev-head"><b>' + rv.n + '</b><span class="frev-stars">' + renderStars(rv.r) + '</span><span class="frev-verified">' + (isAr ? '✓ طلب موثّق' : '✓ Verified order') + '</span></div>' +
+              '<div class="frev-text">“' + (isAr ? rv.tAr : rv.tEn) + '”</div>' +
+              '<div class="frev-compare">' +
+                '<figure><span class="frev-pic" style="background:' + rv.o + '"></span><figcaption>' + (isAr ? 'المطلوب' : 'Ordered') + '</figcaption></figure>' +
+                '<figure><span class="frev-pic" style="background:' + rv.c + '"></span><figcaption>' + (isAr ? 'المستلم' : 'Received') + '</figcaption></figure>' +
+              '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
       '</div>';
     });
     list.innerHTML = html;
+  }
+  function toggleFactoryReviews(id) {
+    var el = document.getElementById('frev-' + id);
+    if (!el) return;
+    var open = el.classList.toggle('open');
+    var caret = el.previousElementSibling && el.previousElementSibling.querySelector('.frev-caret');
+    if (caret) caret.textContent = open ? '▴' : '▾';
   }
   function selectFactory(id) {
     selectedFactory = id;

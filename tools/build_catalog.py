@@ -189,6 +189,21 @@ COLLECTION_ARTIST = {
  "30-citrus-squiggle-pop":"rory-quinn",
  "31-bold-red-foodie":"ngozi-eze",
  "32-blush-floral-tote":"oliver-hart",
+ # new branded-suite mockups (Archive3)
+ "guoo-yogurt-suite":"mai-nguyen",
+ "goodies-scent-suite":"brooke-sanders",
+ "echoes-bakery-suite":"emma-larsson",
+ "petty-stone-cake-suite":"mai-nguyen",
+ "belinda-lingerie-suite":"emma-larsson",
+ "mosh-bakery-suite":"brooke-sanders",
+ "nosh-bakery-suite":"brooke-sanders",
+ "miles-diner-suite":"lin-xiang",
+ "tuscany-cafe-suite":"brooke-sanders",
+ "boho-lifestyle-suite":"oliver-hart",
+ "nine-pastel-suite":"emma-larsson",
+ "kakahu-coffee-suite":"rory-quinn",
+ "kawaii-character-suite":"mai-nguyen",
+ "bold-type-culture-suite":"brooke-sanders",
 }
 
 # New artists get their own work so the (circle) artist cards show real templates behind them,
@@ -201,13 +216,18 @@ PRODUCT_ARTIST = {
  "kraft-takeaway-food-bag":"lin-xiang",
  "sage-shopper-tote-bag":"mai-nguyen",
  "taupe-handle-gift-box":"emma-larsson",
- # new branded-suite mockups (Archive) -> each to a top-5 featured artist matching its style
- "kakahu-tiger-coffee-cup":"rory-quinn",        # playful orange doodle
- "kawaii-character-merch-bag":"mai-nguyen",      # kawaii pink/blue
- "bold-type-culture-shopping-bag":"brooke-sanders",  # bold monochrome typographic
+ # new branded-packaging mockups (Archive3) -> each to a featured artist matching its style
+ "art-for-foodies-takeout-box":"rory-quinn",
+ "bread-butter-bliss-bakery-bag":"mai-nguyen",
+ "cake-me-fit-cake-box":"emma-larsson",
+ "morso-pattern-shopping-bag":"ngozi-eze",
+ "cou-cou-patisserie-bag":"emma-larsson",
+ "coniny-doodle-food-bag":"rory-quinn",
+ "gula-cravings-takeaway-bag":"rory-quinn",
+ "harriet-brunch-bag":"lin-xiang",
 }
 # Always-featured product slugs (surface on the landing's featured row + lead the artist's montage)
-FEATURED_PRODUCTS = {"kakahu-tiger-coffee-cup","kawaii-character-merch-bag","bold-type-culture-shopping-bag"}
+FEATURED_PRODUCTS = {"art-for-foodies-takeout-box","coniny-doodle-food-bag","gula-cravings-takeaway-bag","morso-pattern-shopping-bag","harriet-brunch-bag","cou-cou-patisserie-bag","cake-me-fit-cake-box"}
 
 # "Officially Licensed Stores" — real-world brands (CONCEPT placeholders for an investor demo; tiles
 # are wordmark SVGs in assets/stores/<id>.svg via tools/make_store_tiles.py — swap in real licensed art later).
@@ -420,7 +440,7 @@ def main():
         collections.append({
             "id":cid, "name":nm, "image":dst, "artist":aid,
             "accent":palette_for(stem),
-            "items": 6 + h(cid,10), "tags": (["trending"] if h(cid,100)<22 else [])
+            "items": 6 + h(cid,10), "tags": (["trending"] if (cid in COLLECTION_ARTIST or h(cid,100)<22) else [])
         })
 
     # Products (grids 1-4). placeholders kept as bag lifestyle only.

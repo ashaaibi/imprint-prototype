@@ -2585,54 +2585,200 @@ window.IMPRINT_CATALOG = {
    "href": "luxury-candle-gift-box/"
   },
   {
-   "id": "bold-type-culture-shopping-bag",
-   "name": "Bold Type Culture Shopping Bag",
-   "category": "bags",
+   "id": "art-for-foodies-takeout-box",
+   "name": "Art For Foodies Takeout Box",
+   "category": "boxes",
    "image": {
-    "l": "assets/products/bold-type-culture-shopping-bag-l.webp",
-    "s": "assets/products/bold-type-culture-shopping-bag-s.webp",
-    "lw": 1132,
+    "l": "assets/products/art-for-foodies-takeout-box-l.webp",
+    "s": "assets/products/art-for-foodies-takeout-box-s.webp",
+    "lw": 1000,
     "sw": 480,
-    "h": 1600
+    "h": 1250
    },
-   "artist": "brooke-sanders",
+   "artist": "rory-quinn",
    "makers": [
     "imprint-atelier",
-    "gulf-print",
+    "najm-packaging",
     "levant-press"
    ],
-   "price": 7.2,
+   "price": 19.6,
    "tags": [
-    "new"
+    "bestseller"
    ],
-   "rating": 4.6,
-   "reviews": 107,
+   "rating": 4.5,
+   "reviews": 25,
    "gallery": [
     {
-     "l": "assets/products/bold-type-culture-shopping-bag-l.webp",
-     "s": "assets/products/bold-type-culture-shopping-bag-s.webp",
-     "lw": 1132,
+     "l": "assets/products/art-for-foodies-takeout-box-l.webp",
+     "s": "assets/products/art-for-foodies-takeout-box-s.webp",
+     "lw": 1000,
      "sw": 480,
-     "h": 1600
+     "h": 1250
     },
     {
-     "l": "assets/bags/bag-6-l.webp",
-     "s": "assets/bags/bag-6-s.webp",
+     "l": "assets/bags/bag-10-l.webp",
+     "s": "assets/bags/bag-10-s.webp",
      "lw": 1200,
      "sw": 480,
      "h": 723
     },
     {
-     "l": "assets/bags/bag-8-l.webp",
-     "s": "assets/bags/bag-8-s.webp",
+     "l": "assets/bags/bag-13-l.webp",
+     "s": "assets/bags/bag-13-s.webp",
      "lw": 1200,
      "sw": 480,
      "h": 723
     }
    ],
    "featured": true,
-   "blurb": "Bold Type Culture Shopping Bag — a designer template by Brooke Sanders. Locked layout; swap text, colours and social handles to make it yours.",
-   "href": "bold-type-culture-shopping-bag/"
+   "blurb": "Art For Foodies Takeout Box — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "art-for-foodies-takeout-box/"
+  },
+  {
+   "id": "bread-butter-bliss-bakery-bag",
+   "name": "Bread Butter Bliss Bakery Bag",
+   "category": "food",
+   "image": {
+    "l": "assets/products/bread-butter-bliss-bakery-bag-l.webp",
+    "s": "assets/products/bread-butter-bliss-bakery-bag-s.webp",
+    "lw": 735,
+    "sw": 480,
+    "h": 965
+   },
+   "artist": "mai-nguyen",
+   "makers": [
+    "imprint-atelier",
+    "levant-press",
+    "gulf-print"
+   ],
+   "price": 10.4,
+   "tags": [
+    "trending"
+   ],
+   "rating": 4.4,
+   "reviews": 129,
+   "gallery": [
+    {
+     "l": "assets/products/bread-butter-bliss-bakery-bag-l.webp",
+     "s": "assets/products/bread-butter-bliss-bakery-bag-s.webp",
+     "lw": 735,
+     "sw": 480,
+     "h": 965
+    },
+    {
+     "l": "assets/bags/bag-11-l.webp",
+     "s": "assets/bags/bag-11-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-5-l.webp",
+     "s": "assets/bags/bag-5-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Bread Butter Bliss Bakery Bag — a designer template by Mai Nguyen. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "bread-butter-bliss-bakery-bag/"
+  },
+  {
+   "id": "cake-me-fit-cake-box",
+   "name": "Cake ME Fit Cake Box",
+   "category": "food",
+   "image": {
+    "l": "assets/products/cake-me-fit-cake-box-l.webp",
+    "s": "assets/products/cake-me-fit-cake-box-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1500
+   },
+   "artist": "emma-larsson",
+   "makers": [
+    "imprint-atelier",
+    "levant-press",
+    "gulf-print"
+   ],
+   "price": 11.5,
+   "tags": [],
+   "rating": 4.6,
+   "reviews": 96,
+   "gallery": [
+    {
+     "l": "assets/products/cake-me-fit-cake-box-l.webp",
+     "s": "assets/products/cake-me-fit-cake-box-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1500
+    },
+    {
+     "l": "assets/bags/bag-1-l.webp",
+     "s": "assets/bags/bag-1-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-13-l.webp",
+     "s": "assets/bags/bag-13-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Cake ME Fit Cake Box — a designer template by Emma Larsson. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "cake-me-fit-cake-box/"
+  },
+  {
+   "id": "coniny-doodle-food-bag",
+   "name": "Coniny Doodle Food Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/coniny-doodle-food-bag-l.webp",
+    "s": "assets/products/coniny-doodle-food-bag-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1350
+   },
+   "artist": "rory-quinn",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 10.1,
+   "tags": [],
+   "rating": 4.6,
+   "reviews": 33,
+   "gallery": [
+    {
+     "l": "assets/products/coniny-doodle-food-bag-l.webp",
+     "s": "assets/products/coniny-doodle-food-bag-s.webp",
+     "lw": 1080,
+     "sw": 480,
+     "h": 1350
+    },
+    {
+     "l": "assets/bags/bag-4-l.webp",
+     "s": "assets/bags/bag-4-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-4-l.webp",
+     "s": "assets/bags/bag-4-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Coniny Doodle Food Bag — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "coniny-doodle-food-bag/"
   },
   {
    "id": "coral-pattern-takeout-bag",
@@ -2685,85 +2831,133 @@ window.IMPRINT_CATALOG = {
    "href": "coral-pattern-takeout-bag/"
   },
   {
-   "id": "kakahu-tiger-coffee-cup",
-   "name": "Kakahu Tiger Coffee Cup",
-   "category": "food",
+   "id": "cou-cou-patisserie-bag",
+   "name": "Cou Cou Patisserie Bag",
+   "category": "bags",
    "image": {
-    "l": "assets/products/kakahu-tiger-coffee-cup-l.webp",
-    "s": "assets/products/kakahu-tiger-coffee-cup-s.webp",
+    "l": "assets/products/cou-cou-patisserie-bag-l.webp",
+    "s": "assets/products/cou-cou-patisserie-bag-s.webp",
     "lw": 1200,
     "sw": 480,
-    "h": 1600
+    "h": 1498
    },
-   "artist": "rory-quinn",
+   "artist": "emma-larsson",
    "makers": [
     "imprint-atelier",
-    "levant-press",
-    "gulf-print"
+    "gulf-print",
+    "levant-press"
    ],
-   "price": 8.8,
+   "price": 14.5,
    "tags": [
-    "trending"
+    "new"
    ],
-   "rating": 4.9,
-   "reviews": 154,
+   "rating": 4.4,
+   "reviews": 139,
    "gallery": [
     {
-     "l": "assets/products/kakahu-tiger-coffee-cup-l.webp",
-     "s": "assets/products/kakahu-tiger-coffee-cup-s.webp",
+     "l": "assets/products/cou-cou-patisserie-bag-l.webp",
+     "s": "assets/products/cou-cou-patisserie-bag-s.webp",
      "lw": 1200,
      "sw": 480,
-     "h": 1600
+     "h": 1498
     },
     {
-     "l": "assets/bags/bag-9-l.webp",
-     "s": "assets/bags/bag-9-s.webp",
+     "l": "assets/bags/bag-7-l.webp",
+     "s": "assets/bags/bag-7-s.webp",
      "lw": 1200,
      "sw": 480,
      "h": 723
     },
     {
-     "l": "assets/bags/bag-12-l.webp",
-     "s": "assets/bags/bag-12-s.webp",
+     "l": "assets/bags/bag-11-l.webp",
+     "s": "assets/bags/bag-11-s.webp",
      "lw": 1200,
      "sw": 480,
      "h": 723
     }
    ],
    "featured": true,
-   "blurb": "Kakahu Tiger Coffee Cup — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
-   "href": "kakahu-tiger-coffee-cup/"
+   "blurb": "Cou Cou Patisserie Bag — a designer template by Emma Larsson. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "cou-cou-patisserie-bag/"
   },
   {
-   "id": "kawaii-character-merch-bag",
-   "name": "Kawaii Character Merch Bag",
+   "id": "gula-cravings-takeaway-bag",
+   "name": "Gula Cravings Takeaway Bag",
    "category": "bags",
    "image": {
-    "l": "assets/products/kawaii-character-merch-bag-l.webp",
-    "s": "assets/products/kawaii-character-merch-bag-s.webp",
-    "lw": 1080,
+    "l": "assets/products/gula-cravings-takeaway-bag-l.webp",
+    "s": "assets/products/gula-cravings-takeaway-bag-s.webp",
+    "lw": 736,
     "sw": 480,
-    "h": 1440
+    "h": 920
    },
-   "artist": "mai-nguyen",
+   "artist": "rory-quinn",
    "makers": [
     "imprint-atelier",
     "gulf-print",
     "levant-press"
    ],
-   "price": 7.8,
+   "price": 13.4,
    "tags": [
-    "hot"
+    "trending"
    ],
-   "rating": 4.8,
-   "reviews": 117,
+   "rating": 4.5,
+   "reviews": 114,
    "gallery": [
     {
-     "l": "assets/products/kawaii-character-merch-bag-l.webp",
-     "s": "assets/products/kawaii-character-merch-bag-s.webp",
-     "lw": 1080,
+     "l": "assets/products/gula-cravings-takeaway-bag-l.webp",
+     "s": "assets/products/gula-cravings-takeaway-bag-s.webp",
+     "lw": 736,
      "sw": 480,
-     "h": 1440
+     "h": 920
+    },
+    {
+     "l": "assets/bags/bag-1-l.webp",
+     "s": "assets/bags/bag-1-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-8-l.webp",
+     "s": "assets/bags/bag-8-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Gula Cravings Takeaway Bag — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "gula-cravings-takeaway-bag/"
+  },
+  {
+   "id": "harriet-brunch-bag",
+   "name": "Harriet Brunch Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/harriet-brunch-bag-l.webp",
+    "s": "assets/products/harriet-brunch-bag-s.webp",
+    "lw": 960,
+    "sw": 480,
+    "h": 960
+   },
+   "artist": "lin-xiang",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 6.6,
+   "tags": [],
+   "rating": 4.4,
+   "reviews": 80,
+   "gallery": [
+    {
+     "l": "assets/products/harriet-brunch-bag-l.webp",
+     "s": "assets/products/harriet-brunch-bag-s.webp",
+     "lw": 960,
+     "sw": 480,
+     "h": 960
     },
     {
      "l": "assets/bags/bag-3-l.webp",
@@ -2773,16 +2967,16 @@ window.IMPRINT_CATALOG = {
      "h": 723
     },
     {
-     "l": "assets/bags/bag-4-l.webp",
-     "s": "assets/bags/bag-4-s.webp",
+     "l": "assets/bags/bag-13-l.webp",
+     "s": "assets/bags/bag-13-s.webp",
      "lw": 1200,
      "sw": 480,
      "h": 723
     }
    ],
    "featured": true,
-   "blurb": "Kawaii Character Merch Bag — a designer template by Mai Nguyen. Locked layout; swap text, colours and social handles to make it yours.",
-   "href": "kawaii-character-merch-bag/"
+   "blurb": "Harriet Brunch Bag — a designer template by Lin Xiang. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "harriet-brunch-bag/"
   },
   {
    "id": "kraft-luxe-shopping-bag",
@@ -2884,6 +3078,57 @@ window.IMPRINT_CATALOG = {
    "featured": false,
    "blurb": "Kraft Takeaway Food Bag — a designer template by Lin Xiang. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "kraft-takeaway-food-bag/"
+  },
+  {
+   "id": "morso-pattern-shopping-bag",
+   "name": "Morso Pattern Shopping Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/morso-pattern-shopping-bag-l.webp",
+    "s": "assets/products/morso-pattern-shopping-bag-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1491
+   },
+   "artist": "ngozi-eze",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 10.7,
+   "tags": [
+    "trending",
+    "editors"
+   ],
+   "rating": 4.9,
+   "reviews": 176,
+   "gallery": [
+    {
+     "l": "assets/products/morso-pattern-shopping-bag-l.webp",
+     "s": "assets/products/morso-pattern-shopping-bag-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1491
+    },
+    {
+     "l": "assets/bags/bag-12-l.webp",
+     "s": "assets/bags/bag-12-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-9-l.webp",
+     "s": "assets/bags/bag-9-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": true,
+   "blurb": "Morso Pattern Shopping Bag — a designer template by Ngozi Eze. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "morso-pattern-shopping-bag/"
   },
   {
    "id": "sage-shopper-tote-bag",
@@ -3061,7 +3306,9 @@ window.IMPRINT_CATALOG = {
    "since": 2019,
    "followers": 10996,
    "products": [
-    "kakahu-tiger-coffee-cup",
+    "art-for-foodies-takeout-box",
+    "coniny-doodle-food-bag",
+    "gula-cravings-takeaway-bag",
     "white-cake-box",
     "dark-chocolate-truffle-box",
     "ab-monogram-navy-chocolate-box",
@@ -3077,7 +3324,8 @@ window.IMPRINT_CATALOG = {
     "white-silver-minimal",
     "vibrant-multicolor-abstract",
     "sage-blush-floral",
-    "citrus-squiggle-pop"
+    "citrus-squiggle-pop",
+    "kakahu-coffee-suite"
    ],
    "rating": 4.6
   },
@@ -3120,7 +3368,8 @@ window.IMPRINT_CATALOG = {
    "collections": [
     "neutral-taupe-botanical",
     "navy-copper-moroccan-tin",
-    "blush-floral-tote"
+    "blush-floral-tote",
+    "boho-lifestyle-suite"
    ],
    "rating": 4.7
   },
@@ -3151,7 +3400,6 @@ window.IMPRINT_CATALOG = {
    "followers": 16305,
    "products": [
     "burgundy-chocolate-gift-box",
-    "bold-type-culture-shopping-bag",
     "black-garment-bag",
     "burgundy-rigid-lid-box",
     "navy-tall-bottle-box",
@@ -3164,7 +3412,12 @@ window.IMPRINT_CATALOG = {
     "teal-gold-geometric",
     "white-gold-minimal",
     "charcoal-copper-geometric",
-    "bold-yellow-pop"
+    "bold-yellow-pop",
+    "bold-type-culture-suite",
+    "goodies-scent-suite",
+    "mosh-bakery-suite",
+    "nosh-bakery-suite",
+    "tuscany-cafe-suite"
    ],
    "rating": 4.5
   },
@@ -3196,6 +3449,7 @@ window.IMPRINT_CATALOG = {
    "products": [
     "coffee-cup",
     "terracotta-cylinder-tube",
+    "harriet-brunch-bag",
     "kraft-mailer-box-gold-emblem",
     "green-geometric-paper-gift-bag",
     "la-petite-boutique-pink-bags",
@@ -3207,7 +3461,8 @@ window.IMPRINT_CATALOG = {
    "collections": [
     "ivory-gold-lotus-luxury",
     "black-burgundy-gold-luxury",
-    "playful-beauty-set"
+    "playful-beauty-set",
+    "miles-diner-suite"
    ],
    "rating": 4.5
   },
@@ -3239,12 +3494,12 @@ window.IMPRINT_CATALOG = {
    "products": [
     "ivory-gold-ornate-book-box",
     "black-patterned-mailer-box",
-    "kawaii-character-merch-bag",
     "cream-ribbon-magnetic-gift-box",
     "blush-pink-bouquet-wrap",
     "elara-cosmetics-perfume-set",
     "jewelry-keepsake-box",
     "personalized-stationery-set-2",
+    "bread-butter-bliss-bakery-bag",
     "sage-shopper-tote-bag"
    ],
    "collections": [
@@ -3254,7 +3509,10 @@ window.IMPRINT_CATALOG = {
     "charcoal-copper-diamond",
     "blush-pink-floral",
     "kraft-gray-natural",
-    "pink-boutique-suite"
+    "pink-boutique-suite",
+    "guoo-yogurt-suite",
+    "kawaii-character-suite",
+    "petty-stone-cake-suite"
    ],
    "rating": 4.5
   },
@@ -3284,6 +3542,8 @@ window.IMPRINT_CATALOG = {
    "since": 2017,
    "followers": 15037,
    "products": [
+    "cake-me-fit-cake-box",
+    "cou-cou-patisserie-bag",
     "blush-pink-round-gift-box",
     "ivory-jewelry-box-velvet",
     "white-window-gift-box-ribbon",
@@ -3296,7 +3556,10 @@ window.IMPRINT_CATALOG = {
    "collections": [
     "burgundy-gold-ornate",
     "navy-copper-moroccan",
-    "plum-candle-suite"
+    "plum-candle-suite",
+    "belinda-lingerie-suite",
+    "echoes-bakery-suite",
+    "nine-pastel-suite"
    ],
    "rating": 4.7
   },
@@ -3326,6 +3589,7 @@ window.IMPRINT_CATALOG = {
    "since": 2021,
    "followers": 17236,
    "products": [
+    "morso-pattern-shopping-bag",
     "gold-mandala-paper-gift-bag",
     "kraft-cylinder-tube",
     "gray-garment-bag",
@@ -3428,12 +3692,17 @@ window.IMPRINT_CATALOG = {
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
     "luxury-candle-gift-box",
-    "bold-type-culture-shopping-bag",
+    "art-for-foodies-takeout-box",
+    "bread-butter-bliss-bakery-bag",
+    "cake-me-fit-cake-box",
+    "coniny-doodle-food-bag",
     "coral-pattern-takeout-bag",
-    "kakahu-tiger-coffee-cup",
-    "kawaii-character-merch-bag",
+    "cou-cou-patisserie-bag",
+    "gula-cravings-takeaway-bag",
+    "harriet-brunch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
+    "morso-pattern-shopping-bag",
     "sage-shopper-tote-bag",
     "statement-type-shopping-bag",
     "taupe-handle-gift-box"
@@ -3499,12 +3768,16 @@ window.IMPRINT_CATALOG = {
     "personalized-stationery-set-2",
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
-    "bold-type-culture-shopping-bag",
+    "bread-butter-bliss-bakery-bag",
+    "cake-me-fit-cake-box",
+    "coniny-doodle-food-bag",
     "coral-pattern-takeout-bag",
-    "kakahu-tiger-coffee-cup",
-    "kawaii-character-merch-bag",
+    "cou-cou-patisserie-bag",
+    "gula-cravings-takeaway-bag",
+    "harriet-brunch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
+    "morso-pattern-shopping-bag",
     "sage-shopper-tote-bag",
     "statement-type-shopping-bag"
    ]
@@ -3558,6 +3831,7 @@ window.IMPRINT_CATALOG = {
     "jewelry-keepsake-box",
     "custom-designed-folding-carton",
     "luxury-candle-gift-box",
+    "art-for-foodies-takeout-box",
     "taupe-handle-gift-box"
    ]
   },
@@ -3621,12 +3895,17 @@ window.IMPRINT_CATALOG = {
     "custom-designed-folding-carton",
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
-    "bold-type-culture-shopping-bag",
+    "art-for-foodies-takeout-box",
+    "bread-butter-bliss-bakery-bag",
+    "cake-me-fit-cake-box",
+    "coniny-doodle-food-bag",
     "coral-pattern-takeout-bag",
-    "kakahu-tiger-coffee-cup",
-    "kawaii-character-merch-bag",
+    "cou-cou-patisserie-bag",
+    "gula-cravings-takeaway-bag",
+    "harriet-brunch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
+    "morso-pattern-shopping-bag",
     "sage-shopper-tote-bag",
     "statement-type-shopping-bag",
     "taupe-handle-gift-box"
@@ -4211,6 +4490,244 @@ window.IMPRINT_CATALOG = {
    "accent": "#cf7a92",
    "items": 13,
    "tags": []
+  },
+  {
+   "id": "belinda-lingerie-suite",
+   "name": "Belinda Lingerie Suite",
+   "image": {
+    "l": "assets/collections/belinda-lingerie-suite-l.webp",
+    "s": "assets/collections/belinda-lingerie-suite-s.webp",
+    "lw": 735,
+    "sw": 480,
+    "h": 713
+   },
+   "artist": "emma-larsson",
+   "accent": "#c79a63",
+   "items": 12,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "boho-lifestyle-suite",
+   "name": "Boho Lifestyle Suite",
+   "image": {
+    "l": "assets/collections/boho-lifestyle-suite-l.webp",
+    "s": "assets/collections/boho-lifestyle-suite-s.webp",
+    "lw": 1199,
+    "sw": 480,
+    "h": 1495
+   },
+   "artist": "oliver-hart",
+   "accent": "#c79a63",
+   "items": 6,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "bold-type-culture-suite",
+   "name": "Bold Type Culture Suite",
+   "image": {
+    "l": "assets/collections/bold-type-culture-suite-l.webp",
+    "s": "assets/collections/bold-type-culture-suite-s.webp",
+    "lw": 1132,
+    "sw": 480,
+    "h": 1600
+   },
+   "artist": "brooke-sanders",
+   "accent": "#c79a63",
+   "items": 9,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "echoes-bakery-suite",
+   "name": "Echoes Bakery Suite",
+   "image": {
+    "l": "assets/collections/echoes-bakery-suite-l.webp",
+    "s": "assets/collections/echoes-bakery-suite-s.webp",
+    "lw": 736,
+    "sw": 480,
+    "h": 981
+   },
+   "artist": "emma-larsson",
+   "accent": "#c79a63",
+   "items": 15,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "goodies-scent-suite",
+   "name": "Goodies Scent Suite",
+   "image": {
+    "l": "assets/collections/goodies-scent-suite-l.webp",
+    "s": "assets/collections/goodies-scent-suite-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1080
+   },
+   "artist": "brooke-sanders",
+   "accent": "#c79a63",
+   "items": 7,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "guoo-yogurt-suite",
+   "name": "Guoo Yogurt Suite",
+   "image": {
+    "l": "assets/collections/guoo-yogurt-suite-l.webp",
+    "s": "assets/collections/guoo-yogurt-suite-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1440
+   },
+   "artist": "mai-nguyen",
+   "accent": "#c79a63",
+   "items": 11,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "kakahu-coffee-suite",
+   "name": "Kakahu Coffee Suite",
+   "image": {
+    "l": "assets/collections/kakahu-coffee-suite-l.webp",
+    "s": "assets/collections/kakahu-coffee-suite-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1600
+   },
+   "artist": "rory-quinn",
+   "accent": "#c79a63",
+   "items": 15,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "kawaii-character-suite",
+   "name": "Kawaii Character Suite",
+   "image": {
+    "l": "assets/collections/kawaii-character-suite-l.webp",
+    "s": "assets/collections/kawaii-character-suite-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1440
+   },
+   "artist": "mai-nguyen",
+   "accent": "#c79a63",
+   "items": 15,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "miles-diner-suite",
+   "name": "Miles Diner Suite",
+   "image": {
+    "l": "assets/collections/miles-diner-suite-l.webp",
+    "s": "assets/collections/miles-diner-suite-s.webp",
+    "lw": 1199,
+    "sw": 480,
+    "h": 800
+   },
+   "artist": "lin-xiang",
+   "accent": "#c79a63",
+   "items": 7,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "mosh-bakery-suite",
+   "name": "Mosh Bakery Suite",
+   "image": {
+    "l": "assets/collections/mosh-bakery-suite-l.webp",
+    "s": "assets/collections/mosh-bakery-suite-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1200
+   },
+   "artist": "brooke-sanders",
+   "accent": "#c79a63",
+   "items": 14,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "nine-pastel-suite",
+   "name": "Nine Pastel Suite",
+   "image": {
+    "l": "assets/collections/nine-pastel-suite-l.webp",
+    "s": "assets/collections/nine-pastel-suite-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1500
+   },
+   "artist": "emma-larsson",
+   "accent": "#c79a63",
+   "items": 8,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "nosh-bakery-suite",
+   "name": "Nosh Bakery Suite",
+   "image": {
+    "l": "assets/collections/nosh-bakery-suite-l.webp",
+    "s": "assets/collections/nosh-bakery-suite-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1200
+   },
+   "artist": "brooke-sanders",
+   "accent": "#c79a63",
+   "items": 11,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "petty-stone-cake-suite",
+   "name": "Petty Stone Cake Suite",
+   "image": {
+    "l": "assets/collections/petty-stone-cake-suite-l.webp",
+    "s": "assets/collections/petty-stone-cake-suite-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1439
+   },
+   "artist": "mai-nguyen",
+   "accent": "#c79a63",
+   "items": 12,
+   "tags": [
+    "trending"
+   ]
+  },
+  {
+   "id": "tuscany-cafe-suite",
+   "name": "Tuscany Cafe Suite",
+   "image": {
+    "l": "assets/collections/tuscany-cafe-suite-l.webp",
+    "s": "assets/collections/tuscany-cafe-suite-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1200
+   },
+   "artist": "brooke-sanders",
+   "accent": "#c79a63",
+   "items": 10,
+   "tags": [
+    "trending"
+   ]
   }
  ],
  "stores": [
@@ -4355,13 +4872,13 @@ window.IMPRINT_CATALOG = {
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
     "luxury-candle-gift-box",
-    "bold-type-culture-shopping-bag",
+    "art-for-foodies-takeout-box",
+    "bread-butter-bliss-bakery-bag",
+    "cake-me-fit-cake-box",
+    "coniny-doodle-food-bag",
     "coral-pattern-takeout-bag",
-    "kakahu-tiger-coffee-cup",
-    "kawaii-character-merch-bag",
-    "kraft-luxe-shopping-bag",
-    "kraft-takeaway-food-bag",
-    "sage-shopper-tote-bag"
+    "cou-cou-patisserie-bag",
+    "gula-cravings-takeaway-bag"
    ]
   },
   {
@@ -4375,18 +4892,18 @@ window.IMPRINT_CATALOG = {
    },
    "href": "store.html?store=monster-jam",
    "products": [
+    "coral-pattern-takeout-bag",
+    "cou-cou-patisserie-bag",
+    "gula-cravings-takeaway-bag",
+    "harriet-brunch-bag",
     "kraft-luxe-shopping-bag",
     "kraft-takeaway-food-bag",
+    "morso-pattern-shopping-bag",
     "sage-shopper-tote-bag",
     "statement-type-shopping-bag",
     "taupe-handle-gift-box",
     "honeyloom-gift-bag",
-    "coffee-cup",
-    "gold-mandala-paper-gift-bag",
-    "navy-gold-floral-rigid-box",
-    "ivory-gold-ornate-book-box",
-    "burgundy-chocolate-gift-box",
-    "kraft-mailer-box-gold-emblem"
+    "coffee-cup"
    ]
   },
   {
@@ -4400,18 +4917,18 @@ window.IMPRINT_CATALOG = {
    },
    "href": "store.html?store=wizarding-world",
    "products": [
+    "taupe-handle-gift-box",
+    "honeyloom-gift-bag",
+    "coffee-cup",
+    "gold-mandala-paper-gift-bag",
+    "navy-gold-floral-rigid-box",
     "ivory-gold-ornate-book-box",
     "burgundy-chocolate-gift-box",
     "kraft-mailer-box-gold-emblem",
     "white-cake-box",
     "kraft-cylinder-tube",
     "blush-pink-round-gift-box",
-    "ivory-jewelry-box-velvet",
-    "black-garment-bag",
-    "black-perfume-box",
-    "dark-chocolate-truffle-box",
-    "green-geometric-paper-gift-bag",
-    "cream-ribbon-magnetic-gift-box"
+    "ivory-jewelry-box-velvet"
    ]
   }
  ],
