@@ -115,13 +115,22 @@
 
   IMP.artistCard = function (a) {
     if (!a) return '';
-    return '<a class="acard" href="artists.html?a=' + esc(a.id) + '">' +
-      '<div class="acard-cover">' + IMP.img(a.avatar, '(max-width:640px) 46vw, 240px', { alt: a.name }) + '</div>' +
-      '<div class="acard-body">' +
+    /* Backdrop = up to 3 of the artist's own templates (their "work"); circle avatar overlaps it. */
+    var work = (a.products || []).map(function (pid) { return IMP.product(pid); })
+                 .filter(function (p) { return p && p.image; }).slice(0, 3);
+    var behind = work.length
+      ? '<div class="acard-work">' + work.map(function (p) { return IMP.img(p.image, '160px', { alt: '' }); }).join('') + '</div>'
+      : '<div class="acard-work acard-work-empty" style="background:linear-gradient(150deg,' + esc(a.accent || '#c79a63') + ',#1b1916)"></div>';
+    var av = a.avatar ? IMP.img(a.avatar, '64px', { alt: a.name }) : '';
+    return '<div class="acard">' +
+      behind +
+      '<div class="acard-avatar">' + av + '</div>' +
+      '<div class="acard-foot">' +
         '<div class="acard-name">' + esc(a.name) + ' <span>' + (a.flag || '') + '</span></div>' +
         '<div class="acard-style">' + esc(a.style) + '</div>' +
-        '<div class="acard-meta">' + (a.products ? a.products.length : 0) + ' designs · ' + (a.collections ? a.collections.length : 0) + ' collections · ' + fmtK(a.followers) + ' followers</div>' +
-      '</div></a>';
+        '<div class="acard-meta">' + (a.products ? a.products.length : 0) + ' designs · ' + fmtK(a.followers) + ' followers</div>' +
+        '<a class="acard-shop" href="artists.html?a=' + esc(a.id) + '">Shop</a>' +
+      '</div></div>';
   };
 
   IMP.collectionCard = function (c) {
@@ -157,7 +166,7 @@
     ['artists', 'Artists', 'artists.html'],
     ['makers', 'Manufacturers', 'manufacturers.html'],
     ['collections', 'Collections', 'collections.html'],
-    ['how', 'How it works', 'index.html#how']
+    ['how', 'How it works', 'for-partners.html']
   ];
   function ico(name) {
     var p = {
@@ -201,7 +210,7 @@
         '<div class="af-brand"><div class="l">IMPRINT<span style="color:var(--imp-gold)">®</span></div>' +
           '<p>The marketplace that connects independent artists, brands, and vetted manufacturers — design, customise, and produce premium packaging in one seamless, automated flow.</p></div>' +
         '<div class="af-col"><h5>Shop</h5><a href="products.html">Products</a><a href="collections.html">Collections</a><a href="search.html">Search</a><a href="favourites.html">Favourites</a></div>' +
-        '<div class="af-col"><h5>Network</h5><a href="artists.html">Artists</a><a href="manufacturers.html">Manufacturers</a><a href="index.html#how">How it works</a><a href="designer/index.html">For designers</a></div>' +
+        '<div class="af-col"><h5>Network</h5><a href="artists.html">Artists</a><a href="manufacturers.html">Manufacturers</a><a href="for-partners.html">How it works</a><a href="designer/index.html">For designers</a></div>' +
         '<div class="af-col"><h5>Account</h5><a href="account.html">My account</a><a href="orders.html">Orders</a><a href="checkout.html">Cart</a><a href="#">Help centre</a></div>' +
       '</div><div class="af-bottom">© 2026 IMPRINT®. A three-sided packaging marketplace · artists · brands · manufacturers. All rights reserved.</div></footer>';
   };

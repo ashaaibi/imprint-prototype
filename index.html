@@ -21,22 +21,6 @@
     .hero-badges { display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; }
     .hero-badge { font-size:12.5px; color:var(--imp-fg-2); display:flex; align-items:center; gap:7px; }
     .hero-badge .d { width:7px; height:7px; border-radius:50%; background:var(--imp-gold); }
-    .three-sided { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-    .ts-card { border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); padding:24px; background:var(--imp-surface); }
-    .ts-card .k { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--imp-gold); }
-    .ts-card h3 { font-size:19px; margin:8px 0 8px; color:var(--imp-fg); }
-    .ts-card p { font-size:13.5px; color:var(--imp-fg-2); line-height:1.6; margin:0 0 14px; }
-    .ts-card a { font-size:13px; font-weight:600; color:var(--imp-fg); text-decoration:none; border-bottom:1px solid var(--imp-fg); }
-    .statstrip { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; border-top:1px solid var(--imp-border); border-bottom:1px solid var(--imp-border); padding:26px 0; }
-    .statstrip .v { font-size:30px; font-weight:700; letter-spacing:-0.02em; color:var(--imp-fg); font-family:'Cormorant Garamond',serif; }
-    .statstrip .l { font-size:12px; color:var(--imp-fg-3); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
-    .join-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    .join-card { border-radius:var(--imp-r-xl); padding:34px; color:#fff; position:relative; overflow:hidden; }
-    .join-card h3 { font-size:24px; margin:0 0 8px; font-family:'Cormorant Garamond',serif; font-weight:600; }
-    .join-card p { font-size:14px; opacity:.9; line-height:1.6; margin:0 0 18px; max-width:380px; }
-    .join-card .btn { background:#fff; color:#1a1a1a; border:none; }
-    @media (max-width:800px){ .three-sided,.join-grid{grid-template-columns:1fr 1fr;} .statstrip{grid-template-columns:1fr 1fr;} }
-    @media (max-width:560px){ .three-sided,.join-grid{grid-template-columns:1fr;} }
     /* Desktop: nudge the hero text block up (top-align with the collage instead of centering). */
     .lhero-grid { align-items: start; }
     /* Mobile landing: more breathing room from the screen edges. */
@@ -47,7 +31,6 @@
       .lhero p { font-size: 15.5px; }
       .lhero-cta { gap: 10px; }
       .sec, .sec.tight { padding-top: 30px; padding-bottom: 30px; }
-      .statstrip { padding: 22px 0; }
     }
   </style>
 </head>
@@ -64,7 +47,7 @@
       <p>IMPRINT isn't a print shop. It's the platform that connects independent <b>artists</b>, the <b>brands</b> who love their work, and vetted <b>manufacturers</b> — so a design becomes a finished, shippable product in one automated, seamless flow. Customise any design in real-time 3D, and we route it to production for you.</p>
       <div class="lhero-cta">
         <a class="btn btn-primary" href="products.html" style="flex:0 0 auto">Browse the marketplace</a>
-        <a class="btn" href="index.html#how">How it works</a>
+        <a class="btn" href="for-partners.html">How it works</a>
       </div>
       <div class="hero-badges">
         <span class="hero-badge"><span class="d"></span>Designer templates, ready to customise</span>
@@ -76,53 +59,61 @@
   </div>
 </section>
 
-<section class="imp-wrap tight"><div class="statstrip" id="statstrip"></div></section>
-
 <!-- FEATURED PRODUCTS -->
 <section class="imp-wrap sec">
   <div class="sec-head"><div><p class="eyebrow">Featured</p><h2 class="sec-title">Trending designer templates</h2><p class="sec-sub">Hand-picked, ready-to-customise designs from artists across the network.</p></div><a class="sec-link" href="products.html">All products →</a></div>
   <div class="pgrid" id="feat-products"></div>
 </section>
 
-<!-- CATEGORIES -->
+<!-- LICENSED / BRAND-PARTNER STORES -->
 <section class="imp-wrap sec tight">
-  <div class="sec-head"><div><h2 class="sec-title">Shop by category</h2></div><a class="sec-link" href="products.html">See all →</a></div>
-  <div class="catrow" id="home-cats"></div>
+  <div class="sec-head"><div><p class="eyebrow">Brand partners</p><h2 class="sec-title">Official brand stores</h2><p class="sec-sub">Shop ready-made packaging suites from the brands designing with IMPRINT.</p></div><a class="sec-link" href="collections.html">All stores →</a></div>
+  <div class="storerow" id="brand-stores"></div>
 </section>
 
 <!-- ARTISTS -->
 <section class="imp-wrap sec">
-  <div class="sec-head"><div><p class="eyebrow">The network</p><h2 class="sec-title">Featured artists</h2><p class="sec-sub">Independent designers with a signature style. Follow them and shop their collections.</p></div><a class="sec-link" href="artists.html">All artists →</a></div>
+  <div class="sec-head"><div><p class="eyebrow">The network</p><h2 class="sec-title">Featured artists</h2><p class="sec-sub">Independent designers with a signature style. Shop their templates and collections.</p></div><a class="sec-link" href="artists.html">All artists →</a></div>
   <div class="agrid" id="feat-artists"></div>
 </section>
 
 <!-- COLLECTIONS -->
 <section class="imp-wrap sec tight">
-  <div class="sec-head"><div><h2 class="sec-title">Trending collections</h2></div><a class="sec-link" href="collections.html">All collections →</a></div>
+  <div class="sec-head"><div><h2 class="sec-title">Trending collections</h2><p class="sec-sub">Curated, on-theme sets you can customise end to end.</p></div><a class="sec-link" href="collections.html">All collections →</a></div>
   <div class="colgrid" id="feat-collections"></div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section class="imp-wrap sec" id="how">
-  <div class="sec-head"><div><p class="eyebrow">How it works</p><h2 class="sec-title">One platform. Three sides. Zero friction.</h2></div></div>
-  <div class="three-sided">
-    <div class="ts-card"><div class="k">For artists</div><h3>Design &amp; earn</h3><p>Upload artwork, build a locked template, set what clients can change. Earn a royalty every time it sells — production is handled for you.</p><a href="designer/index.html">Open the designer portal →</a></div>
-    <div class="ts-card"><div class="k">For brands</div><h3>Customise in 3D</h3><p>Pick a designer template, swap your text, colours and logo in real-time 3D, see live pricing, and order — no design skills, no quotes, no waiting.</p><a href="products.html">Browse templates →</a></div>
-    <div class="ts-card"><div class="k">For manufacturers</div><h3>Receive print-ready jobs</h3><p>Production files are generated automatically and routed to the maker the customer chose. You print, finish, and ship — we handle the rest.</p><a href="manufacturers.html">Meet the makers →</a></div>
-  </div>
-</section>
-
-<!-- MANUFACTURERS -->
-<section class="imp-wrap sec tight">
-  <div class="sec-head"><div><h2 class="sec-title">Vetted manufacturers</h2><p class="sec-sub">Compare price, quality, lead time and finishes — you choose the trade-off at checkout.</p></div><a class="sec-link" href="manufacturers.html">All makers →</a></div>
-  <div class="mgrid" id="feat-makers"></div>
-</section>
-
-<!-- JOIN -->
+<!-- BENEFITS -->
 <section class="imp-wrap sec">
-  <div class="join-grid">
-    <div class="join-card" style="background:linear-gradient(150deg,#2a2118,#473522)"><h3>Are you an artist?</h3><p>Turn your style into a catalogue of sellable, customisable products. We handle 3D, pricing, production and fulfilment.</p><a class="btn" href="designer/index.html">Join as an artist</a></div>
-    <div class="join-card" style="background:linear-gradient(150deg,#16302c,#0f4339)"><h3>Run a print house?</h3><p>Get a steady feed of print-ready, pre-paid jobs matched to your capabilities and capacity. No sales team required.</p><a class="btn" href="manufacturers.html">Become a maker</a></div>
+  <div class="sec-head"><div><p class="eyebrow">Why IMPRINT</p><h2 class="sec-title">One platform that works for everyone</h2></div></div>
+  <div class="benefits">
+    <div class="benefit">
+      <div class="k">For brands</div><h3>Order custom packaging, fast</h3>
+      <ul>
+        <li>Customise designer templates in real-time 3D — no design skills needed</li>
+        <li>See live pricing as you design; an estimate up front, the exact total at checkout</li>
+        <li>Pick your maker on price, quality &amp; lead time — we route the print-ready files</li>
+        <li>Low minimums and premium finishes (foil, emboss, soft-touch)</li>
+      </ul>
+    </div>
+    <div class="benefit">
+      <div class="k">For artists</div><h3>Turn your style into income</h3>
+      <ul>
+        <li>Publish locked, customisable templates — set exactly what clients can change</li>
+        <li>Earn a royalty on every order; production &amp; fulfilment handled for you</li>
+        <li>Your own storefront, followers and collections</li>
+        <li>Reach GCC brands actively looking for packaging design</li>
+      </ul>
+    </div>
+    <div class="benefit">
+      <div class="k">For manufacturers</div><h3>A steady feed of pre-paid jobs</h3>
+      <ul>
+        <li>Receive print-ready files matched to your capabilities &amp; capacity</li>
+        <li>Pre-paid orders — no quoting, no sales team required</li>
+        <li>Show your work, reviews &amp; finishes; win jobs on your strengths</li>
+        <li>You print, finish and ship — IMPRINT handles the rest</li>
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -137,9 +128,9 @@
   var C = IMP.cat();
   function pick(arr,n){ return arr.slice(0,n); }
 
+  /* ── Hero collage (flashing products) ── bento tiles, two stacked <img> layers each. */
   var honeyImg = (IMP.product('honeyloom-gift-bag')||{}).image;
   var hero = [honeyImg].concat(pick(C.products.filter(function(p){return p.id!=='honeyloom-gift-bag' && p.image;}),3).map(function(p){return p.image;}));
-  /* Bento tiles: two stacked <img> layers each so designs can crossfade in/out. */
   document.getElementById('hero-collage').innerHTML = hero.map(function(o,i){
     return '<div class="bento">' +
       '<img class="show" src="'+IMP.src(o)+'" alt="" '+(i===0?'fetchpriority="high"':'loading="lazy"')+' decoding="async">' +
@@ -147,38 +138,47 @@
     '</div>';
   }).join('');
 
-  document.getElementById('statstrip').innerHTML = [
-    [C.products.length, 'Designer templates'],
-    [C.artists.length, 'Independent artists'],
-    [C.makers.length, 'Vetted manufacturers'],
-    ['6', 'GCC countries served']
-  ].map(function(s){ return '<div><div class="v">'+s[0]+'</div><div class="l">'+s[1]+'</div></div>'; }).join('');
-
+  /* Featured products — more rows. */
   var feats = C.products.filter(function(p){return p.featured;});
   var honey = C.products.filter(function(p){return p.id==='honeyloom-gift-bag';});
-  var ordered = honey.concat(feats.filter(function(p){return p.id!=='honeyloom-gift-bag';}));
-  document.getElementById('feat-products').innerHTML = pick(ordered,8).map(IMP.productCard).join('');
+  var rest  = C.products.filter(function(p){return p.id!=='honeyloom-gift-bag' && !p.featured;});
+  var ordered = honey.concat(feats.filter(function(p){return p.id!=='honeyloom-gift-bag';})).concat(rest);
+  document.getElementById('feat-products').innerHTML = pick(ordered,12).map(IMP.productCard).join('');
 
-  document.getElementById('home-cats').innerHTML = C.categories.map(function(cat){
-    var n = C.products.filter(function(p){return p.category===cat.id;}).length;
-    return '<a class="catcard" href="products.html#'+cat.id+'"><div class="cc-name">'+cat.name+'</div><div class="cc-count">'+n+' designs</div></a>';
+  /* Brand-partner "stores" (fictional partners). Reads C.stores if the catalog provides it,
+     else builds a set from the strongest collections so the row is populated today. */
+  var stores = (C.stores && C.stores.length) ? C.stores : (function(){
+    var brands = [
+      {name:'Maison Miel',  cat:'Gourmet & honey'},
+      {name:'Café Noir',    cat:'Coffee & café'},
+      {name:'Oud Royale',   cat:'Perfume & oud'},
+      {name:'Bloom & Co',   cat:'Florist & gifting'},
+      {name:'Sweet Souq',   cat:'Confectionery'},
+      {name:'Lumière',      cat:'Candles & home'},
+      {name:'Najma Beauty', cat:'Cosmetics'},
+      {name:'Verde',        cat:'Eco & natural'}
+    ];
+    var cols = C.collections.slice().sort(function(a,b){return (b.tags.length)-(a.tags.length);});
+    return brands.map(function(b,i){ var c=cols[i%cols.length]||{}; return { name:b.name, cat:b.cat, image:c.image, href:'collections.html', accent:c.accent }; });
+  })();
+  document.getElementById('brand-stores').innerHTML = stores.map(function(s){
+    return '<a class="storecard" href="'+IMP.esc(s.href||'collections.html')+'">' +
+      '<div class="sc-art">' + IMP.img(s.image, '186px', {alt:s.name}) + '<span class="sc-badge">Official</span></div>' +
+      '<div class="sc-name">'+IMP.esc(s.name)+'</div><div class="sc-cat">'+IMP.esc(s.cat||'')+'</div></a>';
   }).join('');
 
+  /* Featured artists — circle avatars + work behind + Shop (see IMP.artistCard). */
   var artists = C.artists.slice().sort(function(a,b){return b.followers-a.followers;});
-  document.getElementById('feat-artists').innerHTML = pick(artists,4).map(IMP.artistCard).join('');
+  document.getElementById('feat-artists').innerHTML = pick(artists,5).map(IMP.artistCard).join('');
 
+  /* Collections — more rows, same column count as the products grid. */
   var cols = C.collections.slice().sort(function(a,b){return (b.tags.length)-(a.tags.length);});
-  document.getElementById('feat-collections').innerHTML = pick(cols,5).map(IMP.collectionCard).join('');
+  document.getElementById('feat-collections').innerHTML = pick(cols,10).map(IMP.collectionCard).join('');
 
-  var makers = C.makers.slice().sort(function(a,b){return b.rating-a.rating;});
-  document.getElementById('feat-makers').innerHTML = pick(makers,3).map(IMP.makerCard).join('');
-
-  /* ── Hero enhancements (run AFTER all content renders; wrapped so a failure here
-        can never block the page). Both are no-ops under prefers-reduced-motion. ── */
+  /* ── Hero enhancements (run AFTER content renders; wrapped so a failure can't block the page).
+        Both no-op under prefers-reduced-motion. ── */
   try {
-    /* Typewriter: cycle the one rotating word — type → backspace → next.
-       No-JS / reduced-motion keeps the full static headline. */
-    (function(){
+    (function(){  /* typewriter: cycle the rotating word */
       var h1 = document.querySelector('.lhero h1[data-tw]'); if(!h1) return;
       var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
       if (reduce) return;
@@ -195,9 +195,7 @@
     })();
   } catch(e){}
   try {
-    /* Bento crossfade: each tile fades through real product designs.
-       Pauses on hover + when scrolled out of view; off under reduced-motion. */
-    (function(){
+    (function(){  /* bento crossfade: tiles flash through real product designs */
       var box=document.getElementById('hero-collage'); if(!box) return;
       var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
       var pool=C.products.filter(function(p){return p.image;}).map(function(p){return p.image;});
@@ -222,27 +220,6 @@
       }
       function start(){ tiles.forEach(function(_,ti){ setInterval(function(){ cycle(ti); }, 4200+ti*650); }); }
       if ('requestIdleCallback' in window) requestIdleCallback(start,{timeout:2500}); else setTimeout(start,1800);
-    })();
-  } catch(e){}
-  try {
-    /* Hero video loop: if assets/promo/hero.(mp4|webm) exists, autoplay it muted+looping as the
-       hero; otherwise the bento collage stays. Phones + reduced-motion keep the light collage.
-       The video loads off-DOM and only swaps in on success, so a missing file never breaks the page. */
-    (function(){
-      var box=document.getElementById('hero-collage'); if(!box) return;
-      var reduce=false, narrow=false;
-      try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
-      try{ narrow=matchMedia('(max-width: 760px)').matches; }catch(e){}
-      if (reduce || narrow) return;
-      var v=document.createElement('video');
-      v.muted=true; v.loop=true; v.autoplay=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
-      v.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:var(--imp-r-lg);box-shadow:var(--imp-shadow-md);display:block;aspect-ratio:1/1;background:var(--imp-surface-2)';
-      var mp4=document.createElement('source'); mp4.src='assets/promo/hero.mp4'; mp4.type='video/mp4';
-      var webm=document.createElement('source'); webm.src='assets/promo/hero.webm'; webm.type='video/webm';
-      v.appendChild(mp4); v.appendChild(webm);
-      var swapped=false;
-      v.addEventListener('loadeddata', function(){ if(swapped) return; swapped=true; box.innerHTML=''; box.appendChild(v); box.classList.add('has-hero-video'); var p=v.play(); if(p&&p.catch) p.catch(function(){}); });
-      v.load();   /* if every source 404s the video just never fires loadeddata → collage stays */
     })();
   } catch(e){}
 })();

@@ -101,14 +101,22 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 
 /* ── Artist cards / profile ──────────────────────────────── */
 .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 18px; }
-.acard { border: 1px solid var(--imp-border); border-radius: var(--imp-r-lg); overflow: hidden; background: var(--imp-surface); text-decoration: none; color: inherit; transition: border-color .15s, transform .15s, box-shadow .15s; }
+/* Artist card — their work as the backdrop, a CIRCLE avatar overlapping it, then a Shop button. */
+.acard { position: relative; border: 1px solid var(--imp-border); border-radius: var(--imp-r-lg); overflow: hidden; background: var(--imp-surface); display: flex; flex-direction: column; transition: border-color .15s, transform .15s, box-shadow .15s; }
 .acard:hover { border-color: var(--imp-border-hover); transform: translateY(-3px); box-shadow: var(--imp-shadow-md); }
-.acard-cover { aspect-ratio: 3/2; overflow: hidden; background: var(--imp-surface-2); }
-.acard-cover img { width: 100%; height: 100%; object-fit: cover; }
-.acard-body { padding: 13px 14px 15px; }
-.acard-name { font-size: 15px; font-weight: 700; color: var(--imp-fg); display: flex; align-items: center; gap: 6px; }
+.acard-work { position: relative; aspect-ratio: 16/11; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 2px; background: var(--imp-surface-2); }
+.acard-work img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.acard-work img:first-child:nth-last-child(3) { grid-row: span 2; }   /* 3 works: tall left + 2 stacked */
+.acard-work img:only-child { grid-column: span 2; grid-row: span 2; }
+.acard-work-empty { display: block; }
+.acard-avatar { position: absolute; left: 50%; bottom: -28px; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 3px solid var(--imp-surface); box-shadow: var(--imp-shadow-sm); background: var(--imp-surface-2); z-index: 2; }
+.acard-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.acard-foot { padding: 36px 14px 15px; text-align: center; }
+.acard-name { font-size: 15px; font-weight: 700; color: var(--imp-fg); display: flex; align-items: center; justify-content: center; gap: 6px; }
 .acard-style { font-size: 12px; color: var(--imp-gold); font-weight: 600; margin-top: 2px; }
-.acard-meta { font-size: 11.5px; color: var(--imp-fg-3); margin-top: 7px; }
+.acard-meta { font-size: 11px; color: var(--imp-fg-3); margin-top: 6px; }
+.acard-shop { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 600; color: var(--imp-fg); background: var(--imp-surface-2); border: 1px solid var(--imp-border); border-radius: var(--imp-r-pill); padding: 7px 24px; text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
+.acard-shop:hover { background: var(--imp-fg); color: var(--imp-surface); border-color: var(--imp-fg); }
 
 .follow-btn { font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: var(--imp-r-pill); border: 1px solid var(--imp-fg); background: var(--imp-fg); color: var(--imp-bg); cursor: pointer; transition: all .15s; }
 .follow-btn:hover { opacity: .9; }
@@ -126,7 +134,7 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 .statline .sl { font-size: 11.5px; color: var(--imp-fg-3); text-transform: uppercase; letter-spacing: .05em; }
 
 /* ── Collection cards ────────────────────────────────────── */
-.colgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; }
+.colgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px,1fr)); gap: 18px; }   /* match the products (.pgrid) column count */
 .colcard { border-radius: var(--imp-r-lg); overflow: hidden; position: relative; aspect-ratio: 4/5; text-decoration: none; color: #fff; display: block; box-shadow: var(--imp-shadow-sm); }
 .colcard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
 .colcard:hover img { transform: scale(1.05); }
@@ -241,6 +249,26 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 .pagehead p { font-size: 15px; color: var(--imp-fg-2); margin: 8px 0 0; max-width: 620px; line-height: 1.55; }
 .section-divider { height: 1px; background: var(--imp-border); margin: 0; }
 .followpill { display:inline-flex; gap:6px; align-items:center; }
+
+/* ── Benefits (why IMPRINT — per audience) ── */
+.benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.benefit { border: 1px solid var(--imp-border); border-radius: var(--imp-r-lg); padding: 24px; background: var(--imp-surface); }
+.benefit .k { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--imp-gold); }
+.benefit h3 { font-size: 18px; margin: 8px 0 13px; color: var(--imp-fg); }
+.benefit ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+.benefit li { font-size: 13.5px; color: var(--imp-fg-2); line-height: 1.5; padding-left: 22px; position: relative; }
+.benefit li::before { content: "✓"; position: absolute; left: 0; color: var(--imp-gold); font-weight: 700; }
+@media (max-width: 800px){ .benefits { grid-template-columns: 1fr; } }
+
+/* ── Licensed / brand-partner stores (Zazzle-style horizontal row) ── */
+.storerow { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(186px, 1fr); gap: 18px; overflow-x: auto; scroll-snap-type: x proximity; padding: 2px 2px 8px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.storecard { scroll-snap-align: start; text-decoration: none; color: inherit; display: block; }
+.storecard .sc-art { aspect-ratio: 1/1; border-radius: var(--imp-r-lg); overflow: hidden; position: relative; box-shadow: var(--imp-shadow-sm); background: var(--imp-surface-2); }
+.storecard .sc-art img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--imp-ease); }
+.storecard:hover .sc-art img { transform: scale(1.06); }
+.storecard .sc-badge { position: absolute; left: 10px; top: 10px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.42); backdrop-filter: blur(4px); padding: 4px 9px; border-radius: var(--imp-r-pill); }
+.storecard .sc-name { font-size: 14px; font-weight: 600; color: var(--imp-fg); text-align: center; margin-top: 10px; }
+.storecard .sc-cat { font-size: 11.5px; color: var(--imp-fg-3); text-align: center; margin-top: 1px; }
 
 /* ═══════════════════════════════════════════════════════════
    MOTION — scroll reveals · page transitions · hero typewriter ·
