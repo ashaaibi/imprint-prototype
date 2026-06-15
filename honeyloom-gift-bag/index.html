@@ -180,23 +180,12 @@
       <p class="pdp-sub">A foil honeycomb bottle bag with an editable wordmark and bee monogram — the flagship Imprint template, designed by <a href="artists.html?a=oliver-hart" style="color:var(--imp-gold);text-decoration:none">Oliver Hart</a>. Customise the text, colours and finish in real-time 3D.</p>
       <div class="pdp-stars"><span class="stars">★★★★★</span> <span><b style="color:var(--imp-fg)">5.0</b> · <span id="pdp-total-reviews">63</span> reviews across 4 makers</span></div>
 
-      <!-- Size -->
-      <div class="pdp-label"><span>Size</span><span class="pdp-label-note" id="pdp-size-dims">—</span></div>
-      <div class="pdp-sizes" id="pdp-sizes"></div>
-
-      <!-- Quantity -->
-      <div class="pdp-label"><span>Quantity</span><span class="pdp-label-note">More units · lower price</span></div>
-      <div class="pdp-qty" id="pdp-qty"></div>
-
-      <!-- Manufacturer -->
-      <div class="pdp-label"><span>Manufacturer</span><span class="pdp-label-note">Price &amp; lead time vary</span></div>
-      <div class="pdp-mfrs" id="pdp-mfrs"></div>
-
-      <!-- Price + delivery -->
+      <!-- Price + CTAs — top, above the fold (maker is chosen at checkout) -->
       <div class="pdp-pricebox">
         <div class="pdp-prow"><span id="pdp-base-lbl">—</span><span id="pdp-base-val">—</span></div>
         <div class="pdp-prow"><span id="pdp-vat-lbl">VAT</span><span id="pdp-vat-val">—</span></div>
-        <div class="pdp-prow total"><span>Total <span class="pp-sub" id="pdp-pu-note"></span></span><span id="pdp-total-val">—</span></div>
+        <div class="pdp-prow total"><span>Estimate <span class="pp-sub" id="pdp-pu-note"></span></span><span id="pdp-total-val">—</span></div>
+        <div class="pp-sub" style="margin:7px 0 2px;line-height:1.45">Indicative — your final price is set at checkout when you choose a maker.</div>
         <div class="pdp-deliv">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
           <span>Estimated delivery <b id="pdp-deliv-date">—</b> <span class="pp-sub" id="pdp-deliv-note"></span></span>
@@ -214,7 +203,15 @@
           Add to cart
         </button>
       </div>
-      <div class="pdp-reassure">Customize opens the 3D studio on the <b>Design</b> step — go back to <b>Start</b> anytime to change size or quantity. No account needed · Ships across the GCC.</div>
+      <div class="pdp-reassure">Customize opens the 3D studio on the <b>Design</b> step — change size or quantity anytime. No account needed · pick your maker &amp; pay at checkout.</div>
+
+      <!-- Size -->
+      <div class="pdp-label"><span>Size</span><span class="pdp-label-note" id="pdp-size-dims">—</span></div>
+      <div class="pdp-sizes" id="pdp-sizes"></div>
+
+      <!-- Quantity -->
+      <div class="pdp-label"><span>Quantity</span><span class="pdp-label-note">More units · lower price</span></div>
+      <div class="pdp-qty" id="pdp-qty"></div>
     </div>
   </div>
 
@@ -418,8 +415,9 @@ function render(){
       '<span class="q-total">'+formatPrice(tr.qty*pu)+'</span></div>';
   }).join('');
 
-  /* manufacturers */
-  document.getElementById('pdp-mfrs').innerHTML = MFRS.map(function(x){
+  /* manufacturers — picker moved to checkout; element removed from the PDP, so guard it */
+  var _mfrsEl = document.getElementById('pdp-mfrs');
+  if (_mfrsEl) _mfrsEl.innerHTML = MFRS.map(function(x){
     var pu=t.pu*x.priceMul;
     var badges=x.badges.map(function(b,bi){ return '<span class="m-badge'+(x.featured&&bi===0?' feat':'')+'">'+b+'</span>'; }).join(' ');
     return '<div class="pdp-mfr'+(x.key===sel.mfr?' on':'')+'" onclick="pickMfr(\''+x.key+'\')">' +
@@ -437,14 +435,14 @@ function render(){
   document.getElementById('pdp-vat-lbl').textContent = c.vatLabel || 'VAT';
   document.getElementById('pdp-vat-val').textContent = formatPrice(vat);
   document.getElementById('pdp-total-val').textContent = formatPrice(total);
-  document.getElementById('pdp-pu-note').textContent = '· '+formatPrice(pu)+' / unit · '+m.name;
+  document.getElementById('pdp-pu-note').textContent = '· '+formatPrice(pu)+' / unit';
 
   /* delivery */
   var d1=new Date(); d1.setDate(d1.getDate()+m.leadDays);
   var d2=new Date(); d2.setDate(d2.getDate()+m.leadDays+2);
   var opt={day:'numeric',month:'short'};
   document.getElementById('pdp-deliv-date').textContent = d1.toLocaleDateString('en-GB',opt)+' – '+d2.toLocaleDateString('en-GB',opt);
-  document.getElementById('pdp-deliv-note').textContent = '· via '+m.name+' ('+m.location.split(', ')[1]+')';
+  document.getElementById('pdp-deliv-note').textContent = '· ships across the GCC';
 
   renderDetails();
 }

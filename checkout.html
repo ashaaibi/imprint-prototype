@@ -123,6 +123,13 @@
       border-top: 1px solid var(--imp-border);
     }
     .factory-finishes strong { color: var(--imp-fg); font-weight: 500; }
+    /* maker reviews + recent-work samples (shown in the Choose-factory step) */
+    .factory-reviews { font-size: 12px; font-weight: 600; color: var(--imp-fg-2); margin-top: 10px; }
+    .factory-reviews::first-letter { color: var(--imp-gold); }
+    .factory-quote { font-size: 12.5px; color: var(--imp-fg-2); font-style: italic; line-height: 1.5; margin-top: 4px; }
+    .factory-worklabel { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--imp-fg-3); margin-top: 12px; }
+    .factory-work { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+    .factory-work .fwork { display: block; aspect-ratio: 1/1; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
 
     /* ─── PAYMENT TABS ───────────────────── */
     .payment-tabs {
@@ -485,10 +492,10 @@
 <script>
   /* ─── FACTORIES ─── */
   var FACTORIES = [
-    { id: 'artis',   nameEn: 'Artis Pack',     nameAr: 'أرتيس باك',     flag: '🇦🇪', locationEn: 'Dubai, UAE',         locationAr: 'دبي، الإمارات',     priceAed: 0.80,  lead: '3–5',   rating: 5, finishesEn: 'All finishes + emboss', finishesAr: 'جميع التشطيبات + بروز', avail: 'available', recommended: true,  supportsEmboss: true },
-    { id: 'gulf',    nameEn: 'Gulf Print Co.', nameAr: 'غلف برنت',      flag: '🇸🇦', locationEn: 'Jeddah, KSA',       locationAr: 'جدة، السعودية',    priceAed: 0.20,  lead: '7–10',  rating: 4, finishesEn: 'Standard + emboss',    finishesAr: 'قياسي + بروز',          avail: 'available', recommended: false, supportsEmboss: true },
-    { id: 'eastpack',nameEn: 'EastPack Ltd.',  nameAr: 'إيست باك',      flag: '🇨🇳', locationEn: 'Shenzhen, China',   locationAr: 'شينزن، الصين',     priceAed: -1.50, lead: '18–22', rating: 4, finishesEn: 'Standard only (no emboss)', finishesAr: 'قياسي فقط (بدون بروز)', avail: 'limited',   recommended: false, supportsEmboss: false },
-    { id: 'nile',    nameEn: 'Nile Box Co.',   nameAr: 'نايل بوكس',     flag: '🇪🇬', locationEn: 'Cairo, Egypt',      locationAr: 'القاهرة، مصر',     priceAed: -0.30, lead: '10–14', rating: 3, finishesEn: 'Standard + matte',     finishesAr: 'قياسي + مطفي',           avail: 'available', recommended: false, supportsEmboss: false },
+    { id: 'artis',   nameEn: 'Artis Pack',     nameAr: 'أرتيس باك',     flag: '🇦🇪', locationEn: 'Dubai, UAE',         locationAr: 'دبي، الإمارات',     priceAed: 0.80,  lead: '3–5',   rating: 5, reviews: 187, quoteEn: 'Fastest turnaround in the UAE — flawless foil and colour every run.', quoteAr: 'أسرع تنفيذ في الإمارات — رقائق وألوان مثالية في كل طلب.', work: ['#caa96f','#7a5c33','#e7d8b8'], finishesEn: 'All finishes + emboss', finishesAr: 'جميع التشطيبات + بروز', avail: 'available', recommended: true,  supportsEmboss: true },
+    { id: 'gulf',    nameEn: 'Gulf Print Co.', nameAr: 'غلف برنت',      flag: '🇸🇦', locationEn: 'Jeddah, KSA',       locationAr: 'جدة، السعودية',    priceAed: 0.20,  lead: '7–10',  rating: 4, reviews: 142, quoteEn: 'Excellent value at volume — colours always on-brand.', quoteAr: 'قيمة ممتازة بالكميات — ألوان مطابقة للهوية دائمًا.', work: ['#2a3a5a','#b87333','#d8e0ea'], finishesEn: 'Standard + emboss',    finishesAr: 'قياسي + بروز',          avail: 'available', recommended: false, supportsEmboss: true },
+    { id: 'eastpack',nameEn: 'EastPack Ltd.',  nameAr: 'إيست باك',      flag: '🇨🇳', locationEn: 'Shenzhen, China',   locationAr: 'شينزن، الصين',     priceAed: -1.50, lead: '18–22', rating: 4, reviews: 98,  quoteEn: 'Unbeatable unit cost for large international runs.', quoteAr: 'تكلفة وحدة لا تُنافَس للطلبات الكبيرة.', work: ['#7a2738','#1f7a5a','#e0d2c2'], finishesEn: 'Standard only (no emboss)', finishesAr: 'قياسي فقط (بدون بروز)', avail: 'limited',   recommended: false, supportsEmboss: false },
+    { id: 'nile',    nameEn: 'Nile Box Co.',   nameAr: 'نايل بوكس',     flag: '🇪🇬', locationEn: 'Cairo, Egypt',      locationAr: 'القاهرة، مصر',     priceAed: -0.30, lead: '10–14', rating: 3, reviews: 64,  quoteEn: 'Reliable matte finish and fair pricing on repeat orders.', quoteAr: 'تشطيب مطفي موثوق وأسعار عادلة للطلبات المتكررة.', work: ['#b9996a','#4a4a52','#cf7a92'], finishesEn: 'Standard + matte',     finishesAr: 'قياسي + مطفي',           avail: 'available', recommended: false, supportsEmboss: false },
   ];
 
   /* ─── STATE ─── */
@@ -560,6 +567,10 @@
           '<div><div class="fmeta-label">' + t('co.factory.finishes') + '</div><div class="fmeta-val" style="font-size:12px;font-weight:500;">' + (f.supportsEmboss ? '✓ Emboss' : '— No emboss') + '</div></div>' +
         '</div>' +
         '<div class="factory-finishes"><strong>' + t('co.factory.finishes') + ':</strong> ' + (isAr ? f.finishesAr : f.finishesEn) + '</div>' +
+        '<div class="factory-reviews">★ ' + f.rating.toFixed(1) + ' · ' + f.reviews + (isAr ? ' تقييم' : ' reviews') + '</div>' +
+        '<div class="factory-quote">“' + (isAr ? f.quoteAr : f.quoteEn) + '”</div>' +
+        '<div class="factory-worklabel">' + (isAr ? 'أعمال حديثة' : 'Recent work') + '</div>' +
+        '<div class="factory-work">' + (f.work || []).map(function(c){ return '<span class="fwork" style="background:linear-gradient(135deg,' + c + ',' + c + '88)"></span>'; }).join('') + '</div>' +
       '</div>';
     });
     list.innerHTML = html;
