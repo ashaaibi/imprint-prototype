@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Factory partner plans on IMPRINT — join free and pay only on orders we bring you, then upgrade to a tiered monthly plan for lower commission as volume grows.">
+  <title>Factory partner plans — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="catalog.css">
+  <style>
+    :root { --pp-green:#2f5d4b; --pp-green-soft:#eaf1ed; --pp-gold:#c08a2d; }
+    html[data-theme="dark"] { --pp-green:#7fb79f; --pp-green-soft:#1c2a24; }
+    .pricing { padding-bottom: 80px; }
+    .pp-display { font-family:"Cormorant Garamond",Georgia,serif; }
+
+    /* hero */
+    .pp-hero { text-align:center; max-width:760px; margin:0 auto; padding:38px 0 8px; }
+    .pp-eyebrow { font-size:12px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--pp-gold); margin:0 0 16px; }
+    .pp-h1 { font-family:"Cormorant Garamond",Georgia,serif; font-weight:600; font-size:clamp(38px,6vw,64px); line-height:1.04; letter-spacing:-.01em; margin:0; color:var(--imp-fg); }
+    .pp-h1 em { font-style:italic; color:var(--pp-green); }
+    .pp-lede { font-size:16.5px; line-height:1.62; color:var(--imp-fg-2); max-width:640px; margin:20px auto 0; }
+    .pp-note { font-size:13.5px; color:var(--imp-fg-3); margin:18px auto 0; }
+    .pp-note b { color:var(--pp-green); font-weight:700; }
+
+    /* highlight tiles */
+    .pp-highlights { display:grid; grid-template-columns:repeat(4,1fr); gap:0; max-width:920px; margin:40px auto 0; border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); overflow:hidden; background:var(--imp-surface); }
+    .pp-tile { padding:26px 18px; text-align:center; border-inline-end:1px solid var(--imp-border); }
+    .pp-tile:last-child { border-inline-end:none; }
+    .pp-tile-k { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--imp-fg-3); }
+    .pp-tile-v { font-family:"Cormorant Garamond",Georgia,serif; font-size:30px; font-weight:600; color:var(--imp-fg); margin-top:8px; }
+    .pp-tile-v span { font-family:Inter,sans-serif; font-size:13px; font-weight:600; color:var(--pp-gold); }
+    @media (max-width:720px){ .pp-highlights { grid-template-columns:repeat(2,1fr); } .pp-tile:nth-child(2){border-inline-end:none;} .pp-tile:nth-child(1),.pp-tile:nth-child(2){border-bottom:1px solid var(--imp-border);} }
+
+    /* plan cards */
+    .pp-plans { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:54px; align-items:start; }
+    @media (max-width:1040px){ .pp-plans { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:560px){ .pp-plans { grid-template-columns:1fr; } }
+    .pp-card { position:relative; border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); background:var(--imp-surface); padding:26px 22px; display:flex; flex-direction:column; }
+    .pp-card.feat { border-color:var(--pp-green); box-shadow:0 18px 50px -28px rgba(47,93,75,.5); }
+    .pp-ribbon { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--pp-green); color:#fff; font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:5px 14px; border-radius:var(--imp-r-pill); white-space:nowrap; }
+    .pp-tag { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--imp-fg-3); }
+    .pp-plan-no { color:var(--pp-gold); }
+    .pp-name { font-family:"Cormorant Garamond",Georgia,serif; font-size:34px; font-weight:600; color:var(--imp-fg); margin:14px 0 0; line-height:1; }
+    .pp-desc { font-size:13px; color:var(--imp-fg-2); line-height:1.55; margin:10px 0 0; min-height:54px; }
+    .pp-price { margin:18px 0 2px; display:flex; align-items:baseline; gap:7px; }
+    .pp-price-n { font-family:"Cormorant Garamond",Georgia,serif; font-size:48px; font-weight:600; color:var(--imp-fg); line-height:.9; }
+    .pp-price-u { font-size:13px; color:var(--imp-fg-3); font-weight:500; }
+    .pp-rate { font-size:13.5px; font-weight:700; color:var(--pp-green); }
+    .pp-cta { margin:20px 0 4px; display:block; text-align:center; font-size:14px; font-weight:600; padding:12px 16px; border-radius:var(--imp-r-md); text-decoration:none; border:1px solid var(--imp-border); background:var(--imp-surface); color:var(--imp-fg); transition:background .15s,border-color .15s,opacity .15s; cursor:pointer; }
+    .pp-cta:hover { border-color:var(--imp-border-hover); }
+    .pp-cta.solid { background:var(--pp-green); border-color:var(--pp-green); color:#fff; }
+    .pp-cta.solid:hover { opacity:.92; }
+    .pp-incl { font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--imp-fg-3); margin:20px 0 12px; padding-top:18px; border-top:1px solid var(--imp-border); }
+    .pp-feats { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
+    .pp-feats li { display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--imp-fg-2); line-height:1.4; }
+    .pp-feats svg { width:17px; height:17px; flex:0 0 auto; margin-top:1px; color:var(--pp-green); }
+
+    /* section heads */
+    .pp-sec { margin-top:80px; }
+    .pp-sec-h { font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(28px,4vw,40px); font-weight:600; color:var(--imp-fg); text-align:center; margin:0; }
+    .pp-sec-sub { font-size:15px; color:var(--imp-fg-2); line-height:1.6; text-align:center; max-width:680px; margin:14px auto 0; }
+
+    /* upgrade flow */
+    .pp-flow { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:880px; margin:38px auto 0; }
+    @media (max-width:640px){ .pp-flow { grid-template-columns:repeat(2,1fr); } }
+    .pp-step { position:relative; text-align:center; border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); background:var(--imp-surface); padding:22px 14px; }
+    .pp-step-k { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--imp-fg-3); }
+    .pp-step-v { font-family:"Cormorant Garamond",Georgia,serif; font-size:34px; font-weight:600; color:var(--imp-fg); margin:6px 0 4px; }
+    .pp-step-l { font-size:12.5px; color:var(--imp-fg-2); }
+    .pp-step-l b { color:var(--pp-green); }
+    .pp-step:not(:last-child)::after { content:"→"; position:absolute; inset-inline-end:-11px; top:50%; transform:translateY(-50%); color:var(--pp-gold); font-weight:700; z-index:1; }
+    @media (max-width:640px){ .pp-step:nth-child(2)::after{content:none;} }
+
+    /* why cards */
+    .pp-why { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:38px; }
+    @media (max-width:820px){ .pp-why { grid-template-columns:1fr; } }
+    .pp-why-card { border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); background:var(--imp-surface); padding:26px 24px; }
+    .pp-why-no { font-family:"Cormorant Garamond",Georgia,serif; font-size:20px; color:var(--pp-gold); }
+    .pp-why-h { font-size:17px; font-weight:700; color:var(--imp-fg); margin:10px 0 8px; }
+    .pp-why-p { font-size:13.5px; color:var(--imp-fg-2); line-height:1.6; margin:0; }
+
+    .pp-method { max-width:760px; margin:64px auto 0; font-size:12px; color:var(--imp-fg-3); line-height:1.65; text-align:center; border-top:1px solid var(--imp-border); padding-top:26px; }
+    .pp-method b { color:var(--pp-green); font-weight:700; }
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main class="imp-wrap pricing">
+
+  <section class="pp-hero">
+    <p class="pp-eyebrow">Factory Partner Plans</p>
+    <h1 class="pp-h1">One platform.<br>Two ways we <em>earn</em>.</h1>
+    <p class="pp-lede">Factories join free and pay only when Imprint brings them an order. As volume grows, a fixed monthly plan costs less than commission — so they upgrade, and our revenue turns recurring.</p>
+    <p class="pp-note">Confirmed pricing structure with <b>2 manufacturing partners</b> · local &amp; China · all figures in OMR</p>
+  </section>
+
+  <section class="pp-highlights">
+    <div class="pp-tile"><div class="pp-tile-k">Agent margin</div><div class="pp-tile-v">20%<span> / order</span></div></div>
+    <div class="pp-tile"><div class="pp-tile-k">Free design</div><div class="pp-tile-v">2D / 3D</div></div>
+    <div class="pp-tile"><div class="pp-tile-k">Recurring</div><div class="pp-tile-v">Tiered<span> plans</span></div></div>
+    <div class="pp-tile"><div class="pp-tile-k">Validation</div><div class="pp-tile-v">Live<span> demand</span></div></div>
+  </section>
+
+  <section class="pp-plans">
+    <!-- Plan 01 -->
+    <div class="pp-card">
+      <div class="pp-tag">Entry · <span class="pp-plan-no">Plan 01</span></div>
+      <div class="pp-name pp-display">Commission</div>
+      <p class="pp-desc">Start free. Pay only on the orders we bring you — zero risk, zero monthly fee.</p>
+      <div class="pp-price"><span class="pp-price-n">Free</span></div>
+      <div class="pp-rate">20% per order</div>
+      <a class="pp-cta" href="for-partners.html">Join free</a>
+      <div class="pp-incl">Includes</div>
+      <ul class="pp-feats">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2D / 3D customization engine</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Instant quoting</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Order management dashboard</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Standard listing</li>
+      </ul>
+    </div>
+    <!-- Plan 02 -->
+    <div class="pp-card">
+      <div class="pp-tag">Starter · <span class="pp-plan-no">Plan 02</span></div>
+      <div class="pp-name pp-display">Starter</div>
+      <p class="pp-desc">For factories with steady weekly orders who want lower commission.</p>
+      <div class="pp-price"><span class="pp-price-n">80</span><span class="pp-price-u">OMR / month</span></div>
+      <div class="pp-rate">15% per order</div>
+      <a class="pp-cta" href="for-partners.html">Choose Starter</a>
+      <div class="pp-incl">Everything in 01, plus</div>
+      <ul class="pp-feats">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Higher search placement</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Basic performance reports</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Lower commission rate</li>
+      </ul>
+    </div>
+    <!-- Plan 03 -->
+    <div class="pp-card feat">
+      <div class="pp-ribbon">★ Best value</div>
+      <div class="pp-tag">Growth · <span class="pp-plan-no">Plan 03</span></div>
+      <div class="pp-name pp-display">Growth</div>
+      <p class="pp-desc">For high-volume factories ready to scale demand through the platform.</p>
+      <div class="pp-price"><span class="pp-price-n">200</span><span class="pp-price-u">OMR / month</span></div>
+      <div class="pp-rate">10% per order</div>
+      <a class="pp-cta solid" href="for-partners.html">Choose Growth</a>
+      <div class="pp-incl">Everything in 02, plus</div>
+      <ul class="pp-feats">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Demand forecasting</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Priority in search results</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
+      </ul>
+    </div>
+    <!-- Plan 04 -->
+    <div class="pp-card">
+      <div class="pp-tag">Pro · <span class="pp-plan-no">Plan 04</span></div>
+      <div class="pp-name pp-display">Professional</div>
+      <p class="pp-desc">Full partnership: lowest commission, premium reach, dedicated support.</p>
+      <div class="pp-price"><span class="pp-price-n">500</span><span class="pp-price-u">OMR / month</span></div>
+      <div class="pp-rate">5% per order</div>
+      <a class="pp-cta" href="for-partners.html">Choose Pro</a>
+      <div class="pp-incl">Everything in 03, plus</div>
+      <ul class="pp-feats">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Premium featured placement</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Full market intelligence</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account manager</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Joint marketing campaigns</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="pp-sec">
+    <h2 class="pp-sec-h pp-display">The factory upgrades itself</h2>
+    <p class="pp-sec-sub">When monthly commission climbs past the cost of a fixed plan, Imprint’s Smart Alarm notifies the factory: a subscription now saves them money. They upgrade willingly — and our revenue shifts from variable to recurring.</p>
+    <div class="pp-flow">
+      <div class="pp-step"><div class="pp-step-k">Plan 01</div><div class="pp-step-v">~11</div><div class="pp-step-l">orders / mo → <b>Starter</b></div></div>
+      <div class="pp-step"><div class="pp-step-k">Plan 02</div><div class="pp-step-v">~26</div><div class="pp-step-l">orders / mo → <b>Growth</b></div></div>
+      <div class="pp-step"><div class="pp-step-k">Plan 03</div><div class="pp-step-v">~60</div><div class="pp-step-l">orders / mo → <b>Pro</b></div></div>
+      <div class="pp-step"><div class="pp-step-k">Plan 04</div><div class="pp-step-v">5%</div><div class="pp-step-l">lowest commission</div></div>
+    </div>
+  </section>
+
+  <section class="pp-sec">
+    <h2 class="pp-sec-h pp-display">Why factories stay</h2>
+    <p class="pp-sec-sub">The platform replaces what a factory would otherwise spend on marketing, designers, and customer service — so the margin is value they keep, not a cost they resent.</p>
+    <div class="pp-why">
+      <div class="pp-why-card"><div class="pp-why-no">01</div><div class="pp-why-h">Proprietary 2D/3D tech</div><p class="pp-why-p">Cuts the factory’s communication time and colour-control cost — a value the China partner confirmed directly.</p></div>
+      <div class="pp-why-card"><div class="pp-why-no">02</div><div class="pp-why-h">Dual supply chain</div><p class="pp-why-p">Local factories for speed, China for cost at scale — flexibility no single regional competitor offers.</p></div>
+      <div class="pp-why-card"><div class="pp-why-no">03</div><div class="pp-why-h">Dual revenue</div><p class="pp-why-p">Margin plus subscription makes the platform worth more than mere brokerage — and resistant to bypass.</p></div>
+    </div>
+  </section>
+
+  <p class="pp-method"><b>Methodology note.</b> Agent-margin structure and improving terms with volume are confirmed through negotiation with two manufacturers (local &amp; China). The 20% target margin, plan prices, upgrade thresholds, and volume scenarios are planning assumptions to be refined with live operating data, and are presented as scenarios rather than guarantees. Born in the Gulf, scaling globally.</p>
+
+</main>
+<div id="site-footer"></div>
+
+<script src="shared.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+<script>
+  IMP.initAppHeader({ activePage:'pricing' });
+</script>
+</body>
+</html>

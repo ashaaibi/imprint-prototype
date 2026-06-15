@@ -491,17 +491,20 @@ html[dir="rtl"] .form-select { background-position: left 12px center; padding-ri
 /* ─── PROGRESS STEPS ─────────────────────────────── */
 .progress-steps {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0;
   margin-bottom: 32px;
   padding: 4px 0;
 }
+/* circle stacked OVER the label so the connector line (at circle-center height) never strikes the text */
 .step {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   flex: 1;
   position: relative;
+  text-align: center;
 }
 .step:not(:last-child)::after {
   content: '';
