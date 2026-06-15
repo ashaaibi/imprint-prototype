@@ -138,25 +138,7 @@ TAGS = {
 # ── ARTISTS (13) ─────────────────────────────────────────────────────────────
 # avatar index = position; styleTags drive product/collection matching.
 ARTISTS = [
- ("aminata-diallo",   "Aminata Diallo",   "Atelier Sahel",      "SN","🇸🇳","Heritage Textile", ["kraft","natural","neutral","taupe","woodland","botanical","earth"],
-    "Aminata translates West-African textile heritage — mudcloth geometry, indigo and warm earth tones — into modern, tactile packaging."),
- ("kenji-sato",       "Kenji Sato",       "Studio Sumi",        "JP","🇯🇵","Quiet Line Work",  ["minimal","white","silver","clean","illustrated","line","fox"],
-    "Kenji draws in fine ink lines and negative space — restrained, botanical-leaning illustration with a calm Japanese sensibility."),
- ("priya-nair",       "Priya Nair",       "Marigold Studio",    "IN","🇮🇳","Vibrant Floral",   ["floral","blush","pink","sage","soft","vibrant","botanical","wildflower"],
-    "Priya bursts with colour — marigolds, paisley and joyful florals from South-Indian craft, tuned for celebration and gifting."),
- ("mateo-herrera",    "Mateo Herrera",    "Taller Herrera",     "MX","🇲🇽","Folk Maximalist",  ["abstract","multicolor","vibrant","playful","bold","colorful"],
-    "Mateo is loud and proud — saturated folk-art colour blocks and papel-picado energy that leap off the shelf."),
- ("yasmin-al-najjar", "Yasmin Al-Najjar", "Najma Studio",       "AE","🇦🇪","Arabesque",        ["moroccan","arabesque","navy","copper","tin","ornate","gold","geometric"],
-    "Yasmin builds tessellating Khaleeji geometry — zellige stars, gold lattices and arabesque borders that wrap seamlessly."),
- ("henrik-sorensen",  "Henrik Sørensen",  "Linea Nord",         "DK","🇩🇰","Scandinavian Minimal", ["minimal","white","silver","clean","kraft","neutral","gray"],
-    "Henrik designs in a whisper — bone, brushed silver and uncoated kraft with one deliberate mark. Packaging that lets the product speak."),
- ("amina-yusuf",      "Amina Yusuf",      "Lagos Colour Lab",   "NG","🇳🇬","Bold Abstract",    ["abstract","multicolor","vibrant","bold","colorful","playful"],
-    "Amina channels Lagos energy — bold abstract colour and pattern with fearless contrast, made to be seen across a room."),
- ("hana-lee",         "Hana Lee",         "Seoul Atelier",      "KR","🇰🇷","Emerald Deco",     ["deco","geometric","diamond","copper","emerald","gold","teal","chocolate"],
-    "Hana pairs jewel-toned emerald and teal with warm gold foil — crisp deco geometry for confectionery and fine fragrance."),
- ("kwame-mensah",     "Kwame Mensah",     "Accra Geometric",    "GH","🇬🇭","Geometric Luxe",   ["geometric","charcoal","diamond","burgundy"],
-    "Kwame fuses kente-inspired geometry with deep luxe palettes — charcoal, burgundy and gold for jewellery, spirits and couture."),
- # ── New featured artists (real photos artist-10..16; names/countries read from the portraits) ──
+ # ── Featured artists — real photos (artist-10..16); names/countries read from the portraits ──
  ("rory-quinn",       "Rory Quinn",       "Doodle Press",       "IE","🇮🇪","Pop Doodle",       ["playful","doodle","colorful","bold","multicolor","abstract"],
     "Rory floods every panel with hand-drawn doodles and pop colour — joyful, busy, unmistakably his."),
  ("oliver-hart",      "Oliver Hart",      "Hart & Bloom",       "GB","🇬🇧","Botanical Pop",    ["floral","pop","colorful","botanical","vibrant","wildflower"],
@@ -257,15 +239,15 @@ def artist_for_product(slug):
 # Which artists plausibly suit each product category (every artist appears >=1x),
 # used to keep zero-keyword products on-style while balancing the load.
 CATEGORY_ARTISTS = {
-    "bags":       ["yasmin-al-najjar","mateo-herrera","amina-yusuf","aminata-diallo"],
-    "boxes":      ["hana-lee","kwame-mensah","henrik-sorensen","kenji-sato"],
-    "mailer":     ["henrik-sorensen","aminata-diallo"],
-    "food":       ["hana-lee","aminata-diallo","kenji-sato","priya-nair"],
-    "beauty":     ["yasmin-al-najjar","hana-lee","priya-nair"],
-    "jewellery":  ["kwame-mensah","hana-lee","yasmin-al-najjar"],
-    "tubes":      ["yasmin-al-najjar","mateo-herrera","aminata-diallo"],
-    "floral":     ["priya-nair","aminata-diallo","kenji-sato"],
-    "stationery": ["henrik-sorensen","kenji-sato","priya-nair"],
+    "bags":       ["brooke-sanders","rory-quinn","lin-xiang","ngozi-eze"],
+    "boxes":      ["oliver-hart","emma-larsson","mai-nguyen","brooke-sanders"],
+    "mailer":     ["lin-xiang","brooke-sanders"],
+    "food":       ["rory-quinn","ngozi-eze","brooke-sanders","lin-xiang"],
+    "beauty":     ["mai-nguyen","emma-larsson","oliver-hart"],
+    "jewellery":  ["emma-larsson","oliver-hart","mai-nguyen"],
+    "tubes":      ["lin-xiang","rory-quinn","ngozi-eze"],
+    "floral":     ["oliver-hart","emma-larsson","ngozi-eze"],
+    "stationery": ["mai-nguyen","lin-xiang","rory-quinn"],
 }
 
 def assign_artists(prods):
@@ -425,6 +407,8 @@ def main():
         dst = f"assets/collections/{cid}.png"
         shutil.copyfile(src, os.path.join(ROOT,dst))
         aid = COLLECTION_ARTIST.get(stem)
+        _aids = [a[0] for a in ARTISTS]
+        if aid not in _aids: aid = _aids[h(stem, len(_aids))]   # remapped artist gone -> spread across the roster
         nm = titleize(slugify(re.sub(r'^\d+-','',stem)))
         collections.append({
             "id":cid, "name":nm, "image":dst, "artist":aid,
@@ -479,7 +463,7 @@ def main():
         "id":HONEYLOOM_SLUG,"name":"Honeyloom Gift Bag","category":"bags",
         "image":"templates/renders/honey-gift-bag-1.jpg",
         "gallery":["templates/renders/honey-gift-bag-1.jpg","templates/renders/honey-gift-bag-2.jpg","templates/renders/honey-gift-bag-3.jpg"],
-        "artist":"yasmin-al-najjar","makers":["imprint-atelier","crescent-press","najm-packaging"],
+        "artist":"oliver-hart","makers":["imprint-atelier","crescent-press","najm-packaging"],
         "price":12.5,"tags":["foil","hot","editors"],"rating":5.0,"reviews":63,
         "blurb":"A foil honeycomb bottle bag with editable wordmark — the flagship Imprint template. Fully customisable in 3D.",
         "featured":True,"template":"honey-gift-bag","href":f"{HONEYLOOM_SLUG}/","rich":True,
@@ -488,7 +472,7 @@ def main():
         "id":"coffee-cup","name":"Artisan Coffee Cup","category":"food",
         "image":"assets/products/coffee-cup-1.jpg",
         "gallery":["assets/products/coffee-cup-1.jpg","assets/products/coffee-cup-2.jpg","assets/products/coffee-cup-3.jpg","assets/products/coffee-cup-4.jpg","assets/products/coffee-cup-5.jpg"],
-        "artist":"henrik-sorensen","makers":["imprint-atelier","marina-pack","gulf-print"],
+        "artist":"lin-xiang","makers":["imprint-atelier","marina-pack","gulf-print"],
         "price":1.8,"tags":["new","hot","eco"],"rating":4.9,"reviews":21,
         "blurb":"A double-wall paper coffee cup you can brand across the body, sleeve and base in real-time 3D — the lid stays clean. A ready Imprint template with its own cup studio.",
         "featured":True,"template":"coffee-cup","configurator":"configurator-cup.html","href":"coffee-cup/","size":"M",

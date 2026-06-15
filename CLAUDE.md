@@ -62,11 +62,12 @@ mangling files/folders.
 The marketplace pages are **data-driven** from `window.IMPRINT_CATALOG` (in `catalog.js`), which is
 **generated** by `tools/build_catalog.py` — the single source of truth. The Python script:
 1. copies the curated zip assets into `assets/{products,collections,artists,bags,stores}/` (+ the cup render),
-2. defines products (56) / artists (16) / manufacturers (6) / collections (32) / brand-partner stores
+2. defines products (56) / artists (7) / manufacturers (6) / collections (32) / brand-partner stores
    (8, `catalog.stores` — fictional "official stores" like NOSH/Miles/Tuscany shown in the landing's
    brand-store row) / categories, with a **balanced, style-aware** artist→product/collection assignment.
-   New artists (`NEW_ARTIST_IDS`, real photos `artist-10..16`) get a follower boost + forced product
-   assignments (`PRODUCT_ARTIST`) so they surface in "featured artists" with real work behind the card,
+   The 7 artists are real photos (`artist-10..16`, names/countries read from the portraits); every
+   product/collection is reassigned across them (collections mapped to a removed artist round-robin via
+   `h(stem)`), and `PRODUCT_ARTIST` pins the 6 new products to specific artists,
 3. writes `catalog.js`, and
 4. stamps out **clean-URL product folders** (`<slug>/index.html`) — thin stubs that load `product.js`.
 ```bash
