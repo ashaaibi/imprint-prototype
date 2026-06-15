@@ -61,9 +61,12 @@ mangling files/folders.
 ## Marketplace (catalog-driven)  ⚠️ regenerate after data/asset changes
 The marketplace pages are **data-driven** from `window.IMPRINT_CATALOG` (in `catalog.js`), which is
 **generated** by `tools/build_catalog.py` — the single source of truth. The Python script:
-1. copies the curated zip assets into `assets/{products,collections,artists,bags}/` (+ the cup render),
-2. defines products / artists (13) / manufacturers (6) / collections (25) / categories, with a
-   **balanced, style-aware** artist→product/collection assignment,
+1. copies the curated zip assets into `assets/{products,collections,artists,bags,stores}/` (+ the cup render),
+2. defines products (56) / artists (16) / manufacturers (6) / collections (32) / brand-partner stores
+   (8, `catalog.stores` — fictional "official stores" like NOSH/Miles/Tuscany shown in the landing's
+   brand-store row) / categories, with a **balanced, style-aware** artist→product/collection assignment.
+   New artists (`NEW_ARTIST_IDS`, real photos `artist-10..16`) get a follower boost + forced product
+   assignments (`PRODUCT_ARTIST`) so they surface in "featured artists" with real work behind the card,
 3. writes `catalog.js`, and
 4. stamps out **clean-URL product folders** (`<slug>/index.html`) — thin stubs that load `product.js`.
 ```bash

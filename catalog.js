@@ -216,7 +216,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "yasmin-al-najjar",
+   "artist": "ngozi-eze",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -253,7 +253,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Gold Mandala Paper Gift Bag — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Gold Mandala Paper Gift Bag — a designer template by Ngozi Eze. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "gold-mandala-paper-gift-bag/"
   },
   {
@@ -267,7 +267,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "hana-lee",
+   "artist": "oliver-hart",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -303,7 +303,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Navy Gold Floral Rigid Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Navy Gold Floral Rigid Box — a designer template by Oliver Hart. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "navy-gold-floral-rigid-box/"
   },
   {
@@ -317,7 +317,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "yasmin-al-najjar",
+   "artist": "hana-lee",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -354,7 +354,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Ivory Gold Ornate Book Box — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Ivory Gold Ornate Book Box — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "ivory-gold-ornate-book-box/"
   },
   {
@@ -416,7 +416,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "aminata-diallo",
+   "artist": "lin-xiang",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -454,7 +454,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Kraft Mailer Box Gold Emblem — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Kraft Mailer Box Gold Emblem — a designer template by Lin Xiang. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "kraft-mailer-box-gold-emblem/"
   },
   {
@@ -618,7 +618,7 @@ window.IMPRINT_CATALOG = {
     "sw": 240,
     "h": 320
    },
-   "artist": "hana-lee",
+   "artist": "yasmin-al-najjar",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -654,7 +654,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Ivory Jewelry Box Velvet — a designer template by Hana Lee. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Ivory Jewelry Box Velvet — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "ivory-jewelry-box-velvet/"
   },
   {
@@ -918,7 +918,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "aminata-diallo",
+   "artist": "mai-nguyen",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -954,7 +954,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": true,
-   "blurb": "Black Patterned Mailer Box — a designer template by Aminata Diallo. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Black Patterned Mailer Box — a designer template by Mai Nguyen. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "black-patterned-mailer-box/"
   },
   {
@@ -1161,7 +1161,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "priya-nair",
+   "artist": "emma-larsson",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1197,7 +1197,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Blush Pink Bouquet Wrap — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Blush Pink Bouquet Wrap — a designer template by Emma Larsson. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "blush-pink-bouquet-wrap/"
   },
   {
@@ -1461,7 +1461,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "amina-yusuf",
+   "artist": "brooke-sanders",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1498,7 +1498,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "La Petite Boutique Pink Bags — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "La Petite Boutique Pink Bags — a designer template by Brooke Sanders. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "la-petite-boutique-pink-bags/"
   },
   {
@@ -1658,7 +1658,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "amina-yusuf",
+   "artist": "rory-quinn",
    "makers": [
     "imprint-atelier",
     "marina-pack",
@@ -1695,7 +1695,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Curated Beauty Co. Mailer Box — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Curated Beauty Co. Mailer Box — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "curated-beauty-co-mailer-box/"
   },
   {
@@ -1709,7 +1709,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 682
    },
-   "artist": "mateo-herrera",
+   "artist": "amina-yusuf",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -1743,7 +1743,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Haute Abaya Black Shopping Bag — a designer template by Mateo Herrera. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Haute Abaya Black Shopping Bag — a designer template by Amina Yusuf. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "haute-abaya-black-shopping-bag/"
   },
   {
@@ -1853,7 +1853,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 683
    },
-   "artist": "kenji-sato",
+   "artist": "priya-nair",
    "makers": [
     "imprint-atelier",
     "levant-press",
@@ -1890,7 +1890,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Cafe Noir Coffee Cups — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Cafe Noir Coffee Cups — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "cafe-noir-coffee-cups/"
   },
   {
@@ -2051,7 +2051,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "henrik-sorensen",
+   "artist": "kenji-sato",
    "makers": [
     "imprint-atelier",
     "najm-packaging",
@@ -2087,7 +2087,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Personalized Magnetic Box — a designer template by Henrik Sørensen. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Personalized Magnetic Box — a designer template by Kenji Sato. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "personalized-magnetic-box/"
   },
   {
@@ -2247,7 +2247,7 @@ window.IMPRINT_CATALOG = {
     "sw": 480,
     "h": 568
    },
-   "artist": "priya-nair",
+   "artist": "emma-larsson",
    "makers": [
     "imprint-atelier",
     "gulf-print",
@@ -2283,7 +2283,7 @@ window.IMPRINT_CATALOG = {
     }
    ],
    "featured": false,
-   "blurb": "Luxury Flower Bouquet Box — a designer template by Priya Nair. Locked layout; swap text, colours and social handles to make it yours.",
+   "blurb": "Luxury Flower Bouquet Box — a designer template by Emma Larsson. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "luxury-flower-bouquet-box/"
   },
   {
@@ -2583,6 +2583,305 @@ window.IMPRINT_CATALOG = {
    "featured": false,
    "blurb": "Luxury Candle Gift Box — a designer template by Yasmin Al-Najjar. Locked layout; swap text, colours and social handles to make it yours.",
    "href": "luxury-candle-gift-box/"
+  },
+  {
+   "id": "coral-pattern-takeout-bag",
+   "name": "Coral Pattern Takeout Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/coral-pattern-takeout-bag-l.webp",
+    "s": "assets/products/coral-pattern-takeout-bag-s.webp",
+    "lw": 1000,
+    "sw": 480,
+    "h": 1250
+   },
+   "artist": "rory-quinn",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 8.9,
+   "tags": [
+    "trending"
+   ],
+   "rating": 4.7,
+   "reviews": 137,
+   "gallery": [
+    {
+     "l": "assets/products/coral-pattern-takeout-bag-l.webp",
+     "s": "assets/products/coral-pattern-takeout-bag-s.webp",
+     "lw": 1000,
+     "sw": 480,
+     "h": 1250
+    },
+    {
+     "l": "assets/bags/bag-12-l.webp",
+     "s": "assets/bags/bag-12-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-5-l.webp",
+     "s": "assets/bags/bag-5-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Coral Pattern Takeout Bag — a designer template by Rory Quinn. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "coral-pattern-takeout-bag/"
+  },
+  {
+   "id": "kraft-luxe-shopping-bag",
+   "name": "Kraft Luxe Shopping Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/kraft-luxe-shopping-bag-l.webp",
+    "s": "assets/products/kraft-luxe-shopping-bag-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1491
+   },
+   "artist": "oliver-hart",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 14.0,
+   "tags": [
+    "eco"
+   ],
+   "rating": 4.4,
+   "reviews": 81,
+   "gallery": [
+    {
+     "l": "assets/products/kraft-luxe-shopping-bag-l.webp",
+     "s": "assets/products/kraft-luxe-shopping-bag-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1491
+    },
+    {
+     "l": "assets/bags/bag-9-l.webp",
+     "s": "assets/bags/bag-9-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-9-l.webp",
+     "s": "assets/bags/bag-9-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Kraft Luxe Shopping Bag — a designer template by Oliver Hart. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "kraft-luxe-shopping-bag/"
+  },
+  {
+   "id": "kraft-takeaway-food-bag",
+   "name": "Kraft Takeaway Food Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/kraft-takeaway-food-bag-l.webp",
+    "s": "assets/products/kraft-takeaway-food-bag-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1580
+   },
+   "artist": "lin-xiang",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 8.7,
+   "tags": [
+    "eco",
+    "hot"
+   ],
+   "rating": 4.7,
+   "reviews": 133,
+   "gallery": [
+    {
+     "l": "assets/products/kraft-takeaway-food-bag-l.webp",
+     "s": "assets/products/kraft-takeaway-food-bag-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1580
+    },
+    {
+     "l": "assets/bags/bag-13-l.webp",
+     "s": "assets/bags/bag-13-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-11-l.webp",
+     "s": "assets/bags/bag-11-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Kraft Takeaway Food Bag — a designer template by Lin Xiang. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "kraft-takeaway-food-bag/"
+  },
+  {
+   "id": "sage-shopper-tote-bag",
+   "name": "Sage Shopper Tote Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/sage-shopper-tote-bag-l.webp",
+    "s": "assets/products/sage-shopper-tote-bag-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1500
+   },
+   "artist": "mai-nguyen",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 11.3,
+   "tags": [],
+   "rating": 4.5,
+   "reviews": 156,
+   "gallery": [
+    {
+     "l": "assets/products/sage-shopper-tote-bag-l.webp",
+     "s": "assets/products/sage-shopper-tote-bag-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1500
+    },
+    {
+     "l": "assets/bags/bag-12-l.webp",
+     "s": "assets/bags/bag-12-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-12-l.webp",
+     "s": "assets/bags/bag-12-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Sage Shopper Tote Bag — a designer template by Mai Nguyen. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "sage-shopper-tote-bag/"
+  },
+  {
+   "id": "statement-type-shopping-bag",
+   "name": "Statement Type Shopping Bag",
+   "category": "bags",
+   "image": {
+    "l": "assets/products/statement-type-shopping-bag-l.webp",
+    "s": "assets/products/statement-type-shopping-bag-s.webp",
+    "lw": 736,
+    "sw": 480,
+    "h": 920
+   },
+   "artist": "brooke-sanders",
+   "makers": [
+    "imprint-atelier",
+    "gulf-print",
+    "levant-press"
+   ],
+   "price": 12.6,
+   "tags": [
+    "new"
+   ],
+   "rating": 4.7,
+   "reviews": 48,
+   "gallery": [
+    {
+     "l": "assets/products/statement-type-shopping-bag-l.webp",
+     "s": "assets/products/statement-type-shopping-bag-s.webp",
+     "lw": 736,
+     "sw": 480,
+     "h": 920
+    },
+    {
+     "l": "assets/bags/bag-13-l.webp",
+     "s": "assets/bags/bag-13-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-12-l.webp",
+     "s": "assets/bags/bag-12-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Statement Type Shopping Bag — a designer template by Brooke Sanders. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "statement-type-shopping-bag/"
+  },
+  {
+   "id": "taupe-handle-gift-box",
+   "name": "Taupe Handle Gift Box",
+   "category": "boxes",
+   "image": {
+    "l": "assets/products/taupe-handle-gift-box-l.webp",
+    "s": "assets/products/taupe-handle-gift-box-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1500
+   },
+   "artist": "emma-larsson",
+   "makers": [
+    "imprint-atelier",
+    "najm-packaging",
+    "levant-press"
+   ],
+   "price": 36.6,
+   "tags": [
+    "trending"
+   ],
+   "rating": 4.5,
+   "reviews": 51,
+   "gallery": [
+    {
+     "l": "assets/products/taupe-handle-gift-box-l.webp",
+     "s": "assets/products/taupe-handle-gift-box-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 1500
+    },
+    {
+     "l": "assets/bags/bag-11-l.webp",
+     "s": "assets/bags/bag-11-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    },
+    {
+     "l": "assets/bags/bag-9-l.webp",
+     "s": "assets/bags/bag-9-s.webp",
+     "lw": 1200,
+     "sw": 480,
+     "h": 723
+    }
+   ],
+   "featured": false,
+   "blurb": "Taupe Handle Gift Box — a designer template by Emma Larsson. Locked layout; swap text, colours and social handles to make it yours.",
+   "href": "taupe-handle-gift-box/"
   }
  ],
  "artists": [
@@ -2613,8 +2912,6 @@ window.IMPRINT_CATALOG = {
    "since": 2019,
    "followers": 6245,
    "products": [
-    "kraft-mailer-box-gold-emblem",
-    "black-patterned-mailer-box",
     "sugar-and-spice-bakery-box",
     "bloom-and-petal-bouquet",
     "custom-printed-cardboard-mailer-box"
@@ -2656,7 +2953,7 @@ window.IMPRINT_CATALOG = {
     "white-cake-box",
     "white-window-gift-box-ribbon",
     "ivory-cube-favor-boxes",
-    "cafe-noir-coffee-cups",
+    "personalized-magnetic-box",
     "bakery-box"
    ],
    "collections": [
@@ -2696,9 +2993,8 @@ window.IMPRINT_CATALOG = {
    "products": [
     "blush-pink-round-gift-box",
     "black-perfume-box",
-    "blush-pink-bouquet-wrap",
+    "cafe-noir-coffee-cups",
     "elara-cosmetics-perfume-set",
-    "luxury-flower-bouquet-box",
     "personalized-stationery-set-2"
    ],
    "collections": [
@@ -2736,7 +3032,6 @@ window.IMPRINT_CATALOG = {
    "products": [
     "black-garment-bag",
     "terracotta-cylinder-tube",
-    "haute-abaya-black-shopping-bag",
     "cosmetic-tube"
    ],
    "collections": [
@@ -2774,8 +3069,7 @@ window.IMPRINT_CATALOG = {
    "followers": 9706,
    "products": [
     "honeyloom-gift-bag",
-    "gold-mandala-paper-gift-bag",
-    "ivory-gold-ornate-book-box",
+    "ivory-jewelry-box-velvet",
     "navy-velvet-ring-box",
     "navy-tall-bottle-box",
     "artisan-coffee-green-tin",
@@ -2819,7 +3113,6 @@ window.IMPRINT_CATALOG = {
     "cream-ribbon-magnetic-gift-box",
     "gray-garment-bag",
     "personalized-stationery-set",
-    "personalized-magnetic-box",
     "custom-designed-folding-carton"
    ],
    "collections": [
@@ -2856,8 +3149,7 @@ window.IMPRINT_CATALOG = {
    "followers": 9106,
    "products": [
     "ab-monogram-navy-chocolate-box",
-    "la-petite-boutique-pink-bags",
-    "curated-beauty-co-mailer-box",
+    "haute-abaya-black-shopping-bag",
     "luxury-paper-gift-bag",
     "custom-branded-garment-bag"
    ],
@@ -2894,8 +3186,7 @@ window.IMPRINT_CATALOG = {
    "since": 2021,
    "followers": 9992,
    "products": [
-    "navy-gold-floral-rigid-box",
-    "ivory-jewelry-box-velvet",
+    "ivory-gold-ornate-book-box",
     "dark-chocolate-truffle-box",
     "black-perfume-drawer-box",
     "chocolate-atelier-truffle-box",
@@ -2946,6 +3237,244 @@ window.IMPRINT_CATALOG = {
     "black-burgundy-gold-luxury"
    ],
    "rating": 4.9
+  },
+  {
+   "id": "rory-quinn",
+   "name": "Rory Quinn",
+   "studio": "Doodle Press",
+   "country": "IE",
+   "flag": "🇮🇪",
+   "style": "Pop Doodle",
+   "styleTags": [
+    "playful",
+    "doodle",
+    "colorful",
+    "bold",
+    "multicolor",
+    "abstract"
+   ],
+   "bio": "Rory floods every panel with hand-drawn doodles and pop colour — joyful, busy, unmistakably his.",
+   "avatar": {
+    "l": "assets/artists/rory-quinn-l.webp",
+    "s": "assets/artists/rory-quinn-s.webp",
+    "lw": 1000,
+    "sw": 480,
+    "h": 1000
+   },
+   "since": 2019,
+   "followers": 10996,
+   "products": [
+    "curated-beauty-co-mailer-box",
+    "coral-pattern-takeout-bag"
+   ],
+   "collections": [
+    "citrus-squiggle-pop"
+   ],
+   "rating": 4.6
+  },
+  {
+   "id": "oliver-hart",
+   "name": "Oliver Hart",
+   "studio": "Hart & Bloom",
+   "country": "GB",
+   "flag": "🇬🇧",
+   "style": "Botanical Pop",
+   "styleTags": [
+    "floral",
+    "pop",
+    "colorful",
+    "botanical",
+    "vibrant",
+    "wildflower"
+   ],
+   "bio": "Oliver blends botanical illustration with pop-art saturation — flowers turned up to eleven.",
+   "avatar": {
+    "l": "assets/artists/oliver-hart-l.webp",
+    "s": "assets/artists/oliver-hart-s.webp",
+    "lw": 391,
+    "sw": 391,
+    "h": 391
+   },
+   "since": 2023,
+   "followers": 10377,
+   "products": [
+    "navy-gold-floral-rigid-box",
+    "kraft-luxe-shopping-bag"
+   ],
+   "collections": [
+    "blush-floral-tote"
+   ],
+   "rating": 4.7
+  },
+  {
+   "id": "brooke-sanders",
+   "name": "Brooke Sanders",
+   "studio": "Loud Studio",
+   "country": "US",
+   "flag": "🇺🇸",
+   "style": "Pop Maximalist",
+   "styleTags": [
+    "pop",
+    "bold",
+    "colorful",
+    "playful",
+    "abstract",
+    "multicolor"
+   ],
+   "bio": "Brooke is maximalism with a grin — fearless colour blocks and graphic punch made to be seen.",
+   "avatar": {
+    "l": "assets/artists/brooke-sanders-l.webp",
+    "s": "assets/artists/brooke-sanders-s.webp",
+    "lw": 923,
+    "sw": 480,
+    "h": 922
+   },
+   "since": 2021,
+   "followers": 16305,
+   "products": [
+    "la-petite-boutique-pink-bags",
+    "statement-type-shopping-bag"
+   ],
+   "collections": [
+    "bold-yellow-pop"
+   ],
+   "rating": 4.5
+  },
+  {
+   "id": "lin-xiang",
+   "name": "Lin Xiang",
+   "studio": "Spectrum Lab",
+   "country": "CN",
+   "flag": "🇨🇳",
+   "style": "Spectrum Graphic",
+   "styleTags": [
+    "vibrant",
+    "rainbow",
+    "graphic",
+    "bold",
+    "multicolor",
+    "playful"
+   ],
+   "bio": "Lin works the full spectrum — rainbow gradients and crisp graphic shapes with playful energy.",
+   "avatar": {
+    "l": "assets/artists/lin-xiang-l.webp",
+    "s": "assets/artists/lin-xiang-s.webp",
+    "lw": 656,
+    "sw": 480,
+    "h": 655
+   },
+   "since": 2023,
+   "followers": 10545,
+   "products": [
+    "kraft-mailer-box-gold-emblem",
+    "kraft-takeaway-food-bag"
+   ],
+   "collections": [
+    "playful-beauty-set"
+   ],
+   "rating": 4.5
+  },
+  {
+   "id": "mai-nguyen",
+   "name": "Mai Nguyen",
+   "studio": "Atelier Sóng",
+   "country": "VN",
+   "flag": "🇻🇳",
+   "style": "Fluid Pattern",
+   "styleTags": [
+    "pattern",
+    "pink",
+    "playful",
+    "wave",
+    "soft",
+    "blush"
+   ],
+   "bio": "Mai draws in soft waves and ribbons — fluid pastel pattern that moves across the packaging.",
+   "avatar": {
+    "l": "assets/artists/mai-nguyen-l.webp",
+    "s": "assets/artists/mai-nguyen-s.webp",
+    "lw": 639,
+    "sw": 480,
+    "h": 639
+   },
+   "since": 2015,
+   "followers": 16680,
+   "products": [
+    "black-patterned-mailer-box",
+    "sage-shopper-tote-bag"
+   ],
+   "collections": [
+    "pink-boutique-suite"
+   ],
+   "rating": 4.5
+  },
+  {
+   "id": "emma-larsson",
+   "name": "Emma Larsson",
+   "studio": "Bloom Nord",
+   "country": "SE",
+   "flag": "🇸🇪",
+   "style": "Bloom Pastel",
+   "styleTags": [
+    "floral",
+    "soft",
+    "blush",
+    "pastel",
+    "botanical",
+    "wildflower"
+   ],
+   "bio": "Emma is gentle and sun-washed — pastel florals and airy botanicals for beauty and gifting.",
+   "avatar": {
+    "l": "assets/artists/emma-larsson-l.webp",
+    "s": "assets/artists/emma-larsson-s.webp",
+    "lw": 806,
+    "sw": 480,
+    "h": 806
+   },
+   "since": 2017,
+   "followers": 15037,
+   "products": [
+    "blush-pink-bouquet-wrap",
+    "luxury-flower-bouquet-box",
+    "taupe-handle-gift-box"
+   ],
+   "collections": [
+    "plum-candle-suite"
+   ],
+   "rating": 4.7
+  },
+  {
+   "id": "ngozi-eze",
+   "name": "Ngozi Eze",
+   "studio": "Sunlit Studio",
+   "country": "NG",
+   "flag": "🇳🇬",
+   "style": "Sunlit Bloom",
+   "styleTags": [
+    "floral",
+    "orange",
+    "vibrant",
+    "bold",
+    "botanical",
+    "colorful"
+   ],
+   "bio": "Ngozi paints in warm sun — bold orange blooms and vivid botanicals with West-African warmth.",
+   "avatar": {
+    "l": "assets/artists/ngozi-eze-l.webp",
+    "s": "assets/artists/ngozi-eze-s.webp",
+    "lw": 736,
+    "sw": 480,
+    "h": 736
+   },
+   "since": 2021,
+   "followers": 17236,
+   "products": [
+    "gold-mandala-paper-gift-bag"
+   ],
+   "collections": [
+    "bold-red-foodie"
+   ],
+   "rating": 4.6
   }
  ],
  "makers": [
@@ -3031,7 +3560,13 @@ window.IMPRINT_CATALOG = {
     "personalized-stationery-set-2",
     "premium-rigid-chocolate-box",
     "custom-branded-garment-bag",
-    "luxury-candle-gift-box"
+    "luxury-candle-gift-box",
+    "coral-pattern-takeout-bag",
+    "kraft-luxe-shopping-bag",
+    "kraft-takeaway-food-bag",
+    "sage-shopper-tote-bag",
+    "statement-type-shopping-bag",
+    "taupe-handle-gift-box"
    ]
   },
   {
@@ -3093,7 +3628,12 @@ window.IMPRINT_CATALOG = {
     "luxury-flower-bouquet-box",
     "personalized-stationery-set-2",
     "premium-rigid-chocolate-box",
-    "custom-branded-garment-bag"
+    "custom-branded-garment-bag",
+    "coral-pattern-takeout-bag",
+    "kraft-luxe-shopping-bag",
+    "kraft-takeaway-food-bag",
+    "sage-shopper-tote-bag",
+    "statement-type-shopping-bag"
    ]
   },
   {
@@ -3144,7 +3684,8 @@ window.IMPRINT_CATALOG = {
     "personalized-magnetic-box",
     "jewelry-keepsake-box",
     "custom-designed-folding-carton",
-    "luxury-candle-gift-box"
+    "luxury-candle-gift-box",
+    "taupe-handle-gift-box"
    ]
   },
   {
@@ -3206,7 +3747,13 @@ window.IMPRINT_CATALOG = {
     "luxury-flower-bouquet-box",
     "custom-designed-folding-carton",
     "premium-rigid-chocolate-box",
-    "custom-branded-garment-bag"
+    "custom-branded-garment-bag",
+    "coral-pattern-takeout-bag",
+    "kraft-luxe-shopping-bag",
+    "kraft-takeaway-food-bag",
+    "sage-shopper-tote-bag",
+    "statement-type-shopping-bag",
+    "taupe-handle-gift-box"
    ]
   },
   {
@@ -3683,6 +4230,217 @@ window.IMPRINT_CATALOG = {
    "accent": "#b9996a",
    "items": 12,
    "tags": []
+  },
+  {
+   "id": "bold-yellow-pop",
+   "name": "Bold Yellow Pop",
+   "image": {
+    "l": "assets/collections/bold-yellow-pop-l.webp",
+    "s": "assets/collections/bold-yellow-pop-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1350
+   },
+   "artist": "brooke-sanders",
+   "accent": "#c79a63",
+   "items": 12,
+   "tags": []
+  },
+  {
+   "id": "playful-beauty-set",
+   "name": "Playful Beauty Set",
+   "image": {
+    "l": "assets/collections/playful-beauty-set-l.webp",
+    "s": "assets/collections/playful-beauty-set-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1440
+   },
+   "artist": "lin-xiang",
+   "accent": "#c79a63",
+   "items": 11,
+   "tags": []
+  },
+  {
+   "id": "pink-boutique-suite",
+   "name": "Pink Boutique Suite",
+   "image": {
+    "l": "assets/collections/pink-boutique-suite-l.webp",
+    "s": "assets/collections/pink-boutique-suite-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1440
+   },
+   "artist": "mai-nguyen",
+   "accent": "#c79a63",
+   "items": 8,
+   "tags": []
+  },
+  {
+   "id": "plum-candle-suite",
+   "name": "Plum Candle Suite",
+   "image": {
+    "l": "assets/collections/plum-candle-suite-l.webp",
+    "s": "assets/collections/plum-candle-suite-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1439
+   },
+   "artist": "emma-larsson",
+   "accent": "#c79a63",
+   "items": 11,
+   "tags": []
+  },
+  {
+   "id": "citrus-squiggle-pop",
+   "name": "Citrus Squiggle Pop",
+   "image": {
+    "l": "assets/collections/citrus-squiggle-pop-l.webp",
+    "s": "assets/collections/citrus-squiggle-pop-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1350
+   },
+   "artist": "rory-quinn",
+   "accent": "#c79a63",
+   "items": 8,
+   "tags": []
+  },
+  {
+   "id": "bold-red-foodie",
+   "name": "Bold Red Foodie",
+   "image": {
+    "l": "assets/collections/bold-red-foodie-l.webp",
+    "s": "assets/collections/bold-red-foodie-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1200
+   },
+   "artist": "ngozi-eze",
+   "accent": "#c79a63",
+   "items": 13,
+   "tags": []
+  },
+  {
+   "id": "blush-floral-tote",
+   "name": "Blush Floral Tote",
+   "image": {
+    "l": "assets/collections/blush-floral-tote-l.webp",
+    "s": "assets/collections/blush-floral-tote-s.webp",
+    "lw": 735,
+    "sw": 480,
+    "h": 713
+   },
+   "artist": "oliver-hart",
+   "accent": "#cf7a92",
+   "items": 13,
+   "tags": []
+  }
+ ],
+ "stores": [
+  {
+   "id": "nosh",
+   "name": "NOSH",
+   "cat": "Food & delivery",
+   "image": {
+    "l": "assets/stores/nosh-l.webp",
+    "s": "assets/stores/nosh-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1200
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "miles",
+   "name": "Miles",
+   "cat": "Coffee & café",
+   "image": {
+    "l": "assets/stores/miles-l.webp",
+    "s": "assets/stores/miles-s.webp",
+    "lw": 1199,
+    "sw": 480,
+    "h": 800
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "tuscany",
+   "name": "Tuscany & Co.",
+   "cat": "Gourmet & deli",
+   "image": {
+    "l": "assets/stores/tuscany-l.webp",
+    "s": "assets/stores/tuscany-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1200
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "harriet",
+   "name": "Harriet",
+   "cat": "Fashion & retail",
+   "image": {
+    "l": "assets/stores/harriet-l.webp",
+    "s": "assets/stores/harriet-s.webp",
+    "lw": 960,
+    "sw": 480,
+    "h": 960
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "boho-house",
+   "name": "Bohō House",
+   "cat": "Lifestyle & home",
+   "image": {
+    "l": "assets/stores/boho-house-l.webp",
+    "s": "assets/stores/boho-house-s.webp",
+    "lw": 1199,
+    "sw": 480,
+    "h": 1495
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "goodies",
+   "name": "Goodies",
+   "cat": "Snacks & treats",
+   "image": {
+    "l": "assets/stores/goodies-l.webp",
+    "s": "assets/stores/goodies-s.webp",
+    "lw": 1080,
+    "sw": 480,
+    "h": 1080
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "patisserie-lune",
+   "name": "Patisserie Lune",
+   "cat": "Bakery & pâtisserie",
+   "image": {
+    "l": "assets/stores/patisserie-lune-l.webp",
+    "s": "assets/stores/patisserie-lune-s.webp",
+    "lw": 1200,
+    "sw": 480,
+    "h": 1498
+   },
+   "href": "collections.html"
+  },
+  {
+   "id": "blossom",
+   "name": "Blossom",
+   "cat": "Florist & gifting",
+   "image": {
+    "l": "assets/stores/blossom-l.webp",
+    "s": "assets/stores/blossom-s.webp",
+    "lw": 736,
+    "sw": 480,
+    "h": 1308
+   },
+   "href": "collections.html"
   }
  ],
  "bags": [

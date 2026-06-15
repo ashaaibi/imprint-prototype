@@ -60,6 +60,8 @@ def prep_images(catalog):
         if isinstance(c.get("image"), str): c["image"] = _webp_set(c["image"])
     for a in catalog["artists"]:
         if isinstance(a.get("avatar"), str) and a["avatar"]: a["avatar"] = _webp_set(a["avatar"])
+    for s in catalog.get("stores", []):
+        if isinstance(s.get("image"), str): s["image"] = _webp_set(s["image"])
     catalog["bags"] = [_webp_set(b) if isinstance(b, str) else b for b in catalog.get("bags", [])]
     print(f"WebP variants generated for {len(_IMGCACHE)-n0} unique source images" + ("" if _HAVE_PIL else " (SKIPPED)"))
 
@@ -154,6 +156,21 @@ ARTISTS = [
     "Hana pairs jewel-toned emerald and teal with warm gold foil — crisp deco geometry for confectionery and fine fragrance."),
  ("kwame-mensah",     "Kwame Mensah",     "Accra Geometric",    "GH","🇬🇭","Geometric Luxe",   ["geometric","charcoal","diamond","burgundy"],
     "Kwame fuses kente-inspired geometry with deep luxe palettes — charcoal, burgundy and gold for jewellery, spirits and couture."),
+ # ── New featured artists (real photos artist-10..16; names/countries read from the portraits) ──
+ ("rory-quinn",       "Rory Quinn",       "Doodle Press",       "IE","🇮🇪","Pop Doodle",       ["playful","doodle","colorful","bold","multicolor","abstract"],
+    "Rory floods every panel with hand-drawn doodles and pop colour — joyful, busy, unmistakably his."),
+ ("oliver-hart",      "Oliver Hart",      "Hart & Bloom",       "GB","🇬🇧","Botanical Pop",    ["floral","pop","colorful","botanical","vibrant","wildflower"],
+    "Oliver blends botanical illustration with pop-art saturation — flowers turned up to eleven."),
+ ("brooke-sanders",   "Brooke Sanders",   "Loud Studio",        "US","🇺🇸","Pop Maximalist",   ["pop","bold","colorful","playful","abstract","multicolor"],
+    "Brooke is maximalism with a grin — fearless colour blocks and graphic punch made to be seen."),
+ ("lin-xiang",        "Lin Xiang",        "Spectrum Lab",       "CN","🇨🇳","Spectrum Graphic", ["vibrant","rainbow","graphic","bold","multicolor","playful"],
+    "Lin works the full spectrum — rainbow gradients and crisp graphic shapes with playful energy."),
+ ("mai-nguyen",       "Mai Nguyen",       "Atelier Sóng",       "VN","🇻🇳","Fluid Pattern",    ["pattern","pink","playful","wave","soft","blush"],
+    "Mai draws in soft waves and ribbons — fluid pastel pattern that moves across the packaging."),
+ ("emma-larsson",     "Emma Larsson",     "Bloom Nord",         "SE","🇸🇪","Bloom Pastel",     ["floral","soft","blush","pastel","botanical","wildflower"],
+    "Emma is gentle and sun-washed — pastel florals and airy botanicals for beauty and gifting."),
+ ("ngozi-eze",        "Ngozi Eze",        "Sunlit Studio",      "NG","🇳🇬","Sunlit Bloom",     ["floral","orange","vibrant","bold","botanical","colorful"],
+    "Ngozi paints in warm sun — bold orange blooms and vivid botanicals with West-African warmth."),
 ]
 
 # Explicit collection -> artist (by filename stem keyword), curated for coherence.
@@ -183,7 +200,38 @@ COLLECTION_ARTIST = {
  "23-sage-blush-floral":"priya-nair",
  "24-navy-copper-moroccan-tin":"yasmin-al-najjar",
  "25-kraft-gray-natural":"aminata-diallo",
+ "26-bold-yellow-pop":"brooke-sanders",
+ "27-playful-beauty-set":"lin-xiang",
+ "28-pink-boutique-suite":"mai-nguyen",
+ "29-plum-candle-suite":"emma-larsson",
+ "30-citrus-squiggle-pop":"rory-quinn",
+ "31-bold-red-foodie":"ngozi-eze",
+ "32-blush-floral-tote":"oliver-hart",
 }
+
+# New artists get their own work so the (circle) artist cards show real templates behind them,
+# and a follower boost so they surface in the landing's "featured artists".
+NEW_ARTIST_IDS = {"rory-quinn","oliver-hart","brooke-sanders","lin-xiang","mai-nguyen","emma-larsson","ngozi-eze"}
+PRODUCT_ARTIST = {
+ "coral-pattern-takeout-bag":"rory-quinn",
+ "kraft-luxe-shopping-bag":"oliver-hart",
+ "statement-type-shopping-bag":"brooke-sanders",
+ "kraft-takeaway-food-bag":"lin-xiang",
+ "sage-shopper-tote-bag":"mai-nguyen",
+ "taupe-handle-gift-box":"emma-larsson",
+}
+
+# Fictional brand-partner "stores" (Stores/<id>.jpg) — shown in the landing's Official brand stores row.
+STORES = [
+ ("nosh",           "NOSH",            "Food & delivery"),
+ ("miles",          "Miles",           "Coffee & café"),
+ ("tuscany",        "Tuscany & Co.",   "Gourmet & deli"),
+ ("harriet",        "Harriet",         "Fashion & retail"),
+ ("boho-house",     "Bohō House",      "Lifestyle & home"),
+ ("goodies",        "Goodies",         "Snacks & treats"),
+ ("patisserie-lune","Patisserie Lune", "Bakery & pâtisserie"),
+ ("blossom",        "Blossom",         "Florist & gifting"),
+]
 
 PALETTE = {  # collection stem -> accent for card gradients
  "abstract":"#e0556b","multicolor":"#e0556b","gold":"#c79a63","luxury":"#b8924f","floral":"#cf7a92",
@@ -334,6 +382,7 @@ def main():
     ensure(os.path.join(ASSETS,'collections'))
     ensure(os.path.join(ASSETS,'artists'))
     ensure(os.path.join(ASSETS,'bags'))
+    ensure(os.path.join(ASSETS,'stores'))
 
     # Artists images
     art_imgs = find_imgs('Artists')
@@ -343,6 +392,15 @@ def main():
             dst = f"assets/artists/{aid}.png"
             shutil.copyfile(art_imgs[i], os.path.join(ROOT,dst))
             art_avatar[aid]=dst
+
+    # Brand-partner stores -> assets/stores/<id>.png  (catalog["stores"], landing brand-store row)
+    store_srcs = {os.path.splitext(os.path.basename(p))[0]: p for p in find_imgs('Stores')}
+    stores = []
+    for (sid, sname, scat) in STORES:
+        if sid in store_srcs:
+            dst = f"assets/stores/{sid}.png"
+            shutil.copyfile(store_srcs[sid], os.path.join(ROOT, dst))
+            stores.append({"id": sid, "name": sname, "cat": scat, "image": dst, "href": "collections.html"})
 
     # Bag placeholders -> assets/bags/bag-N.jpg (used for lifestyle / extra gallery)
     bag_imgs = find_imgs('bags')
@@ -376,7 +434,7 @@ def main():
 
     # Products (grids 1-4). placeholders kept as bag lifestyle only.
     prod_imgs = []
-    for g in ('grid-1-jewel-tone-luxury','grid-2-light-elegant','grid-3-branded','grid-4-labeled'):
+    for g in ('grid-1-jewel-tone-luxury','grid-2-light-elegant','grid-3-branded','grid-4-labeled','grid-5-new'):
         prod_imgs += find_imgs(os.path.join('Products',g))
     products=[]
     used_slugs=set([HONEYLOOM_SLUG])
@@ -408,6 +466,8 @@ def main():
 
     # balanced, style-aware artist assignment, then build artist-aware blurbs
     assign_artists(products)
+    for p in products:                          # force new products onto the new artists (their templates)
+        if p['id'] in PRODUCT_ARTIST: p['artist'] = PRODUCT_ARTIST[p['id']]
     art_name = {a[0]:a[1] for a in ARTISTS}
     for p in products:
         p["blurb"] = (f"{p['name']} — a designer template by {art_name.get(p['artist'],'Imprint')}. "
@@ -453,7 +513,7 @@ def main():
             "id":aid,"name":nm,"studio":studio,"country":cc,"flag":flag,
             "style":styleName,"styleTags":tags,"bio":bio,
             "avatar":art_avatar.get(aid,""),
-            "since":2015+h(aid,9),"followers":800+h(aid,9200),
+            "since":2015+h(aid,9),"followers":800+h(aid,9200)+(9000 if aid in NEW_ARTIST_IDS else 0),
             "products":pids,"collections":cids,
             "rating":round(4.5+h(aid,5)/10.0,1),
         })
@@ -473,6 +533,7 @@ def main():
         "artists":artists,
         "makers":makers,
         "collections":collections,
+        "stores":stores,
         "bags":bag_assets,
     }
 

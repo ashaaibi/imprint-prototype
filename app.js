@@ -115,9 +115,13 @@
 
   IMP.artistCard = function (a) {
     if (!a) return '';
-    /* Backdrop = up to 3 of the artist's own templates (their "work"); circle avatar overlaps it. */
+    /* Backdrop = up to 3 of the artist's own templates (their "work"); circle avatar overlaps it.
+       Falls back to their collections when they have no standalone products yet. */
     var work = (a.products || []).map(function (pid) { return IMP.product(pid); })
-                 .filter(function (p) { return p && p.image; }).slice(0, 3);
+                 .filter(function (p) { return p && p.image; });
+    if (!work.length) work = (a.collections || []).map(function (cid) { return IMP.collection(cid); })
+                 .filter(function (c) { return c && c.image; });
+    work = work.slice(0, 3);
     var behind = work.length
       ? '<div class="acard-work">' + work.map(function (p) { return IMP.img(p.image, '160px', { alt: '' }); }).join('') + '</div>'
       : '<div class="acard-work acard-work-empty" style="background:linear-gradient(150deg,' + esc(a.accent || '#c79a63') + ',#1b1916)"></div>';
