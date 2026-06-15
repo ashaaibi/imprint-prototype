@@ -115,26 +115,31 @@
 
   IMP.artistCard = function (a) {
     if (!a) return '';
-    /* Backdrop = up to 3 of the artist's own templates (their "work"); circle avatar overlaps it.
-       Falls back to their collections when they have no standalone products yet. */
+    /* Profile-first: avatar + name + Shop/Follow on top, then up to 3 of the artist's own
+       templates (their "work") as a strip underneath. Falls back to collections, then a tint. */
     var work = (a.products || []).map(function (pid) { return IMP.product(pid); })
                  .filter(function (p) { return p && p.image; });
     if (!work.length) work = (a.collections || []).map(function (cid) { return IMP.collection(cid); })
                  .filter(function (c) { return c && c.image; });
     work = work.slice(0, 3);
-    var behind = work.length
+    var below = work.length
       ? '<div class="acard-work">' + work.map(function (p) { return IMP.img(p.image, '160px', { alt: '' }); }).join('') + '</div>'
       : '<div class="acard-work acard-work-empty" style="background:linear-gradient(150deg,' + esc(a.accent || '#c79a63') + ',#1b1916)"></div>';
-    var av = a.avatar ? IMP.img(a.avatar, '64px', { alt: a.name }) : '';
+    var av = a.avatar ? IMP.img(a.avatar, '76px', { alt: a.name }) : '';
+    var following = IMP.isFollowing(a.id);
     return '<div class="acard">' +
-      behind +
-      '<div class="acard-avatar">' + av + '</div>' +
-      '<div class="acard-foot">' +
+      '<div class="acard-head">' +
+        '<div class="acard-avatar">' + av + '</div>' +
         '<div class="acard-name">' + esc(a.name) + ' <span>' + (a.flag || '') + '</span></div>' +
         '<div class="acard-style">' + esc(a.style) + '</div>' +
         '<div class="acard-meta">' + (a.products ? a.products.length : 0) + ' designs · ' + fmtK(a.followers) + ' followers</div>' +
-        '<a class="acard-shop" href="artists.html?a=' + esc(a.id) + '">Shop</a>' +
-      '</div></div>';
+        '<div class="acard-actions">' +
+          '<a class="acard-shop" href="artists.html?a=' + esc(a.id) + '">Shop</a>' +
+          '<button class="acard-follow' + (following ? ' following' : '') + '" data-follow="' + esc(a.id) + '" data-name="' + esc(a.name) + '">' + (following ? 'Following' : 'Follow') + '</button>' +
+        '</div>' +
+      '</div>' +
+      below +
+    '</div>';
   };
 
   IMP.collectionCard = function (c) {
@@ -144,6 +149,14 @@
       IMP.img(c.image, '(max-width:640px) 46vw, 220px', { alt: c.name }) + '<div class="col-grad"></div>' +
       '<div class="col-body"><div class="col-name">' + esc(c.name) + '</div>' +
       (a ? '<div class="col-by">by ' + esc(a.name) + '</div>' : '') + '</div></a>';
+  };
+
+  IMP.storeCard = function (s) {
+    if (!s) return '';
+    return '<a class="storecard" href="' + esc(s.href || ('store.html?store=' + s.id)) + '">' +
+      '<div class="sc-art"' + (s.accent ? ' style="background:' + esc(s.accent) + '"' : '') + '>' +
+        IMP.img(s.image, '(max-width:640px) 40vw, 200px', { alt: s.name }) + '<span class="sc-badge">Official</span></div>' +
+      '<div class="sc-name">' + esc(s.name) + '</div><div class="sc-cat">' + esc(s.cat || '') + '</div></a>';
   };
 
   IMP.makerCard = function (m) {

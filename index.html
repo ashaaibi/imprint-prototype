@@ -65,12 +65,6 @@
   <div class="pgrid" id="feat-products"></div>
 </section>
 
-<!-- LICENSED / BRAND-PARTNER STORES -->
-<section class="imp-wrap sec tight">
-  <div class="sec-head"><div><p class="eyebrow">Brand partners</p><h2 class="sec-title">Official brand stores</h2><p class="sec-sub">Shop ready-made packaging suites from the brands designing with IMPRINT.</p></div><a class="sec-link" href="collections.html">All stores →</a></div>
-  <div class="storerow" id="brand-stores"></div>
-</section>
-
 <!-- ARTISTS -->
 <section class="imp-wrap sec">
   <div class="sec-head"><div><p class="eyebrow">The network</p><h2 class="sec-title">Featured artists</h2><p class="sec-sub">Independent designers with a signature style. Shop their templates and collections.</p></div><a class="sec-link" href="artists.html">All artists →</a></div>
@@ -81,6 +75,12 @@
 <section class="imp-wrap sec tight">
   <div class="sec-head"><div><h2 class="sec-title">Trending collections</h2><p class="sec-sub">Curated, on-theme sets you can customise end to end.</p></div><a class="sec-link" href="collections.html">All collections →</a></div>
   <div class="colgrid" id="feat-collections"></div>
+</section>
+
+<!-- OFFICIALLY LICENSED STORES -->
+<section class="imp-wrap sec tight">
+  <div class="sec-head"><div><p class="eyebrow">Licensed</p><h2 class="sec-title">Officially Licensed Stores</h2><p class="sec-sub">Shop ready-made packaging suites from the world’s most-loved brands.</p></div><a class="sec-link" href="store.html">All stores →</a></div>
+  <div class="storegrid" id="brand-stores"></div>
 </section>
 
 <!-- BENEFITS -->
@@ -145,27 +145,9 @@
   var ordered = honey.concat(feats.filter(function(p){return p.id!=='honeyloom-gift-bag';})).concat(rest);
   document.getElementById('feat-products').innerHTML = pick(ordered,12).map(IMP.productCard).join('');
 
-  /* Brand-partner "stores" (fictional partners). Reads C.stores if the catalog provides it,
-     else builds a set from the strongest collections so the row is populated today. */
-  var stores = (C.stores && C.stores.length) ? C.stores : (function(){
-    var brands = [
-      {name:'Maison Miel',  cat:'Gourmet & honey'},
-      {name:'Café Noir',    cat:'Coffee & café'},
-      {name:'Oud Royale',   cat:'Perfume & oud'},
-      {name:'Bloom & Co',   cat:'Florist & gifting'},
-      {name:'Sweet Souq',   cat:'Confectionery'},
-      {name:'Lumière',      cat:'Candles & home'},
-      {name:'Najma Beauty', cat:'Cosmetics'},
-      {name:'Verde',        cat:'Eco & natural'}
-    ];
-    var cols = C.collections.slice().sort(function(a,b){return (b.tags.length)-(a.tags.length);});
-    return brands.map(function(b,i){ var c=cols[i%cols.length]||{}; return { name:b.name, cat:b.cat, image:c.image, href:'collections.html', accent:c.accent }; });
-  })();
-  document.getElementById('brand-stores').innerHTML = stores.map(function(s){
-    return '<a class="storecard" href="'+IMP.esc(s.href||'collections.html')+'">' +
-      '<div class="sc-art">' + IMP.img(s.image, '186px', {alt:s.name}) + '<span class="sc-badge">Official</span></div>' +
-      '<div class="sc-name">'+IMP.esc(s.name)+'</div><div class="sc-cat">'+IMP.esc(s.cat||'')+'</div></a>';
-  }).join('');
+  /* Officially Licensed Stores — real-brand storefronts (concept), each links to its own sub-page. */
+  var stores = C.stores || [];
+  document.getElementById('brand-stores').innerHTML = stores.map(IMP.storeCard).join('');
 
   /* Featured artists — circle avatars + work behind + Shop (see IMP.artistCard). */
   var artists = C.artists.slice().sort(function(a,b){return b.followers-a.followers;});

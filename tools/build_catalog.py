@@ -203,16 +203,18 @@ PRODUCT_ARTIST = {
  "taupe-handle-gift-box":"emma-larsson",
 }
 
-# Fictional brand-partner "stores" (Stores/<id>.jpg) — shown in the landing's Official brand stores row.
+# "Officially Licensed Stores" — real-world brands (CONCEPT placeholders for an investor demo; tiles
+# are wordmark SVGs in assets/stores/<id>.svg via tools/make_store_tiles.py — swap in real licensed art later).
+# (id, display name, tagline, accent)
 STORES = [
- ("nosh",           "NOSH",            "Food & delivery"),
- ("miles",          "Miles",           "Coffee & café"),
- ("tuscany",        "Tuscany & Co.",   "Gourmet & deli"),
- ("harriet",        "Harriet",         "Fashion & retail"),
- ("boho-house",     "Bohō House",      "Lifestyle & home"),
- ("goodies",        "Goodies",         "Snacks & treats"),
- ("patisserie-lune","Patisserie Lune", "Bakery & pâtisserie"),
- ("blossom",        "Blossom",         "Florist & gifting"),
+ ("disney",          "Disney",          "Characters & magic",     "#1c3f94"),
+ ("marvel",          "Marvel",          "Super heroes",           "#ed1d24"),
+ ("star-wars",       "Star Wars",       "A galaxy far, far away", "#111114"),
+ ("dc",              "DC",              "Super heroes",           "#0476f2"),
+ ("dr-seuss",        "Dr. Seuss",       "Whimsical classics",     "#e23b4e"),
+ ("sesame-street",   "Sesame Street",   "Sunny days",             "#27b24a"),
+ ("monster-jam",     "Monster Jam",     "Off-road action",        "#b3122b"),
+ ("wizarding-world", "Wizarding World", "Witches & wizards",      "#6b1f2a"),
 ]
 
 PALETTE = {  # collection stem -> accent for card gradients
@@ -375,14 +377,13 @@ def main():
             shutil.copyfile(art_imgs[i], os.path.join(ROOT,dst))
             art_avatar[aid]=dst
 
-    # Brand-partner stores -> assets/stores/<id>.png  (catalog["stores"], landing brand-store row)
-    store_srcs = {os.path.splitext(os.path.basename(p))[0]: p for p in find_imgs('Stores')}
+    # Officially Licensed Stores -> wordmark tiles assets/stores/<id>.svg (committed; tools/make_store_tiles.py).
+    # image is an OBJECT (not a str) so prep_images leaves the SVG untouched (no WebP variants). Each gets a sub-page.
     stores = []
-    for (sid, sname, scat) in STORES:
-        if sid in store_srcs:
-            dst = f"assets/stores/{sid}.png"
-            shutil.copyfile(store_srcs[sid], os.path.join(ROOT, dst))
-            stores.append({"id": sid, "name": sname, "cat": scat, "image": dst, "href": "collections.html"})
+    for (sid, sname, scat, accent) in STORES:
+        img = f"assets/stores/{sid}.svg"
+        stores.append({"id": sid, "name": sname, "cat": scat, "accent": accent,
+                       "image": {"l": img, "s": img}, "href": f"store.html?store={sid}", "products": []})
 
     # Bag placeholders -> assets/bags/bag-N.jpg (used for lifestyle / extra gallery)
     bag_imgs = find_imgs('bags')
@@ -487,6 +488,11 @@ def main():
     # attach product href (clean folder URL)
     for p in all_products:
         p.setdefault("href", f"{p['id']}/")
+
+    # Each licensed store gets a deterministic, varied "packaging suite" (concept) drawn from the catalog.
+    _allp=[p['id'] for p in all_products]; _n=len(_allp)
+    for i,s in enumerate(stores):
+        s["products"]=[_allp[(i*9+k) % _n] for k in range(12)]
 
     # link artists -> their products/collections
     artists=[]

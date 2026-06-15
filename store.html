@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Officially licensed brand stores on IMPRINT — shop ready-made packaging suites from the world's most-loved brands.">
+  <title>Officially Licensed Stores — IMPRINT®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div id="site-nav"></div>
+<main id="store-root" class="imp-wrap"></main>
+<div id="site-footer"></div>
+
+<script src="shared.js"></script>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+<script>
+(function(){
+  IMP.initAppHeader({ activePage:'stores' });
+  var C = IMP.cat();
+  var root = document.getElementById('store-root');
+  var stores = C.stores || [];
+  var sid = null; try { sid = new URLSearchParams(location.search).get('store'); } catch(e){}
+
+  if (sid) { renderStore(sid); } else { renderDirectory(); }
+
+  function renderDirectory(){
+    document.title = 'Officially Licensed Stores — IMPRINT®';
+    root.innerHTML =
+      '<div class="pagehead"><h1>Officially Licensed Stores</h1><p>Shop ready-made packaging suites from the world’s most-loved brands. Brands shown are a concept demo to illustrate licensed storefronts.</p></div>' +
+      '<div class="sec"><div class="storegrid">' + stores.map(IMP.storeCard).join('') + '</div></div>';
+  }
+
+  function renderStore(id){
+    var s = stores.filter(function(x){return x.id===id;})[0];
+    if (!s){ renderDirectory(); return; }
+    document.title = s.name + ' — Official store — IMPRINT®';
+    var prods = (s.products||[]).map(IMP.product).filter(Boolean);
+    var following = IMP.isFollowing('store:'+s.id);
+    root.innerHTML =
+      '<div class="pdp-bc"><a href="index.html">Home</a><span class="sep">/</span><a href="store.html">Stores</a><span class="sep">/</span>'+IMP.esc(s.name)+'</div>' +
+      '<div class="store-hero" style="--store-accent:'+IMP.esc(s.accent||'#c79a63')+'">' +
+        '<div class="store-hero-tile">'+IMP.img(s.image,'132px',{alt:s.name})+'</div>' +
+        '<div class="store-hero-info">' +
+          '<div class="store-badge">Official store</div>' +
+          '<h1 class="store-name">'+IMP.esc(s.name)+'</h1>' +
+          '<p class="store-tag">'+IMP.esc(s.cat||'')+' · '+prods.length+' ready-made designs</p>' +
+          '<div style="display:flex;gap:10px;margin-top:18px">' +
+            '<button class="follow-btn'+(following?' following':'')+'" data-follow="store:'+s.id+'" data-name="'+IMP.esc(s.name)+'">'+(following?'Following':'Follow store')+'</button>' +
+            '<button class="btn btn-icon" data-share="store.html?store='+s.id+'" data-share-title="'+IMP.esc(s.name)+' on IMPRINT" aria-label="Share" title="Share">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      (prods.length ? '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">'+IMP.esc(s.name)+' packaging suite</h2><p class="sec-sub">Ready-to-customise designs styled for '+IMP.esc(s.name)+'.</p></div><a class="sec-link" href="products.html">All products →</a></div><div class="pgrid">'+prods.map(IMP.productCard).join('')+'</div></div>' : '') +
+      '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">More stores</h2></div><a class="sec-link" href="store.html">All stores →</a></div><div class="storegrid">' +
+        stores.filter(function(x){return x.id!==s.id;}).slice(0,7).map(IMP.storeCard).join('') + '</div></div>';
+  }
+})();
+</script>
+</body>
+</html>

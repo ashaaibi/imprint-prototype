@@ -4053,108 +4053,204 @@ window.IMPRINT_CATALOG = {
  ],
  "stores": [
   {
-   "id": "nosh",
-   "name": "NOSH",
-   "cat": "Food & delivery",
+   "id": "disney",
+   "name": "Disney",
+   "cat": "Characters & magic",
+   "accent": "#1c3f94",
    "image": {
-    "l": "assets/stores/nosh-l.webp",
-    "s": "assets/stores/nosh-s.webp",
-    "lw": 1200,
-    "sw": 480,
-    "h": 1200
+    "l": "assets/stores/disney.svg",
+    "s": "assets/stores/disney.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=disney",
+   "products": [
+    "honeyloom-gift-bag",
+    "coffee-cup",
+    "gold-mandala-paper-gift-bag",
+    "navy-gold-floral-rigid-box",
+    "ivory-gold-ornate-book-box",
+    "burgundy-chocolate-gift-box",
+    "kraft-mailer-box-gold-emblem",
+    "white-cake-box",
+    "kraft-cylinder-tube",
+    "blush-pink-round-gift-box",
+    "ivory-jewelry-box-velvet",
+    "black-garment-bag"
+   ]
   },
   {
-   "id": "miles",
-   "name": "Miles",
-   "cat": "Coffee & café",
+   "id": "marvel",
+   "name": "Marvel",
+   "cat": "Super heroes",
+   "accent": "#ed1d24",
    "image": {
-    "l": "assets/stores/miles-l.webp",
-    "s": "assets/stores/miles-s.webp",
-    "lw": 1199,
-    "sw": 480,
-    "h": 800
+    "l": "assets/stores/marvel.svg",
+    "s": "assets/stores/marvel.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=marvel",
+   "products": [
+    "blush-pink-round-gift-box",
+    "ivory-jewelry-box-velvet",
+    "black-garment-bag",
+    "black-perfume-box",
+    "dark-chocolate-truffle-box",
+    "green-geometric-paper-gift-bag",
+    "cream-ribbon-magnetic-gift-box",
+    "black-patterned-mailer-box",
+    "navy-velvet-ring-box",
+    "white-window-gift-box-ribbon",
+    "terracotta-cylinder-tube",
+    "burgundy-rigid-lid-box"
+   ]
   },
   {
-   "id": "tuscany",
-   "name": "Tuscany & Co.",
-   "cat": "Gourmet & deli",
+   "id": "star-wars",
+   "name": "Star Wars",
+   "cat": "A galaxy far, far away",
+   "accent": "#111114",
    "image": {
-    "l": "assets/stores/tuscany-l.webp",
-    "s": "assets/stores/tuscany-s.webp",
-    "lw": 1200,
-    "sw": 480,
-    "h": 1200
+    "l": "assets/stores/star-wars.svg",
+    "s": "assets/stores/star-wars.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=star-wars",
+   "products": [
+    "white-window-gift-box-ribbon",
+    "terracotta-cylinder-tube",
+    "burgundy-rigid-lid-box",
+    "blush-pink-bouquet-wrap",
+    "gray-garment-bag",
+    "black-perfume-drawer-box",
+    "navy-tall-bottle-box",
+    "ivory-cube-favor-boxes",
+    "ab-monogram-navy-chocolate-box",
+    "la-petite-boutique-pink-bags",
+    "artisan-coffee-green-tin",
+    "sugar-and-spice-bakery-box"
+   ]
   },
   {
-   "id": "harriet",
-   "name": "Harriet",
-   "cat": "Fashion & retail",
+   "id": "dc",
+   "name": "DC",
+   "cat": "Super heroes",
+   "accent": "#0476f2",
    "image": {
-    "l": "assets/stores/harriet-l.webp",
-    "s": "assets/stores/harriet-s.webp",
-    "lw": 960,
-    "sw": 480,
-    "h": 960
+    "l": "assets/stores/dc.svg",
+    "s": "assets/stores/dc.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=dc",
+   "products": [
+    "la-petite-boutique-pink-bags",
+    "artisan-coffee-green-tin",
+    "sugar-and-spice-bakery-box",
+    "fine-jewels-green-ring-box",
+    "curated-beauty-co-mailer-box",
+    "haute-abaya-black-shopping-bag",
+    "bloom-and-petal-bouquet",
+    "chocolate-atelier-truffle-box",
+    "cafe-noir-coffee-cups",
+    "elara-cosmetics-perfume-set",
+    "personalized-stationery-set",
+    "luxury-paper-gift-bag"
+   ]
   },
   {
-   "id": "boho-house",
-   "name": "Bohō House",
-   "cat": "Lifestyle & home",
+   "id": "dr-seuss",
+   "name": "Dr. Seuss",
+   "cat": "Whimsical classics",
+   "accent": "#e23b4e",
    "image": {
-    "l": "assets/stores/boho-house-l.webp",
-    "s": "assets/stores/boho-house-s.webp",
-    "lw": 1199,
-    "sw": 480,
-    "h": 1495
+    "l": "assets/stores/dr-seuss.svg",
+    "s": "assets/stores/dr-seuss.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=dr-seuss",
+   "products": [
+    "elara-cosmetics-perfume-set",
+    "personalized-stationery-set",
+    "luxury-paper-gift-bag",
+    "personalized-magnetic-box",
+    "custom-printed-cardboard-mailer-box",
+    "cosmetic-tube",
+    "bakery-box",
+    "luxury-flower-bouquet-box",
+    "jewelry-keepsake-box",
+    "custom-designed-folding-carton",
+    "personalized-stationery-set-2",
+    "premium-rigid-chocolate-box"
+   ]
   },
   {
-   "id": "goodies",
-   "name": "Goodies",
-   "cat": "Snacks & treats",
+   "id": "sesame-street",
+   "name": "Sesame Street",
+   "cat": "Sunny days",
+   "accent": "#27b24a",
    "image": {
-    "l": "assets/stores/goodies-l.webp",
-    "s": "assets/stores/goodies-s.webp",
-    "lw": 1080,
-    "sw": 480,
-    "h": 1080
+    "l": "assets/stores/sesame-street.svg",
+    "s": "assets/stores/sesame-street.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=sesame-street",
+   "products": [
+    "custom-designed-folding-carton",
+    "personalized-stationery-set-2",
+    "premium-rigid-chocolate-box",
+    "custom-branded-garment-bag",
+    "luxury-candle-gift-box",
+    "coral-pattern-takeout-bag",
+    "kraft-luxe-shopping-bag",
+    "kraft-takeaway-food-bag",
+    "sage-shopper-tote-bag",
+    "statement-type-shopping-bag",
+    "taupe-handle-gift-box",
+    "honeyloom-gift-bag"
+   ]
   },
   {
-   "id": "patisserie-lune",
-   "name": "Patisserie Lune",
-   "cat": "Bakery & pâtisserie",
+   "id": "monster-jam",
+   "name": "Monster Jam",
+   "cat": "Off-road action",
+   "accent": "#b3122b",
    "image": {
-    "l": "assets/stores/patisserie-lune-l.webp",
-    "s": "assets/stores/patisserie-lune-s.webp",
-    "lw": 1200,
-    "sw": 480,
-    "h": 1498
+    "l": "assets/stores/monster-jam.svg",
+    "s": "assets/stores/monster-jam.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=monster-jam",
+   "products": [
+    "statement-type-shopping-bag",
+    "taupe-handle-gift-box",
+    "honeyloom-gift-bag",
+    "coffee-cup",
+    "gold-mandala-paper-gift-bag",
+    "navy-gold-floral-rigid-box",
+    "ivory-gold-ornate-book-box",
+    "burgundy-chocolate-gift-box",
+    "kraft-mailer-box-gold-emblem",
+    "white-cake-box",
+    "kraft-cylinder-tube",
+    "blush-pink-round-gift-box"
+   ]
   },
   {
-   "id": "blossom",
-   "name": "Blossom",
-   "cat": "Florist & gifting",
+   "id": "wizarding-world",
+   "name": "Wizarding World",
+   "cat": "Witches & wizards",
+   "accent": "#6b1f2a",
    "image": {
-    "l": "assets/stores/blossom-l.webp",
-    "s": "assets/stores/blossom-s.webp",
-    "lw": 736,
-    "sw": 480,
-    "h": 1308
+    "l": "assets/stores/wizarding-world.svg",
+    "s": "assets/stores/wizarding-world.svg"
    },
-   "href": "collections.html"
+   "href": "store.html?store=wizarding-world",
+   "products": [
+    "white-cake-box",
+    "kraft-cylinder-tube",
+    "blush-pink-round-gift-box",
+    "ivory-jewelry-box-velvet",
+    "black-garment-bag",
+    "black-perfume-box",
+    "dark-chocolate-truffle-box",
+    "green-geometric-paper-gift-bag",
+    "cream-ribbon-magnetic-gift-box",
+    "black-patterned-mailer-box",
+    "navy-velvet-ring-box",
+    "white-window-gift-box-ribbon"
+   ]
   }
  ],
  "bags": [

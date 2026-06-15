@@ -101,22 +101,27 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 
 /* ── Artist cards / profile ──────────────────────────────── */
 .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 18px; }
-/* Artist card — their work as the backdrop, a CIRCLE avatar overlapping it, then a Shop button. */
+/* Artist card — profile FIRST (avatar + name + Shop/Follow), then their work as a strip beneath. */
 .acard { position: relative; border: 1px solid var(--imp-border); border-radius: var(--imp-r-lg); overflow: hidden; background: var(--imp-surface); display: flex; flex-direction: column; transition: border-color .15s, transform .15s, box-shadow .15s; }
 .acard:hover { border-color: var(--imp-border-hover); transform: translateY(-3px); box-shadow: var(--imp-shadow-md); }
-.acard-work { position: relative; aspect-ratio: 16/11; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 2px; background: var(--imp-surface-2); }
+.acard-head { padding: 22px 16px 18px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.acard-avatar { width: 76px; height: 76px; border-radius: 50%; overflow: hidden; border: 3px solid var(--imp-surface); box-shadow: var(--imp-shadow-sm); background: var(--imp-surface-2); margin-bottom: 11px; }
+.acard-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.acard-name { font-size: 15px; font-weight: 700; color: var(--imp-fg); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.acard-style { font-size: 12px; color: var(--imp-gold); font-weight: 600; margin-top: 2px; }
+.acard-meta { font-size: 11px; color: var(--imp-fg-3); margin-top: 6px; }
+.acard-actions { display: flex; gap: 8px; margin-top: 14px; width: 100%; }
+.acard-shop, .acard-follow { flex: 1; font-size: 12.5px; font-weight: 600; border-radius: var(--imp-r-pill); padding: 8px 0; text-align: center; text-decoration: none; cursor: pointer; transition: background .15s, border-color .15s, color .15s, opacity .15s; }
+.acard-shop { color: var(--imp-surface); background: var(--imp-fg); border: 1px solid var(--imp-fg); }
+.acard-shop:hover { opacity: .9; }
+.acard-follow { font-family: inherit; color: var(--imp-fg); background: var(--imp-surface-2); border: 1px solid var(--imp-border); }
+.acard-follow:hover { border-color: var(--imp-border-hover); }
+.acard-follow.following { background: var(--imp-surface); color: var(--imp-gold); border-color: var(--imp-gold); }
+.acard-work { aspect-ratio: 16/9; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 2px; background: var(--imp-surface-2); border-top: 1px solid var(--imp-border); margin-top: auto; }
 .acard-work img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .acard-work img:first-child:nth-last-child(3) { grid-row: span 2; }   /* 3 works: tall left + 2 stacked */
 .acard-work img:only-child { grid-column: span 2; grid-row: span 2; }
 .acard-work-empty { display: block; }
-.acard-avatar { position: absolute; left: 50%; bottom: -28px; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 3px solid var(--imp-surface); box-shadow: var(--imp-shadow-sm); background: var(--imp-surface-2); z-index: 2; }
-.acard-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.acard-foot { padding: 36px 14px 15px; text-align: center; }
-.acard-name { font-size: 15px; font-weight: 700; color: var(--imp-fg); display: flex; align-items: center; justify-content: center; gap: 6px; }
-.acard-style { font-size: 12px; color: var(--imp-gold); font-weight: 600; margin-top: 2px; }
-.acard-meta { font-size: 11px; color: var(--imp-fg-3); margin-top: 6px; }
-.acard-shop { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 600; color: var(--imp-fg); background: var(--imp-surface-2); border: 1px solid var(--imp-border); border-radius: var(--imp-r-pill); padding: 7px 24px; text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
-.acard-shop:hover { background: var(--imp-fg); color: var(--imp-surface); border-color: var(--imp-fg); }
 
 .follow-btn { font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: var(--imp-r-pill); border: 1px solid var(--imp-fg); background: var(--imp-fg); color: var(--imp-bg); cursor: pointer; transition: all .15s; }
 .follow-btn:hover { opacity: .9; }
@@ -269,6 +274,15 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 .storecard .sc-badge { position: absolute; left: 10px; top: 10px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.42); backdrop-filter: blur(4px); padding: 4px 9px; border-radius: var(--imp-r-pill); }
 .storecard .sc-name { font-size: 14px; font-weight: 600; color: var(--imp-fg); text-align: center; margin-top: 10px; }
 .storecard .sc-cat { font-size: 11.5px; color: var(--imp-fg-3); text-align: center; margin-top: 1px; }
+/* Officially Licensed Stores — GRID (no horizontal scroll) + per-store page hero */
+.storegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px,1fr)); gap: 18px; }
+.store-hero { display: flex; gap: 22px; align-items: center; padding: 28px 0 12px; flex-wrap: wrap; }
+.store-hero-tile { width: 132px; height: 132px; border-radius: var(--imp-r-lg); overflow: hidden; box-shadow: var(--imp-shadow-md); background: var(--store-accent,#c79a63); flex: 0 0 auto; }
+.store-hero-tile img { width: 100%; height: 100%; object-fit: cover; }
+.store-hero-info { flex: 1; min-width: 260px; }
+.store-badge { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #fff; background: var(--store-accent,#c79a63); padding: 4px 11px; border-radius: var(--imp-r-pill); }
+.store-name { font-size: clamp(26px,4vw,40px); font-weight: 700; letter-spacing: -0.02em; margin: 11px 0 4px; }
+.store-tag { color: var(--imp-fg-2); font-size: 14.5px; margin: 0; }
 
 /* ═══════════════════════════════════════════════════════════
    MOTION — scroll reveals · page transitions · hero typewriter ·
