@@ -26,6 +26,16 @@ browser, then Remotion composites the polish on top:
    ```
    Drop `out/hero.mp4` into the site as `assets/promo/hero.mp4` (preferred over the raw webm).
 
+### Already live: a default montage hero
+`assets/promo/hero.mp4` is **already committed** — a 1:1, ~1 MB, loop-safe montage of the real
+product renders with the rotating "Customise …" caption + wordmark, so the landing hero animates
+out of the box. It was produced **without a browser** by `promo/render_hero_node.py` (Pillow frames →
+ffmpeg), which is the CI/sandbox-friendly fallback for the `HeroLoop` concept. Re-run it any time:
+```bash
+pip install pillow imageio imageio-ffmpeg && python3 promo/render_hero_node.py
+```
+Swap in the **live-3D-spin** version whenever you capture one with the configurator's **● Record clip**.
+
 > **Why a separate project?** Remotion renders *video files*, which are heavy to autoplay on a
 > fast marketplace. So the live site uses lightweight CSS/JS animations, and this folder produces
 > a polished promo clip you can drop into a pitch deck, the hero, or social — rendered on demand.
