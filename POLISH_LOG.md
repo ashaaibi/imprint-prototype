@@ -3,6 +3,15 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-15 (batch 18) — Updated cup GLB + cup interior layer drop position
+- **Updated paper-cup model:** replaced `paper_cup/paper_cup.glb` with the new export and regenerated
+  `paper_cup/paper_cup_imprint.glb` (the file the studio loads) via the new, committed, reproducible
+  **`tools/rename_cup_materials.py`** (renames M_cup/M_base/M_sleeve/M_lid → M_ext_cup/M_handle_base/
+  M_int_sleeve/M_rivet_lid; geometry/BIN untouched). Re-run it whenever the raw GLB is replaced.
+- **Cup interior (sleeve) default layer position → top-half centre:** new layers (all types) now drop
+  horizontally centred and 25% down the sleeve (`_slv.h*0.25`, was 0.18) — "between the top edge and
+  the centre". Per-size (computed from the sleeve UV box), so it's correct for every cup size.
+
 ## 2026-06-14 (batch 17) — Landing hero video loop + in-browser 3D recorder
 - **Configurator "● Record clip"** (both studios, Designer bar → `IMPRINT_recordClip`): MediaRecorder
   captures the live WebGL canvas to a muted **WebM** while the product spins a seamless 360° and

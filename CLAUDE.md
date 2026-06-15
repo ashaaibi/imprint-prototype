@@ -89,7 +89,9 @@ python3 tools/build_catalog.py    # re-run after editing the data or assets
 artwork layers, finishes, fonts, graphics, backgrounds, 2D editor, testing, templates) with **only the
 model swapped**. The enabler: the bag loader is **material-name-convention-driven** — it groups GLB prims by
 `M_ext*` / `M_int*` prefixes and auto-derives the atlas UV regions + 2D faces from the geometry. So the cup
-just needs bag-convention names: `tools/` rewrote `paper_cup/paper_cup.glb` → **`paper_cup/paper_cup_imprint.glb`**
+just needs bag-convention names: **`tools/rename_cup_materials.py`** rewrites `paper_cup/paper_cup.glb` →
+**`paper_cup/paper_cup_imprint.glb`** (re-run it after replacing the raw GLB; geometry/BIN untouched, only
+material names change)
 mapping **one part per region** so each is an independent step/colour: `M_cup→M_ext_cup` (exterior),
 `M_sleeve→M_int_sleeve` (interior), `M_base→M_handle_base` (handle/ribbon), `M_lid→M_rivet_lid` (rivet) — and
 both the rivet=ribbon **colour** tie (`applyRibbonColor`) **and** the rivet=ribbon **finish** tie (`applyBagFinish`)
@@ -102,8 +104,9 @@ are removed in the cup file so the lid is fully independent. The cup runs a
 - **Per-step camera** = `applyStepCamera(n)` reads a **`STEP_CAM`** table (theta=turntable/Y, phi=tilt/X, radians).
   Testing → *"Step camera angles"* has **X/Y sliders per step** (Cup/Sleeve/Base/Lid) via `onStepCamAngle` (degrees;
   previews live on the current step). Defaults: Cup/Sleeve front, Base look-up, Lid top.
-New layers drop on the sleeve UV
-centre-top. `BAG_MODELS` = proportional cup sizes (8/12/16 oz, one GLB); title/breadcrumb/size-picker relabelled.
+New layers drop on the sleeve UV **top-half centre**
+(horizontally centred, 25% down — `_slv.h*0.25` in addLayer's `_fp`). `BAG_MODELS` = proportional cup
+sizes (8/12/16 oz, one GLB); title/breadcrumb/size-picker relabelled.
 **Still WebGL-verify in a real browser** (headless can't do WebGL): confirm ext/int/base/lid **finishes** paint and
 the per-step cameras land right. Isolated file → can't affect the bag configurator or marketplace.
 
