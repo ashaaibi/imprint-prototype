@@ -29,6 +29,46 @@
   var stores = C.stores || [];
   var sid = null; try { sid = new URLSearchParams(location.search).get('store'); } catch(e){}
 
+  /* Store-specific concept content. DC is built out with franchises + products + fake prices.
+     Images are CLEAN PLACEHOLDER TILES (assets/stores/dc/*.svg) — real licensed art gets dropped in later. */
+  var STORE_EXTRAS = {
+    dc: {
+      note: 'Browse by franchise. Tiles are concept placeholders — licensed DC artwork is dropped in for launch.',
+      franchises: [
+        ['Batman','batman'],['Superman','superman'],['Wonder Woman','wonder-woman'],['The Flash','the-flash'],
+        ['Green Lantern','green-lantern'],['Justice League','justice-league'],['Joker & Harley','joker-harley'],['Batwheels','batwheels']
+      ],
+      products: [
+        ['Batman Symbol Logo Mug','Batman','batman','OMR 3.900'],
+        ['Superman Shield T-Shirt','Superman','superman','OMR 7.500'],
+        ['Wonder Woman Postcard Set','Wonder Woman','wonder-woman','OMR 2.200'],
+        ['The Flash Birthday Invitations','The Flash','the-flash','OMR 1.800'],
+        ['Justice League 3-Ring Binder','Justice League','justice-league','OMR 5.400'],
+        ['Batman Symbol Pillow Case','Batman','batman','OMR 6.900'],
+        ['Bat-Signal Wrapping Paper','Batman','batman','OMR 2.900'],
+        ['Green Lantern Sticker Pack','Green Lantern','green-lantern','OMR 1.500'],
+        ['Joker & Harley Playing Cards','Joker & Harley','joker-harley','OMR 3.200'],
+        ['Batwheels Birthday Banner','Batwheels','batwheels','OMR 2.400'],
+        ['Batman & Robin Lunch Box','Batman','batman','OMR 8.900'],
+        ['Justice League Paper Plates','Justice League','justice-league','OMR 1.900']
+      ]
+    }
+  };
+  function dcTile(id){ return 'assets/stores/dc/' + id + '.svg'; }
+  function renderExtras(ex, s){
+    return '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">Shop by franchise</h2><p class="sec-sub">' + IMP.esc(ex.note || '') + '</p></div></div>' +
+        '<div class="storegrid">' + ex.franchises.map(function(f){
+          return '<div class="storecard" style="cursor:default"><div class="sc-art" style="background:#0e0f16"><img src="' + dcTile(f[1]) + '" alt="' + IMP.esc(f[0]) + '" loading="lazy" decoding="async"></div><div class="sc-name">' + IMP.esc(f[0]) + '</div></div>';
+        }).join('') + '</div></div>' +
+      '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">' + IMP.esc(s.name) + ' products</h2><p class="sec-sub">Official ' + IMP.esc(s.name) + ' designs — customise and order across the GCC.</p></div></div>' +
+        '<div class="pgrid">' + ex.products.map(function(p){
+          return '<div class="pcard" style="cursor:default">' +
+            '<div class="pcard-media"><span class="tag tag-trend tag-pill-media">' + IMP.esc(p[1]) + '</span><img src="' + dcTile(p[2]) + '" alt="' + IMP.esc(p[0]) + '" loading="lazy" decoding="async"></div>' +
+            '<div class="pcard-body"><div class="pcard-name">' + IMP.esc(p[0]) + '</div><div class="pcard-by">' + IMP.esc(s.name) + ' Official</div>' +
+            '<div class="pcard-foot"><span class="pcard-price">' + IMP.esc(p[3]) + ' <span>/ unit</span></span></div></div></div>';
+        }).join('') + '</div></div>';
+  }
+
   if (sid) { renderStore(sid); } else { renderDirectory(); }
 
   function renderDirectory(){
@@ -51,7 +91,7 @@
         '<div class="store-hero-info">' +
           '<div class="store-badge">Official store</div>' +
           '<h1 class="store-name">'+IMP.esc(s.name)+'</h1>' +
-          '<p class="store-tag">'+IMP.esc(s.cat||'')+' · '+prods.length+' ready-made designs</p>' +
+          '<p class="store-tag">'+IMP.esc(s.cat||'')+' · '+(STORE_EXTRAS[s.id]?STORE_EXTRAS[s.id].products.length:prods.length)+' ready-made designs</p>' +
           '<div style="display:flex;gap:10px;margin-top:18px">' +
             '<button class="follow-btn'+(following?' following':'')+'" data-follow="store:'+s.id+'" data-name="'+IMP.esc(s.name)+'">'+(following?'Following':'Follow store')+'</button>' +
             '<button class="btn btn-icon" data-share="store.html?store='+s.id+'" data-share-title="'+IMP.esc(s.name)+' on IMPRINT" aria-label="Share" title="Share">' +
@@ -59,7 +99,8 @@
           '</div>' +
         '</div>' +
       '</div>' +
-      (prods.length ? '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">'+IMP.esc(s.name)+' packaging suite</h2><p class="sec-sub">Ready-to-customise designs styled for '+IMP.esc(s.name)+'.</p></div><a class="sec-link" href="products.html">All products →</a></div><div class="pgrid">'+prods.map(IMP.productCard).join('')+'</div></div>' : '') +
+      (STORE_EXTRAS[s.id] ? renderExtras(STORE_EXTRAS[s.id], s) :
+        (prods.length ? '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">'+IMP.esc(s.name)+' packaging suite</h2><p class="sec-sub">Ready-to-customise designs styled for '+IMP.esc(s.name)+'.</p></div><a class="sec-link" href="products.html">All products →</a></div><div class="pgrid">'+prods.map(IMP.productCard).join('')+'</div></div>' : '')) +
       '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">More stores</h2></div><a class="sec-link" href="store.html">All stores →</a></div><div class="storegrid">' +
         stores.filter(function(x){return x.id!==s.id;}).slice(0,7).map(IMP.storeCard).join('') + '</div></div>';
   }
