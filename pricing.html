@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Factory partner plans on IMPRINT — join free and pay only on orders we bring you, then upgrade to a tiered monthly plan for lower commission as volume grows.">
-  <title>Factory partner plans — IMPRINT®</title>
+  <meta name="description" content="IMPRINT pricing — designer membership plans (publish free, earn per use, upgrade for a smaller cut) and factory partner plans (join free, lower commission as volume grows).">
+  <title>Pricing — IMPRINT®</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,8 +17,15 @@
     .pricing { padding-bottom: 80px; }
     .pp-display { font-family:"Cormorant Garamond",Georgia,serif; }
 
+    /* audience toggle */
+    .pp-switch-wrap { display:flex; justify-content:center; padding:34px 0 0; }
+    .pp-switch { display:flex; gap:5px; background:var(--imp-surface-2); border:1px solid var(--imp-border); border-radius:var(--imp-r-pill); padding:5px; }
+    .pp-switch button { font:inherit; font-size:14px; font-weight:600; padding:9px 22px; border-radius:var(--imp-r-pill); border:none; background:none; color:var(--imp-fg-2); cursor:pointer; transition:background .15s,color .15s; white-space:nowrap; }
+    .pp-switch button.on { background:var(--imp-surface); color:var(--imp-fg); box-shadow:var(--imp-shadow-sm); }
+    .pp-pane[hidden]{ display:none; }
+
     /* hero */
-    .pp-hero { text-align:center; max-width:760px; margin:0 auto; padding:38px 0 8px; }
+    .pp-hero { text-align:center; max-width:760px; margin:0 auto; padding:24px 0 8px; }
     .pp-eyebrow { font-size:12px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--pp-gold); margin:0 0 16px; }
     .pp-h1 { font-family:"Cormorant Garamond",Georgia,serif; font-weight:600; font-size:clamp(38px,6vw,64px); line-height:1.04; letter-spacing:-.01em; margin:0; color:var(--imp-fg); }
     .pp-h1 em { font-style:italic; color:var(--pp-green); }
@@ -50,6 +57,7 @@
     .pp-price-n { font-family:"Cormorant Garamond",Georgia,serif; font-size:48px; font-weight:600; color:var(--imp-fg); line-height:.9; }
     .pp-price-u { font-size:13px; color:var(--imp-fg-3); font-weight:500; }
     .pp-rate { font-size:13.5px; font-weight:700; color:var(--pp-green); }
+    .pp-cap { font-size:12px; color:var(--imp-fg-3); margin-top:3px; }
     .pp-cta { margin:20px 0 4px; display:block; text-align:center; font-size:14px; font-weight:600; padding:12px 16px; border-radius:var(--imp-r-md); text-decoration:none; border:1px solid var(--imp-border); background:var(--imp-surface); color:var(--imp-fg); transition:background .15s,border-color .15s,opacity .15s; cursor:pointer; }
     .pp-cta:hover { border-color:var(--imp-border-hover); }
     .pp-cta.solid { background:var(--pp-green); border-color:var(--pp-green); color:#fff; }
@@ -67,7 +75,7 @@
     .pp-sec-h { font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(28px,4vw,40px); font-weight:600; color:var(--imp-fg); text-align:center; margin:0; }
     .pp-sec-sub { font-size:15px; color:var(--imp-fg-2); line-height:1.6; text-align:center; max-width:680px; margin:14px auto 0; }
 
-    /* upgrade flow */
+    /* flow row */
     .pp-flow { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:880px; margin:38px auto 0; }
     @media (max-width:640px){ .pp-flow { grid-template-columns:repeat(2,1fr); } }
     .pp-step { position:relative; text-align:center; border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); background:var(--imp-surface); padding:22px 14px; }
@@ -77,6 +85,16 @@
     .pp-step-l b { color:var(--pp-green); }
     .pp-step:not(:last-child)::after { content:"→"; position:absolute; inset-inline-end:-11px; top:50%; transform:translateY(-50%); color:var(--pp-gold); font-weight:700; z-index:1; }
     @media (max-width:640px){ .pp-step:nth-child(2)::after{content:none;} }
+
+    /* math table */
+    .pp-math-wrap { max-width:820px; margin:34px auto 0; overflow-x:auto; border:1px solid var(--imp-border); border-radius:var(--imp-r-lg); }
+    .pp-math { width:100%; border-collapse:collapse; font-size:13.5px; min-width:560px; }
+    .pp-math th, .pp-math td { padding:13px 16px; text-align:right; border-bottom:1px solid var(--imp-border); white-space:nowrap; }
+    .pp-math th:first-child, .pp-math td:first-child { text-align:left; }
+    .pp-math thead th { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--imp-fg-3); background:var(--imp-surface-2); }
+    .pp-math tbody tr:last-child td { border-bottom:none; }
+    .pp-math tbody td:first-child { font-weight:700; color:var(--imp-fg); }
+    .pp-math .keep { color:var(--pp-green); font-weight:700; }
 
     /* why cards */
     .pp-why { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:38px; }
@@ -95,108 +113,245 @@
 <div id="site-nav"></div>
 <main class="imp-wrap pricing">
 
-  <section class="pp-hero">
-    <p class="pp-eyebrow">Factory Partner Plans</p>
-    <h1 class="pp-h1">One platform.<br>Two ways we <em>earn</em>.</h1>
-    <p class="pp-lede">Factories join free and pay only when Imprint brings them an order. As volume grows, a fixed monthly plan costs less than commission — so they upgrade, and our revenue turns recurring.</p>
-    <p class="pp-note">Confirmed pricing structure with <b>2 manufacturing partners</b> · local &amp; China · all figures in OMR</p>
-  </section>
+  <div class="pp-switch-wrap">
+    <div class="pp-switch" role="tablist" aria-label="Pricing audience">
+      <button id="tab-designers" class="on" role="tab" onclick="ppShow('designers')">For designers</button>
+      <button id="tab-makers" role="tab" onclick="ppShow('makers')">For manufacturers</button>
+    </div>
+  </div>
 
-  <section class="pp-highlights">
-    <div class="pp-tile"><div class="pp-tile-k">Agent margin</div><div class="pp-tile-v">20%<span> / order</span></div></div>
-    <div class="pp-tile"><div class="pp-tile-k">Free design</div><div class="pp-tile-v">2D / 3D</div></div>
-    <div class="pp-tile"><div class="pp-tile-k">Recurring</div><div class="pp-tile-v">Tiered<span> plans</span></div></div>
-    <div class="pp-tile"><div class="pp-tile-k">Validation</div><div class="pp-tile-v">Live<span> demand</span></div></div>
-  </section>
+  <!-- ════════════════ DESIGNERS ════════════════ -->
+  <div class="pp-pane" id="pane-designers">
+    <section class="pp-hero">
+      <p class="pp-eyebrow">Designer Plans</p>
+      <h1 class="pp-h1">Design once.<br>Earn every <em>time</em>.</h1>
+      <p class="pp-lede">Designers join free and publish templates. Every time a customer uses a template, the designer earns. As they grow, they upgrade — unlocking higher template prices and a smaller platform cut.</p>
+      <p class="pp-note">A creator marketplace modelled on <b>Redbubble &amp; Zazzle</b> economics · all figures in OMR</p>
+    </section>
 
-  <section class="pp-plans">
-    <!-- Plan 01 -->
-    <div class="pp-card current">
-      <div class="pp-tag">Entry · <span class="pp-plan-no">Plan 01</span><span class="pp-current-pill">Your plan</span></div>
-      <div class="pp-name pp-display">Commission</div>
-      <p class="pp-desc">Start free. Pay only on the orders we bring you — zero risk, zero monthly fee.</p>
-      <div class="pp-price"><span class="pp-price-n">Free</span></div>
-      <div class="pp-rate">20% per order</div>
-      <div class="pp-cta current" aria-disabled="true">✓ Current plan</div>
-      <div class="pp-incl">Includes</div>
-      <ul class="pp-feats">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2D / 3D customization engine</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Instant quoting</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Order management dashboard</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Standard listing</li>
-      </ul>
-    </div>
-    <!-- Plan 02 -->
-    <div class="pp-card">
-      <div class="pp-tag">Starter · <span class="pp-plan-no">Plan 02</span></div>
-      <div class="pp-name pp-display">Starter</div>
-      <p class="pp-desc">For factories with steady weekly orders who want lower commission.</p>
-      <div class="pp-price"><span class="pp-price-n">80</span><span class="pp-price-u">OMR / month</span></div>
-      <div class="pp-rate">15% per order</div>
-      <a class="pp-cta" href="for-partners.html">Choose Starter</a>
-      <div class="pp-incl">Everything in 01, plus</div>
-      <ul class="pp-feats">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Higher search placement</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Basic performance reports</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Lower commission rate</li>
-      </ul>
-    </div>
-    <!-- Plan 03 -->
-    <div class="pp-card feat">
-      <div class="pp-ribbon">★ Best value</div>
-      <div class="pp-tag">Growth · <span class="pp-plan-no">Plan 03</span></div>
-      <div class="pp-name pp-display">Growth</div>
-      <p class="pp-desc">For high-volume factories ready to scale demand through the platform.</p>
-      <div class="pp-price"><span class="pp-price-n">200</span><span class="pp-price-u">OMR / month</span></div>
-      <div class="pp-rate">10% per order</div>
-      <a class="pp-cta solid" href="for-partners.html">Choose Growth</a>
-      <div class="pp-incl">Everything in 02, plus</div>
-      <ul class="pp-feats">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Demand forecasting</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Priority in search results</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
-      </ul>
-    </div>
-    <!-- Plan 04 -->
-    <div class="pp-card">
-      <div class="pp-tag">Pro · <span class="pp-plan-no">Plan 04</span></div>
-      <div class="pp-name pp-display">Professional</div>
-      <p class="pp-desc">Full partnership: lowest commission, premium reach, dedicated support.</p>
-      <div class="pp-price"><span class="pp-price-n">500</span><span class="pp-price-u">OMR / month</span></div>
-      <div class="pp-rate">5% per order</div>
-      <a class="pp-cta" href="for-partners.html">Choose Pro</a>
-      <div class="pp-incl">Everything in 03, plus</div>
-      <ul class="pp-feats">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Premium featured placement</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Full market intelligence</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account manager</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Joint marketing campaigns</li>
-      </ul>
-    </div>
-  </section>
+    <section class="pp-highlights">
+      <div class="pp-tile"><div class="pp-tile-k">Join</div><div class="pp-tile-v">Free</div></div>
+      <div class="pp-tile"><div class="pp-tile-k">Earn</div><div class="pp-tile-v">Per<span> use</span></div></div>
+      <div class="pp-tile"><div class="pp-tile-k">Upgrade</div><div class="pp-tile-v">Lower<span> cut</span></div></div>
+      <div class="pp-tile"><div class="pp-tile-k">Recurring</div><div class="pp-tile-v">Subs<span> + ads</span></div></div>
+    </section>
 
-  <section class="pp-sec">
-    <h2 class="pp-sec-h pp-display">The factory upgrades itself</h2>
-    <p class="pp-sec-sub">When monthly commission climbs past the cost of a fixed plan, Imprint’s Smart Alarm notifies the factory: a subscription now saves them money. They upgrade willingly — and our revenue shifts from variable to recurring.</p>
-    <div class="pp-flow">
-      <div class="pp-step"><div class="pp-step-k">Plan 01</div><div class="pp-step-v">~11</div><div class="pp-step-l">orders / mo → <b>Starter</b></div></div>
-      <div class="pp-step"><div class="pp-step-k">Plan 02</div><div class="pp-step-v">~26</div><div class="pp-step-l">orders / mo → <b>Growth</b></div></div>
-      <div class="pp-step"><div class="pp-step-k">Plan 03</div><div class="pp-step-v">~60</div><div class="pp-step-l">orders / mo → <b>Pro</b></div></div>
-      <div class="pp-step"><div class="pp-step-k">Plan 04</div><div class="pp-step-v">5%</div><div class="pp-step-l">lowest commission</div></div>
-    </div>
-  </section>
+    <section class="pp-plans">
+      <!-- Tier 01 -->
+      <div class="pp-card current">
+        <div class="pp-tag">Open · <span class="pp-plan-no">Tier 01</span><span class="pp-current-pill">Your plan</span></div>
+        <div class="pp-name pp-display">Free</div>
+        <p class="pp-desc">Publish and start earning per use — no monthly fee, no risk.</p>
+        <div class="pp-price"><span class="pp-price-n">Free</span></div>
+        <div class="pp-rate">40% platform cut</div>
+        <div class="pp-cap">Price cap: up to OMR 0.2 / use</div>
+        <div class="pp-cta current" aria-disabled="true">✓ Current plan</div>
+        <div class="pp-incl">Includes</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Up to 10 published templates</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Per-use earnings, paid monthly</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2D / 3D customization tools</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Standard placement</li>
+        </ul>
+      </div>
+      <!-- Tier 02 -->
+      <div class="pp-card">
+        <div class="pp-tag">Rising · <span class="pp-plan-no">Tier 02</span></div>
+        <div class="pp-name pp-display">Starter</div>
+        <p class="pp-desc">For designers gaining traction who want higher prices and a smaller cut.</p>
+        <div class="pp-price"><span class="pp-price-n">10</span><span class="pp-price-u">OMR / month</span></div>
+        <div class="pp-rate">30% platform cut</div>
+        <div class="pp-cap">Price cap: up to OMR 0.3 / use</div>
+        <a class="pp-cta" href="for-partners.html">Choose Starter</a>
+        <div class="pp-incl">Everything in 01, plus</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Up to 50 templates</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Limited exclusive designs</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Basic analytics</li>
+        </ul>
+      </div>
+      <!-- Tier 03 -->
+      <div class="pp-card feat">
+        <div class="pp-ribbon">★ Most popular</div>
+        <div class="pp-tag">Established · <span class="pp-plan-no">Tier 03</span></div>
+        <div class="pp-name pp-display">Pro</div>
+        <p class="pp-desc">For working designers building a real catalog and steady royalties.</p>
+        <div class="pp-price"><span class="pp-price-n">25</span><span class="pp-price-u">OMR / month</span></div>
+        <div class="pp-rate">20% platform cut</div>
+        <div class="pp-cap">Price cap: up to OMR 0.5 / use</div>
+        <a class="pp-cta solid" href="for-partners.html">Choose Pro</a>
+        <div class="pp-incl">Everything in 02, plus</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Unlimited templates</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Full exclusive design library</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Priority placement</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
+        </ul>
+      </div>
+      <!-- Tier 04 -->
+      <div class="pp-card">
+        <div class="pp-tag">Master · <span class="pp-plan-no">Tier 04</span></div>
+        <div class="pp-name pp-display">Studio</div>
+        <p class="pp-desc">For top designers and studios — premium pricing, lowest cut, featured reach.</p>
+        <div class="pp-price"><span class="pp-price-n">50</span><span class="pp-price-u">OMR / month</span></div>
+        <div class="pp-rate">10% platform cut</div>
+        <div class="pp-cap">Price cap: uncapped (OMR 1.0+)</div>
+        <a class="pp-cta" href="for-partners.html">Choose Studio</a>
+        <div class="pp-incl">Everything in 03, plus</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Uncapped template pricing</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Featured on the Trending page</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Full market intelligence</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dedicated creator support</li>
+        </ul>
+      </div>
+    </section>
 
-  <section class="pp-sec">
-    <h2 class="pp-sec-h pp-display">Why factories stay</h2>
-    <p class="pp-sec-sub">The platform replaces what a factory would otherwise spend on marketing, designers, and customer service — so the margin is value they keep, not a cost they resent.</p>
-    <div class="pp-why">
-      <div class="pp-why-card"><div class="pp-why-no">01</div><div class="pp-why-h">Proprietary 2D/3D tech</div><p class="pp-why-p">Cuts the factory’s communication time and colour-control cost — a value the China partner confirmed directly.</p></div>
-      <div class="pp-why-card"><div class="pp-why-no">02</div><div class="pp-why-h">Dual supply chain</div><p class="pp-why-p">Local factories for speed, China for cost at scale — flexibility no single regional competitor offers.</p></div>
-      <div class="pp-why-card"><div class="pp-why-no">03</div><div class="pp-why-h">Dual revenue</div><p class="pp-why-p">Margin plus subscription makes the platform worth more than mere brokerage — and resistant to bypass.</p></div>
-    </div>
-  </section>
+    <section class="pp-sec">
+      <h2 class="pp-sec-h pp-display">The cut shrinks as you grow</h2>
+      <p class="pp-sec-sub">Free designers pay no subscription, so Imprint takes a larger share per use. Paying designers earn higher prices and keep more — the upgrade pays for itself, and Imprint gains recurring subscription revenue on top of every sale.</p>
+      <div class="pp-flow">
+        <div class="pp-step"><div class="pp-step-k">Free</div><div class="pp-step-v">40%</div><div class="pp-step-l">platform cut</div></div>
+        <div class="pp-step"><div class="pp-step-k">Starter</div><div class="pp-step-v">30%</div><div class="pp-step-l">platform cut</div></div>
+        <div class="pp-step"><div class="pp-step-k">Pro</div><div class="pp-step-v">20%</div><div class="pp-step-l">platform cut</div></div>
+        <div class="pp-step"><div class="pp-step-k">Studio</div><div class="pp-step-v">10%</div><div class="pp-step-l">platform cut</div></div>
+      </div>
+    </section>
 
-  <p class="pp-method"><b>Methodology note.</b> Agent-margin structure and improving terms with volume are confirmed through negotiation with two manufacturers (local &amp; China). The 20% target margin, plan prices, upgrade thresholds, and volume scenarios are planning assumptions to be refined with live operating data, and are presented as scenarios rather than guarantees. Born in the Gulf, scaling globally.</p>
+    <section class="pp-sec">
+      <h2 class="pp-sec-h pp-display">One template, many uses</h2>
+      <p class="pp-sec-sub">How the same template performs across tiers over 50 uses — the designer always keeps more as they climb, while Imprint’s recurring revenue grows.</p>
+      <div class="pp-math-wrap">
+        <table class="pp-math">
+          <thead><tr><th>Designer tier</th><th>Price / use</th><th>50 uses</th><th>Designer keeps</th><th>Imprint (cut)</th><th>+ Subscription</th></tr></thead>
+          <tbody>
+            <tr><td>Free</td><td>0.2</td><td>10.0</td><td class="keep">6.0</td><td>4.0</td><td>—</td></tr>
+            <tr><td>Starter</td><td>0.3</td><td>15.0</td><td class="keep">10.5</td><td>4.5</td><td>10.0</td></tr>
+            <tr><td>Pro</td><td>0.5</td><td>25.0</td><td class="keep">20.0</td><td>5.0</td><td>25.0</td></tr>
+            <tr><td>Studio</td><td>1.0</td><td>50.0</td><td class="keep">45.0</td><td>5.0</td><td>50.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="pp-sec-sub" style="font-size:12.5px;margin-top:14px">All figures in OMR. The factory agent margin (~20% per print order) is separate and additional — every designer sale also flows a printing order through the factory network.</p>
+    </section>
+
+    <section class="pp-sec">
+      <h2 class="pp-sec-h pp-display">Why it works</h2>
+      <div class="pp-why">
+        <div class="pp-why-card"><div class="pp-why-no">01</div><div class="pp-why-h">Per-use royalties</div><p class="pp-why-p">A template earns its designer every single time a customer uses it — passive income that compounds with the catalog.</p></div>
+        <div class="pp-why-card"><div class="pp-why-no">02</div><div class="pp-why-h">Tiered platform cut</div><p class="pp-why-p">40% on free, down to 10% on Studio. Designers upgrade willingly because they keep more of a higher price.</p></div>
+        <div class="pp-why-card"><div class="pp-why-no">03</div><div class="pp-why-h">Three revenue lines</div><p class="pp-why-p">Platform cut on every template, monthly subscriptions, and paid featured placement — stacked on the factory margin.</p></div>
+      </div>
+    </section>
+
+    <p class="pp-method"><b>Methodology note.</b> Tier structure and the per-use royalty model are modelled on proven creator marketplaces (Redbubble, Zazzle). Per-use prices, subscription rates, platform-cut percentages, and the 50-use scenario are planning assumptions to be refined with live operating data, and are presented as scenarios rather than guarantees. Born in the Gulf, scaling globally.</p>
+  </div>
+
+  <!-- ════════════════ MANUFACTURERS ════════════════ -->
+  <div class="pp-pane" id="pane-makers" hidden>
+    <section class="pp-hero">
+      <p class="pp-eyebrow">Factory Partner Plans</p>
+      <h1 class="pp-h1">One platform.<br>Two ways we <em>earn</em>.</h1>
+      <p class="pp-lede">Factories join free and pay only when Imprint brings them an order. As volume grows, a fixed monthly plan costs less than commission — so they upgrade, and our revenue turns recurring.</p>
+      <p class="pp-note">Confirmed pricing structure with <b>2 manufacturing partners</b> · local &amp; China · all figures in OMR</p>
+    </section>
+
+    <section class="pp-highlights">
+      <div class="pp-tile"><div class="pp-tile-k">Agent margin</div><div class="pp-tile-v">20%<span> / order</span></div></div>
+      <div class="pp-tile"><div class="pp-tile-k">Free design</div><div class="pp-tile-v">2D / 3D</div></div>
+      <div class="pp-tile"><div class="pp-tile-k">Recurring</div><div class="pp-tile-v">Tiered<span> plans</span></div></div>
+      <div class="pp-tile"><div class="pp-tile-k">Validation</div><div class="pp-tile-v">Live<span> demand</span></div></div>
+    </section>
+
+    <section class="pp-plans">
+      <!-- Plan 01 -->
+      <div class="pp-card current">
+        <div class="pp-tag">Entry · <span class="pp-plan-no">Plan 01</span><span class="pp-current-pill">Your plan</span></div>
+        <div class="pp-name pp-display">Commission</div>
+        <p class="pp-desc">Start free. Pay only on the orders we bring you — zero risk, zero monthly fee.</p>
+        <div class="pp-price"><span class="pp-price-n">Free</span></div>
+        <div class="pp-rate">20% per order</div>
+        <div class="pp-cta current" aria-disabled="true">✓ Current plan</div>
+        <div class="pp-incl">Includes</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2D / 3D customization engine</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Instant quoting</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Order management dashboard</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Standard listing</li>
+        </ul>
+      </div>
+      <!-- Plan 02 -->
+      <div class="pp-card">
+        <div class="pp-tag">Starter · <span class="pp-plan-no">Plan 02</span></div>
+        <div class="pp-name pp-display">Starter</div>
+        <p class="pp-desc">For factories with steady weekly orders who want lower commission.</p>
+        <div class="pp-price"><span class="pp-price-n">80</span><span class="pp-price-u">OMR / month</span></div>
+        <div class="pp-rate">15% per order</div>
+        <a class="pp-cta" href="for-partners.html">Choose Starter</a>
+        <div class="pp-incl">Everything in 01, plus</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Higher search placement</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Basic performance reports</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Lower commission rate</li>
+        </ul>
+      </div>
+      <!-- Plan 03 -->
+      <div class="pp-card feat">
+        <div class="pp-ribbon">★ Best value</div>
+        <div class="pp-tag">Growth · <span class="pp-plan-no">Plan 03</span></div>
+        <div class="pp-name pp-display">Growth</div>
+        <p class="pp-desc">For high-volume factories ready to scale demand through the platform.</p>
+        <div class="pp-price"><span class="pp-price-n">200</span><span class="pp-price-u">OMR / month</span></div>
+        <div class="pp-rate">10% per order</div>
+        <a class="pp-cta solid" href="for-partners.html">Choose Growth</a>
+        <div class="pp-incl">Everything in 02, plus</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Demand forecasting</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Priority in search results</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
+        </ul>
+      </div>
+      <!-- Plan 04 -->
+      <div class="pp-card">
+        <div class="pp-tag">Pro · <span class="pp-plan-no">Plan 04</span></div>
+        <div class="pp-name pp-display">Professional</div>
+        <p class="pp-desc">Full partnership: lowest commission, premium reach, dedicated support.</p>
+        <div class="pp-price"><span class="pp-price-n">500</span><span class="pp-price-u">OMR / month</span></div>
+        <div class="pp-rate">5% per order</div>
+        <a class="pp-cta" href="for-partners.html">Choose Pro</a>
+        <div class="pp-incl">Everything in 03, plus</div>
+        <ul class="pp-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Premium featured placement</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Full market intelligence</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account manager</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Joint marketing campaigns</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="pp-sec">
+      <h2 class="pp-sec-h pp-display">The factory upgrades itself</h2>
+      <p class="pp-sec-sub">When monthly commission climbs past the cost of a fixed plan, Imprint’s Smart Alarm notifies the factory: a subscription now saves them money. They upgrade willingly — and our revenue shifts from variable to recurring.</p>
+      <div class="pp-flow">
+        <div class="pp-step"><div class="pp-step-k">Plan 01</div><div class="pp-step-v">~11</div><div class="pp-step-l">orders / mo → <b>Starter</b></div></div>
+        <div class="pp-step"><div class="pp-step-k">Plan 02</div><div class="pp-step-v">~26</div><div class="pp-step-l">orders / mo → <b>Growth</b></div></div>
+        <div class="pp-step"><div class="pp-step-k">Plan 03</div><div class="pp-step-v">~60</div><div class="pp-step-l">orders / mo → <b>Pro</b></div></div>
+        <div class="pp-step"><div class="pp-step-k">Plan 04</div><div class="pp-step-v">5%</div><div class="pp-step-l">lowest commission</div></div>
+      </div>
+    </section>
+
+    <section class="pp-sec">
+      <h2 class="pp-sec-h pp-display">Why factories stay</h2>
+      <p class="pp-sec-sub">The platform replaces what a factory would otherwise spend on marketing, designers, and customer service — so the margin is value they keep, not a cost they resent.</p>
+      <div class="pp-why">
+        <div class="pp-why-card"><div class="pp-why-no">01</div><div class="pp-why-h">Proprietary 2D/3D tech</div><p class="pp-why-p">Cuts the factory’s communication time and colour-control cost — a value the China partner confirmed directly.</p></div>
+        <div class="pp-why-card"><div class="pp-why-no">02</div><div class="pp-why-h">Dual supply chain</div><p class="pp-why-p">Local factories for speed, China for cost at scale — flexibility no single regional competitor offers.</p></div>
+        <div class="pp-why-card"><div class="pp-why-no">03</div><div class="pp-why-h">Dual revenue</div><p class="pp-why-p">Margin plus subscription makes the platform worth more than mere brokerage — and resistant to bypass.</p></div>
+      </div>
+    </section>
+
+    <p class="pp-method"><b>Methodology note.</b> Agent-margin structure and improving terms with volume are confirmed through negotiation with two manufacturers (local &amp; China). The 20% target margin, plan prices, upgrade thresholds, and volume scenarios are planning assumptions to be refined with live operating data, and are presented as scenarios rather than guarantees. Born in the Gulf, scaling globally.</p>
+  </div>
 
 </main>
 <div id="site-footer"></div>
@@ -206,6 +361,15 @@
 <script src="app.js"></script>
 <script>
   IMP.initAppHeader({ activePage:'pricing' });
+  function ppShow(which){
+    var d = which !== 'makers';
+    document.getElementById('pane-designers').hidden = !d;
+    document.getElementById('pane-makers').hidden = d;
+    document.getElementById('tab-designers').classList.toggle('on', d);
+    document.getElementById('tab-makers').classList.toggle('on', !d);
+    try { history.replaceState(null, '', '?for=' + which); } catch(e){}
+  }
+  (function(){ try { var f = new URLSearchParams(location.search).get('for'); if (f === 'makers') ppShow('makers'); } catch(e){} })();
 </script>
 </body>
 </html>
