@@ -181,9 +181,11 @@
 
   IMP.storeCard = function (s) {
     if (!s) return '';
+    /* Uses a real brand image at assets/stores/<id>.webp when present, else falls back to the wordmark tile. */
     return '<a class="storecard" href="' + esc(s.href || ('store.html?store=' + s.id)) + '">' +
       '<div class="sc-art"' + (s.accent ? ' style="background:' + esc(s.accent) + '"' : '') + '>' +
-        IMP.img(s.image, '(max-width:640px) 40vw, 200px', { alt: s.name }) + '<span class="sc-badge">Official</span></div>' +
+        '<img src="assets/stores/' + esc(s.id) + '.webp" alt="' + esc(s.name) + '" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'' + IMP.src(s.image) + '\'">' +
+        '<span class="sc-badge">Official</span></div>' +
       '<div class="sc-name">' + esc(s.name) + '</div><div class="sc-cat">' + esc(s.cat || '') + '</div></a>';
   };
 

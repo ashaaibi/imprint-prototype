@@ -46,7 +46,7 @@
   function renderExtras(ex, s){
     return '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">Shop by franchise</h2><p class="sec-sub">' + IMP.esc(ex.note || '') + '</p></div></div>' +
         '<div class="storegrid">' + ex.franchises.map(function(f){
-          return '<div class="storecard" style="cursor:default"><div class="sc-art" style="background:#0e0f16"><img src="' + dcTile(f[1]) + '" alt="' + IMP.esc(f[0]) + '" loading="lazy" decoding="async"></div><div class="sc-name">' + IMP.esc(f[0]) + '</div></div>';
+          return '<div class="storecard" style="cursor:default"><div class="sc-art" style="background:#0e0f16"><img src="assets/stores/dc/franchises/' + f[1] + '.jpg" alt="' + IMP.esc(f[0]) + '" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'' + dcTile(f[1]) + '\'"></div><div class="sc-name">' + IMP.esc(f[0]) + '</div></div>';
         }).join('') + '</div></div>' +
       (ex.collections ? '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">' + IMP.esc(s.name) + ' collections</h2><p class="sec-sub">Coordinated themed sets — customise the whole look in one go.</p></div></div><div class="colgrid">' +
         ex.collections.map(function(c){
@@ -79,7 +79,7 @@
     root.innerHTML =
       '<div class="pdp-bc"><a href="index.html">Home</a><span class="sep">/</span><a href="store.html">Stores</a><span class="sep">/</span>'+IMP.esc(s.name)+'</div>' +
       '<div class="store-hero" style="--store-accent:'+IMP.esc(s.accent||'#c79a63')+'">' +
-        '<div class="store-hero-tile">'+IMP.img(s.image,'132px',{alt:s.name})+'</div>' +
+        '<div class="store-hero-tile"><img src="assets/stores/'+s.id+'.webp" alt="'+IMP.esc(s.name)+'" decoding="async" onerror="this.onerror=null;this.src=\''+IMP.src(s.image)+'\'"></div>' +
         '<div class="store-hero-info">' +
           '<div class="store-badge">Official store</div>' +
           '<h1 class="store-name">'+IMP.esc(s.name)+'</h1>' +
