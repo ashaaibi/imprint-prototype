@@ -38,6 +38,14 @@
         ['Batman','batman'],['Superman','superman'],['Wonder Woman','wonder-woman'],['The Flash','the-flash'],
         ['Green Lantern','green-lantern'],['Justice League','justice-league'],['Joker & Harley','joker-harley'],['Batwheels','batwheels']
       ],
+      collections: [
+        ['Batman Birthday Party','batman',8,'OMR 1.800'],
+        ['Superman Hero Essentials','superman',6,'OMR 2.900'],
+        ['Wonder Woman Postcards','wonder-woman',7,'OMR 2.200'],
+        ['Justice League Kids','justice-league',9,'OMR 1.900'],
+        ['Batwheels Party Pack','batwheels',6,'OMR 2.400'],
+        ['Joker & Harley Collectibles','joker-harley',5,'OMR 3.200']
+      ],
       products: [
         ['Batman Symbol Logo Mug','Batman','batman','OMR 3.900'],
         ['Superman Shield T-Shirt','Superman','superman','OMR 7.500'],
@@ -60,6 +68,10 @@
         '<div class="storegrid">' + ex.franchises.map(function(f){
           return '<div class="storecard" style="cursor:default"><div class="sc-art" style="background:#0e0f16"><img src="' + dcTile(f[1]) + '" alt="' + IMP.esc(f[0]) + '" loading="lazy" decoding="async"></div><div class="sc-name">' + IMP.esc(f[0]) + '</div></div>';
         }).join('') + '</div></div>' +
+      (ex.collections ? '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">' + IMP.esc(s.name) + ' collections</h2><p class="sec-sub">Coordinated themed sets — customise the whole look in one go.</p></div></div><div class="colgrid">' +
+        ex.collections.map(function(c){
+          return '<a class="colcard" href="store.html?store=' + s.id + '" style="background:#0e0f16"><img src="' + dcTile(c[1]) + '" alt="' + IMP.esc(c[0]) + '" loading="lazy" decoding="async"><div class="col-grad"></div><span class="col-tag">Collection</span><div class="col-body"><div class="col-name">' + IMP.esc(c[0]) + '</div><div class="col-items">' + c[2] + ' designs · from ' + IMP.esc(c[3]) + '</div></div></a>';
+        }).join('') + '</div></div>' : '') +
       '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">' + IMP.esc(s.name) + ' products</h2><p class="sec-sub">Official ' + IMP.esc(s.name) + ' designs — customise and order across the GCC.</p></div></div>' +
         '<div class="pgrid">' + ex.products.map(function(p){
           return '<div class="pcard" style="cursor:default">' +
