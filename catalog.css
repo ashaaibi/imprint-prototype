@@ -5,21 +5,16 @@
    favourites, account, orders, collections + product PDPs.
 ═══════════════════════════════════════════════════════════ */
 
-.imp-wrap { max-width: var(--imp-max-w); margin: 0 auto; padding: 0 24px; }
-/* Tablet (641–1024px): more breathing room from the screen edges, site-wide — extends the
-   mobile edge-padding treatment up to tablets so content/nav/footer never hug the bezel.
-   Content, secondary nav and footer share the same edge anchor, so they stay aligned. */
-@media (min-width: 641px) and (max-width: 1024px){
-  .imp-wrap, .an-inner { padding-left: 40px; padding-right: 40px; }
-  .af-inner { padding-left: 40px; padding-right: 40px; }
-}
+/* Page edge padding is ONE responsive value (--imp-edge) shared by content, secondary nav, header
+   and footer — so they always align and never hug the screen edge, on phones/tablets/desktop alike. */
+.imp-wrap { max-width: var(--imp-max-w); margin: 0 auto; padding-inline: var(--imp-edge); }
 .imp-display { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
 main { min-height: 60vh; }
 a { color: inherit; }
 
 /* ── Secondary app nav ───────────────────────────────────── */
 .app-nav { position: sticky; top: var(--imp-header-h); z-index: 40; background: var(--imp-bg); background: color-mix(in srgb, var(--imp-bg) 88%, transparent); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--imp-border); }
-.an-inner { max-width: var(--imp-max-w); margin: 0 auto; padding: 9px 24px; display: flex; align-items: center; gap: 18px; }
+.an-inner { max-width: var(--imp-max-w); margin: 0 auto; padding: 9px var(--imp-edge); display: flex; align-items: center; gap: 18px; }
 .an-links { display: flex; gap: 4px; flex: 0 0 auto; }
 .an-links a { font-size: 13.5px; font-weight: 600; color: var(--imp-fg-2); text-decoration: none; padding: 7px 12px; border-radius: var(--imp-r-pill); white-space: nowrap; transition: background .15s, color .15s; }
 .an-links a:hover { background: var(--imp-surface-2); color: var(--imp-fg); }
@@ -241,7 +236,7 @@ html[data-theme="dark"] .tag-limited{background:#2a2a2a;color:#d4d0cc}
 
 /* ── Footer ──────────────────────────────────────────────── */
 .app-footer { border-top: 1px solid var(--imp-border); margin-top: 40px; background: var(--imp-surface); }
-.af-inner { max-width: var(--imp-max-w); margin: 0 auto; padding: 44px 24px 30px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 28px; }
+.af-inner { max-width: var(--imp-max-w); margin: 0 auto; padding: 44px var(--imp-edge) 30px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 28px; }
 .af-brand .l { font-family: var(--imp-font-display); font-size: 22px; font-weight: 800; letter-spacing: .02em; }
 .af-brand p { font-size: 13px; color: var(--imp-fg-3); line-height: 1.6; margin: 10px 0 0; max-width: 280px; }
 .af-col h5 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--imp-fg-3); margin: 0 0 12px; }
