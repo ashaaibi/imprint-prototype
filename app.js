@@ -132,6 +132,42 @@
     '</div>';
   };
 
+  /* Mock chat — lets buyers message a designer (prototype: ephemeral thread + canned reply). */
+  IMP.openChat = function (artistId) {
+    var a = IMP.artist(artistId); if (!a) return;
+    var first = esc((a.name || 'there').split(' ')[0]);
+    var ov = document.getElementById('imp-chat');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'imp-chat';
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.remove('open'); });
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<div class="chat-box" role="dialog" aria-label="Chat with ' + esc(a.name) + '">' +
+        '<div class="chat-head">' + (a.avatar ? '<img src="' + IMP.src(a.avatar) + '" alt="">' : '') +
+          '<div style="flex:1"><div class="chat-name">' + esc(a.name) + ' ' + (a.flag || '') + '</div>' +
+          '<div class="chat-sub">Typically replies within a few hours</div></div>' +
+          '<button class="chat-x" type="button" aria-label="Close">&times;</button></div>' +
+        '<div class="chat-thread" id="imp-chat-thread"><div class="chat-msg in">Hi! I’m ' + first + '. Tell me about your project — sizes, quantity and deadline — and I’ll point you to the right template.</div></div>' +
+        '<form class="chat-input" id="imp-chat-form"><input id="imp-chat-text" placeholder="Message ' + first + '…" autocomplete="off" aria-label="Message"><button type="submit">Send</button></form>' +
+      '</div>';
+    ov.classList.add('open');
+    var thread = ov.querySelector('#imp-chat-thread');
+    ov.querySelector('.chat-x').onclick = function () { ov.classList.remove('open'); };
+    ov.querySelector('#imp-chat-form').onsubmit = function (e) {
+      e.preventDefault();
+      var inp = ov.querySelector('#imp-chat-text'), v = (inp.value || '').trim(); if (!v) return;
+      var out = document.createElement('div'); out.className = 'chat-msg out'; out.textContent = v;
+      thread.appendChild(out); inp.value = ''; thread.scrollTop = thread.scrollHeight;
+      setTimeout(function () {
+        var r = document.createElement('div'); r.className = 'chat-msg in';
+        r.textContent = 'Thanks! I’ll review and reply with a quote and a few template options shortly.';
+        thread.appendChild(r); thread.scrollTop = thread.scrollHeight;
+      }, 850);
+    };
+    setTimeout(function () { var t = ov.querySelector('#imp-chat-text'); if (t) t.focus(); }, 60);
+  };
+
   IMP.collectionCard = function (c) {
     if (!c) return '';
     var a = IMP.artist(c.artist);
@@ -175,6 +211,7 @@
     ['artists', 'Artists', 'artists.html'],
     ['makers', 'Manufacturers', 'manufacturers.html'],
     ['collections', 'Collections', 'collections.html'],
+    ['pricing', 'Pricing', 'pricing.html'],
     ['how', 'How it works', 'for-partners.html']
   ];
   function ico(name) {
@@ -241,6 +278,8 @@
       document.dispatchEvent(new CustomEvent('imprint:favchange'));
       return;
     }
+    var chatEl = e.target.closest && e.target.closest('[data-chat]');
+    if (chatEl) { e.preventDefault(); IMP.openChat(chatEl.getAttribute('data-chat')); return; }
     var fol = e.target.closest && e.target.closest('[data-follow]');
     if (fol) {
       e.preventDefault();
@@ -323,7 +362,7 @@
         var href = a.getAttribute('href') || '';
         if (!href || href.charAt(0) === '#' || a.target === '_blank' || a.hasAttribute('download')) return;
         if (/^(mailto:|tel:|javascript:)/i.test(href)) return;
-        if (a.hasAttribute('data-no-transition') || a.hasAttribute('data-fav') || a.hasAttribute('data-follow') || a.hasAttribute('data-share')) return;
+        if (a.hasAttribute('data-no-transition') || a.hasAttribute('data-fav') || a.hasAttribute('data-follow') || a.hasAttribute('data-share') || a.hasAttribute('data-chat')) return;
         var url; try { url = new URL(a.href, location.href); } catch (_) { return; }
         if (url.origin !== location.origin) return;                                  /* external link */
         if (url.pathname === location.pathname && (url.hash || url.search === location.search)) return; /* same page */

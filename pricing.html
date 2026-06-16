@@ -54,6 +54,9 @@
     .pp-cta:hover { border-color:var(--imp-border-hover); }
     .pp-cta.solid { background:var(--pp-green); border-color:var(--pp-green); color:#fff; }
     .pp-cta.solid:hover { opacity:.92; }
+    .pp-card.current { border-color:var(--pp-green); box-shadow:0 14px 40px -28px rgba(47,93,75,.45); }
+    .pp-current-pill { display:inline-block; margin-inline-start:8px; font-size:10px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; color:#fff; background:var(--pp-green); padding:3px 8px; border-radius:var(--imp-r-pill); }
+    .pp-cta.current { background:var(--pp-green-soft); color:var(--pp-green); border-color:var(--pp-green); cursor:default; }
     .pp-incl { font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--imp-fg-3); margin:20px 0 12px; padding-top:18px; border-top:1px solid var(--imp-border); }
     .pp-feats { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
     .pp-feats li { display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--imp-fg-2); line-height:1.4; }
@@ -108,13 +111,13 @@
 
   <section class="pp-plans">
     <!-- Plan 01 -->
-    <div class="pp-card">
-      <div class="pp-tag">Entry · <span class="pp-plan-no">Plan 01</span></div>
+    <div class="pp-card current">
+      <div class="pp-tag">Entry · <span class="pp-plan-no">Plan 01</span><span class="pp-current-pill">Your plan</span></div>
       <div class="pp-name pp-display">Commission</div>
       <p class="pp-desc">Start free. Pay only on the orders we bring you — zero risk, zero monthly fee.</p>
       <div class="pp-price"><span class="pp-price-n">Free</span></div>
       <div class="pp-rate">20% per order</div>
-      <a class="pp-cta" href="for-partners.html">Join free</a>
+      <div class="pp-cta current" aria-disabled="true">✓ Current plan</div>
       <div class="pp-incl">Includes</div>
       <ul class="pp-feats">
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>2D / 3D customization engine</li>

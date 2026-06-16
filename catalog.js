@@ -4732,15 +4732,15 @@ window.IMPRINT_CATALOG = {
  ],
  "stores": [
   {
-   "id": "disney",
-   "name": "Disney",
-   "cat": "Characters & magic",
-   "accent": "#1c3f94",
+   "id": "dc",
+   "name": "DC",
+   "cat": "Super heroes",
+   "accent": "#0476f2",
    "image": {
-    "l": "assets/stores/disney.svg",
-    "s": "assets/stores/disney.svg"
+    "l": "assets/stores/dc.svg",
+    "s": "assets/stores/dc.svg"
    },
-   "href": "store.html?store=disney",
+   "href": "store.html?store=dc",
    "products": [
     "honeyloom-gift-bag",
     "coffee-cup",
@@ -4757,15 +4757,15 @@ window.IMPRINT_CATALOG = {
    ]
   },
   {
-   "id": "marvel",
-   "name": "Marvel",
-   "cat": "Super heroes",
-   "accent": "#ed1d24",
+   "id": "disney",
+   "name": "Disney",
+   "cat": "Characters & magic",
+   "accent": "#1c3f94",
    "image": {
-    "l": "assets/stores/marvel.svg",
-    "s": "assets/stores/marvel.svg"
+    "l": "assets/stores/disney.svg",
+    "s": "assets/stores/disney.svg"
    },
-   "href": "store.html?store=marvel",
+   "href": "store.html?store=disney",
    "products": [
     "blush-pink-round-gift-box",
     "ivory-jewelry-box-velvet",
@@ -4782,15 +4782,15 @@ window.IMPRINT_CATALOG = {
    ]
   },
   {
-   "id": "star-wars",
-   "name": "Star Wars",
-   "cat": "A galaxy far, far away",
-   "accent": "#111114",
+   "id": "marvel",
+   "name": "Marvel",
+   "cat": "Super heroes",
+   "accent": "#ed1d24",
    "image": {
-    "l": "assets/stores/star-wars.svg",
-    "s": "assets/stores/star-wars.svg"
+    "l": "assets/stores/marvel.svg",
+    "s": "assets/stores/marvel.svg"
    },
-   "href": "store.html?store=star-wars",
+   "href": "store.html?store=marvel",
    "products": [
     "white-window-gift-box-ribbon",
     "terracotta-cylinder-tube",
@@ -4807,15 +4807,15 @@ window.IMPRINT_CATALOG = {
    ]
   },
   {
-   "id": "dc",
-   "name": "DC",
-   "cat": "Super heroes",
-   "accent": "#0476f2",
+   "id": "star-wars",
+   "name": "Star Wars",
+   "cat": "A galaxy far, far away",
+   "accent": "#111114",
    "image": {
-    "l": "assets/stores/dc.svg",
-    "s": "assets/stores/dc.svg"
+    "l": "assets/stores/star-wars.svg",
+    "s": "assets/stores/star-wars.svg"
    },
-   "href": "store.html?store=dc",
+   "href": "store.html?store=star-wars",
    "products": [
     "la-petite-boutique-pink-bags",
     "artisan-coffee-green-tin",

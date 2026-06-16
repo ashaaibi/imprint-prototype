@@ -233,10 +233,10 @@ FEATURED_PRODUCTS = {"art-for-foodies-takeout-box","coniny-doodle-food-bag","gul
 # are wordmark SVGs in assets/stores/<id>.svg via tools/make_store_tiles.py — swap in real licensed art later).
 # (id, display name, tagline, accent)
 STORES = [
+ ("dc",              "DC",              "Super heroes",           "#0476f2"),
  ("disney",          "Disney",          "Characters & magic",     "#1c3f94"),
  ("marvel",          "Marvel",          "Super heroes",           "#ed1d24"),
  ("star-wars",       "Star Wars",       "A galaxy far, far away", "#111114"),
- ("dc",              "DC",              "Super heroes",           "#0476f2"),
  ("dr-seuss",        "Dr. Seuss",       "Whimsical classics",     "#e23b4e"),
  ("sesame-street",   "Sesame Street",   "Sunny days",             "#27b24a"),
  ("monster-jam",     "Monster Jam",     "Off-road action",        "#b3122b"),
