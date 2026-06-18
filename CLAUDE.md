@@ -210,8 +210,15 @@ so they return original output when `LOCKS` is null.
   **drops its result instead of `scene.add`-ing a second bag** — without this, unlocked-size imports stacked two bags.
 - **Client** = `?template=<id>` → fetch `templates/<id>.template.json` → rebuild layer images → `_restoreState`
   → mark layers `_tplLock` → `_applyLocks()` (hide locked sizes/steps/add-layer + lock layers) → land on Design.
-  `_tplLock` layers get a **minimal panel** (`_clientPanel`: only the designer-allowed text / colour / social);
-  geometry is locked via the `_tplLock` guards in `_aDown`/`_hitHandle`. Clients **never** see Testing.
+  `_tplLock` layers render the **FULL layer panel minus whatever the designer locked** — the `controls.*`
+  patches (layout/areas/move/finish/emboss) plus inline `_lkd`/`_tplCanEdit` gates in `buildLayerBodyHTML`/
+  `stickerColorSectionHTML` hide only the locked sections (recolor=`controls.recolor`, transform follows
+  `controls.move`, Replace/Remove follows `edit.graphics`, colour follows `edit.colour`, text follows
+  `edit.text`/`edit.social`). **All gates are no-ops when `LOCKS` is null**, so normal/designer mode is
+  unchanged. Geometry (move/resize) is blocked only when move is locked, via `_tplMoveLocked(L)` in
+  `_aDown`/`_hitHandle` (was a blanket `_tplLock`). The old minimal `_clientPanel` is retired (dead). The
+  designer Locks panel defaults to **everything UNLOCKED** ("Lock controls" boxes start unchecked), so a
+  client gets all settings unless the designer opts into locking. Clients **never** see Testing.
 
 ## Presets folders + manifests  ⚠️ IMPORTANT
 The "Presets" picker reads three TYPE folders, each holding COLLECTION sub-folders:

@@ -3217,6 +3217,9 @@ function _lkd(path){                         /* is this feature locked by the lo
   return !!o;
 }
 function _tplCanEdit(kind){ return !LOCKS || (LOCKS.edit && LOCKS.edit[kind]); }   /* client-editable: text/colour/social/graphics */
+/* Template-layer geometry (move/resize/rotate) is locked ONLY when the designer locked "Move /
+   resize". With no template (LOCKS null) this is always false → normal/designer mode untouched. */
+function _tplMoveLocked(L){ return !!(L && L._tplLock && _lkd('controls.move')); }
 function setBagUVForModel(key){
   var m = BAG_MODELS[key]; if (!m) return;
   BAG_UV.exterior = { x:m.uv.exterior.x, y:m.uv.exterior.y, w:m.uv.exterior.w, h:m.uv.exterior.h };
@@ -6601,11 +6604,15 @@ function stickerColorSectionHTML(L) {
   var on = !!L.recolorOn;
   var ihue = (L.imgHue || 0), isat = (L.imgSat != null ? L.imgSat : 100);
   var _satTrack = 'linear-gradient(to right,hsl(' + ihue + ',0%,62%),hsl(' + ihue + ',92%,50%))';
-  var h = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Adjust') + '>Adjust</div>' +
+  /* Client locks: Adjust (Hue/Sat) needs colour-edit; the Recolor wheel needs colour-edit AND an
+     unlocked recolor control. With no template loaded (LOCKS null) both are true → unchanged. */
+  var _canCol = _tplCanEdit('colour'), _canRec = _canCol && !_lkd('controls.recolor');
+  var h = !_canCol ? '' : ('<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Adjust') + '>Adjust</div>' +
     '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Hue') + '>Hue</span><span class="ctrl-slider-val" id="lyr-' + id + '-imghue-val">' + ihue + '°</span></div>' +
       '<input type="range" class="hue-slider" id="lyr-' + id + '-imghue" min="0" max="360" step="1" value="' + ihue + '" oninput="onLayerImgHue(' + id + ',this.value)"></div>' +
     '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Saturation') + '>Saturation</span><span class="ctrl-slider-val" id="lyr-' + id + '-imgsat-val">' + isat + '%</span></div>' +
-      '<input type="range" class="sat-slider" id="lyr-' + id + '-imgsat" min="0" max="200" step="1" value="' + isat + '" style="background:' + _satTrack + '" oninput="onLayerImgSat(' + id + ',this.value)"></div>';
+      '<input type="range" class="sat-slider" id="lyr-' + id + '-imgsat" min="0" max="200" step="1" value="' + isat + '" style="background:' + _satTrack + '" oninput="onLayerImgSat(' + id + ',this.value)"></div>');
+  if (!_canRec) return h;
   h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:10px;">' +
     '<span class="ctrl-color-label" style="margin:0;">Recolor</span>' +
     '<label style="position:relative;display:inline-block;width:38px;height:22px;flex:0 0 auto;cursor:pointer;">' +
@@ -6833,10 +6840,10 @@ function buildLayerBodyHTML(L) {
       h += '<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--imp-border);border-radius:8px;padding:10px;margin:14px 0 12px;">' +
         '<img src="' + (L.img.src || '') + '" style="max-width:60px;max-height:42px;object-fit:contain;border-radius:4px;">' +
         '<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--imp-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(L.fileName || 'Image') + '</div>' +
-        '<button style="' + btnStyle + '" onclick="' + (L.isLogo ? ('pickLayerLogoFile(' + id + ')') : L.kind === 'sticker' ? ('openAddSourcePrompt(' + id + ',&#39;' + (L.tiled ? 'pattern' : 'sticker') + '&#39;)') : ('pickLayerLogoFile(' + id + ')')) + '">Replace</button>' +
-        (L.isDefault ? '' : '<button style="' + btnStyle + '" onclick="removeLayerLogo(' + id + ')">Remove</button>') +
+        (_tplCanEdit('graphics') ? ('<button style="' + btnStyle + '" onclick="' + (L.isLogo ? ('pickLayerLogoFile(' + id + ')') : L.kind === 'sticker' ? ('openAddSourcePrompt(' + id + ',&#39;' + (L.tiled ? 'pattern' : 'sticker') + '&#39;)') : ('pickLayerLogoFile(' + id + ')')) + '">Replace</button>' +
+        (L.isDefault ? '' : '<button style="' + btnStyle + '" onclick="removeLayerLogo(' + id + ')">Remove</button>')) : '') +
         '</div>';
-      h += '<button style="width:100%;margin:0 0 12px;font-size:11px;font-weight:500;color:var(--imp-fg-2);background:var(--imp-surface);border:1px solid var(--imp-border);border-radius:7px;cursor:pointer;padding:9px;display:flex;align-items:center;justify-content:center;gap:7px;" onclick="editLayerCutout(' + id + ')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8-3 3-2.3-2.3"/></svg> Remove background…</button>';
+      if (_tplCanEdit('graphics')) h += '<button style="width:100%;margin:0 0 12px;font-size:11px;font-weight:500;color:var(--imp-fg-2);background:var(--imp-surface);border:1px solid var(--imp-border);border-radius:7px;cursor:pointer;padding:9px;display:flex;align-items:center;justify-content:center;gap:7px;" onclick="editLayerCutout(' + id + ')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8-3 3-2.3-2.3"/></svg> Remove background…</button>';
     } else {
       h += '<div onclick="pickLayerLogoFile(' + id + ')" style="border:1px dashed var(--imp-border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;margin:14px 0 12px;font-size:11px;color:var(--imp-fg-3);">Click to upload ' + kindLabel.toLowerCase() + '<br><span style="font-size:10px;opacity:0.7;">SVG, PNG, JPG, PDF — any size</span></div>';
     }
@@ -6848,8 +6855,9 @@ function buildLayerBodyHTML(L) {
         '<span style="font-size:12px;font-weight:600;color:var(--imp-fg);flex:1;">' + _sp.label + '</span>' +
         '<button onclick="clearLayerSocial(' + id + ')" title="Remove icon" style="border:none;background:none;color:var(--imp-fg-3,#999);cursor:pointer;font-size:15px;line-height:1;padding:2px;">&times;</button></div>';
     }
-    h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
-      layerFontRowHTML(L);
+    var _canTxt = (_tplCanEdit('text') || (L.social && _tplCanEdit('social')));   /* client may edit the words / social handle */
+    if (_canTxt) h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
+      (_tplCanEdit('text') ? layerFontRowHTML(L) : '');
   }
   /* Colour / Recolor section — built here but placed LAST among the common controls
      (after Areas), per the requested control order. */
@@ -6863,6 +6871,7 @@ function buildLayerBodyHTML(L) {
       '<div class="mono-swatches" id="lyr-' + id + '-swatches"></div>' +
       '<div class="color-hex" id="lyr-' + id + '-chex"></div>';
     if (L.kind === 'logo') _colorSec += '<div style="font-size:10px;color:var(--secondary);margin-top:4px;line-height:1.4;">White = original graphic colors. Any other color overlays a tint.</div>';
+    if (!_tplCanEdit('colour')) _colorSec = '';   /* client colour-edit lock (text/logo hue picker) */
   }
 
   /* Material finish (gloss/matte/soft-touch/foil + Advanced PBR) — offered on ALL layer types now.
@@ -6875,12 +6884,13 @@ function buildLayerBodyHTML(L) {
       sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
       sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
     '</div>';
+  if (_lkd('controls.finish')) _finishHTML = '';   /* client finish lock → hide the whole Finish section */
   var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
   var _embossLayoutHTML = '';
   if (!_isGraphic && !L.isBackground) {   /* Emboss/Deboss + Layout: Logo & Text only */
-    _embossLayoutHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
+    _embossLayoutHTML = (_lkd('controls.emboss') ? '' : ('<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr('Emboss / Deboss') + '>Emboss / Deboss</div>' +
       _embossSegHTML(id, L) +
-      '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>' +
+      '<div style="font-size:10px;color:var(--secondary);margin-top:6px;line-height:1.4;">Emboss = raised · Deboss = pressed in. Shows in 3D. Depth tunable in Testing.</div>')) +
       _layoutPickerHTML(id, L);
     if (L.tiled) _embossLayoutHTML += _tiledControlsHTML(id, L);
   }
@@ -6894,7 +6904,7 @@ function buildLayerBodyHTML(L) {
     h += _finishHTML;
   } else if (L.kind === 'text') {
     /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → Finish → Emboss/Layout. */
-    h += _transformHTML(id, L, true);
+    h += (_lkd('controls.move') ? '' : _transformHTML(id, L, true));   /* transform follows the move/resize lock */
     h += _colorSec;
     h += _moveSectionHTML(id, L);
     h += _areasSectionHTML(id, L);
@@ -6902,7 +6912,7 @@ function buildLayerBodyHTML(L) {
     h += _embossLayoutHTML;
   } else {
     /* Logo / Graphic: Scale → Opacity → Rotation → Move → Areas → Recolor → Finish → (Emboss/Layout: Logo only). */
-    h += _transformHTML(id, L);
+    h += (_lkd('controls.move') ? '' : _transformHTML(id, L));   /* transform follows the move/resize lock */
     h += _moveSectionHTML(id, L);
     h += _areasSectionHTML(id, L);
     h += _colorSec;
@@ -11417,7 +11427,7 @@ function _layerCropBox(b, L){
 }
 function _hitLayer(ax,ay){ var ls=_drawableLayers(); for (var i=0;i<ls.length;i++){ var L=ls[i], b=_layerCropBox(_layerBox(L), L); var dx=ax-b.cx, dy=ay-b.cy, ca=Math.cos(-b.ang), sa=Math.sin(-b.ang); var lx=dx*ca-dy*sa, ly=dx*sa+dy*ca; if (Math.abs(lx)<=b.hw && Math.abs(ly)<=b.hh) return L; } return null; }
 function _hitHandle(sp){
-  var L=a2d.sel; if(!L || L._tplLock || (L.locked && !_moveLockOnly(L))) return null; var b=_layerCropBox(_layerBox(L), L);  /* template layers + locked non-bg expose no resize/crop handles */
+  var L=a2d.sel; if(!L || _tplMoveLocked(L) || (L.locked && !_moveLockOnly(L))) return null; var b=_layerCropBox(_layerBox(L), L);  /* move-locked template layers + locked non-bg expose no resize/crop handles */
   var R=Math.max(16,A2D.handleSize+8)*a2d.dpr;
   /* rotate (outside) → 4 corner resize → 4 edge-midpoint crop handles */
   var order=[ ['rotate',0,1.6],
@@ -11472,7 +11482,7 @@ function _aDown(e){
   }
   /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
-  if (L && (L.locked || L._tplLock)){
+  if (L && (L.locked || _tplMoveLocked(L))){
     /* Locked: the BODY can't be dragged (a body click-drag pans instead); a click just selects
        it (toolbar shows). Backgrounds are move-locked only — their resize/crop handles still work
        (handled above via _hitHandle), so this branch is only reached on a body hit. */
@@ -11494,7 +11504,7 @@ function _aMove(e){
     else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nwse-resize':'nesw-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
     else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
-    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ var _ml=(_hL.locked||_hL._tplLock); cur=_ml?'grab':'move'; a2d.hoverL=(_ml?null:_hL); } else a2d.hoverL=null; }
+    else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ var _ml=(_hL.locked||_tplMoveLocked(_hL)); cur=_ml?'grab':'move'; a2d.hoverL=(_ml?null:_hL); } else a2d.hoverL=null; }
     if (cur!=='move') a2d.hoverL=null;   /* only preview the box when actually hovering an unlocked layer body */
     if (a2d.canvas) a2d.canvas.style.cursor=cur;
     return;
@@ -12497,7 +12507,9 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
   patch('_moveSectionHTML',  function(o){ return function(id,L){ return _lkd('controls.move')?'':o(id,L); }; });
   patch('layerFinishGridHTML', function(o){ return function(L){ return _lkd('controls.finish')?'':o(L); }; });
   patch('_embossSegHTML',    function(o){ return function(id,L){ return _lkd('controls.emboss')?'':o(id,L); }; });
-  patch('buildLayerBodyHTML', function(o){ return function(L){ return (LOCKS && L && L._tplLock) ? _clientPanel(L) : o(L); }; });
+  /* Template layers now render the FULL layer panel; the controls.* patches + the edit.* / _lkd
+     gates inside buildLayerBodyHTML hide only what the designer actually locked. (Previously this
+     forced every template layer to the minimal _clientPanel, ignoring the granular locks.) */
 
   function _clientPanel(L){
     var id=L.id, h='';
@@ -12536,7 +12548,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     var lk=document.createElement('div'); lk.id='imp-locks';
     lk.innerHTML = '<h4>What clients can change</h4>' +
       '<div class="lk-sec">Client may edit</div>' + ckb('edit.text','Text content',true) + ckb('edit.colour','Colours',true) + ckb('edit.social','Social handles',true) + ckb('edit.graphics','Add their own graphics',false) +
-      '<div class="lk-sec">Lock controls</div>' + ckb('controls.layout','Layout',true) + ckb('controls.emboss','Emboss / Deboss',true) + ckb('controls.recolor','Recolor wheel',true) + ckb('controls.finish','Material finish',true) + ckb('controls.areas','Areas (faces)',true) + ckb('controls.move','Move / resize',true) +
+      '<div class="lk-sec">Lock controls <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:0.7;">— unchecked = client can use it</span></div>' + ckb('controls.layout','Layout',false) + ckb('controls.emboss','Emboss / Deboss',false) + ckb('controls.recolor','Recolor wheel',false) + ckb('controls.finish','Material finish',false) + ckb('controls.areas','Areas (faces)',false) + ckb('controls.move','Move / resize',false) +
       '<div class="lk-sec">Size & steps</div>' +
       '<label><input type="checkbox" id="lk-fixsize" checked> Fix to current size</label>' +
       '<label><input type="checkbox" data-step="3" checked> Hide Exterior step</label>' +
