@@ -2646,20 +2646,20 @@
 
       <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:2px 0 6px;">Neutral snap (per layer type)</div>
       <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Text</span><span class="slider-val" id="neutral-snap-text-val">1%</span></div>
-        <input type="range" class="test-slider" id="neutral-snap-text" min="0" max="50" step="1" value="1" oninput="onNeutralSnapSlider('text',this.value)">
+        <div class="slider-top"><span class="slider-name">Text</span><span class="slider-val" id="neutral-snap-text-val">0%</span></div>
+        <input type="range" class="test-slider" id="neutral-snap-text" min="0" max="50" step="1" value="0" oninput="onNeutralSnapSlider('text',this.value)">
       </div>
       <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Logo</span><span class="slider-val" id="neutral-snap-logo-val">1%</span></div>
-        <input type="range" class="test-slider" id="neutral-snap-logo" min="0" max="50" step="1" value="1" oninput="onNeutralSnapSlider('logo',this.value)">
+        <div class="slider-top"><span class="slider-name">Logo</span><span class="slider-val" id="neutral-snap-logo-val">0%</span></div>
+        <input type="range" class="test-slider" id="neutral-snap-logo" min="0" max="50" step="1" value="0" oninput="onNeutralSnapSlider('logo',this.value)">
       </div>
       <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Graphic</span><span class="slider-val" id="neutral-snap-graphic-val">1%</span></div>
-        <input type="range" class="test-slider" id="neutral-snap-graphic" min="0" max="50" step="1" value="1" oninput="onNeutralSnapSlider('graphic',this.value)">
+        <div class="slider-top"><span class="slider-name">Graphic</span><span class="slider-val" id="neutral-snap-graphic-val">0%</span></div>
+        <input type="range" class="test-slider" id="neutral-snap-graphic" min="0" max="50" step="1" value="0" oninput="onNeutralSnapSlider('graphic',this.value)">
       </div>
       <div class="slider-row">
-        <div class="slider-top"><span class="slider-name">Background</span><span class="slider-val" id="neutral-snap-background-val">1%</span></div>
-        <input type="range" class="test-slider" id="neutral-snap-background" min="0" max="50" step="1" value="1" oninput="onNeutralSnapSlider('background',this.value)">
+        <div class="slider-top"><span class="slider-name">Background</span><span class="slider-val" id="neutral-snap-background-val">0%</span></div>
+        <input type="range" class="test-slider" id="neutral-snap-background" min="0" max="50" step="1" value="0" oninput="onNeutralSnapSlider('background',this.value)">
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Colors below this saturation (near the color-wheel core) snap to pure white or black, per layer type. 0% = off.</div>
 
@@ -3734,6 +3734,7 @@ let bagTexCanvas, bagTexCtx, bagTexture;
 /* Clean colour+artwork snapshot (no finish/PBR overlay) — what the 2D editor shows, so
    the finish maps only affect the 3D viewer. */
 var bagCleanCanvas = null, bagCleanCtx = null;
+var _baseSnapCv = null;   /* base-only atlas snapshot, reused for the 3D-only artwork tone pass */
 /* Atlas padding: a transparent margin (px) around the 2048 printable core so artwork
    placed at the very edge of a UV island isn't clipped at the canvas boundary. UV 0–1
    is mapped to the central 2048 region via texture offset/repeat, so 3D printing is
@@ -4203,6 +4204,16 @@ function drawBagTexture() {
       var _bcx = _baseCacheCv.getContext('2d'); _bcx.clearRect(0,0,W,W); _bcx.drawImage(bagTexCanvas, 0, 0); _baseCacheValid = true;
     }
   }
+  /* 3D-ONLY artwork tone (Testing brightness/saturation/contrast): when non-default, snapshot
+     the base now — the artwork bakes TRUE next (feeding the clean 2D snapshot), then a dedicated
+     pass below re-bakes the artwork TONED onto the 3D atlas. Skipped mid-drag for speed. */
+  var _tone3d = _lightBake() ? 'none' : _layerToneStr();
+  window._skipPBRInArt = false;
+  if (_tone3d !== 'none') {
+    if (!_baseSnapCv || _baseSnapCv.width !== W){ _baseSnapCv = document.createElement('canvas'); _baseSnapCv.width = _baseSnapCv.height = W; }
+    var _bsx = _baseSnapCv.getContext('2d'); _bsx.setTransform(1,0,0,1,0,0); _bsx.clearRect(0,0,W,H); _bsx.drawImage(bagTexCanvas, 0, 0);
+    window._skipPBRInArt = true;   /* pass 1 (TRUE) skips PBR; the toned pass rebuilds it */
+  }
   // 5. Artwork — freeform across the whole atlas, on top of every base colour.
   drawArtworkOnBag();
 
@@ -4217,6 +4228,14 @@ function drawBagTexture() {
     if (!A2D.showHandles2D) _erase(bagHandleClip);
     if (!A2D.showRivets2D)  _erase(bagRivetClip);
     _filteredBagDirty = true;   /* clean bag changed → idle backdrop cache must rebuild */
+  }
+  // 3D-ONLY artwork tone pass: restore the base, then re-bake the artwork through the Testing
+  // tone filter so brightness/saturation/contrast punch the 3D layers. The 2D editor reads the
+  // clean snapshot taken above, so it stays TRUE colour; the base colours are never toned.
+  if (_tone3d !== 'none') {
+    bagTexCtx.setTransform(1,0,0,1,0,0); bagTexCtx.clearRect(0, 0, W, H); bagTexCtx.drawImage(_baseSnapCv, 0, 0);
+    window._skipPBRInArt = false; window._artworkTonePass = true;
+    try { drawArtworkOnBag(); } finally { window._artworkTonePass = false; }
   }
   // Finish (paper) overlay — applied to the 3D colour map AFTER the clean snapshot, so
   // it never appears in the 2D editor. Skipped mid-drag for speed.
@@ -4383,15 +4402,22 @@ function getArtCorr() {
    to BAG_UV.exterior). The caller sets the clip region beforehand.
    mode 'color' → tinted logo / colored text (visible artwork)
    mode 'mask'  → logo alpha / white text (PBR + bump shape masks) */
-var LAYER_BRIGHTNESS = 1.0;   /* TRUE COLOUR default — no artwork pre-darken; the 2D editor reads accurate sRGB. Lower in Testing only to pre-condition artwork for the lit 3D view. */
-var LAYER_SATURATION = 1.0;    /* TRUE COLOUR default — no artwork saturation boost, so the 2D editor reads accurate sRGB. Raise in Testing only to add punch to the lit 3D view. */
-var LAYER_CONTRAST   = 1.0;    /* TRUE COLOUR default — no artwork contrast boost. */
-function _layerFilter(){
+var LAYER_BRIGHTNESS = 1.0;   /* TRUE COLOUR default. 3D-VIEWER ONLY — applied to artwork layers in a dedicated pass AFTER the clean (2D) snapshot, so the 2D editor stays accurate sRGB. Raise in Testing to pre-condition artwork for the lit 3D view. */
+var LAYER_SATURATION = 1.0;    /* TRUE COLOUR default. 3D-VIEWER ONLY (see above) — the 2D editor is unaffected. Raise in Testing to add punch to the lit 3D view. */
+var LAYER_CONTRAST   = 1.0;    /* TRUE COLOUR default. 3D-VIEWER ONLY (see above). */
+/* Raw Testing artwork-tone string — decides/drives the 3D-only tone pass in drawBagTexture. */
+function _layerToneStr(){
   var f = '';
   if (LAYER_BRIGHTNESS !== 1) f += ' brightness(' + LAYER_BRIGHTNESS + ')';
   if (LAYER_SATURATION !== 1) f += ' saturate(' + LAYER_SATURATION + ')';
   if (LAYER_CONTRAST   !== 1) f += ' contrast(' + LAYER_CONTRAST + ')';
   return f === '' ? 'none' : f.replace(/^ /, '');
+}
+function _layerFilter(){
+  /* 3D-ONLY: the artwork tone is baked in a dedicated pass after the clean (2D) snapshot,
+     guarded by window._artworkTonePass. Everywhere else (incl. the bake that feeds the 2D
+     editor) this returns 'none', so artwork stays TRUE colour in the 2D editor. */
+  return window._artworkTonePass ? _layerToneStr() : 'none';
 }
 /* Per-layer colour filter = the global artwork tone filter + this layer's own Hue/Saturation
    adjust (L.imgHue / L.imgSat). A global image filter, independent of the Recolor feature —
@@ -4717,8 +4743,9 @@ function drawArtworkOnBag() {
     drawLayerContent(bagTexCtx, L, 1, corr, 'color');
     bagTexCtx.restore();
   }
-  /* Rebuild PBR maps from scratch then overlay artwork finish (skipped while dragging / colour-only) */
-  if (!_lightBake()) rebuildPBRMaps();
+  /* Rebuild PBR maps from scratch then overlay artwork finish (skipped while dragging / colour-only).
+     Also skipped in pass 1 of a 3D-tone bake — the toned pass rebuilds it (window._skipPBRInArt). */
+  if (!_lightBake() && !window._skipPBRInArt) rebuildPBRMaps();
 }
 
 /* Artwork is now freeform across the whole atlas — layers position against the full
@@ -6282,9 +6309,9 @@ function _satAdjust(rgb, satPct) {
 /* Near-core (low-chroma) colors get forced to pure white or black so off-white borders
    / off-black outlines render clean. Uses chroma (max−min), NOT HSL saturation — near
    white/black, HSL saturation spikes unreliably, so it misclassifies off-whites. */
-var neutralSnap = 1; /* legacy global default; per-layer-type thresholds live in NEUTRAL_SNAP (Testing) */
+var neutralSnap = 0; /* legacy global default; per-layer-type thresholds live in NEUTRAL_SNAP (Testing) */
 /* Per-layer-type neutral-snap thresholds (chroma % below which a colour snaps to pure white/black). */
-var NEUTRAL_SNAP = { text: 1, logo: 1, graphic: 1, background: 1 };
+var NEUTRAL_SNAP = { text: 0, logo: 0, graphic: 0, background: 0 };
 function _nsKey(L) { return !L ? 'graphic' : (L.kind === 'text' ? 'text' : L.isBackground ? 'background' : L.isLogo ? 'logo' : 'graphic'); }
 function neutralSnapForLayer(L) { var v = NEUTRAL_SNAP[_nsKey(L)]; return (v != null) ? v : neutralSnap; }
 function _chroma(rgb) { return (Math.max(rgb[0], rgb[1], rgb[2]) - Math.min(rgb[0], rgb[1], rgb[2])) / 255; }
