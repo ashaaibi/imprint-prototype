@@ -216,6 +216,9 @@
       function colorBlock(title, region) {
         y = section(c, y, title) + 34;
         kv(c, M, y, PW - 2 * M, L('Base colour / finish', 'اللون الأساسي / التشطيب'), _hexUp(BAG[region].color) + '   ·   ' + _capFinish(BAG[region].finish), BAG[region].color); y += 56;
+        if (window.IMP_COLOR) { var _sp = IMP_COLOR.formatSpec(BAG[region].color);
+          TX(c, _sp.cmykStr + '   ·   ' + (_sp.pantoneExact ? 'Pantone ' : '≈ Pantone ') + _sp.pantone + (_sp.outOfGamut ? '   ⚠ ' + L('outside CMYK gamut', 'خارج نطاق CMYK') : ''),
+             M, y, { size: 18, color: _sp.outOfGamut ? '#b8860b' : SUB }); y += 42; }
         var fc = BAG[region].faceColors || {}, faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) ? Object.keys(BAG_FACES[region]) : ['front', 'back', 'left', 'right', 'base'];
         faces.forEach(function (f) {
           var hex = fc[f] || BAG[region].color, over = !!fc[f];
@@ -228,6 +231,9 @@
       y = section(c, y, L('Hardware', 'الإكسسوارات')) + 34;
       if (BAG.ribbon) { kv(c, M, y, cw, L('Handles', 'المقابض'), _hexUp(BAG.ribbon.color) + '  ' + _capFinish(BAG.ribbon.finish || ''), BAG.ribbon.color); }
       if (BAG.rivet) { kv(c, col2, y, cw, L('Rivets', 'البرشام'), _hexUp(BAG.rivet.color), BAG.rivet.color); }
+      if (window.IMP_COLOR) { y += 40;
+        if (BAG.ribbon) { var _sh = IMP_COLOR.formatSpec(BAG.ribbon.color); TX(c, _sh.cmykStr + '  ·  ' + (_sh.pantoneExact ? '' : '≈ ') + _sh.pantone + (_sh.outOfGamut ? '  ⚠' : ''), M, y, { size: 18, color: _sh.outOfGamut ? '#b8860b' : SUB }); }
+        if (BAG.rivet) { var _sr = IMP_COLOR.formatSpec(BAG.rivet.color); TX(c, _sr.cmykStr + '  ·  ' + (_sr.pantoneExact ? '' : '≈ ') + _sr.pantone + (_sr.outOfGamut ? '  ⚠' : ''), col2, y, { size: 18, color: _sr.outOfGamut ? '#b8860b' : SUB }); } }
       footer(c, ref, 2, 5); pages.push(p2);
 
       /* ── PAGE 3 — artwork layers ── */
