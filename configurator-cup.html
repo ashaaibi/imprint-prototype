@@ -2825,10 +2825,10 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer brightness</span>
-          <span class="slider-val" id="layer-brightness-val">0.60</span>
+          <span class="slider-val" id="layer-brightness-val">1.0</span>
         </div>
         <input type="range" class="test-slider" id="layer-brightness-slider"
-               min="0" max="2" step="0.05" value="0.60"
+               min="0" max="2" step="0.05" value="1.0"
                oninput="onLayerBrightnessSlider(this.value)">
       </div>
 
@@ -2845,10 +2845,10 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer contrast</span>
-          <span class="slider-val" id="layer-contrast-val">1.45</span>
+          <span class="slider-val" id="layer-contrast-val">1.0</span>
         </div>
         <input type="range" class="test-slider" id="layer-contrast-slider"
-               min="0" max="3" step="0.05" value="1.45"
+               min="0" max="3" step="0.05" value="1.0"
                oninput="onLayerContrastSlider(this.value)">
       </div>
 
@@ -4468,9 +4468,9 @@ function getArtCorr() {
    to BAG_UV.exterior). The caller sets the clip region beforehand.
    mode 'color' → tinted logo / colored text (visible artwork)
    mode 'mask'  → logo alpha / white text (PBR + bump shape masks) */
-var LAYER_BRIGHTNESS = 0.6;   /* testing: brightness multiplier applied to artwork pixels only */
+var LAYER_BRIGHTNESS = 1.0;   /* TRUE COLOUR default — no artwork pre-darken; the 2D editor reads accurate sRGB. Lower in Testing only to pre-condition artwork for the lit 3D view. */
 var LAYER_SATURATION = 1.0;    /* TRUE COLOUR default — no artwork saturation boost, so the 2D editor reads accurate sRGB. Raise in Testing only to add punch to the lit 3D view. */
-var LAYER_CONTRAST   = 1.45;   /* testing: contrast boost for artwork pixels only */
+var LAYER_CONTRAST   = 1.0;    /* TRUE COLOUR default — no artwork contrast boost. */
 function _layerFilter(){
   var f = '';
   if (LAYER_BRIGHTNESS !== 1) f += ' brightness(' + LAYER_BRIGHTNESS + ')';
