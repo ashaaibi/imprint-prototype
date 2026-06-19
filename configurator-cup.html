@@ -3052,7 +3052,7 @@
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
-<script src="spec-pdf.js?v=5"></script>
+<script src="spec-pdf.js?v=6"></script>
 <script src="color-calibration.js?v=1"></script>
 <script>
 /* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
@@ -7187,7 +7187,7 @@ function onLayerExtrude(id, val) {
   var L = getLayer(id); if (!L) return;
   val = parseFloat(val); L.extrude = val;
   var lbl = document.getElementById('lyr-' + id + '-extrude-val'); if (lbl) lbl.textContent = val.toFixed(2);
-  rebuildBumpMap(); updatePricing();
+  drawBagTexture(); updatePricing();   /* full re-bake: the emboss bevel is composited into the colour atlas (overlayArtworkEmboss), not just the bump map */
 }
 /* Emboss / Deboss as 3 states (none / emboss / deboss) — magnitude comes from the Testing values. */
 function _embossSegHTML(id, L) {
@@ -7202,7 +7202,7 @@ function _embossSegHTML(id, L) {
 function onLayerEmboss(id, mode) {
   var L = getLayer(id); if (!L) return;
   L.extrude = (mode === 'emboss') ? EMBOSS_DEPTH : (mode === 'deboss') ? -DEBOSS_DEPTH : 0;
-  rebuildBumpMap(); updatePricing();
+  drawBagTexture(); updatePricing();   /* full re-bake so the emboss/deboss bevel shows immediately (was rebuildBumpMap only → no visual change until a finish re-click) */
   if (typeof renderLayersList === 'function') renderLayersList();   /* refresh the active button */
 }
 function onEmbossDepth(which, val) {
@@ -7211,7 +7211,7 @@ function onEmbossDepth(which, val) {
   var lbl = document.getElementById('emboss-' + which + '-val'); if (lbl) lbl.textContent = val.toFixed(1);
   /* re-apply to every layer currently using that mode so the change is live */
   (BAG.artwork.layers || []).forEach(function(L) { if (!L) return; if (L.extrude > 0) L.extrude = EMBOSS_DEPTH; else if (L.extrude < 0) L.extrude = -DEBOSS_DEPTH; });
-  rebuildBumpMap();
+  drawBagTexture();   /* re-bake colour bevel + bump for every embossed layer */
 }
 function onLayerPatStack(id, mode) {
   var L = getLayer(id); if (!L) return;
@@ -8752,7 +8752,9 @@ function applyBagFinish(region, key, btn, instant) {
   /* Roughness + metalness: ease over 1s when the user changes finish; snap on load/clear */
   var targetR = p.roughness * PBR_MAX.roughness;
   var targetM = p.metalness * PBR_MAX.metalness;
-  if (instant || !configReady || finishTweenMs <= 0) {
+  /* Handles (ribbon) + lid/rivet snap immediately via the slider path — their eased tween only
+     advances while animate() ticks, so a finish click otherwise didn't show until a manual tweak. */
+  if (instant || !configReady || finishTweenMs <= 0 || region === 'ribbon' || region === 'rivet') {
     finishTweens[region] = null;
     onBagRoughness(region, p.roughness);
     onBagMetalness(region, p.metalness);

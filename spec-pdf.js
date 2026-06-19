@@ -131,13 +131,15 @@
       var uv = (clip && clip.bbox) ? clip.bbox : ((typeof BAG_UV !== 'undefined') ? BAG_UV[region] : null);
       if (!uv) return null;
       var measuring = !!(opts.measure && _dieDims(opts.dims));
-      /* one GAP value (face edge → measurement line) shared by W/H/L; same look on every line */
-      var GAP = Math.round(Math.min(uv.w, uv.h) * 0.06);
-      var FS = Math.round(uv.h * 0.030);
-      var padR = uv.w * 0.06, padBot = uv.h * 0.06;
-      var mL = measuring ? (GAP + FS * 2.6) : padR;   /* left room for the height bracket + rotated label */
-      var mT = measuring ? (GAP + FS * 2.2) : padBot; /* top room for the width / length brackets + label above */
-      var ox = uv.x - mL, oy = uv.y - mT, ow = uv.w + mL + padR, oh = uv.h + mT + padBot;
+      var FS = Math.round(Math.min(uv.w, uv.h) * 0.045);   /* measurement font */
+      var GAP = Math.round(FS * 1.4);                       /* face edge → measurement line (same gap for W/H/L) */
+      /* crop box (island area); allow a forced common size so exterior & interior come out EQUAL */
+      var bw = (opts.box && opts.box.w) ? opts.box.w : uv.w;
+      var bh = (opts.box && opts.box.h) ? opts.box.h : uv.h;
+      var cx = uv.x + uv.w / 2, cy = uv.y + uv.h / 2, ix = cx - bw / 2, iy = cy - bh / 2;
+      /* ONE uniform margin on every side → flip-safe room for the labels (fixes the missing W/L numbers) */
+      var MARG = Math.round(measuring ? (GAP + FS * 2.8) : Math.min(bw, bh) * 0.06);
+      var ox = ix - MARG, oy = iy - MARG, ow = bw + 2 * MARG, oh = bh + 2 * MARG;
       var cw = Math.round(ow), ch = Math.round(oh);
       var cn = document.createElement('canvas'); cn.width = cw; cn.height = ch; var x = cn.getContext('2d');
       x.fillStyle = FAINT; x.fillRect(0, 0, cw, ch);   /* off-island = the layout card colour (grayish), not white */
@@ -194,6 +196,56 @@
   function _ref() { return 'IMP-' + (Date.now().toString(36).toUpperCase().slice(-7)); }
   function _today() { try { return new Date().toLocaleDateString(AR() ? 'ar' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return new Date().toDateString(); } }
 
+  /* ── manufacturing-spec mapping (configurator state → factory checkboxes) ── */
+  function _hexToRgb(h) { h = ('' + (h || '')).replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); if (h.length < 6) return null; var n = parseInt(h.slice(0, 6), 16); return isNaN(n) ? null : { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }; }
+  function _hue(r, g, b) { r /= 255; g /= 255; b /= 255; var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0; if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; } return h; }
+  function _foilClass(hex) { var c = _hexToRgb(hex); if (!c) return null; var mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b); if ((mx + mn) / 510 > 0.82) return 'silver'; var h = _hue(c.r, c.g, c.b); if (h >= 150 && h <= 210) return 'silver'; if (h >= 18 && h <= 75) return 'gold'; return null; }
+  function _layerHex(L) { if (!L) return null; if (L.color) return L.color; try { if (L.recolor && L.recolor.extracted && L.recolor.extracted.length) { var e = L.recolor.extracted[0]; return e.to || e.hex || (typeof e === 'string' ? e : null); } } catch (_) {} return null; }
+  function _specData() {
+    var ext = (typeof BAG !== 'undefined' && BAG.exterior && BAG.exterior.finish) || 'matte';
+    var layers = (typeof BAG !== 'undefined' && BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function (L) { return L && L.visible; }) : [];
+    var silver = false, gold = false;
+    layers.forEach(function (L) { if (L.finish === 'foil') { if (_foilClass(_layerHex(L)) === 'gold') gold = true; else silver = true; } });
+    if (ext === 'foil') { if (_foilClass(BAG.exterior.color) === 'gold') gold = true; else silver = true; }
+    var mdl = (typeof currentBagModel !== 'undefined') ? currentBagModel : 'wide';
+    return {
+      type: (ext === 'kraft') ? 'texture' : (ext === 'gloss' || ext === 'foil') ? 'glossy' : 'matt',
+      spotUV: ext === 'gloss' || layers.some(function (L) { return L.finish === 'gloss'; }),
+      emboss: layers.some(function (L) { return L.extrude > 0; }),
+      deboss: layers.some(function (L) { return L.extrude < 0; }),
+      silver: silver, gold: gold,
+      horiz: (mdl === 'wide' || mdl === 'gift')
+    };
+  }
+  /* a tick-box (filled gold + check when on) */
+  function _chkbox(c, x, y, sz, on) {
+    c.save(); roundRect(c, x, y, sz, sz, 5); c.fillStyle = on ? GOLD : '#ffffff'; c.fill();
+    c.strokeStyle = on ? GOLD : '#c2bdb2'; c.lineWidth = 2; c.stroke();
+    if (on) { c.strokeStyle = '#fff'; c.lineWidth = Math.max(2.5, sz * 0.13); c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(x + sz * 0.23, y + sz * 0.53); c.lineTo(x + sz * 0.42, y + sz * 0.72); c.lineTo(x + sz * 0.78, y + sz * 0.28); c.stroke(); }
+    c.restore();
+  }
+  function _measure(c, s, size, wt) { c.save(); c.font = (wt || 400) + ' ' + size + 'px ' + _font(); var w = c.measureText('' + s).width; c.restore(); return w; }
+  /* spec row: a bold label, then checkbox options flowed/wrapped beneath it. Returns next y. */
+  function _specRow(c, x, y, w, label, opts) {
+    TX(c, label, x, y, { size: 25, weight: 700, color: INK });
+    var lineY = y + 44, ox = x + 6, sz = 26, fs = 23, pad = 28;
+    opts.forEach(function (o) {
+      var tw = _measure(c, o.t, fs, o.on ? 600 : 400);
+      if (ox > x + 6 && ox + sz + 11 + tw > x + w) { ox = x + 6; lineY += 44; }   /* wrap */
+      _chkbox(c, ox, lineY - sz + 3, sz, o.on);
+      TX(c, o.t, ox + sz + 11, lineY, { size: fs, weight: o.on ? 600 : 400, color: o.on ? INK : SUB, autoRtl: false });
+      ox += sz + 11 + tw + pad;
+    });
+    return lineY + 40;
+  }
+  function _valRow(c, x, y, w, label, value, hex) {
+    TX(c, label, x, y, { size: 25, weight: 700, color: INK });
+    var vx = x + 6, vy = y + 44;
+    if (hex) { swatch(c, vx, vy - 30, hex, 34); vx += 48; }
+    TX(c, value, vx, vy, { size: 24, weight: 600, color: INK, autoRtl: false });
+    return vy + 40;
+  }
+
   /* ── main ───────────────────────────────────────────────────────────── */
   window.generateSpecPDF = async function (btn) {
     var jspdf = window.jspdf || window.jsPDF; var JsPDF = jspdf && (jspdf.jsPDF || jspdf);
@@ -232,7 +284,9 @@
       shots.top = _capture3D(ft, 0.18);
       shots.bottom = _capture3D(ft, Math.PI - 0.18);
       if (sv && orbit) { orbit.theta = sv.theta; orbit.phi = sv.phi; orbit.radius = sv.radius; orbit.autoSpin = sv.autoSpin; if (typeof sphericalToCamera === 'function') sphericalToCamera(); if (typeof realismRender === 'function') realismRender(); }
-      var dieExt = _capture2D('exterior', { measure: true, dims: dims }), dieInt = _capture2D('interior', { measure: true, dims: dims }), dieHandles = _capture2D('handles', {});
+      var _ebb = (typeof bagExtClip !== 'undefined' && bagExtClip) ? bagExtClip.bbox : null, _ibb = (typeof bagIntClip !== 'undefined' && bagIntClip) ? bagIntClip.bbox : null;
+      var _dieBox = (_ebb && _ibb) ? { w: Math.max(_ebb.w, _ibb.w), h: Math.max(_ebb.h, _ibb.h) } : null;   /* equal exterior/interior size */
+      var dieExt = _capture2D('exterior', { measure: true, dims: dims, box: _dieBox }), dieInt = _capture2D('interior', { measure: true, dims: dims, box: _dieBox });
       if (prevMode === '2d' && typeof setViewMode === 'function') setViewMode('2d');
 
       /* restore the quality settings */
@@ -242,19 +296,49 @@
 
       var pages = [], jobs = [], c;
 
-      /* ── PAGE 1 — cover (hero left · at-a-glance right) ── */
+      /* ── PAGE 1 — cover + manufacturing spec checklist (mapped from the design) ── */
+      var sd = _specData();
       var p1 = newPage(); c = p1.c;
       header(c, L('Product spec sheet', 'ورقة مواصفات المنتج'));
-      TX(c, model.label, M, 380, { size: 42, weight: 700, color: INK });
-      TX(c, L('Ref ', 'مرجع ') + ref + '  ·  ' + date, M, 436, { size: 28, color: SUB });
-      var heroW = PW / 2 - M - 30, heroH = PH - 500 - 170;
-      jobs.push(placeImg(c, shots.hero, M, 490, heroW, heroH, L('3D preview', 'معاينة ثلاثية الأبعاد')));
-      var rx = PW / 2 + 24, rw = PW - M - rx;
-      var ry = section(c, 540, L('At a glance', 'نظرة سريعة'), rx) + 56;
-      kv(c, rx, ry, rw, L('Size (L×H×W)', 'المقاس (طول×ارتفاع×عرض)'), dims); ry += 90;
-      kv(c, rx, ry, rw, L('Quantity', 'الكمية'), qty.toLocaleString() + ' ' + L('units', 'وحدة')); ry += 90;
-      kv(c, rx, ry, rw, L('Exterior finish', 'تشطيب الخارج'), _capFinish(BAG.exterior.finish), BAG.exterior.color); ry += 90;
-      kv(c, rx, ry, rw, L('Interior finish', 'تشطيب الداخل'), _capFinish(BAG.interior.finish), BAG.interior.color);
+      TX(c, model.label, M, 356, { size: 40, weight: 700, color: INK });
+      TX(c, L('Ref ', 'مرجع ') + ref + '  ·  ' + date, M, 404, { size: 26, color: SUB });
+      var scol = (PW - 2 * M - 80) / 2, sLX = M, sRX = M + scol + 80;
+      /* 3D preview — smaller, sits at the top of the right column */
+      jobs.push(placeImg(c, shots.hero, sRX, 318, scol, 624, L('3D preview', 'معاينة ثلاثية الأبعاد')));
+      section(c, 470, L('Manufacturing spec', 'مواصفات التصنيع'), sLX);
+      /* LEFT column */
+      var ly = 542;
+      ly = _valRow(c, sLX, ly, scol, L('Size (L×H×W)', 'المقاس (طول×ارتفاع×عرض)'), dims) + 12;
+      ly = _valRow(c, sLX, ly, scol, L('Quantity (MOQ)', 'الكمية'), qty.toLocaleString() + ' ' + L('pcs', 'قطعة')) + 12;
+      ly = _specRow(c, sLX, ly, scol, L('Type', 'النوع'), [
+        { t: L('White card · matt lam.', 'كرتون · لامينيت مطفي'), on: sd.type === 'matt' },
+        { t: L('White card · gloss lam.', 'كرتون · لامينيت لامع'), on: sd.type === 'glossy' },
+        { t: L('Texture paper', 'ورق محبب'), on: sd.type === 'texture' }]) + 12;
+      ly = _specRow(c, sLX, ly, scol, L('Thickness', 'السماكة'), [
+        { t: '250 gsm', on: true }, { t: '300 gsm', on: false }, { t: '350 gsm', on: false }]) + 12;
+      ly = _specRow(c, sLX, ly, scol, L('Handle type', 'نوع المقبض'), [
+        { t: L('Satin ribbon', 'شريط ساتان'), on: true }, { t: L('Grosgrain', 'غروغرين'), on: false }, { t: L('Cotton rope', 'حبل قطني'), on: false }]) + 12;
+      ly = _specRow(c, sLX, ly, scol, L('Handle method', 'تركيب المقبض'), [
+        { t: L('Eyelet', 'عيون'), on: false }, { t: L('Tie knot', 'عقدة'), on: false }, { t: L('Embedded handle', 'مقبض مدمج'), on: true }]) + 12;
+      ly = _valRow(c, sLX, ly, scol, L('Handle colour', 'لون المقبض'), (BAG.ribbon ? _hexUp(BAG.ribbon.color) : '—'), BAG.ribbon ? BAG.ribbon.color : null);
+      if (BAG.ribbon) _cmykLine(c, BAG.ribbon.color, sLX + 6, ly + 6, 21);
+      /* RIGHT column (below the 3D preview) */
+      var rry = 1012;
+      rry = _specRow(c, sRX, rry, scol, L('Surface treatment', 'المعالجة السطحية'), [
+        { t: L('Gold foil', 'ختم ذهبي'), on: sd.gold }, { t: L('Silver foil', 'ختم فضي'), on: sd.silver },
+        { t: L('Spot UV', 'يو في موضعي'), on: sd.spotUV }, { t: L('Embossing', 'نقش بارز'), on: sd.emboss }, { t: L('Debossing', 'نقش غائر'), on: sd.deboss }]) + 12;
+      rry = _specRow(c, sRX, rry, scol, L('Bottom', 'القاعدة'), [
+        { t: L('Full paste', 'لصق كامل'), on: true }, { t: L('Normal paste', 'لصق عادي'), on: false }]) + 12;
+      rry = _specRow(c, sRX, rry, scol, L('Paper inside', 'الورق الداخلي'), [
+        { t: L('Brand new', 'أبيض جديد'), on: true }, { t: L('Normal (grey)', 'عادي رمادي'), on: false }]) + 12;
+      rry = _specRow(c, sRX, rry, scol, L('Direction style', 'الاتجاه'), [
+        { t: L('Horizontal', 'أفقي'), on: sd.horiz }, { t: L('Vertical', 'عمودي'), on: !sd.horiz }]) + 12;
+      rry = _specRow(c, sRX, rry, scol, L('Ribbon bow', 'فيونكة'), [
+        { t: L('Yes', 'نعم'), on: false }, { t: L('No', 'لا'), on: true }]) + 12;
+      rry = _specRow(c, sRX, rry, scol, L('Ribbon method', 'طريقة الشريط'), [
+        { t: L('Hole & ribbon', 'ثقب وشريط'), on: true }, { t: L('Sticker outside', 'ملصق خارجي'), on: false }, { t: L('Embedded inside', 'مدمج داخلي'), on: false }]) + 12;
+      rry = _specRow(c, sRX, rry, scol, L('Handle size', 'مقاس المقبض'), [
+        { t: L('Normal', 'عادي'), on: true }, { t: L('Long', 'طويل'), on: false }]);
       footer(c, ref, 1, 4); pages.push(p1);
 
       /* ── PAGE 2 — materials & colours (exterior left · interior right, per-face CMYK/Pantone) ── */
@@ -280,14 +364,11 @@
       if (BAG.rivet) { kv(c, rightX, hy, colW, L('Rivets', 'البرشام'), _hexUp(BAG.rivet.color), BAG.rivet.color); _cmykLine(c, BAG.rivet.color, rightX, hy + 46, 21); }
       footer(c, ref, 2, 4); pages.push(p2);
 
-      /* ── PAGE 3 — 2D dieline layout (BEFORE the 3D views) ── */
+      /* ── PAGE 3 — 2D dieline layout (BEFORE the 3D views; handles excluded, big equal panels) ── */
       var p3 = newPage(); c = p3.c; header(c, L('2D dieline layout', 'مخطط القص المسطّح'));
-      /* a separate Handles box ONLY when the handles are NOT shown in the 2D editor */
-      var showHandlesBox = !!dieHandles && !(typeof A2D !== 'undefined' && A2D.showHandles2D);
-      var dY = 330, dH = showHandlesBox ? 740 : 870, dW = PW - 2 * M;
+      var dY = 320, dH = 900, dW = PW - 2 * M;
       jobs.push(placeImg(c, dieExt, M, dY, dW, dH, L('Exterior layout', 'مخطط الخارج')));
-      jobs.push(placeImg(c, dieInt, M, dY + dH + 34, dW, dH, L('Interior layout', 'مخطط الداخل')));
-      if (showHandlesBox) jobs.push(placeImg(c, dieHandles, M, dY + 2 * (dH + 34), dW, 200, L('Handles', 'المقابض')));
+      jobs.push(placeImg(c, dieInt, M, dY + dH + 30, dW, dH, L('Interior layout', 'مخطط الداخل')));
       footer(c, ref, 3, 4); pages.push(p3);
 
       /* ── PAGE 4 — 3D views ── */
