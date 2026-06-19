@@ -96,30 +96,64 @@
     } catch (e) { console.warn('3D capture failed', e); return null; }
   }
 
-  function _capture2D(region) {
+  /* Parse a dims string like "28 × 20 × 14 cm" → [W,H,D] (numbers) or null. */
+  function _dieDims(s) { var m = ('' + (s || '')).match(/\d+(?:\.\d+)?/g); return (m && m.length >= 2) ? m.map(parseFloat) : null; }
+  /* A dimension bracket: a thin line + end ticks + a centred "<n> cm" label.
+     vertical → runs along Y at screen-x `a`, between b0..b1 (label rotated, to the left);
+     horizontal → runs along X at screen-y `a`, between b0..b1 (label below). */
+  function _dimBracket(c, vertical, a, b0, b1, txt) {
+    var T = 9;
+    c.save(); c.strokeStyle = '#a99a7d'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath();
+    if (vertical) { c.moveTo(a, b0); c.lineTo(a, b1); c.moveTo(a - T, b0); c.lineTo(a + T, b0); c.moveTo(a - T, b1); c.lineTo(a + T, b1); }
+    else { c.moveTo(b0, a); c.lineTo(b1, a); c.moveTo(b0, a - T); c.lineTo(b0, a + T); c.moveTo(b1, a - T); c.lineTo(b1, a + T); }
+    c.stroke(); c.restore();
+    var mid = (b0 + b1) / 2;
+    if (vertical) { c.save(); c.translate(a - 14, mid); c.rotate(-Math.PI / 2); TX(c, txt, 0, 0, { size: 19, weight: 700, color: SUB, align: 'center', autoRtl: false }); c.restore(); }
+    else TX(c, txt, mid, a + 28, { size: 19, weight: 700, color: SUB, align: 'center', autoRtl: false });
+  }
+
+  /* Flat dieline of a region (exterior | interior | handles): the clean artwork CLIPPED to the
+     island (off-island UVs → transparent, so the grayish card colour shows through), the UV-guide
+     outline, and optional W×H×D measurement brackets. No per-face sub-labels. */
+  function _capture2D(region, opts) {
     try {
+      opts = opts || {};
       if (typeof bagCleanCanvas === 'undefined' || !bagCleanCanvas) return null;
-      var uv = (typeof BAG_UV !== 'undefined') ? BAG_UV[region] : null; if (!uv) return null;
-      var cw = Math.round(uv.w), ch = Math.round(uv.h);
+      var clip = (region === 'handles') ? (typeof bagHandleClip !== 'undefined' ? bagHandleClip : null)
+               : (region === 'interior') ? (typeof bagIntClip !== 'undefined' ? bagIntClip : null)
+               : (typeof bagExtClip !== 'undefined' ? bagExtClip : null);
+      var uv = (clip && clip.bbox) ? clip.bbox : ((typeof BAG_UV !== 'undefined') ? BAG_UV[region] : null);
+      if (!uv) return null;
+      var measuring = !!(opts.measure && _dieDims(opts.dims));
+      var padR = uv.w * 0.07, padBot = uv.h * 0.07;
+      var mL = measuring ? uv.w * 0.15 : padR;     /* left margin for the height bracket */
+      var mT = measuring ? uv.h * 0.15 : padBot;   /* top margin for the width / depth brackets */
+      var ox = uv.x - mL, oy = uv.y - mT, ow = uv.w + mL + padR, oh = uv.h + mT + padBot;
+      var cw = Math.round(ow), ch = Math.round(oh);
       var cn = document.createElement('canvas'); cn.width = cw; cn.height = ch; var x = cn.getContext('2d');
-      x.fillStyle = '#ffffff'; x.fillRect(0, 0, cw, ch);
-      /* flipped vertically to match the 2D editor orientation, + the UV guide (silhouette/outlines) */
-      x.save(); x.translate(0, ch); x.scale(1, -1);
-      x.drawImage(bagCleanCanvas, uv.x, uv.y, uv.w, uv.h, 0, 0, cw, ch);
-      if (typeof bagUVGuideCanvas !== 'undefined' && bagUVGuideCanvas && typeof bagTexCanvas !== 'undefined') {
-        var k = bagUVGuideCanvas.width / bagTexCanvas.width;
-        x.drawImage(bagUVGuideCanvas, uv.x * k, uv.y * k, uv.w * k, uv.h * k, 0, 0, cw, ch);
+      x.fillStyle = FAINT; x.fillRect(0, 0, cw, ch);   /* off-island = the layout card colour (grayish), not white */
+      var sx = cw / ow, sy = ch / oh;
+      var atlasW = (typeof bagTexCanvas !== 'undefined' && bagTexCanvas) ? bagTexCanvas.width : 2048;
+      x.save();
+      x.translate(0, ch); x.scale(1, -1); x.scale(sx, sy); x.translate(-ox, -oy);   /* flip to editor orientation + atlas→crop */
+      if (region === 'handles') {
+        /* the clean canvas erases handles/rivets by default → paint the island in the handle colour */
+        if (clip && clip.path) { x.fillStyle = (typeof BAG !== 'undefined' && BAG.ribbon && BAG.ribbon.color) || '#cccccc'; x.fill(clip.path); x.lineWidth = 3 / sx; x.strokeStyle = 'rgba(0,0,0,0.22)'; x.stroke(clip.path); }
+      } else {
+        x.save(); if (clip && clip.path) { x.beginPath(); x.clip(clip.path); }   /* OFF-ISLAND UVs → opacity 0 */
+        x.drawImage(bagCleanCanvas, 0, 0); x.restore();
+        if (typeof bagUVGuideCanvas !== 'undefined' && bagUVGuideCanvas) x.drawImage(bagUVGuideCanvas, 0, 0, bagUVGuideCanvas.width, bagUVGuideCanvas.height, 0, 0, atlasW, atlasW);
       }
       x.restore();
-      /* labels (un-flipped) at the centre-BOTTOM of each face */
-      var faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) || {};
-      x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '700 ' + Math.round(ch * 0.05) + 'px ' + _font(); x.lineJoin = 'round';
-      Object.keys(faces).forEach(function (f) {
-        var bb = faces[f]; if (!bb) return;
-        var lx = (bb.x + bb.w / 2) - uv.x, ly = ch - ((bb.y + bb.h * 0.14) - uv.y);
-        x.lineWidth = Math.round(ch * 0.014); x.strokeStyle = '#ffffff'; x.strokeText(_faceName(f), lx, ly);
-        x.fillStyle = '#111'; x.fillText(_faceName(f), lx, ly);
-      });
+      /* measurement brackets (un-flipped): front → W (above) + H (left of a side); a side → D (above). */
+      if (measuring) {
+        var dd = _dieDims(opts.dims), faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) || {};
+        var disp = function (bb) { var x0 = (bb.x - ox) * sx, x1 = (bb.x + bb.w - ox) * sx, y0 = ch - (bb.y - oy) * sy, y1 = ch - (bb.y + bb.h - oy) * sy; return { l: Math.min(x0, x1), r: Math.max(x0, x1), t: Math.min(y0, y1), b: Math.max(y0, y1) }; };
+        var side = faces.left || faces.right, hface = side || faces.front;
+        if (faces.front) { var fr = disp(faces.front); _dimBracket(x, false, 44, fr.l, fr.r, dd[0] + ' cm'); }
+        if (hface) { var hr = disp(hface); _dimBracket(x, true, 44, hr.t, hr.b, dd[1] + ' cm'); }
+        if (side && dd[2] != null) { var sr = disp(side); _dimBracket(x, false, 44, sr.l, sr.r, dd[2] + ' cm'); }
+      }
       return cn.toDataURL('image/jpeg', 0.92);
     } catch (e) { console.warn('2D capture failed', e); return null; }
   }
@@ -181,7 +215,7 @@
       shots.top = _capture3D(ft, 0.18);
       shots.bottom = _capture3D(ft, Math.PI - 0.18);
       if (sv && orbit) { orbit.theta = sv.theta; orbit.phi = sv.phi; orbit.radius = sv.radius; orbit.autoSpin = sv.autoSpin; if (typeof sphericalToCamera === 'function') sphericalToCamera(); if (typeof realismRender === 'function') realismRender(); }
-      var dieExt = _capture2D('exterior'), dieInt = _capture2D('interior');
+      var dieExt = _capture2D('exterior', { measure: true, dims: dims }), dieInt = _capture2D('interior', { measure: true, dims: dims }), dieHandles = _capture2D('handles', {});
       if (prevMode === '2d' && typeof setViewMode === 'function') setViewMode('2d');
 
       var pages = [], jobs = [];
@@ -203,7 +237,7 @@
       ky += 60;
       kv(c, col1, ky, cw, L('Exterior', 'الخارج'), _capFinish(BAG.exterior.finish), BAG.exterior.color);
       kv(c, col2, ky, cw, L('Interior', 'الداخل'), _capFinish(BAG.interior.finish), BAG.interior.color);
-      footer(c, ref, 1, 5); pages.push(p1);
+      footer(c, ref, 1, 4); pages.push(p1);
 
       /* ── PAGE 2 — materials & colours ── */
       var p2 = newPage(); c = p2.c; header(c, L('Materials & colours', 'الخامات والألوان'));
@@ -234,30 +268,14 @@
       if (window.IMP_COLOR) { y += 40;
         if (BAG.ribbon) { var _sh = IMP_COLOR.formatSpec(BAG.ribbon.color); TX(c, _sh.cmykStr + '  ·  ' + (_sh.pantoneExact ? '' : '≈ ') + _sh.pantone + (_sh.outOfGamut ? '  ⚠' : ''), M, y, { size: 18, color: _sh.outOfGamut ? '#b8860b' : SUB }); }
         if (BAG.rivet) { var _sr = IMP_COLOR.formatSpec(BAG.rivet.color); TX(c, _sr.cmykStr + '  ·  ' + (_sr.pantoneExact ? '' : '≈ ') + _sr.pantone + (_sr.outOfGamut ? '  ⚠' : ''), col2, y, { size: 18, color: _sr.outOfGamut ? '#b8860b' : SUB }); } }
-      footer(c, ref, 2, 5); pages.push(p2);
+      footer(c, ref, 2, 4); pages.push(p2);
 
-      /* ── PAGE 3 — artwork layers ── */
-      var p3 = newPage(); c = p3.c; header(c, L('Artwork layers', 'طبقات التصميم'));
-      y = 250; y = section(c, y, L('Layers', 'الطبقات')) + 40;
-      var layers = (BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function (Lr) { return Lr && Lr.visible && (Lr.kind === 'logo' || Lr.kind === 'sticker' || Lr.kind === 'text'); }) : [];
-      if (!layers.length) { TX(c, L('No artwork added.', 'لا يوجد تصميم مضاف.'), M, y, { size: 21, color: SUB }); }
-      else {
-        layers.forEach(function (Lr, i) {
-          if (y > PH - 160) return;
-          var kind = Lr.kind === 'text' ? L('Text', 'نص') : (Lr.tiled ? L('Pattern', 'نمط') : L('Graphic', 'رسمة'));
-          var name = Lr.kind === 'text' ? ('“' + (Lr.content || '').slice(0, 24) + '”') : (Lr.fileName || Lr.name || kind);
-          c.save(); roundRect(c, M, y - 26, PW - 2 * M, 96, 10); c.fillStyle = FAINT; c.fill(); c.restore();
-          TX(c, (i + 1) + '. ' + name, M + 20, y + 4, { size: 21, weight: 600, color: INK });
-          TX(c, kind, PW - M - 20, y + 4, { size: 19, color: GOLD, align: 'right' });
-          var det = L('pos ', 'موضع ') + Math.round(Lr.posU || 0) + ',' + Math.round(Lr.posV || 0) +
-            '   ·  ' + L('scale ', 'حجم ') + Math.round((Lr.scale || 0)) + '%' +
-            '   ·  ' + L('rotation ', 'دوران ') + Math.round(Lr.rotation || 0) + '°' +
-            (Lr.color ? ('   ·  ' + _hexUp(Lr.color)) : '');
-          TX(c, det, M + 20, y + 44, { size: 17, color: SUB });
-          y += 110;
-        });
-      }
-      footer(c, ref, 3, 5); pages.push(p3);
+      /* ── PAGE 3 — 2D dieline layout (ordered BEFORE the 3D views) ── */
+      var p3 = newPage(); c = p3.c; header(c, L('2D dieline layout', 'مخطط القص المسطّح'));
+      jobs.push(placeImg(c, dieExt, M, 240, PW - 2 * M, 556, L('Exterior layout', 'مخطط الخارج')));
+      jobs.push(placeImg(c, dieInt, M, 812, PW - 2 * M, 556, L('Interior layout', 'مخطط الداخل')));
+      if (dieHandles) jobs.push(placeImg(c, dieHandles, M, 1384, PW - 2 * M, 214, L('Handles', 'المقابض')));
+      footer(c, ref, 3, 4); pages.push(p3);
 
       /* ── PAGE 4 — 3D views ── */
       var p4 = newPage(); c = p4.c; header(c, L('3D views', 'مناظر ثلاثية الأبعاد'));
@@ -267,13 +285,7 @@
         var col = i % 3, row = (i / 3) | 0;
         jobs.push(placeImg(c, shots[g[0]], gx + col * (gw + 24), gy + row * (gh + 36), gw, gh, g[1]));
       });
-      footer(c, ref, 4, 5); pages.push(p4);
-
-      /* ── PAGE 5 — dielines ── */
-      var p5 = newPage(); c = p5.c; header(c, L('2D dieline layout', 'مخطط القص المسطّح'));
-      jobs.push(placeImg(c, dieExt, M, 250, PW - 2 * M, 640, L('Exterior layout', 'مخطط الخارج')));
-      jobs.push(placeImg(c, dieInt, M, 920, PW - 2 * M, 640, L('Interior layout', 'مخطط الداخل')));
-      footer(c, ref, 5, 5); pages.push(p5);
+      footer(c, ref, 4, 4); pages.push(p4);
 
       await Promise.all(jobs);
 

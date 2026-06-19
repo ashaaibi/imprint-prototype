@@ -2970,7 +2970,7 @@
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
-<script src="spec-pdf.js?v=3"></script>
+<script src="spec-pdf.js?v=4"></script>
 <script src="color-calibration.js?v=1"></script>
 <script>
 /* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
@@ -11923,6 +11923,22 @@ function atlas2dRender(){
     });
     ctx.restore();
   }
+  /* Bag size readout (W × H × D) — top-left of the 2D editor; updates with the selected size. */
+  try {
+    var _szM = (typeof BAG_MODELS !== 'undefined' && typeof currentBagModel !== 'undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
+    if (_szM && _szM.dims) {
+      var _szTxt = (_arL ? 'المقاس: ' : 'Size: ') + _szM.dims;
+      ctx.save();
+      ctx.font = '700 ' + Math.round(13 * D) + 'px Inter, Arial, sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      var _szPad = 11 * D, _szW = ctx.measureText(_szTxt).width, _szBx = 14 * D, _szBy = 14 * D, _szBh = 30 * D, _szBw = _szW + _szPad * 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1 * D;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(_szBx, _szBy, _szBw, _szBh, 8 * D); ctx.fill(); ctx.stroke(); }
+      else { ctx.fillRect(_szBx, _szBy, _szBw, _szBh); ctx.strokeRect(_szBx, _szBy, _szBw, _szBh); }
+      ctx.fillStyle = '#33312c'; ctx.fillText(_szTxt, _szBx + _szPad, _szBy + _szBh / 2);
+      ctx.restore();
+    }
+  } catch (_) {}
   ctx.textAlign='left';
   updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
 }
