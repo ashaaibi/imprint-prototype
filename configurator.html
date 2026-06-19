@@ -3738,6 +3738,7 @@ let bagTexCanvas, bagTexCtx, bagTexture;
    the finish maps only affect the 3D viewer. */
 var bagCleanCanvas = null, bagCleanCtx = null;
 var _baseSnapCv = null;   /* base-only atlas snapshot, reused for the 3D-only artwork tone pass */
+var _intFlipCv = null;    /* pristine atlas snapshot, reused to horizontally un-mirror interior faces in 3D */
 /* Atlas padding: a transparent margin (px) around the 2048 printable core so artwork
    placed at the very edge of a UV island isn't clipped at the canvas boundary. UV 0–1
    is mapped to the central 2048 region via texture offset/repeat, so 3D printing is
@@ -4244,6 +4245,24 @@ function drawBagTexture() {
   // it never appears in the 2D editor. Skipped mid-drag for speed.
   if (!_lightBake() && typeof applyFinishAlbedo === 'function') applyFinishAlbedo();
   if (!_lightBake() && typeof overlayArtworkEmboss === 'function') overlayArtworkEmboss();   /* visible emboss/deboss bevel (3D only) */
+
+  /* INTERIOR un-mirror (3D atlas ONLY): the 3D maps interior faces with a horizontal flip, so a
+     design on the inside reads mirrored. Pre-flip each interior face's pixels here — AFTER the
+     clean 2D snapshot — so the inside reads correctly in 3D while the 2D editor is unchanged. */
+  if (!_lightBake() && typeof BAG_FACES !== 'undefined' && BAG_FACES.interior && Object.keys(BAG_FACES.interior).length) {
+    if (!_intFlipCv || _intFlipCv.width !== W) { _intFlipCv = _intFlipCv || document.createElement('canvas'); _intFlipCv.width = _intFlipCv.height = W; }
+    var _ifx = _intFlipCv.getContext('2d'); _ifx.setTransform(1, 0, 0, 1, 0, 0); _ifx.clearRect(0, 0, W, W); _ifx.drawImage(bagTexCanvas, 0, 0);
+    Object.keys(BAG_FACES.interior).forEach(function (f) {
+      var bb = BAG_FACES.interior[f]; if (!bb) return;
+      var fx = Math.max(0, Math.floor(bb.x)), fy = Math.max(0, Math.floor(bb.y)), fw = Math.ceil(bb.w), fh = Math.ceil(bb.h);
+      if (fw <= 1 || fh <= 1) return;
+      bagTexCtx.save(); bagTexCtx.setTransform(1, 0, 0, 1, 0, 0);
+      if (bb.clip && bb.clip.path) { bagTexCtx.beginPath(); bagTexCtx.clip(bb.clip.path); }   /* confine the flip to this face island */
+      bagTexCtx.translate(fx + fw, fy); bagTexCtx.scale(-1, 1);
+      bagTexCtx.drawImage(_intFlipCv, fx, fy, fw, fh, 0, 0, fw, fh);
+      bagTexCtx.restore();
+    });
+  }
 
   if (bagTexture) bagTexture.needsUpdate = true;
   if (!_lightBake()) {            /* skip heavy passes while dragging → smooth FPS; full redraw on release */
