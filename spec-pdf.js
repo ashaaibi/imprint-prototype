@@ -1,9 +1,9 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   IMPRINT — Spec-sheet PDF generator
-   Builds a branded multi-page tech-pack: cover (hero 3/4), specs + colours
-   (per-face hex), artwork layers, 3D angle screenshots and the 2D dielines.
+   IMPRINT — Spec-sheet PDF generator  (manufacturer tech-pack)
+   LANDSCAPE A3 pages, high resolution. Cover (hero 3/4) · materials + per-face
+   CMYK/Pantone · 2D dielines (before the 3D views) · 3D angle screenshots.
    Each page is drawn to a canvas (so Arabic shapes natively) and packed into a
-   PDF via jsPDF (vendor/jspdf). Language follows the site language.
+   PDF via jsPDF (vendor/jspdf). NO pricing — this file is for the factory.
    ──────────────────────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
@@ -12,8 +12,8 @@
   function L(en, ar) { return AR() ? ar : en; }
   function _font(stack) { return stack || (AR() ? 'Cairo, Inter, Arial, sans-serif' : 'Inter, Helvetica, Arial, sans-serif'); }
 
-  /* A4 portrait @ ~150dpi */
-  var PW = 1240, PH = 1754, M = 96;
+  /* A3 LANDSCAPE @ ~200 dpi (bigger sheet + high resolution for the factory) */
+  var PW = 3300, PH = 2333, M = 184;
   var INK = '#1c1c1c', SUB = '#6b6b68', GOLD = '#c8a96e', LINE = '#e6e4df', CREAM = '#faf9f7', FAINT = '#f3f1ec';
 
   function newPage() {
@@ -24,7 +24,7 @@
   }
   function TX(c, s, x, y, o) {
     o = o || {}; s = (s == null ? '' : '' + s);
-    var size = o.size || 26, wt = o.weight || 400, col = o.color || INK, al = o.align || 'left';
+    var size = o.size || 36, wt = o.weight || 400, col = o.color || INK, al = o.align || 'left';
     c.save();
     c.font = wt + ' ' + size + 'px ' + _font(o.font);
     c.fillStyle = col; c.textBaseline = o.baseline || 'alphabetic'; c.textAlign = al;
@@ -32,52 +32,60 @@
     c.fillText(s, x, y, o.maxw || undefined);
     c.restore();
   }
-  function rule(c, x1, y, x2, col, w) { c.save(); c.strokeStyle = col || LINE; c.lineWidth = w || 1.5; c.beginPath(); c.moveTo(x1, y); c.lineTo(x2, y); c.stroke(); c.restore(); }
+  function rule(c, x1, y, x2, col, w) { c.save(); c.strokeStyle = col || LINE; c.lineWidth = w || 2; c.beginPath(); c.moveTo(x1, y); c.lineTo(x2, y); c.stroke(); c.restore(); }
   function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
-  function swatch(c, x, y, hex, sz) { sz = sz || 26; c.save(); roundRect(c, x, y, sz, sz, 6); c.fillStyle = hex || '#fff'; c.fill(); c.strokeStyle = 'rgba(0,0,0,0.18)'; c.lineWidth = 1.5; c.stroke(); c.restore(); }
+  function swatch(c, x, y, hex, sz) { sz = sz || 38; c.save(); roundRect(c, x, y, sz, sz, 8); c.fillStyle = hex || '#fff'; c.fill(); c.strokeStyle = 'rgba(0,0,0,0.18)'; c.lineWidth = 2; c.stroke(); c.restore(); }
 
   function header(c, title) {
-    /* wordmark */
-    TX(c, 'IMPRINT', M, 96, { size: 40, weight: 800, color: INK, rtl: false });
-    c.save(); c.fillStyle = GOLD; c.beginPath(); c.arc(M + 232, 70, 5, 0, 6.3); c.fill(); c.restore();
-    TX(c, L('CUSTOM PAPER-BAG SPEC SHEET', 'ورقة مواصفات الكيس الورقي'), PW - M, 92, { size: 19, weight: 600, color: SUB, align: 'right' });
-    rule(c, M, 120, PW - M, GOLD, 2);
-    if (title) TX(c, title, M, 178, { size: 34, weight: 800, color: INK });
+    TX(c, 'IMPRINT', M, 150, { size: 58, weight: 800, color: INK, rtl: false });
+    c.save(); c.fillStyle = GOLD; c.beginPath(); c.arc(M + 322, 118, 7, 0, 6.3); c.fill(); c.restore();
+    TX(c, L('CUSTOM PAPER-BAG SPEC SHEET — FACTORY', 'ورقة مواصفات الكيس الورقي — للمصنع'), PW - M, 144, { size: 26, weight: 600, color: SUB, align: 'right' });
+    rule(c, M, 182, PW - M, GOLD, 3);
+    if (title) TX(c, title, M, 274, { size: 50, weight: 800, color: INK });
   }
   function footer(c, ref, pageNo, pageTot) {
-    rule(c, M, PH - 80, PW - M, LINE, 1.5);
-    TX(c, 'IMPRINT® · ' + ref, M, PH - 50, { size: 18, color: SUB, rtl: false });
-    TX(c, L('Page ', 'صفحة ') + pageNo + ' / ' + pageTot, PW - M, PH - 50, { size: 18, color: SUB, align: 'right' });
+    rule(c, M, PH - 122, PW - M, LINE, 2);
+    TX(c, 'IMPRINT® · ' + ref, M, PH - 74, { size: 25, color: SUB, rtl: false });
+    TX(c, L('Page ', 'صفحة ') + pageNo + ' / ' + pageTot, PW - M, PH - 74, { size: 25, color: SUB, align: 'right' });
   }
 
-  /* section label */
-  function section(c, y, label) {
-    c.save(); c.fillStyle = GOLD; c.fillRect(M, y - 16, 5, 22); c.restore();
-    TX(c, label, M + 16, y, { size: 24, weight: 700, color: INK });
-    return y + 22;
+  /* section label (optional x for column layouts) */
+  function section(c, y, label, x) {
+    x = x || M;
+    c.save(); c.fillStyle = GOLD; c.fillRect(x, y - 24, 7, 32); c.restore();
+    TX(c, label, x + 22, y, { size: 33, weight: 700, color: INK });
+    return y + 30;
   }
   /* key/value row; optional swatch hex */
   function kv(c, x, y, w, label, value, hex) {
-    TX(c, label, x, y, { size: 21, color: SUB });
+    TX(c, label, x, y, { size: 28, color: SUB });
     var vx = x + w;
-    if (hex) { swatch(c, vx - 30, y - 19, hex, 26); vx -= 42; }
-    TX(c, value, vx, y, { size: 21, weight: 600, color: INK, align: 'right' });
-    rule(c, x, y + 16, x + w, FAINT, 1.2);
+    if (hex) { swatch(c, vx - 42, y - 30, hex, 40); vx -= 58; }
+    TX(c, value, vx, y, { size: 28, weight: 600, color: INK, align: 'right' });
+    rule(c, x, y + 22, x + w, FAINT, 1.6);
   }
 
   function _hexUp(h) { return (h || '').toUpperCase(); }
   function _capFinish(s) { s = (s || ''); return s.charAt(0).toUpperCase() + s.slice(1).replace('softtouch', 'Soft Touch').replace('foil', 'Foil Stamp'); }
   function _faceName(f) { return AR() ? ({ front: 'أمامي', back: 'خلفي', left: 'يسار', right: 'يمين', base: 'قاعدة' }[f] || f) : (f.charAt(0).toUpperCase() + f.slice(1)); }
+  /* CMYK + ≈Pantone one-liner for a hex (factory print spec). */
+  function _cmykLine(c, hex, x, y, size) {
+    if (!window.IMP_COLOR) return;
+    var sp = IMP_COLOR.formatSpec(hex);
+    TX(c, sp.cmykStr + '   ·   ' + (sp.pantoneExact ? 'Pantone ' : '≈ Pantone ') + sp.pantone + (sp.outOfGamut ? '   ⚠ ' + L('outside CMYK gamut', 'خارج نطاق CMYK') : ''),
+       x, y, { size: size || 23, color: sp.outOfGamut ? '#b8860b' : SUB });
+  }
 
   /* ── capture helpers ─────────────────────────────────────────────────── */
   function _raf() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+  function _sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
   /* Clean isolated bag render: no floor/shadow/sky/post-fx, framed to fit. */
   function _capture3D(theta, phi) {
     try {
       if (!T || !T.renderer || !T.scene || !orbit || typeof bagGroup === 'undefined' || !bagGroup) return null;
       var box = new THREE.Box3().setFromObject(bagGroup), sph = box.getBoundingSphere(new THREE.Sphere());
       var fov = (T.camera.fov || 31) * Math.PI / 180, d = sph.radius / Math.sin(fov / 2) * 1.12;
-      /* hide everything except the bag + lights, drop the sky background */
       var bg = T.scene.background; T.scene.background = null;
       var hidden = [];
       T.scene.children.forEach(function (ch) {
@@ -96,25 +104,23 @@
     } catch (e) { console.warn('3D capture failed', e); return null; }
   }
 
-  /* Parse a dims string like "28 × 20 × 14 cm" → [W,H,D] (numbers) or null. */
-  function _dieDims(s) { var m = ('' + (s || '')).match(/\d+(?:\.\d+)?/g); return (m && m.length >= 2) ? m.map(parseFloat) : null; }
-  /* A dimension bracket: a thin line + end ticks + a centred "<n> cm" label.
+  /* A dimension bracket: a thin line + end ticks + a centred "<axis>/<n> cm" label.
      vertical → runs along Y at screen-x `a`, between b0..b1 (label rotated, to the left);
-     horizontal → runs along X at screen-y `a`, between b0..b1 (label below). */
-  function _dimBracket(c, vertical, a, b0, b1, txt) {
-    var T = 9;
-    c.save(); c.strokeStyle = '#a99a7d'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath();
+     horizontal → runs along X at screen-y `a`, between b0..b1 (label ABOVE the line). */
+  function _dimBracket(c, vertical, a, b0, b1, txt, fs) {
+    fs = fs || 26; var T = Math.max(9, fs * 0.55);
+    c.save(); c.strokeStyle = '#a99a7d'; c.lineWidth = Math.max(2, fs * 0.10); c.lineCap = 'round'; c.beginPath();
     if (vertical) { c.moveTo(a, b0); c.lineTo(a, b1); c.moveTo(a - T, b0); c.lineTo(a + T, b0); c.moveTo(a - T, b1); c.lineTo(a + T, b1); }
     else { c.moveTo(b0, a); c.lineTo(b1, a); c.moveTo(b0, a - T); c.lineTo(b0, a + T); c.moveTo(b1, a - T); c.lineTo(b1, a + T); }
     c.stroke(); c.restore();
     var mid = (b0 + b1) / 2;
-    if (vertical) { c.save(); c.translate(a - 14, mid); c.rotate(-Math.PI / 2); TX(c, txt, 0, 0, { size: 19, weight: 700, color: SUB, align: 'center', autoRtl: false }); c.restore(); }
-    else TX(c, txt, mid, a + 28, { size: 19, weight: 700, color: SUB, align: 'center', autoRtl: false });
+    if (vertical) { c.save(); c.translate(a - fs * 0.7, mid); c.rotate(-Math.PI / 2); TX(c, txt, 0, 0, { size: fs, weight: 700, color: '#5a5446', align: 'center', autoRtl: false }); c.restore(); }
+    else TX(c, txt, mid, a - fs * 0.5, { size: fs, weight: 700, color: '#5a5446', align: 'center', baseline: 'alphabetic', autoRtl: false });   /* number ABOVE the line */
   }
 
   /* Flat dieline of a region (exterior | interior | handles): the clean artwork CLIPPED to the
      island (off-island UVs → transparent, so the grayish card colour shows through), the UV-guide
-     outline, and optional W×H×D measurement brackets. No per-face sub-labels. */
+     outline, and optional L×H×W measurement brackets. No per-face sub-labels. */
   function _capture2D(region, opts) {
     try {
       opts = opts || {};
@@ -125,9 +131,12 @@
       var uv = (clip && clip.bbox) ? clip.bbox : ((typeof BAG_UV !== 'undefined') ? BAG_UV[region] : null);
       if (!uv) return null;
       var measuring = !!(opts.measure && _dieDims(opts.dims));
-      var padR = uv.w * 0.07, padBot = uv.h * 0.07;
-      var mL = measuring ? uv.w * 0.15 : padR;     /* left margin for the height bracket */
-      var mT = measuring ? uv.h * 0.15 : padBot;   /* top margin for the width / depth brackets */
+      /* one GAP value (face edge → measurement line) shared by W/H/L; same look on every line */
+      var GAP = Math.round(Math.min(uv.w, uv.h) * 0.06);
+      var FS = Math.round(uv.h * 0.030);
+      var padR = uv.w * 0.06, padBot = uv.h * 0.06;
+      var mL = measuring ? (GAP + FS * 2.6) : padR;   /* left room for the height bracket + rotated label */
+      var mT = measuring ? (GAP + FS * 2.2) : padBot; /* top room for the width / length brackets + label above */
       var ox = uv.x - mL, oy = uv.y - mT, ow = uv.w + mL + padR, oh = uv.h + mT + padBot;
       var cw = Math.round(ow), ch = Math.round(oh);
       var cn = document.createElement('canvas'); cn.width = cw; cn.height = ch; var x = cn.getContext('2d');
@@ -145,29 +154,32 @@
         if (typeof bagUVGuideCanvas !== 'undefined' && bagUVGuideCanvas) x.drawImage(bagUVGuideCanvas, 0, 0, bagUVGuideCanvas.width, bagUVGuideCanvas.height, 0, 0, atlasW, atlasW);
       }
       x.restore();
-      /* measurement brackets (un-flipped): front → W (above) + H (left of a side); a side → D (above). */
+      /* measurement brackets (un-flipped): front → L (above) · a side → W (above) · height → H (left).
+         L = length (front-panel width), H = height, W = width (side gusset) — manufacturer convention. */
       if (measuring) {
         var dd = _dieDims(opts.dims), faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) || {};
         var disp = function (bb) { var x0 = (bb.x - ox) * sx, x1 = (bb.x + bb.w - ox) * sx, y0 = ch - (bb.y - oy) * sy, y1 = ch - (bb.y + bb.h - oy) * sy; return { l: Math.min(x0, x1), r: Math.max(x0, x1), t: Math.min(y0, y1), b: Math.max(y0, y1) }; };
         var side = faces.left || faces.right, hface = side || faces.front;
-        if (faces.front) { var fr = disp(faces.front); _dimBracket(x, false, 44, fr.l, fr.r, dd[0] + ' cm'); }
-        if (hface) { var hr = disp(hface); _dimBracket(x, true, 44, hr.t, hr.b, dd[1] + ' cm'); }
-        if (side && dd[2] != null) { var sr = disp(side); _dimBracket(x, false, 44, sr.l, sr.r, dd[2] + ' cm'); }
+        if (faces.front) { var fr = disp(faces.front); _dimBracket(x, false, fr.t - GAP, fr.l, fr.r, 'L/' + dd[0] + ' cm', FS); }
+        if (hface) { var hr = disp(hface); _dimBracket(x, true, hr.l - GAP, hr.t, hr.b, 'H/' + dd[1] + ' cm', FS); }
+        if (side && dd[2] != null) { var sr = disp(side); _dimBracket(x, false, sr.t - GAP, sr.l, sr.r, 'W/' + dd[2] + ' cm', FS); }
       }
-      return cn.toDataURL('image/jpeg', 0.92);
+      return cn.toDataURL('image/png');
     } catch (e) { console.warn('2D capture failed', e); return null; }
   }
+  /* Parse a dims string like "28 × 20 × 14 cm" → [L,H,W] (numbers) or null. */
+  function _dieDims(s) { var m = ('' + (s || '')).match(/\d+(?:\.\d+)?/g); return (m && m.length >= 2) ? m.map(parseFloat) : null; }
 
   /* draw an image (data url) into a box, contained, centered, on a faint card */
   function placeImg(c, url, x, y, w, h, label) {
-    roundRect(c, x, y, w, h, 12); c.save(); c.fillStyle = FAINT; c.fill();
-    c.strokeStyle = LINE; c.lineWidth = 1.5; c.stroke(); c.restore();
-    if (label) TX(c, label, x + 14, y + 30, { size: 18, weight: 600, color: SUB });
-    if (!url) { TX(c, '—', x + w / 2, y + h / 2, { size: 30, color: SUB, align: 'center', baseline: 'middle' }); return; }
+    roundRect(c, x, y, w, h, 16); c.save(); c.fillStyle = FAINT; c.fill();
+    c.strokeStyle = LINE; c.lineWidth = 2; c.stroke(); c.restore();
+    if (label) TX(c, label, x + 22, y + 44, { size: 25, weight: 600, color: SUB });
+    if (!url) { TX(c, '—', x + w / 2, y + h / 2, { size: 40, color: SUB, align: 'center', baseline: 'middle' }); return; }
     return new Promise(function (res) {
       var im = new Image();
       im.onload = function () {
-        var pad = 18, top = label ? 38 : pad;
+        var pad = 26, top = label ? 58 : pad;
         var bw = w - pad * 2, bh = h - top - pad;
         var s = Math.min(bw / im.width, bh / im.height);
         var dw = im.width * s, dh = im.height * s;
@@ -188,21 +200,26 @@
     if (!JsPDF) { alert('PDF library not loaded.'); return; }
     var label = btn ? btn.querySelector('span') : null, oldTxt = label ? label.textContent : '';
     if (label) label.textContent = L('Generating…', 'جارٍ الإنشاء…'); if (btn) btn.disabled = true;
+    var _q = {};   /* saved quality settings to restore after export */
     try {
-      /* gather data */
+      /* gather data — NO pricing (factory sheet) */
       var model = (typeof BAG_MODELS !== 'undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : { label: 'Paper bag', dims: '' };
       var dims = (typeof S !== 'undefined' && S.dims) ? S.dims : (model.dims || '');
       var qty = (typeof S !== 'undefined' && S.qty) ? S.qty : 0;
-      var unit = (typeof S !== 'undefined' && S.pu) ? S.pu : 0;
-      var ctry = (typeof getCountry === 'function') ? getCountry() : { currency: 'AED', vat: 0, vatLabel: '' };
-      var cur = AR() ? (ctry.currencyAr || ctry.currency) : ctry.currency;
-      var sub = qty * unit, vat = sub * (ctry.vat || 0), total = sub + vat;
-      var fmt = function (n) { return cur + ' ' + (Math.round(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
       var ref = _ref(), date = _today();
 
-      /* capture screenshots — force 3D mode + full size */
+      /* force 3D mode for the screenshots */
       var prevMode = (typeof viewMode !== 'undefined') ? viewMode : '3d';
       if (prevMode === '2d' && typeof setViewMode === 'function') { setViewMode('3d'); await _raf(); await _raf(); }
+
+      /* ── MAX-RESOLUTION boost for the export (restored afterwards) ──
+         outline/UV-guide → 4096, finish & emboss maps → 4096, renderer pixel-ratio → max.
+         (The colour atlas is fixed at 2048² in the engine, so artwork is baked at 2048.) */
+      try { _q.guide = (typeof A2D !== 'undefined') ? A2D.guideRes : null; if (typeof A2D !== 'undefined') { A2D.guideRes = 4096; if (typeof buildUVGuide === 'function') buildUVGuide(); } } catch (e) {}
+      try { if (T && T.renderer) { _q.pr = T.renderer.getPixelRatio(); T.renderer.setPixelRatio(3); } } catch (e) {}
+      try { _q.pbrExp = (typeof PBR_SIZE !== 'undefined') ? Math.round(Math.log(PBR_SIZE) / Math.LN2) : null; if (typeof onFinishQuality === 'function') onFinishQuality(12); } catch (e) {}
+      await _sleep(380);   /* let the debounced 4096 finish re-bake settle before capturing */
+
       var sv = orbit ? { theta: orbit.theta, phi: orbit.phi, radius: orbit.radius, autoSpin: orbit.autoSpin } : null;
       var ft = (typeof frontTheta === 'function') ? frontTheta() : 0.6;
       var VP = (typeof VIEW_PHI !== 'undefined') ? VIEW_PHI : 1.2;
@@ -218,86 +235,85 @@
       var dieExt = _capture2D('exterior', { measure: true, dims: dims }), dieInt = _capture2D('interior', { measure: true, dims: dims }), dieHandles = _capture2D('handles', {});
       if (prevMode === '2d' && typeof setViewMode === 'function') setViewMode('2d');
 
-      var pages = [], jobs = [];
+      /* restore the quality settings */
+      try { if (_q.pbrExp != null && typeof onFinishQuality === 'function') onFinishQuality(_q.pbrExp); } catch (e) {}
+      try { if (_q.guide != null && typeof A2D !== 'undefined') { A2D.guideRes = _q.guide; if (typeof buildUVGuide === 'function') buildUVGuide(); } } catch (e) {}
+      try { if (_q.pr != null && T && T.renderer) T.renderer.setPixelRatio(_q.pr); } catch (e) {}
 
-      /* ── PAGE 1 — cover ── */
-      var p1 = newPage(), c = p1.c;
+      var pages = [], jobs = [], c;
+
+      /* ── PAGE 1 — cover (hero left · at-a-glance right) ── */
+      var p1 = newPage(); c = p1.c;
       header(c, L('Product spec sheet', 'ورقة مواصفات المنتج'));
-      TX(c, model.label, M, 250, { size: 30, weight: 700, color: INK });
-      TX(c, L('Quote ', 'عرض سعر ') + ref + '  ·  ' + date, M, 288, { size: 20, color: SUB });
-      jobs.push(placeImg(c, shots.hero, M, 320, PW - 2 * M, 620, L('3D preview', 'معاينة ثلاثية الأبعاد')));
-      var ky = 1010;
-      ky = section(c, ky, L('At a glance', 'نظرة سريعة')) + 36;
-      var col1 = M, col2 = PW / 2 + 10, cw = (PW / 2 - M) - 20;
-      kv(c, col1, ky, cw, L('Size (W×H×D)', 'المقاس (ع×ا×ع)'), dims);
-      kv(c, col2, ky, cw, L('Quantity', 'الكمية'), qty.toLocaleString() + ' ' + L('units', 'وحدة'));
-      ky += 60;
-      kv(c, col1, ky, cw, L('Unit price', 'سعر الوحدة'), fmt(unit));
-      kv(c, col2, ky, cw, L('Total', 'الإجمالي'), fmt(total));
-      ky += 60;
-      kv(c, col1, ky, cw, L('Exterior', 'الخارج'), _capFinish(BAG.exterior.finish), BAG.exterior.color);
-      kv(c, col2, ky, cw, L('Interior', 'الداخل'), _capFinish(BAG.interior.finish), BAG.interior.color);
+      TX(c, model.label, M, 380, { size: 42, weight: 700, color: INK });
+      TX(c, L('Ref ', 'مرجع ') + ref + '  ·  ' + date, M, 436, { size: 28, color: SUB });
+      var heroW = PW / 2 - M - 30, heroH = PH - 500 - 170;
+      jobs.push(placeImg(c, shots.hero, M, 490, heroW, heroH, L('3D preview', 'معاينة ثلاثية الأبعاد')));
+      var rx = PW / 2 + 24, rw = PW - M - rx;
+      var ry = section(c, 540, L('At a glance', 'نظرة سريعة'), rx) + 56;
+      kv(c, rx, ry, rw, L('Size (L×H×W)', 'المقاس (طول×ارتفاع×عرض)'), dims); ry += 90;
+      kv(c, rx, ry, rw, L('Quantity', 'الكمية'), qty.toLocaleString() + ' ' + L('units', 'وحدة')); ry += 90;
+      kv(c, rx, ry, rw, L('Exterior finish', 'تشطيب الخارج'), _capFinish(BAG.exterior.finish), BAG.exterior.color); ry += 90;
+      kv(c, rx, ry, rw, L('Interior finish', 'تشطيب الداخل'), _capFinish(BAG.interior.finish), BAG.interior.color);
       footer(c, ref, 1, 4); pages.push(p1);
 
-      /* ── PAGE 2 — materials & colours ── */
+      /* ── PAGE 2 — materials & colours (exterior left · interior right, per-face CMYK/Pantone) ── */
       var p2 = newPage(); c = p2.c; header(c, L('Materials & colours', 'الخامات والألوان'));
-      var y = 250;
-      y = section(c, y, L('Pricing', 'التسعير')) + 36;
-      kv(c, M, y, cw, L('Quantity', 'الكمية'), qty.toLocaleString()); kv(c, col2, y, cw, L('Unit price', 'سعر الوحدة'), fmt(unit)); y += 60;
-      kv(c, M, y, cw, L('Subtotal', 'المجموع الفرعي'), fmt(sub)); kv(c, col2, y, cw, (ctry.vatLabel || L('VAT', 'الضريبة')), fmt(vat)); y += 60;
-      kv(c, M, y, cw, L('Grand total', 'الإجمالي الكلي'), fmt(total)); y += 80;
-
-      function colorBlock(title, region) {
-        y = section(c, y, title) + 34;
-        kv(c, M, y, PW - 2 * M, L('Base colour / finish', 'اللون الأساسي / التشطيب'), _hexUp(BAG[region].color) + '   ·   ' + _capFinish(BAG[region].finish), BAG[region].color); y += 56;
-        if (window.IMP_COLOR) { var _sp = IMP_COLOR.formatSpec(BAG[region].color);
-          TX(c, _sp.cmykStr + '   ·   ' + (_sp.pantoneExact ? 'Pantone ' : '≈ Pantone ') + _sp.pantone + (_sp.outOfGamut ? '   ⚠ ' + L('outside CMYK gamut', 'خارج نطاق CMYK') : ''),
-             M, y, { size: 18, color: _sp.outOfGamut ? '#b8860b' : SUB }); y += 42; }
+      var colW = (PW - 2 * M - 64) / 2, leftX = M, rightX = M + colW + 64, startY = 380;
+      function colorBlock(title, region, bx, bw, by) {
+        var yy = section(c, by, title, bx) + 40;
+        kv(c, bx, yy, bw, L('Base colour / finish', 'اللون الأساسي / التشطيب'), _hexUp(BAG[region].color) + '   ·   ' + _capFinish(BAG[region].finish), BAG[region].color); yy += 50;
+        _cmykLine(c, BAG[region].color, bx, yy, 23); yy += 50;
         var fc = BAG[region].faceColors || {}, faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) ? Object.keys(BAG_FACES[region]) : ['front', 'back', 'left', 'right', 'base'];
         faces.forEach(function (f) {
           var hex = fc[f] || BAG[region].color, over = !!fc[f];
-          kv(c, M, y, PW - 2 * M, _faceName(f) + (over ? '  •' : ''), _hexUp(hex) + (over ? '' : '  ' + L('(base)', '(أساسي)')), hex); y += 46;
+          kv(c, bx, yy, bw, _faceName(f) + (over ? '  •' : ''), _hexUp(hex) + (over ? '' : '  ' + L('(base)', '(أساسي)')), hex); yy += 44;
+          _cmykLine(c, hex, bx, yy, 21); yy += 44;   /* CMYK + ≈Pantone for EVERY face */
         });
-        y += 18;
+        return yy + 18;
       }
-      colorBlock(L('Exterior faces', 'أوجه الخارج'), 'exterior');
-      colorBlock(L('Interior faces', 'أوجه الداخل'), 'interior');
-      y = section(c, y, L('Hardware', 'الإكسسوارات')) + 34;
-      if (BAG.ribbon) { kv(c, M, y, cw, L('Handles', 'المقابض'), _hexUp(BAG.ribbon.color) + '  ' + _capFinish(BAG.ribbon.finish || ''), BAG.ribbon.color); }
-      if (BAG.rivet) { kv(c, col2, y, cw, L('Rivets', 'البرشام'), _hexUp(BAG.rivet.color), BAG.rivet.color); }
-      if (window.IMP_COLOR) { y += 40;
-        if (BAG.ribbon) { var _sh = IMP_COLOR.formatSpec(BAG.ribbon.color); TX(c, _sh.cmykStr + '  ·  ' + (_sh.pantoneExact ? '' : '≈ ') + _sh.pantone + (_sh.outOfGamut ? '  ⚠' : ''), M, y, { size: 18, color: _sh.outOfGamut ? '#b8860b' : SUB }); }
-        if (BAG.rivet) { var _sr = IMP_COLOR.formatSpec(BAG.rivet.color); TX(c, _sr.cmykStr + '  ·  ' + (_sr.pantoneExact ? '' : '≈ ') + _sr.pantone + (_sr.outOfGamut ? '  ⚠' : ''), col2, y, { size: 18, color: _sr.outOfGamut ? '#b8860b' : SUB }); } }
+      var yE = colorBlock(L('Exterior faces', 'أوجه الخارج'), 'exterior', leftX, colW, startY);
+      var yI = colorBlock(L('Interior faces', 'أوجه الداخل'), 'interior', rightX, colW, startY);
+      var hy = Math.max(yE, yI) + 14;
+      hy = section(c, hy, L('Hardware', 'الإكسسوارات')) + 40;
+      if (BAG.ribbon) { kv(c, leftX, hy, colW, L('Handles', 'المقابض'), _hexUp(BAG.ribbon.color) + '  ' + _capFinish(BAG.ribbon.finish || ''), BAG.ribbon.color); _cmykLine(c, BAG.ribbon.color, leftX, hy + 46, 21); }
+      if (BAG.rivet) { kv(c, rightX, hy, colW, L('Rivets', 'البرشام'), _hexUp(BAG.rivet.color), BAG.rivet.color); _cmykLine(c, BAG.rivet.color, rightX, hy + 46, 21); }
       footer(c, ref, 2, 4); pages.push(p2);
 
-      /* ── PAGE 3 — 2D dieline layout (ordered BEFORE the 3D views) ── */
+      /* ── PAGE 3 — 2D dieline layout (BEFORE the 3D views) ── */
       var p3 = newPage(); c = p3.c; header(c, L('2D dieline layout', 'مخطط القص المسطّح'));
-      jobs.push(placeImg(c, dieExt, M, 240, PW - 2 * M, 556, L('Exterior layout', 'مخطط الخارج')));
-      jobs.push(placeImg(c, dieInt, M, 812, PW - 2 * M, 556, L('Interior layout', 'مخطط الداخل')));
-      if (dieHandles) jobs.push(placeImg(c, dieHandles, M, 1384, PW - 2 * M, 214, L('Handles', 'المقابض')));
+      /* a separate Handles box ONLY when the handles are NOT shown in the 2D editor */
+      var showHandlesBox = !!dieHandles && !(typeof A2D !== 'undefined' && A2D.showHandles2D);
+      var dY = 330, dH = showHandlesBox ? 740 : 870, dW = PW - 2 * M;
+      jobs.push(placeImg(c, dieExt, M, dY, dW, dH, L('Exterior layout', 'مخطط الخارج')));
+      jobs.push(placeImg(c, dieInt, M, dY + dH + 34, dW, dH, L('Interior layout', 'مخطط الداخل')));
+      if (showHandlesBox) jobs.push(placeImg(c, dieHandles, M, dY + 2 * (dH + 34), dW, 200, L('Handles', 'المقابض')));
       footer(c, ref, 3, 4); pages.push(p3);
 
       /* ── PAGE 4 — 3D views ── */
       var p4 = newPage(); c = p4.c; header(c, L('3D views', 'مناظر ثلاثية الأبعاد'));
-      var gx = M, gw = (PW - 2 * M - 2 * 24) / 3, gh = 420, gy = 260;
+      var gap = 44, cols = 3, gw = (PW - 2 * M - (cols - 1) * gap) / cols, gh = (PH - 360 - 170 - gap) / 2, gy = 360;
       var grid = [['front', L('Front', 'أمامي')], ['back', L('Back', 'خلفي')], ['left', L('Left', 'يسار')], ['right', L('Right', 'يمين')], ['top', L('Top', 'أعلى')], ['bottom', L('Bottom', 'أسفل')]];
       grid.forEach(function (g, i) {
-        var col = i % 3, row = (i / 3) | 0;
-        jobs.push(placeImg(c, shots[g[0]], gx + col * (gw + 24), gy + row * (gh + 36), gw, gh, g[1]));
+        var col = i % cols, row = (i / cols) | 0;
+        jobs.push(placeImg(c, shots[g[0]], M + col * (gw + gap), gy + row * (gh + gap), gw, gh, g[1]));
       });
       footer(c, ref, 4, 4); pages.push(p4);
 
       await Promise.all(jobs);
 
-      /* ── assemble PDF ── */
-      var doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      /* ── assemble PDF — A3 landscape, PNG pages (lossless, high-res for the factory) ── */
+      var doc = new JsPDF({ unit: 'mm', format: 'a3', orientation: 'landscape' });
       pages.forEach(function (pg, i) {
         if (i > 0) doc.addPage();
-        doc.addImage(pg.cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+        doc.addImage(pg.cv.toDataURL('image/png'), 'PNG', 0, 0, 420, 297, undefined, 'FAST');
       });
       doc.save('IMPRINT_' + (model.key || 'PaperBag') + '_' + ref + '.pdf');
     } catch (e) {
       console.error('spec PDF failed', e);
+      try { if (_q.pbrExp != null && typeof onFinishQuality === 'function') onFinishQuality(_q.pbrExp); } catch (e2) {}
+      try { if (_q.guide != null && typeof A2D !== 'undefined') { A2D.guideRes = _q.guide; if (typeof buildUVGuide === 'function') buildUVGuide(); } } catch (e2) {}
+      try { if (_q.pr != null && T && T.renderer) T.renderer.setPixelRatio(_q.pr); } catch (e2) {}
       alert(L('Sorry — the PDF could not be generated.', 'تعذّر إنشاء ملف PDF.'));
     } finally {
       if (label) label.textContent = oldTxt; if (btn) btn.disabled = false;

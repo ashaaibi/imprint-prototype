@@ -2970,7 +2970,7 @@
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
-<script src="spec-pdf.js?v=4"></script>
+<script src="spec-pdf.js?v=5"></script>
 <script src="color-calibration.js?v=1"></script>
 <script>
 /* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
@@ -11168,7 +11168,7 @@ var A2D = {
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
-  showHandles2D:true, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
+  showHandles2D:false, showRivets2D:false  /* show the handle/rivet islands (fill+outline+label) in the 2D editor */
 };
 var a2d = { zoom:1, panX:0, panY:0, sel:null, op:null, canvas:null, ctx:null, dpr:1, raf:0,
             pointers:{}, pinchD0:0, pinchZ0:1, pinchMid:null, start:null, bound:false, lastDraw:0, hoverL:null,
