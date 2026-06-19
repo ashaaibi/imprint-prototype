@@ -1621,6 +1621,33 @@
       /* minimized snap: only the handle + pager (Back · 1/3 · Next) stays visible */
       .controls-panel.sheet-min .cstep-nav { display: none; }
     }
+
+    /* ─── RING-BOX FOLD SCRUBBER (responsive) ───────────────────────────────
+       Desktop/tablet: pinned bottom-centre of the stage. Mobile: JS lifts the
+       `bottom` to sit just above the live bottom-sheet snap point (see
+       _positionFoldScrub). Hidden in the 2D editor (folding is a 3D concern). */
+    .fold-scrub{
+      position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+      z-index:6; display:flex; align-items:center; gap:10px;
+      width:max-content; max-width:min(440px, calc(100vw - 24px)); box-sizing:border-box;
+      background:var(--imp-surface,#fff); border:1px solid var(--imp-border,#e5e5e5);
+      border-radius:999px; padding:7px 14px; box-shadow:0 6px 20px rgba(0,0,0,0.14);
+      font-family:var(--imp-font); font-size:11px; font-weight:600;
+      color:var(--imp-fg-2,#777); user-select:none;
+    }
+    .fold-scrub .fold-end{ white-space:nowrap; }
+    .fold-scrub .fold-pct{ min-width:30px; text-align:right; color:var(--imp-fg,#111); }
+    .fold-range{ flex:1 1 auto; width:auto; min-width:90px; max-width:220px;
+      accent-color:var(--imp-gold,#c8a96e); cursor:pointer; }
+    .canvas-stage.mode-2d .fold-scrub{ display:none; }   /* no fold control while editing the flat layout */
+    @media (max-width:760px){
+      .fold-scrub{ gap:8px; padding:6px 12px; font-size:10px;
+        width:calc(100vw - 24px); max-width:360px; }
+      .fold-range{ min-width:70px; max-width:none; }
+    }
+    @media (max-width:380px){
+      .fold-scrub .fold-end{ display:none; }   /* tightest phones: just the slider + % */
+    }
   </style>
 </head>
 
@@ -1671,11 +1698,11 @@
       </div>
       <div class="dim-pill" id="dim-pill">Foldable · one size</div>
       <!-- Ring box fold scrubber: 0 = closed/assembled (default), 100 = open -->
-      <div class="fold-scrub" id="fold-scrub" style="position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;background:var(--imp-surface,#fff);border:1px solid var(--imp-border,#e5e5e5);border-radius:999px;padding:7px 14px;box-shadow:0 6px 20px rgba(0,0,0,0.14);font-family:var(--imp-font);font-size:11px;font-weight:600;color:var(--imp-fg-2,#777);user-select:none;">
-        <span data-en="Closed" data-ar="مغلق">Closed</span>
-        <input type="range" id="fold-slider" min="0" max="100" step="1" value="0" aria-label="Fold open/closed" oninput="IMP_foldScrub(this.value)" style="width:160px;accent-color:var(--imp-gold,#c8a96e);cursor:pointer;">
-        <span data-en="Open" data-ar="مفتوح">Open</span>
-        <span style="min-width:30px;text-align:right;color:var(--imp-fg,#111);"><span id="fold-val">0</span>%</span>
+      <div class="fold-scrub" id="fold-scrub">
+        <span class="fold-end" data-en="Closed" data-ar="مغلق">Closed</span>
+        <input type="range" id="fold-slider" class="fold-range" min="0" max="100" step="1" value="0" aria-label="Fold open/closed" oninput="IMP_foldScrub(this.value)">
+        <span class="fold-end" data-en="Open" data-ar="مفتوح">Open</span>
+        <span class="fold-pct"><span id="fold-val">0</span>%</span>
       </div>
       <div class="mode-toggle" id="mode-toggle">
         <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
@@ -5314,6 +5341,21 @@ function IMP_foldScrub(frame){
     for (var i=0;i<n && (b1+i)<vals.length;i++){ inf[i] = vals[b0+i]*(1-a) + vals[b1+i]*a; }
   }
 }
+
+/* Mobile: lift the fold scrubber above the bottom-sheet's LIVE snap point so it's
+   never hidden behind the sheet. The sheet is height:90vh, bottom:0, pushed down by
+   `--sheet-y` px → its top sits (0.9·innerHeight − sheetY) above the viewport bottom.
+   Desktop/tablet: clear the inline bottom so the CSS default (bottom:16px) applies. */
+function _positionFoldScrub(){
+  var fs = document.getElementById('fold-scrub'); if (!fs) return;
+  if (!window.matchMedia('(max-width: 760px)').matches){ fs.style.bottom = ''; return; }
+  var sheet = document.querySelector('.controls-panel');
+  var y = sheet ? (parseFloat(sheet.style.getPropertyValue('--sheet-y')) || 0) : 0;
+  var topFromBottom = window.innerHeight * 0.90 - y;
+  fs.style.bottom = Math.max(12, Math.round(topFromBottom) + 12) + 'px';
+}
+window.addEventListener('resize', _positionFoldScrub);
+window.addEventListener('orientationchange', _positionFoldScrub);
 
 function buildPaperBagMesh() {
   var _mySeq = ++_bagBuildSeq;
@@ -9989,7 +10031,7 @@ function setupOrbit() {
     }
     function snaps() { return [52 * vhpx(), 28 * vhpx(), 0, minY()]; } /* peek, half, full, minimized (translateY px) */
     var idx = 0; /* start at peek */
-    function setY(px) { sheet.style.setProperty('--sheet-y', px + 'px'); if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); }
+    function setY(px) { sheet.style.setProperty('--sheet-y', px + 'px'); if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); if (typeof _positionFoldScrub === 'function') _positionFoldScrub(); }
     function applySnap(i, animate) {
       idx = Math.max(0, Math.min(snaps().length - 1, i));
       sheet.classList.toggle('sheet-min', idx === 3);   /* minimized → hide the step pills, show only the pager */
