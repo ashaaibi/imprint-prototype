@@ -2337,8 +2337,8 @@
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Min layer size</span><span class="slider-val" id="min-layer-scale-val">0.50%</span></div>
         <input type="range" class="test-slider" min="0.1" max="5" step="0.1" value="0.5" oninput="onMinLayerScale(this.value)"></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">Smallest size a graphic can be shrunk to with the resize handles.</div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview update</span><span class="slider-val" id="a2d-previewInterval-val">0.5s</span></div>
-        <input type="range" class="test-slider" min="0" max="5" step="0.1" value="0.5" oninput="onPreviewInterval(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Live preview update</span><span class="slider-val" id="a2d-previewInterval-val">real-time</span></div>
+        <input type="range" class="test-slider" min="0" max="5" step="0.1" value="0" oninput="onPreviewInterval(this.value)"></div>
         <div style="font-size:10px;color:var(--secondary);line-height:1.4;">How often the 3D live preview re-renders while you edit in 2D. Higher = smoother 2D editing (lower FPS cost); 0 = real-time.</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Handle size</span><span class="slider-val" id="a2d-handleSize-val">10</span></div>
         <input type="range" class="test-slider" min="4" max="20" step="1" value="10" oninput="onA2Dnum('handleSize',this.value,false)"></div>
@@ -2815,40 +2815,40 @@
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Scene lights intensity</span>
-          <span class="slider-val" id="scene-lights-val">0.55</span>
+          <span class="slider-val" id="scene-lights-val">0.50</span>
         </div>
         <input type="range" class="test-slider" id="scene-lights-slider"
-               min="0" max="2" step="0.05" value="0.55"
+               min="0" max="2" step="0.05" value="0.50"
                oninput="onSceneLightsSlider(this.value)">
       </div>
 
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer brightness</span>
-          <span class="slider-val" id="layer-brightness-val">1.0</span>
+          <span class="slider-val" id="layer-brightness-val">0.65</span>
         </div>
         <input type="range" class="test-slider" id="layer-brightness-slider"
-               min="0" max="2" step="0.05" value="1.0"
+               min="0" max="2" step="0.05" value="0.65"
                oninput="onLayerBrightnessSlider(this.value)">
       </div>
 
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer saturation</span>
-          <span class="slider-val" id="layer-saturation-val">1.0</span>
+          <span class="slider-val" id="layer-saturation-val">1.25</span>
         </div>
         <input type="range" class="test-slider" id="layer-saturation-slider"
-               min="0" max="3" step="0.05" value="1.0"
+               min="0" max="3" step="0.05" value="1.25"
                oninput="onLayerSaturationSlider(this.value)">
       </div>
 
       <div class="slider-row">
         <div class="slider-top">
           <span class="slider-name">Layer contrast</span>
-          <span class="slider-val" id="layer-contrast-val">1.0</span>
+          <span class="slider-val" id="layer-contrast-val">1.10</span>
         </div>
         <input type="range" class="test-slider" id="layer-contrast-slider"
-               min="0" max="3" step="0.05" value="1.0"
+               min="0" max="3" step="0.05" value="1.10"
                oninput="onLayerContrastSlider(this.value)">
       </div>
 
@@ -4490,9 +4490,9 @@ function getArtCorr() {
    to BAG_UV.exterior). The caller sets the clip region beforehand.
    mode 'color' → tinted logo / colored text (visible artwork)
    mode 'mask'  → logo alpha / white text (PBR + bump shape masks) */
-var LAYER_BRIGHTNESS = 1.0;   /* TRUE COLOUR default. 3D-VIEWER ONLY — applied to artwork layers in a dedicated pass AFTER the clean (2D) snapshot, so the 2D editor stays accurate sRGB. Raise in Testing to pre-condition artwork for the lit 3D view. */
-var LAYER_SATURATION = 1.0;    /* TRUE COLOUR default. 3D-VIEWER ONLY (see above) — the 2D editor is unaffected. Raise in Testing to add punch to the lit 3D view. */
-var LAYER_CONTRAST   = 1.0;    /* TRUE COLOUR default. 3D-VIEWER ONLY (see above). */
+var LAYER_BRIGHTNESS = 0.65;  /* 3D-VIEWER ONLY — applied to artwork layers in a dedicated pass AFTER the clean (2D) snapshot, so the 2D editor stays accurate sRGB. Pre-conditions artwork for the lit 3D view. */
+var LAYER_SATURATION = 1.25;  /* 3D-VIEWER ONLY (see above) — the 2D editor is unaffected. Adds saturation punch to the lit 3D view. */
+var LAYER_CONTRAST   = 1.10;  /* 3D-VIEWER ONLY (see above). */
 /* Raw Testing artwork-tone string — decides/drives the 3D-only tone pass in drawBagTexture. */
 function _layerToneStr(){
   var f = '';
@@ -9876,7 +9876,7 @@ function initThree() {
   setupOrbit();
   animate();
   initHdriPresets();
-  onSceneLightsSlider(0.55);
+  onSceneLightsSlider(0.50);
   onShadowOpacitySlider('0');           /* fake blob off — real shadows now on */
   envYRotation = 235;
   document.getElementById('env-rotate-val').textContent = '235°';
@@ -11287,7 +11287,7 @@ var A2D = {
   gapMin:0, gapMax:100,     /* real pattern-gap range that the 0–100 Gap slider maps onto */
   editorRes:1,              /* 2D-editor supersampling multiplier (× devicePixelRatio) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewInterval:0.5, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
+  previewOn:true, previewInterval:0, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
