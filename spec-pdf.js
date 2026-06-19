@@ -187,14 +187,22 @@
       var islandX = MARG + (fitW - dw) / 2, islandY = MARG + (fitH - dh) / 2;
       var cn = document.createElement('canvas'); cn.width = cw; cn.height = ch; var x = cn.getContext('2d');
       x.fillStyle = FAINT; x.fillRect(0, 0, cw, ch);
-      var atlasW = (typeof bagTexCanvas !== 'undefined' && bagTexCanvas) ? bagTexCanvas.width : 2048;
       x.save();
       x.setTransform(k, 0, 0, -k, islandX - k * uv.x, islandY + dh + k * uv.y);   /* atlas → output, scaled + flipped */
       x.save(); if (clip && clip.path) { x.beginPath(); x.clip(clip.path); }            /* artwork clipped to the island */
       if (region === 'handles') { if (clip && clip.path) { x.fillStyle = (typeof BAG !== 'undefined' && BAG.ribbon && BAG.ribbon.color) || '#cccccc'; x.fill(clip.path); } }
       else x.drawImage(bagCleanCanvas, 0, 0);
       x.restore();
-      if (region !== 'handles' && typeof bagUVGuideCanvas !== 'undefined' && bagUVGuideCanvas) x.drawImage(bagUVGuideCanvas, 0, 0, bagUVGuideCanvas.width, bagUVGuideCanvas.height, 0, 0, atlasW, atlasW);   /* outlines + silhouette */
+      /* Outlines for THIS region ONLY (per-face fold lines + shell silhouette), drawn from the
+         region's own UV islands — NOT the shared guide canvas — so no neighbouring region's
+         silhouette can leak into this box. Widths are /k so device thickness stays constant. */
+      if (region !== 'handles') {
+        x.lineJoin = 'round'; x.lineCap = 'round';
+        if (clip && clip.outline) { x.strokeStyle = '#2b2b2b'; x.lineWidth = 5 / k; x.stroke(clip.outline); }
+        var _faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) || {};
+        x.strokeStyle = '#3c3c3c'; x.lineWidth = 3 / k;
+        Object.keys(_faces).forEach(function (f) { var fc = _faces[f]; if (fc && fc.clip && fc.clip.outline) x.stroke(fc.clip.outline); });
+      } else if (clip && clip.outline) { x.strokeStyle = '#2b2b2b'; x.lineWidth = 4 / k; x.stroke(clip.outline); }
       x.restore();
       if (measuring) {
         var dd = _dieDims(opts.dims), faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) || {};
