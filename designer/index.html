@@ -50,6 +50,7 @@
   <div class="dp-cta-row">
     <a class="dp-btn primary" href="../configurator.html?designer=1">✦ New bag template</a>
     <a class="dp-btn primary" href="../configurator-cup.html?designer=1">☕ New cup template</a>
+    <a class="dp-btn primary" href="../configurator-box.html?designer=1">🎁 New box template</a>
     <button class="dp-btn" type="button" onclick="document.getElementById('tpl-import').click()">⬆ Import template JSON</button>
     <input type="file" id="tpl-import" accept=".json,application/json" style="display:none" onchange="importTemplateFile(this)">
     <a class="dp-btn" href="../products.html" target="_blank">View the marketplace</a>
@@ -57,7 +58,7 @@
   <p class="dp-sub" style="margin-top:10px;font-size:13px">Tip: open any template <strong>as designer</strong> (edit &amp; see locks) or <strong>as client</strong> (locked preview) below to switch and compare the two.</p>
 
   <div class="dp-steps">
-    <div class="dp-step"><div class="n">1</div><h3>Design</h3><p>Build the bag in designer mode — size, colours, finishes, text, logos, graphics, social layers.</p></div>
+    <div class="dp-step"><div class="n">1</div><h3>Design</h3><p>Build your product — bag, cup or box — in designer mode: size, colours, finishes, text, logos, graphics, social layers.</p></div>
     <div class="dp-step"><div class="n">2</div><h3>Lock</h3><p>Open <strong>🔒 Locks</strong> and choose what clients can change (text, colours, handles) and what's fixed (size, layout, emboss, finish…).</p></div>
     <div class="dp-step"><div class="n">3</div><h3>Capture &amp; export</h3><p>Hit <strong>📷 Render</strong> for product photos, then <strong>⬇ Export template</strong> to download the JSON.</p></div>
     <div class="dp-step"><div class="n">4</div><h3>Publish</h3><p>Commit the JSON + renders to <code>/templates/</code> and add an entry to <code>templates/index.json</code>. It appears in the gallery.</p></div>
@@ -85,8 +86,10 @@ function importTemplateFile(input){
     var tpl; try { tpl = JSON.parse(reader.result); } catch(e){ alert('That file is not valid JSON.'); return; }
     if(!tpl || !tpl.snapshot){ alert('This doesn’t look like an Imprint template (no "snapshot").'); return; }
     try { localStorage.setItem('imprint_import_tpl', reader.result); } catch(e){ alert('Could not store the template (too large for this browser).'); return; }
-    var isCup = tpl.snapshot && /cup/.test(tpl.snapshot.model || '');
-    var base = isCup ? '../configurator-cup.html' : '../configurator.html';
+    var _m = (tpl.snapshot && tpl.snapshot.model) || '';
+    var base = /cup/.test(_m) ? '../configurator-cup.html'
+             : /box|earring/.test(_m) ? '../configurator-box.html'
+             : '../configurator.html';
     window.open(base + '?template=__imported&designer=1', '_blank');   /* opens the imported design in the studio */
   };
   reader.readAsText(file);
