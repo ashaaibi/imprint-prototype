@@ -12216,10 +12216,12 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
 <style id="tpl-css">
   #testing-panel { display: none; }                         /* Testing is for designers only */
   body.imp-designer #testing-panel { display: block; }
-  #imp-dbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 60; display: flex; gap: 8px; align-items: center; background: var(--imp-fg,#111); color: #fff; padding: 7px 9px; border-radius: 999px; box-shadow: 0 8px 28px rgba(0,0,0,0.32); font-family: var(--imp-font, Inter, sans-serif); }
+  #imp-dbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 64px; z-index: 60; display: flex; gap: 8px; align-items: center; background: var(--imp-fg,#111); color: #fff; padding: 7px 9px; border-radius: 999px; box-shadow: 0 8px 28px rgba(0,0,0,0.32); font-family: var(--imp-font, Inter, sans-serif); }
   #imp-dbar .dtag { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.65; padding: 0 4px 0 6px; }
   #imp-dbar button { font-family: inherit; font-size: 12px; font-weight: 600; border: none; border-radius: 999px; padding: 8px 13px; cursor: pointer; background: rgba(255,255,255,0.15); color: #fff; }
   #imp-dbar button:hover { background: rgba(255,255,255,0.28); }
+  #imp-dbar .imp-dbar-toggle { background: rgba(255,255,255,0.10); padding: 8px 12px; font-size: 13px; line-height: 1; }
+  #imp-dbar.collapsed > button:not(.imp-dbar-toggle) { display: none; }   /* collapsed → just the toggle + "Designer" tag (frees the fold slider) */
   #imp-locks { position: fixed; right: 16px; bottom: 66px; z-index: 61; width: 270px; max-height: 72vh; overflow: auto; background: var(--imp-surface,#fff); color: var(--imp-fg,#111); border: 1px solid var(--imp-border,#e5e5e5); border-radius: 14px; box-shadow: 0 14px 44px rgba(0,0,0,0.26); padding: 14px 16px; display: none; }
   #imp-locks.open { display: block; }
   #imp-locks h4 { margin: 0; font-size: 13px; }
@@ -12448,9 +12450,16 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
 
   /* ===== Designer UI (bar + locks panel) ===== */
   function ckb(path,label,on){ return '<label><input type="checkbox" data-lk="'+path+'"'+(on?' checked':'')+'> '+label+'</label>'; }
+  window._toggleDbar = function(){
+    var bar=document.getElementById('imp-dbar'); if(!bar) return;
+    var c = bar.classList.toggle('collapsed');
+    var t = bar.querySelector('.imp-dbar-toggle'); if(t) t.textContent = c ? '⟩' : '⟨';
+    try{ localStorage.setItem('imp_dbar_collapsed', c?'1':'0'); }catch(e){}
+  };
   function buildDesignerUI(){
     var bar=document.createElement('div'); bar.id='imp-dbar';
-    bar.innerHTML='<span class="dtag">Designer</span>' +
+    bar.innerHTML='<button type="button" class="imp-dbar-toggle" title="Collapse / expand designer bar" onclick="_toggleDbar()">⟨</button>' +
+      '<span class="dtag">Designer</span>' +
       '<button type="button" onclick="document.getElementById(\'imp-locks\').classList.toggle(\'open\')">🔒 Locks</button>' +
       '<button type="button" onclick="IMPRINT_captureRender()">📷 Render</button>' +
       '<button type="button" id="imp-rec-btn" onclick="IMPRINT_recordClip(8)" title="Record a seamless 360° spin + recolour as a muted WebM — usable as the hero loop or as Remotion 3D footage">● Record clip</button>' +
@@ -12458,6 +12467,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
       '<button type="button" onclick="IMPRINT_importTemplate()">⬆ Import JSON</button>' +
       '<button type="button" onclick="IMPRINT_previewAsClient()">👁 Preview as client ↗</button>';
     document.body.appendChild(bar);
+    try{ if(localStorage.getItem('imp_dbar_collapsed')==='1'){ bar.classList.add('collapsed'); var _dt=bar.querySelector('.imp-dbar-toggle'); if(_dt)_dt.textContent='⟩'; } }catch(e){}
     var lk=document.createElement('div'); lk.id='imp-locks';
     lk.innerHTML = '<h4>What clients can change</h4>' +
       '<div class="lk-sec">Client may edit</div>' + ckb('edit.text','Text content',true) + ckb('edit.colour','Colours',true) + ckb('edit.social','Social handles',true) + ckb('edit.graphics','Add their own graphics',false) +
