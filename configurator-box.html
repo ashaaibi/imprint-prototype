@@ -5363,6 +5363,8 @@ function IMP_foldScrub(frame){
    • desktop 3D → cleared → CSS default (bottom-centre of the stage). */
 function _positionFoldScrub(){
   var fs = document.getElementById('fold-scrub'); if (!fs) return;
+  if (typeof viewMode !== 'undefined' && viewMode === 'render') { fs.style.display='none'; return; }   /* UVs don't fold */
+  fs.style.display='';
   var stage = document.querySelector('.canvas-stage');
   var is2D = !!(stage && stage.classList.contains('mode-2d'));
   fs.style.left=''; fs.style.right=''; fs.style.bottom=''; fs.style.width=''; fs.style.transform='';
@@ -5394,7 +5396,7 @@ window.addEventListener('orientationchange', _positionFoldScrub);
    only (finish/bump transfer is a follow-up; near-invisible on soft-touch). */
 var DUAL_UV = true;                       /* master switch; IMP_setDualUV(false) → single-UV fallback */
 var _rbFlipX = false, _rbFlipY = true;    /* output orientation — toggle (Flip X/Y) if the 3D looks mirrored / upside-down */
-var _rbScene=null, _rbCam=null, _rbTarget=null, _rbMat=null, _rbMeshes=[];
+var _rbScene=null, _rbCam=null, _rbTarget=null, _rbMat=null, _rbMeshes=[], _rbDispCam=null;
 function _rbGeomFor(srcGeom){
   var uv0=srcGeom.getAttribute('uv'), uv1=srcGeom.getAttribute('uv2');
   if(!uv0||!uv1) return null;
@@ -5446,6 +5448,27 @@ function _rbBuildControl(){
     '<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'y\')">Flip Y</button>'+
     '<button type="button" style="'+bs+'" onclick="IMP_setDualUV(false)" title="Fall back to single-UV (design = render layout)">Off</button>';
   stage.appendChild(d);
+}
+/* Aspect-fit ortho camera so the unit UV square shows centred (not stretched) on the stage canvas. */
+function _rbUpdateDispCam(){
+  if(!_rbDispCam) _rbDispCam=new THREE.OrthographicCamera(0,1,1,0,-1,1);
+  var cv=document.getElementById('three-canvas'); if(!cv) return;
+  var w=cv.clientWidth||cv.width||1, h=cv.clientHeight||cv.height||1, a=w/h, L,R,Tp,B;
+  if(a>=1){ L=0.5-a/2; R=0.5+a/2; B=0; Tp=1; } else { L=0; R=1; B=0.5-(1/a)/2; Tp=0.5+(1/a)/2; }
+  _rbDispCam.left=L; _rbDispCam.right=R; _rbDispCam.top=Tp; _rbDispCam.bottom=B; _rbDispCam.updateProjectionMatrix();
+}
+/* Toggle bar: dual-UV → [3D][Print][Render] (names both UV sets); single-UV → [3D][2D]. */
+function _applyModeToggle(){
+  var mt=document.getElementById('mode-toggle'); if(!mt) return;
+  var b2=mt.querySelector('[data-mode="2d"]'), br=mt.querySelector('[data-mode="render"]');
+  if(window._dualUV){
+    if(b2) b2.textContent='Print';
+    if(!br){ br=document.createElement('button'); br.setAttribute('data-mode','render'); br.setAttribute('onclick',"setViewMode('render')"); br.textContent='Render'; mt.appendChild(br); }
+  } else {
+    if(b2) b2.textContent='2D';
+    if(br) br.remove();
+    if(typeof viewMode!=='undefined' && viewMode==='render' && typeof setViewMode==='function') setViewMode('3d');
+  }
 }
 
 function buildPaperBagMesh() {
@@ -5547,6 +5570,7 @@ function buildPaperBagMesh() {
     _setupFold(gltf.animations && gltf.animations[0], [extMesh, intMesh].filter(Boolean));
     console.log('[imprint] BUILD=ring-box morph · ext:', !!extMesh, '· int:', !!intMesh, '· morphTargets:', (primaryMesh.morphTargetInfluences||[]).length, '· foldFrames:', _foldTrk ? _foldTrk.times.length : 0);
     if (window._dualUV && typeof _initDualRebake === 'function') _initDualRebake(extMesh, intMesh, boxMat);
+    if (typeof _applyModeToggle === 'function') _applyModeToggle();
 
     // Auto-scale to fit ~1.4 units tall
     var bbox = new THREE.Box3().setFromObject(bagGroup);
@@ -10019,7 +10043,11 @@ function animate(now) {
     else _lastPreviewRender = now || 0;
   }
   if (_doRender) {
-    if (typeof realismRender === 'function') realismRender();
+    if (viewMode === 'render' && window._dualUV && _rbScene && typeof _rbUpdateDispCam === 'function') {
+      _rbUpdateDispCam();
+      T.renderer.setRenderTarget(null);
+      T.renderer.render(_rbScene, _rbDispCam);    /* flat no-stretch (render-UV) unwrap, live */
+    } else if (typeof realismRender === 'function') realismRender();
     else T.renderer.render(T.scene, T.camera);
   }
 }
@@ -11271,7 +11299,7 @@ function _autoEdit2dAfterUpload(){
   return;
 }
 function setViewMode(mode){
-  viewMode = (mode === '2d') ? '2d' : '3d';
+  viewMode = (mode === '2d') ? '2d' : (mode === 'render' ? 'render' : '3d');
   if (typeof _hideFaceBar==='function') _hideFaceBar();
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
   var stage = document.querySelector('.canvas-stage');
