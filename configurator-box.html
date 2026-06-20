@@ -9,18 +9,18 @@
   <meta name="description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="IMPRINT®">
-  <meta property="og:title" content="IMPRINT® — Ring box configurator">
+  <meta property="og:title" content="IMPRINT® — Jewellery box configurator">
   <meta property="og:description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
   <meta property="og:url" content="https://ashaaibi.github.io/imprint-prototype/configurator.html">
   <meta property="og:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="IMPRINT® — Ring box configurator">
+  <meta name="twitter:title" content="IMPRINT® — Jewellery box configurator">
   <meta name="twitter:description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
   <meta name="twitter:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMPRINT® — Ring box configurator</title>
+  <title>IMPRINT® — Jewellery box configurator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
@@ -1667,7 +1667,7 @@
   <section class="preview-panel" aria-label="Live preview">
 
     <div class="preview-header">
-      <span class="tpl-name" id="tpl-name" data-en="Ring box" data-ar="علبة خاتم">Ring box</span>
+      <span class="tpl-name" id="tpl-name" data-en="Jewellery box" data-ar="علبة مجوهرات">Jewellery box</span>
       <div class="tpl-meta" data-en="Live pricing updates as you change spec." data-ar="يتحدث السعر فورياً عند تغيير المواصفات.">Live pricing updates as you change spec.</div>
     </div>
 
@@ -1696,7 +1696,7 @@
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
         <div class="cfg-loader-text" id="bag-switch-text">Reshaping your bag…</div>
       </div>
-      <div class="dim-pill" id="dim-pill">Foldable · one size</div>
+      <div class="dim-pill" id="dim-pill">Foldable · ring</div>
       <!-- Ring box fold scrubber: 0 = closed/assembled (default), 100 = open -->
       <div class="fold-scrub" id="fold-scrub">
         <span class="fold-end" data-en="Closed" data-ar="مغلق">Closed</span>
@@ -1972,7 +1972,12 @@
       <div class="bag-size-list">
         <button class="bag-sopt on" onclick="onBagSize('box',this)">
           <span class="bag-sopt-key">Ring Box</span>
-          <span class="bag-sopt-dims" data-en="Foldable · one size" data-ar="قابل للطي · مقاس واحد">Foldable · one size</span>
+          <span class="bag-sopt-dims" data-en="Foldable · size 01" data-ar="قابل للطي · مقاس ١">Foldable · size 01</span>
+          <span class="bag-sopt-price">from AED 6.20/unit</span>
+        </button>
+        <button class="bag-sopt" onclick="onBagSize('earring',this)">
+          <span class="bag-sopt-key">Earring Box</span>
+          <span class="bag-sopt-dims" data-en="Foldable · size 02" data-ar="قابل للطي · مقاس ٢">Foldable · size 02</span>
           <span class="bag-sopt-price">from AED 6.20/unit</span>
         </button>
       </div>
@@ -3106,7 +3111,10 @@ var BAG_FACES = { exterior: {}, interior: {} };
 
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
 const BAG_MODELS = {
-  box: { key:'box', label:'Ring Box', file:'ring_box_size01.glb', dims:'Foldable · one size',
+  box: { key:'box', label:'Ring Box', file:'ring_box_size01.glb', dims:'Foldable · ring',
+    uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} }, front:{ posU:50.00, posV:50.00 },
+    tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
+  earring: { key:'earring', label:'Earring Box', file:'earring_box_size02.glb', dims:'Foldable · earring',
     uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} }, front:{ posU:50.00, posV:50.00 },
     tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
 };
@@ -5323,6 +5331,7 @@ function _setupFold(clip, meshes){
   _foldTrk = { times: tr.times, values: tr.values };
   _foldDur = clip.duration || (tr.times.length ? tr.times[tr.times.length-1] : 0);
   _foldNT  = (_foldMeshes[0].morphTargetInfluences || []).length || 0;
+  var _fsl = document.getElementById('fold-slider'); if (_fsl) _fsl.value = 0;   /* reset the thumb on (re)build / size-switch */
   IMP_foldScrub(0);   /* default → assembled (frame 0) */
 }
 /* frame: 0 (closed/assembled) … 100 (open). Reads the baked weight curve and
@@ -5389,7 +5398,7 @@ function buildPaperBagMesh() {
     return;
   }
   var loader = new THREE.GLTFLoader();
-  var model = BAG_MODELS[currentBagModel] || BAG_MODELS.wide;
+  var model = BAG_MODELS[currentBagModel] || BAG_MODELS.box;
   setBagUVForModel(currentBagModel);
   if (typeof updateBagQtyGridFromEntry === 'function') updateBagQtyGridFromEntry(model);
   /* keep the bottom-left measurement pill in sync with the loaded model (unless the user is
@@ -12023,7 +12032,7 @@ function configStepPrev() { goConfigStep(currentConfigStep - 1); }
 if (typeof initSiteHeader === 'function') {
   initSiteHeader({
     activePage: 'configurator',
-    breadcrumb: '<a href="index.html" data-en="Home" data-ar="الرئيسية">Home</a><span class="sep">/</span><a href="products.html" data-en="Products" data-ar="المنتجات">Products</a><span class="sep">/</span><strong data-en="Ring box" data-ar="علبة خاتم">Ring box</strong>',
+    breadcrumb: '<a href="index.html" data-en="Home" data-ar="الرئيسية">Home</a><span class="sep">/</span><a href="products.html" data-en="Products" data-ar="المنتجات">Products</a><span class="sep">/</span><strong data-en="Jewellery box" data-ar="علبة مجوهرات">Jewellery box</strong>',
     showCart: true
   });
 }
