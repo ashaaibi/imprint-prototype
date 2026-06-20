@@ -5394,7 +5394,7 @@ window.addEventListener('orientationchange', _positionFoldScrub);
    the design atlas at its print-UV ('uv2'); the result becomes the 3D colour
    map. Single-UV GLBs are untouched (everything stays on 'uv'). v1 = colour map
    only (finish/bump transfer is a follow-up; near-invisible on soft-touch). */
-var DUAL_UV = true;                       /* master switch; IMP_setDualUV(false) → single-UV fallback */
+var DUAL_UV = false;                      /* default OFF so the box loads fast; turn on via the Dual-UV pill to test */
 var _rbFlipX = false, _rbFlipY = true;    /* output orientation — toggle (Flip X/Y) if the 3D looks mirrored / upside-down */
 var _rbScene=null, _rbCam=null, _rbMat=null, _rbMeshes=[], _rbDispCam=null, _rbMatRef=null, _rbColorT=null, _rbRoughT=null, _rbMetalT=null, _rbBumpT=null;
 function _rbGeomFor(srcGeom){
@@ -5430,7 +5430,6 @@ function _initDualRebake(extMesh,intMesh,mat){
     mat.map=_rbColorT.texture;
     if(mat.alphaMap){ mat.alphaMap=null; }   /* atlas alpha would be misaligned → drop it (box is opaque) */
     mat.needsUpdate=true;
-    _rbBuildControl();
   }catch(e){ console.error('dual-UV init failed → single-UV fallback',e); window._dualUV=false; if(mat){mat.map=bagTexture; mat.needsUpdate=true;} }
 }
 function _dualRebake(){
@@ -5449,7 +5448,7 @@ function _dualRebake(){
     for(var i=0;i<list.length;i++){
       var src=list[i][0], tgt=list[i][1], prop=list[i][2];
       if(!src||!tgt) continue;
-      _rbMat.map=src; _rbMat.needsUpdate=true;
+      _rbMat.map=src;
       T.renderer.setRenderTarget(tgt); T.renderer.setClearColor(0x000000,1); T.renderer.clear();
       T.renderer.render(_rbScene,_rbCam);
       if(_rbMatRef[prop]!==tgt.texture){ _rbMatRef[prop]=tgt.texture; _rbMatRef.needsUpdate=true; }
@@ -5461,16 +5460,20 @@ function _dualRebake(){
 window.IMP_setDualUV=function(on){ DUAL_UV=!!on; var c=document.getElementById('dualuv-ctl'); if(c)c.remove(); if(typeof buildPaperBagMesh==='function') buildPaperBagMesh(); };
 window.IMP_rbFlip=function(axis){ if(axis==='x')_rbFlipX=!_rbFlipX; else _rbFlipY=!_rbFlipY; if(window._dualUV){ _rbBuildScene(); _dualRebake(); } };
 function _rbBuildControl(){
-  if(document.getElementById('dualuv-ctl')) return;
   var stage=document.querySelector('.canvas-stage'); if(!stage) return;
+  var ex=document.getElementById('dualuv-ctl'); if(ex) ex.remove();
   var bs='font:inherit;border:none;border-radius:999px;padding:4px 8px;cursor:pointer;background:var(--imp-surface-2,#eee);color:inherit;';
   var d=document.createElement('div'); d.id='dualuv-ctl';
   d.style.cssText='position:absolute;top:12px;left:12px;z-index:7;display:flex;gap:6px;align-items:center;background:var(--imp-surface,#fff);border:1px solid var(--imp-border,#e5e5e5);border-radius:999px;padding:5px 9px;box-shadow:0 4px 14px rgba(0,0,0,0.12);font-family:var(--imp-font);font-size:10px;font-weight:600;color:var(--imp-fg-2,#777);user-select:none;';
-  d.innerHTML='<span title="3D renders the no-stretch UVs; you design/print on the straight UVs">Dual-UV</span>'+
-    '<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'x\')">Flip X</button>'+
-    '<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'y\')">Flip Y</button>'+
-    '<button type="button" style="'+bs+'" onclick="IMP_setDualUV(false)" title="Fall back to single-UV (design = render layout)">Off</button>';
-  stage.appendChild(d);
+  var h='<span title="3D renders the no-stretch UVs; you design/print on the straight UVs">Dual-UV</span>';
+  if(window._dualUV){
+    h+='<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'x\')">Flip X</button>'+
+       '<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'y\')">Flip Y</button>'+
+       '<button type="button" style="'+bs+'" onclick="IMP_setDualUV(false)" title="Back to single-UV (fast)">Off</button>';
+  } else {
+    h+='<button type="button" style="'+bs+'" onclick="IMP_setDualUV(true)" title="Enable dual-UV: design/print on the straight set, render the no-stretch set">On</button>';
+  }
+  d.innerHTML=h; stage.appendChild(d);
 }
 /* Aspect-fit ortho camera so the unit UV square shows centred (not stretched) on the stage canvas. */
 function _rbUpdateDispCam(){
@@ -5575,7 +5578,8 @@ function buildPaperBagMesh() {
        GLB has a 2nd UV set (TEXCOORD_1 = straight print layout), the editor + PDF
        use it ('uv2') and the 3D re-bakes design→render so it samples the no-stretch
        set ('uv') without stretch. Single-UV GLBs keep everything on 'uv'. */
-    window._dualUV = !!(primaryMesh.geometry.getAttribute('uv2')) && DUAL_UV && !!(T && T.renderer);
+    window._hasUV2 = !!(primaryMesh.geometry.getAttribute('uv2'));
+    window._dualUV = window._hasUV2 && DUAL_UV && !!(T && T.renderer);
     var _islUV = window._dualUV ? 'uv2' : 'uv';
     bagExtClip = extMesh ? computeIslandRegion(extMesh.geometry, _islUV) : null;
     bagIntClip = intMesh ? computeIslandRegion(intMesh.geometry, _islUV) : null;
@@ -5594,6 +5598,7 @@ function buildPaperBagMesh() {
     console.log('[imprint] BUILD=ring-box morph · ext:', !!extMesh, '· int:', !!intMesh, '· morphTargets:', (primaryMesh.morphTargetInfluences||[]).length, '· foldFrames:', _foldTrk ? _foldTrk.times.length : 0);
     if (window._dualUV && typeof _initDualRebake === 'function') _initDualRebake(extMesh, intMesh, boxMat);
     if (typeof _applyModeToggle === 'function') _applyModeToggle();
+    if (window._hasUV2 && typeof _rbBuildControl === 'function') _rbBuildControl();
 
     // Auto-scale to fit ~1.4 units tall
     var bbox = new THREE.Box3().setFromObject(bagGroup);
