@@ -5396,7 +5396,7 @@ window.addEventListener('orientationchange', _positionFoldScrub);
    only (finish/bump transfer is a follow-up; near-invisible on soft-touch). */
 var DUAL_UV = true;                       /* master switch; IMP_setDualUV(false) → single-UV fallback */
 var _rbFlipX = false, _rbFlipY = true;    /* output orientation — toggle (Flip X/Y) if the 3D looks mirrored / upside-down */
-var _rbScene=null, _rbCam=null, _rbTarget=null, _rbMat=null, _rbMeshes=[], _rbDispCam=null;
+var _rbScene=null, _rbCam=null, _rbMat=null, _rbMeshes=[], _rbDispCam=null, _rbMatRef=null, _rbColorT=null, _rbRoughT=null, _rbMetalT=null, _rbBumpT=null;
 function _rbGeomFor(srcGeom){
   var uv0=srcGeom.getAttribute('uv'), uv1=srcGeom.getAttribute('uv2');
   if(!uv0||!uv1) return null;
@@ -5418,22 +5418,45 @@ function _rbBuildScene(){
 function _initDualRebake(extMesh,intMesh,mat){
   try{
     if(!T||!T.renderer||!bagTexture){ window._dualUV=false; return; }
+    _rbMatRef=mat;
     _rbMeshes=[extMesh,intMesh].filter(Boolean);
     _rbBuildScene();
-    var W=_atlasW();
-    if(!_rbTarget||_rbTarget.width!==W){ if(_rbTarget)_rbTarget.dispose(); _rbTarget=new THREE.WebGLRenderTarget(W,W,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat}); }
-    try{ _rbTarget.texture.encoding=bagTexture.encoding; }catch(e){}
-    mat.map=_rbTarget.texture; mat.needsUpdate=true;
+    function mk(sz){ return new THREE.WebGLRenderTarget(sz,sz,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat}); }
+    var W=_atlasW(), P=(typeof PBR_SIZE!=='undefined'?PBR_SIZE:1024), B=(typeof BUMP_SIZE!=='undefined'?BUMP_SIZE:1024);
+    if(_rbColorT)_rbColorT.dispose(); _rbColorT=mk(W); try{_rbColorT.texture.encoding=bagTexture.encoding;}catch(e){}
+    if(_rbRoughT)_rbRoughT.dispose(); _rbRoughT=mk(P);
+    if(_rbMetalT)_rbMetalT.dispose(); _rbMetalT=mk(P);
+    if(_rbBumpT)_rbBumpT.dispose();   _rbBumpT=mk(B);
+    mat.map=_rbColorT.texture;
+    if(mat.alphaMap){ mat.alphaMap=null; }   /* atlas alpha would be misaligned → drop it (box is opaque) */
+    mat.needsUpdate=true;
     _rbBuildControl();
   }catch(e){ console.error('dual-UV init failed → single-UV fallback',e); window._dualUV=false; if(mat){mat.map=bagTexture; mat.needsUpdate=true;} }
 }
 function _dualRebake(){
-  if(!window._dualUV||!_rbTarget||!_rbScene||!T||!T.renderer) return;
-  if(_rbMat) _rbMat.map=bagTexture;
+  if(!window._dualUV||!_rbColorT||!_rbScene||!T||!T.renderer||!_rbMatRef) return;
+  /* Transfer EVERY atlas map from the print layout (painted) into the render layout
+     (sampled via 'uv') so colour AND finish/bump all line up — otherwise a misaligned
+     metalness map renders the box metallic-black. Render targets stay linear (no output
+     encoding), so each transfer is a verbatim copy. */
+  var list=[ [bagTexture, _rbColorT, 'map'],
+             [(typeof bagRoughTex!=='undefined'?bagRoughTex:null), _rbRoughT, 'roughnessMap'],
+             [(typeof bagMetalTex!=='undefined'?bagMetalTex:null), _rbMetalT, 'metalnessMap'],
+             [(typeof bagBumpTex!=='undefined'?bagBumpTex:null),   _rbBumpT,  'bumpMap'] ];
   var prevT=T.renderer.getRenderTarget();
   var pcol=new THREE.Color(); T.renderer.getClearColor(pcol); var pa=T.renderer.getClearAlpha();
-  try{ T.renderer.setRenderTarget(_rbTarget); T.renderer.setClearColor(0x000000,1); T.renderer.clear(); T.renderer.render(_rbScene,_rbCam); }
-  finally{ T.renderer.setRenderTarget(prevT); T.renderer.setClearColor(pcol,pa); }   /* restore — must not leave the viewport black */
+  try{
+    for(var i=0;i<list.length;i++){
+      var src=list[i][0], tgt=list[i][1], prop=list[i][2];
+      if(!src||!tgt) continue;
+      _rbMat.map=src; _rbMat.needsUpdate=true;
+      T.renderer.setRenderTarget(tgt); T.renderer.setClearColor(0x000000,1); T.renderer.clear();
+      T.renderer.render(_rbScene,_rbCam);
+      if(_rbMatRef[prop]!==tgt.texture){ _rbMatRef[prop]=tgt.texture; _rbMatRef.needsUpdate=true; }
+    }
+    if(_rbMatRef.alphaMap){ _rbMatRef.alphaMap=null; _rbMatRef.needsUpdate=true; }
+  } finally { T.renderer.setRenderTarget(prevT); T.renderer.setClearColor(pcol,pa); }   /* restore — must not leave the viewport black */
+  _rbMat.map=bagTexture;   /* leave the colour source bound for the live Render-view screen pass */
 }
 window.IMP_setDualUV=function(on){ DUAL_UV=!!on; var c=document.getElementById('dualuv-ctl'); if(c)c.remove(); if(typeof buildPaperBagMesh==='function') buildPaperBagMesh(); };
 window.IMP_rbFlip=function(axis){ if(axis==='x')_rbFlipX=!_rbFlipX; else _rbFlipY=!_rbFlipY; if(window._dualUV){ _rbBuildScene(); _dualRebake(); } };
