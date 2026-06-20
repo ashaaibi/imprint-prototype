@@ -1972,14 +1972,14 @@
     <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
       <div class="bag-size-list">
-        <button class="bag-sopt on" onclick="onBagSize('box',this)">
-          <span class="bag-sopt-key">Ring Box</span>
-          <span class="bag-sopt-dims" data-en="Foldable · size 01" data-ar="قابل للطي · مقاس ١">Foldable · size 01</span>
+        <button class="bag-sopt on" onclick="onBagSize('opt',this)">
+          <span class="bag-sopt-key">Optimized UV</span>
+          <span class="bag-sopt-dims" data-en="No-stretch render" data-ar="بدون تمدد">No-stretch render</span>
           <span class="bag-sopt-price">from AED 6.20/unit</span>
         </button>
-        <button class="bag-sopt" onclick="onBagSize('earring',this)">
-          <span class="bag-sopt-key">Earring Box</span>
-          <span class="bag-sopt-dims" data-en="Foldable · size 02" data-ar="قابل للطي · مقاس ٢">Foldable · size 02</span>
+        <button class="bag-sopt" onclick="onBagSize('orig',this)">
+          <span class="bag-sopt-key">Original UV</span>
+          <span class="bag-sopt-dims" data-en="Straight print dieline" data-ar="قالب طباعة مستقيم">Straight print dieline</span>
           <span class="bag-sopt-price">from AED 6.20/unit</span>
         </button>
       </div>
@@ -3113,14 +3113,14 @@ var BAG_FACES = { exterior: {}, interior: {} };
 
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
 const BAG_MODELS = {
-  box: { key:'box', label:'Ring Box', file:'ring_box_size01.glb', dims:'Foldable · ring',
+  opt: { key:'opt', label:'Optimized UV', file:'Size01_Ring_optUV.glb', dims:'No-stretch UVs',
     uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} }, front:{ posU:50.00, posV:50.00 },
     tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
-  earring: { key:'earring', label:'Earring Box', file:'earring_box_size02.glb', dims:'Foldable · earring',
+  orig: { key:'orig', label:'Original UV', file:'Size01_Ring_origUV.glb', dims:'Straight print UVs',
     uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} }, front:{ posU:50.00, posV:50.00 },
     tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
 };
-var currentBagModel = 'box';
+var currentBagModel = 'opt';
 /* ── PDP hand-off ── product.html opens us with ?size=&qty=&pmul=&mfr=&step= so the user can
    pre-pick size/quantity/manufacturer there, then land on the Design step. Read it before the
    first build so the correct model loads and the price reflects the manufacturer. */
@@ -5416,7 +5416,7 @@ function buildPaperBagMesh() {
     return;
   }
   var loader = new THREE.GLTFLoader();
-  var model = BAG_MODELS[currentBagModel] || BAG_MODELS.box;
+  var model = BAG_MODELS[currentBagModel] || BAG_MODELS.opt;
   setBagUVForModel(currentBagModel);
   if (typeof updateBagQtyGridFromEntry === 'function') updateBagQtyGridFromEntry(model);
   /* keep the bottom-left measurement pill in sync with the loaded model (unless the user is
