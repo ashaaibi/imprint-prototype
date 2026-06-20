@@ -3113,7 +3113,7 @@ var BAG_FACES = { exterior: {}, interior: {} };
 
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
 const BAG_MODELS = {
-  box: { key:'box', label:'Ring Box', file:'ring_box_size01_dualuv.glb', dims:'Foldable · ring',
+  box: { key:'box', label:'Ring Box', file:'ring_box_size01.glb', dims:'Foldable · ring',
     uv:{ exterior:{x:31,y:1005,w:982,h:1007}, interior:{x:1041,y:1005,w:982,h:1007} }, front:{ posU:50.00, posV:50.00 },
     tiers:[{qty:200,pu:6.20,save:0},{qty:500,pu:4.60,save:26},{qty:1000,pu:3.70,save:40},{qty:2000,pu:2.90,save:53}] },
   earring: { key:'earring', label:'Earring Box', file:'earring_box_size02.glb', dims:'Foldable · earring',
@@ -4290,7 +4290,6 @@ function drawBagTexture() {
   if (!_lightBake()) {            /* skip heavy passes while dragging → smooth FPS; full redraw on release */
     rebuildBumpMap();
     if (typeof scheduleHistory === 'function') scheduleHistory();
-    if (window._dualUV && typeof _dualRebake === 'function') _dualRebake();   /* print→render UV transfer for the 3D colour map */
   }
   _colorOnlyEdit = false;   /* consumed for this bake (#3) */
 }
@@ -5209,9 +5208,9 @@ function mergeBagGeoms(geoms) {
    triangle is added to a Path2D using the same transform as the body atlas
    (canvas_x = u·2048, canvas_y = (1−v)·2048). Returns { path, bbox } or null.
    Used to paint handle/rivet colour + artwork into exactly their own texels. */
-function computeIslandRegion(geom, uvName) {
+function computeIslandRegion(geom) {
   if (!geom) return null;
-  var uvAttr = geom.getAttribute(uvName||'uv'); if (!uvAttr) return null;
+  var uvAttr = geom.getAttribute('uv'); if (!uvAttr) return null;
   var ua = uvAttr.array, idx = geom.getIndex();
   var path = (typeof Path2D !== 'undefined') ? new Path2D() : null; if (!path) return null;
   var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
@@ -5363,8 +5362,6 @@ function IMP_foldScrub(frame){
    • desktop 3D → cleared → CSS default (bottom-centre of the stage). */
 function _positionFoldScrub(){
   var fs = document.getElementById('fold-scrub'); if (!fs) return;
-  if (typeof viewMode !== 'undefined' && viewMode === 'render') { fs.style.display='none'; return; }   /* UVs don't fold */
-  fs.style.display='';
   var stage = document.querySelector('.canvas-stage');
   var is2D = !!(stage && stage.classList.contains('mode-2d'));
   fs.style.left=''; fs.style.right=''; fs.style.bottom=''; fs.style.width=''; fs.style.transform='';
@@ -5386,116 +5383,6 @@ function _positionFoldScrub(){
 }
 window.addEventListener('resize', _positionFoldScrub);
 window.addEventListener('orientationchange', _positionFoldScrub);
-
-/* ── DUAL-UV RE-BAKE (box) ──────────────────────────────────────────────────
-   When the GLB carries 2 UV sets you DESIGN + PRINT on TEXCOORD_1 (the straight
-   dieline) while the 3D RENDERS via TEXCOORD_0 (no stretch). A GPU pass bridges
-   them: it draws the mesh flat at its render-UV ('uv') positions while sampling
-   the design atlas at its print-UV ('uv2'); the result becomes the 3D colour
-   map. Single-UV GLBs are untouched (everything stays on 'uv'). v1 = colour map
-   only (finish/bump transfer is a follow-up; near-invisible on soft-touch). */
-var DUAL_UV = false;                      /* default OFF so the box loads fast; turn on via the Dual-UV pill to test */
-var _rbFlipX = false, _rbFlipY = true;    /* output orientation — toggle (Flip X/Y) if the 3D looks mirrored / upside-down */
-var _rbScene=null, _rbCam=null, _rbMat=null, _rbMeshes=[], _rbDispCam=null, _rbMatRef=null, _rbColorT=null, _rbRoughT=null, _rbMetalT=null, _rbBumpT=null;
-function _rbGeomFor(srcGeom){
-  var uv0=srcGeom.getAttribute('uv'), uv1=srcGeom.getAttribute('uv2');
-  if(!uv0||!uv1) return null;
-  var n=uv0.count, pos=new Float32Array(n*3), su=new Float32Array(n*2);
-  for(var i=0;i<n;i++){ var x=uv0.getX(i), y=uv0.getY(i); if(_rbFlipX)x=1-x; if(_rbFlipY)y=1-y;
-    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=0; su[i*2]=uv1.getX(i); su[i*2+1]=uv1.getY(i); }
-  var g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  g.setAttribute('uv',new THREE.BufferAttribute(su,2));
-  var idx=srcGeom.getIndex(); if(idx) g.setIndex(idx.clone());
-  return g;
-}
-function _rbBuildScene(){
-  _rbScene=new THREE.Scene();
-  _rbCam=new THREE.OrthographicCamera(0,1,1,0,-1,1);     /* render-UV 0..1 plane → full target */
-  _rbMat=new THREE.MeshBasicMaterial({ map:bagTexture, side:THREE.DoubleSide });   /* unlit copy; DoubleSide so winding can't drop tris */
-  _rbMeshes.forEach(function(m){ var g=_rbGeomFor(m.geometry); if(g) _rbScene.add(new THREE.Mesh(g,_rbMat)); });
-}
-function _initDualRebake(extMesh,intMesh,mat){
-  try{
-    if(!T||!T.renderer||!bagTexture){ window._dualUV=false; return; }
-    _rbMatRef=mat;
-    _rbMeshes=[extMesh,intMesh].filter(Boolean);
-    _rbBuildScene();
-    function mk(sz){ return new THREE.WebGLRenderTarget(sz,sz,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat}); }
-    var W=_atlasW(), P=(typeof PBR_SIZE!=='undefined'?PBR_SIZE:1024), B=(typeof BUMP_SIZE!=='undefined'?BUMP_SIZE:1024);
-    if(_rbColorT)_rbColorT.dispose(); _rbColorT=mk(W); try{_rbColorT.texture.encoding=bagTexture.encoding;}catch(e){}
-    if(_rbRoughT)_rbRoughT.dispose(); _rbRoughT=mk(P);
-    if(_rbMetalT)_rbMetalT.dispose(); _rbMetalT=mk(P);
-    if(_rbBumpT)_rbBumpT.dispose();   _rbBumpT=mk(B);
-    mat.map=_rbColorT.texture;
-    if(mat.alphaMap){ mat.alphaMap=null; }   /* atlas alpha would be misaligned → drop it (box is opaque) */
-    mat.needsUpdate=true;
-  }catch(e){ console.error('dual-UV init failed → single-UV fallback',e); window._dualUV=false; if(mat){mat.map=bagTexture; mat.needsUpdate=true;} }
-}
-function _dualRebake(){
-  if(!window._dualUV||!_rbColorT||!_rbScene||!T||!T.renderer||!_rbMatRef) return;
-  /* Transfer EVERY atlas map from the print layout (painted) into the render layout
-     (sampled via 'uv') so colour AND finish/bump all line up — otherwise a misaligned
-     metalness map renders the box metallic-black. Render targets stay linear (no output
-     encoding), so each transfer is a verbatim copy. */
-  var list=[ [bagTexture, _rbColorT, 'map'],
-             [(typeof bagRoughTex!=='undefined'?bagRoughTex:null), _rbRoughT, 'roughnessMap'],
-             [(typeof bagMetalTex!=='undefined'?bagMetalTex:null), _rbMetalT, 'metalnessMap'],
-             [(typeof bagBumpTex!=='undefined'?bagBumpTex:null),   _rbBumpT,  'bumpMap'] ];
-  var prevT=T.renderer.getRenderTarget();
-  var pcol=new THREE.Color(); T.renderer.getClearColor(pcol); var pa=T.renderer.getClearAlpha();
-  try{
-    for(var i=0;i<list.length;i++){
-      var src=list[i][0], tgt=list[i][1], prop=list[i][2];
-      if(!src||!tgt) continue;
-      _rbMat.map=src;
-      T.renderer.setRenderTarget(tgt); T.renderer.setClearColor(0x000000,1); T.renderer.clear();
-      T.renderer.render(_rbScene,_rbCam);
-      if(_rbMatRef[prop]!==tgt.texture){ _rbMatRef[prop]=tgt.texture; _rbMatRef.needsUpdate=true; }
-    }
-    if(_rbMatRef.alphaMap){ _rbMatRef.alphaMap=null; _rbMatRef.needsUpdate=true; }
-  } finally { T.renderer.setRenderTarget(prevT); T.renderer.setClearColor(pcol,pa); }   /* restore — must not leave the viewport black */
-  _rbMat.map=bagTexture;   /* leave the colour source bound for the live Render-view screen pass */
-}
-window.IMP_setDualUV=function(on){ DUAL_UV=!!on; var c=document.getElementById('dualuv-ctl'); if(c)c.remove(); if(typeof buildPaperBagMesh==='function') buildPaperBagMesh(); };
-window.IMP_rbFlip=function(axis){ if(axis==='x')_rbFlipX=!_rbFlipX; else _rbFlipY=!_rbFlipY; if(window._dualUV){ _rbBuildScene(); _dualRebake(); } };
-function _rbBuildControl(){
-  var stage=document.querySelector('.canvas-stage'); if(!stage) return;
-  var ex=document.getElementById('dualuv-ctl'); if(ex) ex.remove();
-  var bs='font:inherit;border:none;border-radius:999px;padding:4px 8px;cursor:pointer;background:var(--imp-surface-2,#eee);color:inherit;';
-  var d=document.createElement('div'); d.id='dualuv-ctl';
-  d.style.cssText='position:absolute;top:12px;left:12px;z-index:7;display:flex;gap:6px;align-items:center;background:var(--imp-surface,#fff);border:1px solid var(--imp-border,#e5e5e5);border-radius:999px;padding:5px 9px;box-shadow:0 4px 14px rgba(0,0,0,0.12);font-family:var(--imp-font);font-size:10px;font-weight:600;color:var(--imp-fg-2,#777);user-select:none;';
-  var h='<span title="3D renders the no-stretch UVs; you design/print on the straight UVs">Dual-UV</span>';
-  if(window._dualUV){
-    h+='<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'x\')">Flip X</button>'+
-       '<button type="button" style="'+bs+'" onclick="IMP_rbFlip(\'y\')">Flip Y</button>'+
-       '<button type="button" style="'+bs+'" onclick="IMP_setDualUV(false)" title="Back to single-UV (fast)">Off</button>';
-  } else {
-    h+='<button type="button" style="'+bs+'" onclick="IMP_setDualUV(true)" title="Enable dual-UV: design/print on the straight set, render the no-stretch set">On</button>';
-  }
-  d.innerHTML=h; stage.appendChild(d);
-}
-/* Aspect-fit ortho camera so the unit UV square shows centred (not stretched) on the stage canvas. */
-function _rbUpdateDispCam(){
-  if(!_rbDispCam) _rbDispCam=new THREE.OrthographicCamera(0,1,1,0,-1,1);
-  var cv=document.getElementById('three-canvas'); if(!cv) return;
-  var w=cv.clientWidth||cv.width||1, h=cv.clientHeight||cv.height||1, a=w/h, L,R,Tp,B;
-  if(a>=1){ L=0.5-a/2; R=0.5+a/2; B=0; Tp=1; } else { L=0; R=1; B=0.5-(1/a)/2; Tp=0.5+(1/a)/2; }
-  _rbDispCam.left=L; _rbDispCam.right=R; _rbDispCam.top=Tp; _rbDispCam.bottom=B; _rbDispCam.updateProjectionMatrix();
-}
-/* Toggle bar: dual-UV → [3D][Print][Render] (names both UV sets); single-UV → [3D][2D]. */
-function _applyModeToggle(){
-  var mt=document.getElementById('mode-toggle'); if(!mt) return;
-  var b2=mt.querySelector('[data-mode="2d"]'), br=mt.querySelector('[data-mode="render"]');
-  if(window._dualUV){
-    if(b2) b2.textContent='Print';
-    if(!br){ br=document.createElement('button'); br.setAttribute('data-mode','render'); br.setAttribute('onclick',"setViewMode('render')"); br.textContent='Render'; mt.appendChild(br); }
-  } else {
-    if(b2) b2.textContent='2D';
-    if(br) br.remove();
-    if(typeof viewMode!=='undefined' && viewMode==='render' && typeof setViewMode==='function') setViewMode('3d');
-  }
-}
 
 function buildPaperBagMesh() {
   var _mySeq = ++_bagBuildSeq;
@@ -5574,15 +5461,10 @@ function buildPaperBagMesh() {
     bagMeshRef  = primaryMesh;
     bagFrontRef = null; bagBackRef = null; bagRivetRef = null;   /* box has no handles/rivets */
 
-    /* UV-island regions per material (UVs static across the fold). DUAL-UV: if the
-       GLB has a 2nd UV set (TEXCOORD_1 = straight print layout), the editor + PDF
-       use it ('uv2') and the 3D re-bakes design→render so it samples the no-stretch
-       set ('uv') without stretch. Single-UV GLBs keep everything on 'uv'. */
-    window._hasUV2 = !!(primaryMesh.geometry.getAttribute('uv2'));
-    window._dualUV = window._hasUV2 && DUAL_UV && !!(T && T.renderer);
-    var _islUV = window._dualUV ? 'uv2' : 'uv';
-    bagExtClip = extMesh ? computeIslandRegion(extMesh.geometry, _islUV) : null;
-    bagIntClip = intMesh ? computeIslandRegion(intMesh.geometry, _islUV) : null;
+    /* UV-island regions per material (UVs are static across the fold) — derived
+       from geometry so a Maya re-UV + re-export "just works". Two regions only. */
+    bagExtClip = extMesh ? computeIslandRegion(extMesh.geometry) : null;
+    bagIntClip = intMesh ? computeIslandRegion(intMesh.geometry) : null;
     bagHandleClip = null; bagRivetClip = null;
     if (bagExtClip) BAG_UV.exterior = bagExtClip.bbox;
     if (bagIntClip) BAG_UV.interior = bagIntClip.bbox;
@@ -5596,9 +5478,6 @@ function buildPaperBagMesh() {
     /* Wire the fold scrub from the GLB's own morph-weights track. */
     _setupFold(gltf.animations && gltf.animations[0], [extMesh, intMesh].filter(Boolean));
     console.log('[imprint] BUILD=ring-box morph · ext:', !!extMesh, '· int:', !!intMesh, '· morphTargets:', (primaryMesh.morphTargetInfluences||[]).length, '· foldFrames:', _foldTrk ? _foldTrk.times.length : 0);
-    if (window._dualUV && typeof _initDualRebake === 'function') _initDualRebake(extMesh, intMesh, boxMat);
-    if (typeof _applyModeToggle === 'function') _applyModeToggle();
-    if (window._hasUV2 && typeof _rbBuildControl === 'function') _rbBuildControl();
 
     // Auto-scale to fit ~1.4 units tall
     var bbox = new THREE.Box3().setFromObject(bagGroup);
@@ -10071,11 +9950,7 @@ function animate(now) {
     else _lastPreviewRender = now || 0;
   }
   if (_doRender) {
-    if (viewMode === 'render' && window._dualUV && _rbScene && typeof _rbUpdateDispCam === 'function') {
-      _rbUpdateDispCam();
-      T.renderer.setRenderTarget(null);
-      T.renderer.render(_rbScene, _rbDispCam);    /* flat no-stretch (render-UV) unwrap, live */
-    } else if (typeof realismRender === 'function') realismRender();
+    if (typeof realismRender === 'function') realismRender();
     else T.renderer.render(T.scene, T.camera);
   }
 }
@@ -11327,7 +11202,7 @@ function _autoEdit2dAfterUpload(){
   return;
 }
 function setViewMode(mode){
-  viewMode = (mode === '2d') ? '2d' : (mode === 'render' ? 'render' : '3d');
+  viewMode = (mode === '2d') ? '2d' : '3d';
   if (typeof _hideFaceBar==='function') _hideFaceBar();
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
   var stage = document.querySelector('.canvas-stage');
