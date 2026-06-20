@@ -1636,10 +1636,13 @@
       color:var(--imp-fg-2,#777); user-select:none;
     }
     .fold-scrub .fold-end{ white-space:nowrap; }
-    .fold-scrub .fold-pct{ min-width:30px; text-align:right; color:var(--imp-fg,#111); }
     .fold-range{ flex:1 1 auto; width:auto; min-width:90px; max-width:220px;
       accent-color:var(--imp-gold,#c8a96e); cursor:pointer; }
-    .canvas-stage.mode-2d .fold-scrub{ display:none; }   /* no fold control while editing the flat layout */
+    /* 2D editor: the fold slider rides just above the live-preview box (placed by
+       _positionFoldScrub). Hidden only when the preview itself is hidden. */
+    .canvas-stage.mode-2d.no-preview .fold-scrub{ display:none; }
+    .fold-scrub.fs-mini{ gap:7px; padding:5px 11px; font-size:10px; }
+    .fold-scrub.fs-mini .fold-range{ min-width:50px; max-width:none; }
     @media (max-width:760px){
       .fold-scrub{ gap:8px; padding:6px 12px; font-size:10px;
         width:calc(100vw - 24px); max-width:360px; }
@@ -1702,7 +1705,6 @@
         <span class="fold-end" data-en="Closed" data-ar="مغلق">Closed</span>
         <input type="range" id="fold-slider" class="fold-range" min="0" max="100" step="1" value="0" aria-label="Fold open/closed" oninput="IMP_foldScrub(this.value)">
         <span class="fold-end" data-en="Open" data-ar="مفتوح">Open</span>
-        <span class="fold-pct"><span id="fold-val">0</span>%</span>
       </div>
       <div class="mode-toggle" id="mode-toggle">
         <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
@@ -5337,8 +5339,7 @@ function _setupFold(clip, meshes){
 /* frame: 0 (closed/assembled) … 100 (open). Reads the baked weight curve and
    lerps the per-target influences, applied to every fold mesh. */
 function IMP_foldScrub(frame){
-  var el = document.getElementById('fold-val'); var fv = Math.max(0, Math.min(100, parseFloat(frame)||0));
-  if (el) el.textContent = Math.round(fv);
+  var fv = Math.max(0, Math.min(100, parseFloat(frame)||0));
   if (!_foldTrk || !_foldNT || !_foldMeshes.length) return;
   var t = (fv/100) * _foldDur;
   var times = _foldTrk.times, vals = _foldTrk.values, n = _foldNT, K = times.length;
@@ -5355,13 +5356,30 @@ function IMP_foldScrub(frame){
    never hidden behind the sheet. The sheet is height:90vh, bottom:0, pushed down by
    `--sheet-y` px → its top sits (0.9·innerHeight − sheetY) above the viewport bottom.
    Desktop/tablet: clear the inline bottom so the CSS default (bottom:16px) applies. */
+/* Place the fold scrubber for the current view:
+   • 2D editor  → just above the bottom-right live-preview box (matches its width)
+   • mobile 3D  → just above the bottom-sheet's live snap point
+   • desktop 3D → cleared → CSS default (bottom-centre of the stage). */
 function _positionFoldScrub(){
   var fs = document.getElementById('fold-scrub'); if (!fs) return;
-  if (!window.matchMedia('(max-width: 760px)').matches){ fs.style.bottom = ''; return; }
-  var sheet = document.querySelector('.controls-panel');
-  var y = sheet ? (parseFloat(sheet.style.getPropertyValue('--sheet-y')) || 0) : 0;
-  var topFromBottom = window.innerHeight * 0.90 - y;
-  fs.style.bottom = Math.max(12, Math.round(topFromBottom) + 12) + 'px';
+  var stage = document.querySelector('.canvas-stage');
+  var is2D = !!(stage && stage.classList.contains('mode-2d'));
+  fs.style.left=''; fs.style.right=''; fs.style.bottom=''; fs.style.width=''; fs.style.transform='';
+  fs.classList.toggle('fs-mini', is2D);
+  if (is2D){
+    var cv = document.getElementById('three-canvas');
+    var hgt = (cv && parseFloat(cv.style.height)) || 152;
+    var wid = (typeof A2D!=='undefined' && A2D.previewW) ? A2D.previewW : 244;
+    fs.style.left='auto'; fs.style.transform='none'; fs.style.right='16px';
+    fs.style.width = wid + 'px';
+    fs.style.bottom = (16 + hgt + 10) + 'px';   /* sit just above the preview box + its label */
+    return;
+  }
+  if (window.matchMedia('(max-width: 760px)').matches){
+    var sheet = document.querySelector('.controls-panel');
+    var y = sheet ? (parseFloat(sheet.style.getPropertyValue('--sheet-y')) || 0) : 0;
+    fs.style.bottom = Math.max(12, Math.round(window.innerHeight * 0.90 - y) + 12) + 'px';
+  }
 }
 window.addEventListener('resize', _positionFoldScrub);
 window.addEventListener('orientationchange', _positionFoldScrub);
@@ -11211,6 +11229,7 @@ function setViewMode(mode){
     previewSpinLocked = false;   /* back in 3D → default auto-rotate behaviour resumes */
     if (_saved3DView && typeof orbit !== 'undefined' && orbit){ orbit.theta=_saved3DView.theta; orbit.phi=_saved3DView.phi; orbit.radius=_saved3DView.radius; _saved3DView=null; }
   }
+  if (typeof _positionFoldScrub === 'function') _positionFoldScrub();   /* re-place the fold slider for 2D / 3D */
 }
 var _saved3DView = null;
 function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelector('.canvas-stage'); if(stage) stage.classList.toggle('no-preview', viewMode==='2d' && !A2D.previewOn); }
@@ -11239,6 +11258,7 @@ function _fitMiniPreview(){
   cv.style.setProperty('height', hgt+'px', 'important');
   var lbl=document.querySelector('.mini3d-label'); if(lbl){ lbl.style.bottom=(16+hgt-14)+'px'; lbl.style.right='16px'; }   /* overlap the top edge of the box, sitting on the viewer */
   var grip=document.getElementById('mini3d-resize'); if(grip){ grip.style.right=(16+wid-26)+'px'; grip.style.bottom=(16+hgt-26)+'px'; }   /* tuck inside the box's top-left corner */
+  if (typeof _positionFoldScrub === 'function') _positionFoldScrub();   /* keep the fold slider above the live-preview box */
 }
 /* drag the top-left grip to resize the live-preview box (width drives height via stage aspect) */
 var _miniResizeBound = false;
