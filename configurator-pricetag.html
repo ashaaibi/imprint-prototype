@@ -4290,7 +4290,7 @@ function _drawTagHole(ctx){
     if(!clip||!clip.bbox) return;
     var bb=clip.bbox, r=(2.5/((currentTagDims.w||6)*10))*bb.w;
     if(!(r>1)) return;
-    var cx=bb.x+bb.w/2, cy=bb.y+bb.h*0.12;
+    var cx=bb.x+bb.w/2, cy=bb.y+bb.h*0.88;   /* top of the tag after the V flip */
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
     ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();   /* punch transparent (treated as background) */
     ctx.globalCompositeOperation='source-over';
@@ -5325,17 +5325,21 @@ var _bagBuildSeq = 0;   /* guards against overlapping async GLB builds (e.g. the
 /* Build the two tag face geometries (front=exterior, back=interior) for a given W×H (cm)
    and corner bevel (0→1). Shared by the full build and the light rebuild. */
 function _makeTagGeoms(tw, th, bevel){
-  var asp=tw/th, maxU=0.40, uw, uh;
-  if(asp>=1){ uw=maxU; uh=maxU/asp; } else { uh=maxU; uw=maxU*asp; }
+  /* Uniform cm→UV scale so width & height grow INDEPENDENTLY (clamped to fit the atlas) —
+     fixes the "increasing width past height shrinks height" bug. Gap = fixed fraction of the
+     tag width, centred on 0.5 → the front/back gap stays visually consistent at every size. */
+  var k = Math.min(0.040, 0.40/tw, 0.84/th);
+  var uw = tw*k, uh = th*k, gap = 0.38*uw;
+  var extCx = 0.5 - gap/2 - uw/2, intCx = 0.5 + gap/2 + uw/2;
   function uvRect(cx){ return { u0:cx-uw/2, v0:0.5-uh/2, u1:cx+uw/2, v1:0.5+uh/2 }; }
-  var extUV=uvRect(0.27), intUV=uvRect(0.73);
+  var extUV=uvRect(extCx), intUV=uvRect(intCx);
   function quad(front, R){
     var hw=tw/2, hh=th/2, z=front?0.02:-0.02, nz=front?1:-1;
     var rr=Math.max(0,Math.min(1,bevel||0))*Math.min(tw,th)/2, seg=12;
     var cs=[[hw-rr,hh-rr,0],[-hw+rr,hh-rr,Math.PI/2],[-hw+rr,-hh+rr,Math.PI],[hw-rr,-hh+rr,1.5*Math.PI]], P=[];
     cs.forEach(function(cn){ for(var i=0;i<=seg;i++){ var a=cn[2]+(Math.PI/2)*(i/seg); P.push([cn[0]+rr*Math.cos(a), cn[1]+rr*Math.sin(a)]); } });
     var pos=[0,0,z], uv=[(R.u0+R.u1)/2,(R.v0+R.v1)/2], nm=[0,0,nz], idx=[];
-    for(var i=0;i<P.length;i++){ pos.push(P[i][0],P[i][1],z); uv.push(R.u0+(P[i][0]+hw)/tw*(R.u1-R.u0), R.v0+(P[i][1]+hh)/th*(R.v1-R.v0)); nm.push(0,0,nz); }
+    for(var i=0;i<P.length;i++){ pos.push(P[i][0],P[i][1],z); uv.push(R.u0+(P[i][0]+hw)/tw*(R.u1-R.u0), R.v0+(hh-P[i][1])/th*(R.v1-R.v0)); nm.push(0,0,nz); }   /* (hh−y) flips V → tag reads right-side-up in the 2D editor + 3D */
     for(var i=0;i<P.length;i++){ var a=1+i, b=1+((i+1)%P.length); if(front) idx.push(0,a,b); else idx.push(0,b,a); }
     var g=new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
@@ -11125,7 +11129,7 @@ var A2D = {
   gapMin:0, gapMax:100,     /* real pattern-gap range that the 0–100 Gap slider maps onto */
   editorRes:1,              /* 2D-editor supersampling multiplier (× devicePixelRatio) */
   handleSize:10, handleColor:'#000000',
-  previewOn:true, previewInterval:0, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
+  previewOn:false, previewInterval:0, previewBrightness:1.55, previewSaturate:1.4, previewContrast:1.28, previewZoom:3.5, previewW:244,
   wireFull:false,           /* false = clean island outlines only; true = full triangle mesh */
   triClean:0,               /* px: hide internal edges shorter than this (declutter the mesh) */
   silhouetteOn:true, silhouetteColor:'#000000', silhouetteThickness:2.0, silhouetteDash:false,  /* outer shell outline */
@@ -11760,8 +11764,8 @@ function atlas2dRender(){
   /* 8. upright labels (normal screen space). Arabic when the site language is Arabic.
      A stroke (outline) is drawn under the fill for contrast (testing-tunable). */
   var _arL = (typeof getLang==='function' && getLang()==='ar');
-  var GL = _arL ? {Exterior:'خارج الكيس',Interior:'داخل الكيس',Handles:'المقابض',Rivets:'البرشام'}
-                : {Exterior:'Exterior',Interior:'Interior',Handles:'Handles',Rivets:'Rivets'};
+  var GL = _arL ? {Exterior:'الأمام',Interior:'الخلف',Handles:'المقابض',Rivets:'البرشام'}
+                : {Exterior:'Front',Interior:'Back',Handles:'Handles',Rivets:'Rivets'};
   var labelDefs = [ {bb:uv.exterior,label:GL.Exterior,target:{kind:'region',region:'exterior'}}, {bb:uv.interior,label:GL.Interior,target:{kind:'region',region:'interior'}} ];
   /* Handles label only when the handle islands are shown in the 2D editor. */
   if (A2D.showHandles2D) labelDefs.push({bb:uv.handles,label:GL.Handles,target:{kind:'handles'}});
@@ -11995,7 +11999,7 @@ function renderReviewSummary() {
   function row(label, valHTML){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--imp-border);font-size:13px;"><span style="color:var(--imp-fg-3);">'+label+'</span><span style="color:var(--imp-fg);font-weight:600;text-align:right;">'+valHTML+'</span></div>'; }
   var ar = (typeof getLang==='function' && getLang()==='ar');
   var T = ar ? { Size:'الحجم', Quantity:'الكمية', units:'وحدة', Exterior:'الخارج', Interior:'الداخل', Handles:'المقابض', Rivets:'البرشام', Artwork:'التصميم', None:'لا يوجد', Pattern:'خلفية', Graphic:'رسمة' }
-             : { Size:'Size', Quantity:'Quantity', units:'units', Exterior:'Exterior', Interior:'Interior', Handles:'Handles', Rivets:'Rivets', Artwork:'Artwork', None:'None', Pattern:'Background', Graphic:'Graphic' };
+             : { Size:'Size', Quantity:'Quantity', units:'units', Exterior:'Front', Interior:'Back', Handles:'Handles', Rivets:'Rivets', Artwork:'Artwork', None:'None', Pattern:'Background', Graphic:'Graphic' };
   function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
   var model = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
   var layers = (BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='logo'||L.kind==='sticker'||L.kind==='text'); }) : [];
