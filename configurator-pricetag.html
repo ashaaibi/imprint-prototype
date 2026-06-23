@@ -11286,6 +11286,18 @@ function _hitHandle(sp){
   for (var i=0;i<order.length;i++){ var o=order[i], h=_boxLocalToScreen(b,o[1],o[2]); if (Math.hypot(sp.x-h.x,sp.y-h.y)<=R) return o[0]; }
   return null;
 }
+/* Price tag: grab a CORNER of the front/back rectangle to resize the whole tag (W×H).
+   Returns { region, signU, signV } (sign of the grabbed corner vs the region centre) or null. */
+function _hitTagCorner(sp){
+  if (typeof currentTagDims==='undefined' || !currentTagDims || typeof BAG_UV==='undefined' || !BAG_UV) return null;
+  if (typeof A2D!=='undefined' && A2D.measureShow===false) return null;   /* handles ride with the measurements */
+  var R=Math.max(16,(A2D.handleSize||10)+8)*a2d.dpr, regs=[['exterior',BAG_UV.exterior],['interior',BAG_UV.interior]];
+  for(var r=0;r<regs.length;r++){ var bb=regs[r][1]; if(!bb) continue;
+    var cxA=bb.x+bb.w/2, cyA=bb.y+bb.h/2, cs=[[bb.x,bb.y],[bb.x+bb.w,bb.y],[bb.x+bb.w,bb.y+bb.h],[bb.x,bb.y+bb.h]];
+    for(var i=0;i<cs.length;i++){ var h=_a2s(cs[i][0],cs[i][1]);
+      if(Math.hypot(sp.x-h.x,sp.y-h.y)<=R) return { region:regs[r][0], signU:(cs[i][0]>cxA?1:-1), signV:(cs[i][1]>cyA?1:-1) }; } }
+  return null;
+}
 function _atlasBind(c){
   c.addEventListener('pointerdown', _aDown);
   c.addEventListener('pointermove', _aMove);
@@ -11330,6 +11342,13 @@ function _aDown(e){
     if (ui.type==='finish'){ a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=null; if(typeof _showFinishBar==='function') _showFinishBar(ui.region, sp); return; }
     a2d.sel=null; a2d.op=null; _ctxBarFor=null; a2d.faceSel=ui.target; _showFaceBar(ui.target, sp); return;
   }
+  /* Price tag: grab a rectangle corner → resize the whole tag (W×H). Checked before the body
+     hit so the corner always wins; layer resize/rotate handles (above) still take priority. */
+  var _tc=(typeof _hitTagCorner==='function')?_hitTagCorner(sp):null;
+  if (_tc){ a2d.sel=null; a2d.op='tagresize'; _a2dDragging=true;
+    a2d.start={ sp:sp, ap0:_s2a(sp.x,sp.y), w0:currentTagDims.w, h0:currentTagDims.h, region:_tc.region, signU:_tc.signU, signV:_tc.signV };
+    if(a2d.canvas) a2d.canvas.style.cursor=(_tc.signU*_tc.signV>0)?'nesw-resize':'nwse-resize';
+    return; }
   /* (label text no longer opens a colour bar — recolour is only via the colour wheel) */
   var ap=_s2a(sp.x,sp.y), L=_hitLayer(ap.x,ap.y);
   if (L && (L.locked || _tplMoveLocked(L))){
@@ -11350,9 +11369,11 @@ function _aMove(e){
     /* hover cursor feedback */
     var cur='grab';
     var hh0=_hitHandle(sp);
+    var _hcTag=(typeof _hitTagCorner==='function')?_hitTagCorner(sp):null;
     if (hh0==='rotate') cur='pointer';
     else if (hh0 && hh0.indexOf('sc-')===0) cur=(hh0==='sc-tr'||hh0==='sc-bl')?'nwse-resize':'nesw-resize';
     else if (hh0 && hh0.indexOf('cr-')===0) cur='crosshair';
+    else if (_hcTag) cur=(_hcTag.signU*_hcTag.signV>0)?'nesw-resize':'nwse-resize';   /* price-tag corner resize */
     else if (typeof _hitLabelUI==='function' && _hitLabelUI(sp)) cur='pointer';   /* labels, colour icons & face toggles */
     else { var ap0=_s2a(sp.x,sp.y); var _hL=_hitLayer(ap0.x,ap0.y); if (_hL){ var _ml=(_hL.locked||_tplMoveLocked(_hL)); cur=_ml?'grab':'move'; a2d.hoverL=(_ml?null:_hL); } else a2d.hoverL=null; }
     if (cur!=='move') a2d.hoverL=null;   /* only preview the box when actually hovering an unlocked layer body */
@@ -11387,6 +11408,22 @@ function _aMove(e){
       if(snV!=null){ L.posV=snV; a2d._snapY=snAY; }
     }
     _a2dApply();
+  }
+  else if (a2d.op==='tagresize'){
+    /* Resize the price tag by dragging a rectangle corner (jump-free delta from the grab point).
+       The regions share a fixed centre gap and grow OUTWARD horizontally (inner edge pinned → 1×),
+       while height is symmetric about V=0.5 (2×). Atlas-px → cm uses _makeTagGeoms' 0.040 scale.
+       (Flip-safe: signV & dV are both atlas-Y, so their product is correct regardless of the V flip.) */
+    var apN=_s2a(sp.x,sp.y), st=a2d.start;
+    var dU=(apN.x-st.ap0.x)/2048/0.040, dV=(apN.y-st.ap0.y)/2048/0.040;
+    var outU=(st.region==='interior')?1:-1;   /* exterior grows leftward, interior rightward */
+    var nw=Math.round(Math.max(1.5,Math.min(11, st.w0 + outU*dU))*10)/10;
+    var nh=Math.round(Math.max(1.5,Math.min(22, st.h0 + 2*st.signV*dV))*10)/10;
+    if (nw!==currentTagDims.w || nh!==currentTagDims.h){
+      currentTagDims={ w:nw, h:nh };
+      if(!a2d._tagRAF){ a2d._tagRAF=requestAnimationFrame(function(){ a2d._tagRAF=0; if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }); }
+    }
+    return;
   }
   else if (a2d.op.indexOf('sc-')===0){
     /* Resize from any corner of the VISUAL (cropped) box, anchored at the opposite cropped
@@ -11475,6 +11512,22 @@ function _aUp(e){
   if (n===0 || (a2d.op==='pinch' && n<2)) a2d.op=null;
   if (a2d.op===null && a2d.canvas) a2d.canvas.style.cursor='grab';   /* let hover re-set it */
   if (a2d.op===null){ _a2dDragging=false; a2d._snapX=null; a2d._snapY=null; a2d._rect=null; }   /* exit fast-drag → next redraw is full quality */
+  if (endedOp==='tagresize' && a2d.op===null){
+    /* Commit the dragged size as a CUSTOM size + sync the Start-step UI (pill, inputs, chips). */
+    if(a2d._tagRAF){ cancelAnimationFrame(a2d._tagRAF); a2d._tagRAF=0; }
+    if (typeof _customSize!=='undefined'){ _customSize.on=true; _customSize.w=currentTagDims.w; _customSize.h=currentTagDims.h; }
+    var _txt=currentTagDims.w+' × '+currentTagDims.h+' cm';
+    var _pill=document.getElementById('dim-pill'); if(_pill) _pill.textContent=_txt;
+    var _dd=document.getElementById('custom-size-dims'); if(_dd) _dd.textContent=_txt;
+    var _ew=document.getElementById('cs-w'); if(_ew) _ew.value=currentTagDims.w;
+    var _eh=document.getElementById('cs-h'); if(_eh) _eh.value=currentTagDims.h;
+    var _cp=document.getElementById('custom-size-panel'); if(_cp) _cp.style.display='block';
+    document.querySelectorAll('.bag-sopt').forEach(function(b){ b.classList.remove('on'); });
+    var _cb=document.getElementById('bag-sopt-custom'); if(_cb) _cb.classList.add('on');
+    if(typeof S!=='undefined') S.dims=_txt;
+    if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry();
+    if(typeof scheduleHistory==='function') scheduleHistory();
+  }
   /* NOTE: crop is kept live (reversible) — drag the crop handles back out to un-crop / Ctrl-Z undoes it. */
   /* (clicking an empty face no longer opens a colour bar — recolour is only via a label's colour wheel) */
   if (wasEdit && a2d.op===null){ if (typeof drawBagTexture==='function') drawBagTexture(); if (typeof scheduleHistory==='function') scheduleHistory(); }
@@ -11898,6 +11951,10 @@ function atlas2dRender(){
       ctx.save(); ctx.translate(L-_gap-_mFP*0.6,(T+B)/2); ctx.rotate(-Math.PI/2);
       ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
       /* the hole is punched into the atlas itself (transparent) — no overlay ring needed */
+      /* corner resize handles — drag any corner to change the tag W×H (measurements follow live) */
+      var _hs=4.5*D;
+      [c0,c1,c2,c3].forEach(function(cp){ ctx.beginPath(); ctx.rect(cp.x-_hs,cp.y-_hs,_hs*2,_hs*2);
+        ctx.fillStyle='#ffffff'; ctx.fill(); ctx.lineWidth=Math.max(1,1.4*D); ctx.strokeStyle=_mC; ctx.stroke(); });
     });
     ctx.restore();
   }
