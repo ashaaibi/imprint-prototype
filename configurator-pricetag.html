@@ -1930,6 +1930,16 @@
 
     <!-- Quantity ───────────────────────── -->
 
+    <!-- Tag Shape (corner bevel) ─────────── -->
+    <div class="cs bag-section config-step" data-cstep="1">
+      <label class="cl"><span data-en="Shape" data-ar="الشكل">Shape</span></label>
+      <div class="ctrl-slider-row" style="margin-top:8px">
+        <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Corner round" data-ar="استدارة الزوايا">Corner round</span><span class="ctrl-slider-val" id="tag-bevel-val">0%</span></div>
+        <input type="range" class="test-slider" id="tag-bevel" min="0" max="100" step="1" value="0" oninput="onTagBevel(this.value)">
+      </div>
+      <div style="font-size:10.5px;color:var(--imp-fg-3);margin-top:6px;line-height:1.45;" data-en="Rounds the corners — from a sharp rectangle to fully rounded (a circle when the tag is square)." data-ar="تدوير الزوايا — من مستطيل حاد إلى دائري بالكامل (دائرة عندما تكون البطاقة مربعة).">Rounds the corners — from a sharp rectangle to fully rounded (a circle when the tag is square).</div>
+    </div>
+
     <!-- Bag Size ───────────────────────── -->
     <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
@@ -3085,6 +3095,7 @@ var BAG_FACES = { exterior: {}, interior: {} };
 
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
 var currentTagDims = { w:6, h:6 };   /* live tag size (cm), set by the builder */
+var currentTagBevel = 0;             /* 0 = sharp rectangle … 1 = fully rounded (a circle when square) */
 const BAG_MODELS = {
   s6x6: { key:'s6x6', label:'6 × 6 cm', w:6, h:6, dims:'6 × 6 cm', file:'',
     uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
@@ -5310,6 +5321,13 @@ function buildUVGuide() {
 
 var _bagBuildSeq = 0;   /* guards against overlapping async GLB builds (e.g. the default-size
                            load racing a template restore that switches size) stacking two bags */
+var _bevelTimer=null;
+function onTagBevel(v){
+  currentTagBevel = Math.max(0, Math.min(1, (parseFloat(v)||0)/100));
+  var el=document.getElementById('tag-bevel-val'); if(el) el.textContent=Math.round(currentTagBevel*100)+'%';
+  if(_bevelTimer) clearTimeout(_bevelTimer);
+  _bevelTimer=setTimeout(function(){ if(typeof buildPaperBagMesh==='function') buildPaperBagMesh(); }, 60);   /* coalesce drags */
+}
 function buildPaperBagMesh() {
   var _mySeq = ++_bagBuildSeq;
   if (typeof setBagLoading === 'function') setBagLoading(true);
@@ -5355,13 +5373,21 @@ function buildPaperBagMesh() {
     if(_asp>=1){ _uw=_maxU; _uh=_maxU/_asp; } else { _uh=_maxU; _uw=_maxU*_asp; }
     function _uvRect(cx){ return { u0:cx-_uw/2, v0:0.5-_uh/2, u1:cx+_uw/2, v1:0.5+_uh/2 }; }
     var _extUV=_uvRect(0.27), _intUV=_uvRect(0.73);
+    /* Rounded-rect outline (bevel 0→1 ⇒ corner radius 0 → min(W,H)/2 ⇒ circle when square),
+       fan-triangulated; UVs map the W×H box onto the region rect. */
     function _tagQuad(front, R){
-      var g=new THREE.BufferGeometry(), hw=_tw/2, hh=_th/2, z=front?0.02:-0.02, nz=front?1:-1;
-      g.setAttribute('position', new THREE.Float32BufferAttribute([-hw,-hh,z, hw,-hh,z, hw,hh,z, -hw,hh,z],3));
-      g.setAttribute('uv',       new THREE.Float32BufferAttribute([R.u0,R.v0, R.u1,R.v0, R.u1,R.v1, R.u0,R.v1],2));
-      g.setAttribute('normal',   new THREE.Float32BufferAttribute([0,0,nz,0,0,nz,0,0,nz,0,0,nz],3));
-      g.setIndex(front ? [0,1,2, 0,2,3] : [0,2,1, 0,3,2]);
-      return g;
+      var hw=_tw/2, hh=_th/2, z=front?0.02:-0.02, nz=front?1:-1;
+      var rr=Math.max(0,Math.min(1,currentTagBevel||0))*Math.min(_tw,_th)/2, seg=12;
+      var cs=[[hw-rr,hh-rr,0],[-hw+rr,hh-rr,Math.PI/2],[-hw+rr,-hh+rr,Math.PI],[hw-rr,-hh+rr,1.5*Math.PI]], P=[];
+      cs.forEach(function(cn){ for(var i=0;i<=seg;i++){ var a=cn[2]+(Math.PI/2)*(i/seg); P.push([cn[0]+rr*Math.cos(a), cn[1]+rr*Math.sin(a)]); } });
+      var pos=[0,0,z], uv=[(R.u0+R.u1)/2,(R.v0+R.v1)/2], nm=[0,0,nz], idx=[];
+      for(var i=0;i<P.length;i++){ pos.push(P[i][0],P[i][1],z); uv.push(R.u0+(P[i][0]+hw)/_tw*(R.u1-R.u0), R.v0+(P[i][1]+hh)/_th*(R.v1-R.v0)); nm.push(0,0,nz); }
+      for(var i=0;i<P.length;i++){ var a=1+i, b=1+((i+1)%P.length); if(front) idx.push(0,a,b); else idx.push(0,b,a); }
+      var g=new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv,2));
+      g.setAttribute('normal', new THREE.Float32BufferAttribute(nm,3));
+      g.setIndex(idx); return g;
     }
     var frontGeom=_tagQuad(true,_extUV), backGeom=_tagQuad(false,_intUV);
     var bodyMesh = new THREE.Mesh(mergeBagGeoms([frontGeom, backGeom]), new THREE.MeshPhysicalMaterial({
