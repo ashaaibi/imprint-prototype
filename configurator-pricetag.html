@@ -9912,6 +9912,50 @@ function animate(now) {
     if (typeof realismRender === 'function') realismRender();
     else T.renderer.render(T.scene, T.camera);
   }
+  if (typeof _drawTagMeasure3D === 'function') _drawTagMeasure3D();
+}
+
+/* ── Price tag: W/H dimension arrows overlaid on the 3D preview (engineering-drawing look that
+   matches the 2D editor). Projects the flat tag's front-face corners to screen each frame; uses
+   the same A2D.measure* settings + currentTagDims. Cleared whenever we're not in full 3D view. ── */
+var _tagMeasCv=null, _tagMeasCtx=null;
+function _drawTagMeasure3D(){
+  try {
+    if (typeof currentTagDims==='undefined' || !currentTagDims) return;
+    var stage=document.querySelector('.canvas-stage'); if(!stage) return;
+    if(!_tagMeasCv){
+      _tagMeasCv=document.createElement('canvas'); _tagMeasCv.id='tag-measure-overlay';
+      _tagMeasCv.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:3;';
+      stage.appendChild(_tagMeasCv); _tagMeasCtx=_tagMeasCv.getContext('2d');
+    }
+    var cv=_tagMeasCv, ctx=_tagMeasCtx;
+    var cssW=stage.clientWidth, cssH=stage.clientHeight, dpr=window.devicePixelRatio||1;
+    if(cv.width!==Math.round(cssW*dpr)||cv.height!==Math.round(cssH*dpr)){ cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr); }
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH);
+    var show=(viewMode==='3d') && (typeof A2D==='undefined' || A2D.measureShow!==false) && !!bagGroup && T && T.camera;
+    if(!show) return;
+    var bb=new THREE.Box3().setFromObject(bagGroup); if(bb.isEmpty()) return;
+    var zf=bb.max.z;   /* front face is the +Z side of the flat card */
+    function proj(x,y,z){ var v=new THREE.Vector3(x,y,z).project(T.camera); return { x:(v.x*0.5+0.5)*cssW, y:(-v.y*0.5+0.5)*cssH }; }
+    var bl=proj(bb.min.x,bb.min.y,zf), br=proj(bb.max.x,bb.min.y,zf), tl=proj(bb.min.x,bb.max.y,zf);
+    var col=(typeof _themeColor==='function')?_themeColor(A2D.measureColor||'#555555'):(A2D.measureColor||'#555555');
+    var fs=(A2D.measureSize||14), gap=20, hl=7;
+    ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.4; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.font=(A2D.measureWeight||600)+' '+fs+'px -apple-system, system-ui, sans-serif';
+    /* width arrow under the bottom edge */
+    var wy=Math.max(bl.y,br.y)+gap;
+    ctx.beginPath(); ctx.moveTo(bl.x,wy); ctx.lineTo(br.x,wy);
+    ctx.moveTo(bl.x,wy); ctx.lineTo(bl.x+hl,wy-hl*0.7); ctx.moveTo(bl.x,wy); ctx.lineTo(bl.x+hl,wy+hl*0.7);
+    ctx.moveTo(br.x,wy); ctx.lineTo(br.x-hl,wy-hl*0.7); ctx.moveTo(br.x,wy); ctx.lineTo(br.x-hl,wy+hl*0.7); ctx.stroke();
+    ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(currentTagDims.w+' cm',(bl.x+br.x)/2, wy+4);
+    /* height arrow left of the left edge */
+    var hx=Math.min(bl.x,tl.x)-gap;
+    ctx.beginPath(); ctx.moveTo(hx,bl.y); ctx.lineTo(hx,tl.y);
+    ctx.moveTo(hx,bl.y); ctx.lineTo(hx-hl*0.7,bl.y-hl); ctx.moveTo(hx,bl.y); ctx.lineTo(hx+hl*0.7,bl.y-hl);
+    ctx.moveTo(hx,tl.y); ctx.lineTo(hx-hl*0.7,tl.y+hl); ctx.moveTo(hx,tl.y); ctx.lineTo(hx+hl*0.7,tl.y+hl); ctx.stroke();
+    ctx.save(); ctx.translate(hx-6,(bl.y+tl.y)/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(currentTagDims.h+' cm',0,0); ctx.restore();
+  } catch(e){}
 }
 
 function setupOrbit() {
