@@ -2008,9 +2008,9 @@
       <label class="cl" data-en="Review your bag" data-ar="مراجعة الكيس">Review your bag</label>
       <p style="font-size:12px;color:var(--imp-fg-3);margin:2px 0 12px;line-height:1.4;" data-en="Check everything before adding to cart." data-ar="تحقق من كل شيء قبل الإضافة إلى السلة.">Check everything before adding to cart.</p>
       <div id="review-summary"></div>
-      <button id="download-spec-btn" onclick="generateSpecPDF(this)" style="width:100%;margin-top:14px;padding:12px;border:1px solid var(--imp-border);border-radius:10px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <button id="download-spec-btn" onclick="IMPRINT_downloadFullPackage(this)" style="width:100%;margin-top:14px;padding:12px;border:1px solid var(--imp-border);border-radius:10px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-        <span data-en="Download spec sheet (PDF)" data-ar="تحميل ورقة المواصفات (PDF)">Download spec sheet (PDF)</span>
+        <span data-en="Download Full Package" data-ar="تحميل الحزمة الكاملة">Download Full Package</span>
       </button>
     </div>
 
@@ -2976,7 +2976,7 @@
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';</script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
-<script src="spec-pdf.js?v=9"></script>
+<script src="spec-pdf.js?v=10"></script>
 <script src="color-calibration.js?v=1"></script>
 <script>
 /* Keep the configurator layout LEFT-TO-RIGHT even in Arabic — only the TEXT translates,
@@ -12255,6 +12255,119 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', fun
     dl(id+'.template.json', new Blob([JSON.stringify(tpl)], {type:'application/json'}));
     alert('Exported '+id+'.template.json\n\nNext: commit it to /templates/, capture a render (📷) and commit that too, then add an entry to /templates/index.json to publish it to the gallery.');
   };
+
+  /* ===== Full Package (.zip): template JSON + spec-sheet PDF + every uploaded/library asset =====
+     Dependency-free STORE-method ZIP writer (no JSZip — we can't pull a CDN). serializeTemplate()
+     already embeds layer images (data URLs in _srcImgSrc/_imgSrc) and custom fonts (tpl.fonts[k].data),
+     so we extract those into standalone files alongside the JSON + PDF. */
+  var _crcTable = (function(){ var t=[]; for (var n=0;n<256;n++){ var c=n; for (var k=0;k<8;k++){ c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1); } t[n]=c>>>0; } return t; })();
+  function _crc32(u8){ var c=0xFFFFFFFF; for (var i=0;i<u8.length;i++){ c = _crcTable[(c ^ u8[i]) & 0xFF] ^ (c>>>8); } return (c ^ 0xFFFFFFFF)>>>0; }
+  function _mimeExt(m){ m=(m||'').toLowerCase().split(';')[0].trim();
+    var map={'image/png':'png','image/jpeg':'jpg','image/jpg':'jpg','image/webp':'webp','image/gif':'gif','image/svg+xml':'svg',
+      'font/ttf':'ttf','font/otf':'otf','font/woff':'woff','font/woff2':'woff2','application/font-woff':'woff','application/x-font-ttf':'ttf','application/x-font-otf':'otf',
+      'application/pdf':'pdf','application/json':'json','text/plain':'txt'};
+    return map[m] || (m.indexOf('/')>0 ? m.split('/')[1].replace(/[^a-z0-9]/g,'').slice(0,5) : 'bin'); }
+  function _urlExt(url){ var m=/\.([a-z0-9]{2,5})(?:[?#]|$)/i.exec((url||'').split(/[?#]/)[0]); return m ? m[1].toLowerCase() : ''; }
+  /* data: URL or http(s)/relative URL → { bytes:Uint8Array, ext:string } (async; fetches library files). */
+  function _assetBytes(url){
+    if (!url) return Promise.resolve(null);
+    try {
+      if (url.indexOf('data:')===0){
+        var comma = url.indexOf(','); if (comma<0) return Promise.resolve(null);
+        var meta = url.slice(5, comma), raw = url.slice(comma+1), bytes;
+        var mime = (meta.split(';')[0]||'');
+        if (/;base64/i.test(meta)){ var bin=atob(raw); bytes=new Uint8Array(bin.length); for (var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); }
+        else { bytes = new TextEncoder().encode(decodeURIComponent(raw)); }
+        return Promise.resolve({ bytes: bytes, ext: _mimeExt(mime) });
+      }
+      return fetch(url).then(function(r){ var ct=r.headers.get('content-type')||''; return r.arrayBuffer().then(function(buf){
+        return { bytes:new Uint8Array(buf), ext: _urlExt(url) || _mimeExt(ct) }; }); }).catch(function(){ return null; });
+    } catch(e){ return Promise.resolve(null); }
+  }
+  function _makeZip(files){
+    var enc = new TextEncoder(), locals = [], centrals = [], offset = 0;
+    files.forEach(function(f){
+      var nameBytes = enc.encode(f.name), data = f.data, crc = _crc32(data), sz = data.length >>> 0;
+      var lh = new Uint8Array(30 + nameBytes.length), dv = new DataView(lh.buffer);
+      dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0,true); dv.setUint16(8,0,true);
+      dv.setUint16(10,0,true); dv.setUint16(12,0x21,true); dv.setUint32(14,crc,true); dv.setUint32(18,sz,true);
+      dv.setUint32(22,sz,true); dv.setUint16(26,nameBytes.length,true); dv.setUint16(28,0,true); lh.set(nameBytes,30);
+      locals.push(lh, data);
+      var ch = new Uint8Array(46 + nameBytes.length), cv = new DataView(ch.buffer);
+      cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true); cv.setUint16(8,0,true);
+      cv.setUint16(10,0,true); cv.setUint16(12,0,true); cv.setUint16(14,0x21,true); cv.setUint32(16,crc,true);
+      cv.setUint32(20,sz,true); cv.setUint32(24,sz,true); cv.setUint16(28,nameBytes.length,true); cv.setUint16(30,0,true);
+      cv.setUint16(32,0,true); cv.setUint16(34,0,true); cv.setUint16(36,0,true); cv.setUint32(38,0,true);
+      cv.setUint32(42,offset,true); ch.set(nameBytes,46); centrals.push(ch);
+      offset += lh.length + data.length;
+    });
+    var centralSize = centrals.reduce(function(s,c){ return s+c.length; },0);
+    var eocd = new Uint8Array(22), ev = new DataView(eocd.buffer);
+    ev.setUint32(0,0x06054b50,true); ev.setUint16(4,0,true); ev.setUint16(6,0,true);
+    ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true);
+    ev.setUint32(12,centralSize,true); ev.setUint32(16,offset,true); ev.setUint16(20,0,true);
+    return new Blob(locals.concat(centrals, [eocd]), { type:'application/zip' });
+  }
+  window.IMPRINT_downloadFullPackage = function(btn){
+    var label = btn ? btn.querySelector('span') : null, prevTxt = label ? label.textContent : '';
+    if (label) label.textContent = 'Packaging…'; if (btn) btn.disabled = true;
+    var date = new Date().toISOString().slice(0,10);
+    var modelKey = (typeof currentBagModel!=='undefined' && currentBagModel) ? currentBagModel : 'custom';
+    var id = 'price-tag-' + modelKey + '-' + date, enc = new TextEncoder(), files = [];
+    return Promise.resolve().then(function(){
+      var tpl = serializeTemplate({ id:id, name:'Price tag', category:'Price tag', designer:'Imprint', created:date });
+      files.push({ name:'template.json', data: enc.encode(JSON.stringify(tpl, null, 2)) });
+      /* layer images: uploads (data URL) + library graphics/logos/backgrounds (fetched) */
+      var layers = (tpl.snapshot && tpl.snapshot.layers) || [], counters = {}, chain = Promise.resolve();
+      layers.forEach(function(L){
+        var src = L._srcImgSrc || L._imgSrc; if (!src) return;
+        var kind = L.isBackground ? 'background' : (L.isLogo ? 'logo' : (L.kind==='sticker' ? 'graphic' : (L.kind||'asset')));
+        chain = chain.then(function(){ return _assetBytes(src); }).then(function(got){
+          if (!got || !got.bytes || !got.bytes.length) return;
+          counters[kind] = (counters[kind]||0)+1;
+          files.push({ name:'assets/'+kind+'-'+counters[kind]+'.'+got.ext, data: got.bytes });
+        });
+      });
+      /* embedded custom fonts */
+      var fonts = tpl.fonts || {};
+      Object.keys(fonts).forEach(function(fk){
+        if (!fonts[fk] || !fonts[fk].data) return;
+        chain = chain.then(function(){ return _assetBytes(fonts[fk].data); }).then(function(fg){
+          if (!fg || !fg.bytes || !fg.bytes.length) return;
+          var safe = String(fonts[fk].label||fk).replace(/[^a-z0-9._-]+/gi,'_');
+          files.push({ name:'assets/fonts/'+safe+'.'+fg.ext, data: fg.bytes });
+        });
+      });
+      /* spec-sheet PDF (reuses the existing generator via returnBlob) */
+      chain = chain.then(function(){
+        if (typeof generateSpecPDF!=='function') return null;
+        return generateSpecPDF(null, { returnBlob:true }).catch(function(){ return null; });
+      }).then(function(pdf){
+        if (pdf && pdf.blob) return pdf.blob.arrayBuffer().then(function(ab){ files.push({ name:'spec-sheet.pdf', data:new Uint8Array(ab) }); });
+      });
+      return chain;
+    }).then(function(){
+      var readme = [
+        'IMPRINT — Price tag full package',
+        'Generated: ' + new Date().toString(),
+        '',
+        'Contents',
+        '  template.json   the editable Imprint template (re-import it in the designer portal to keep editing).',
+        '  spec-sheet.pdf  print specification sheet to hand to your manufacturer.',
+        '  assets/         every uploaded image / library graphic, plus any embedded custom fonts (assets/fonts/).',
+        '',
+        'The artwork, fonts and colours are all baked into template.json; the assets/ folder is the same files',
+        'as standalone originals so a print shop can use them directly.'
+      ].join('\n');
+      files.push({ name:'README.txt', data: enc.encode(readme) });
+      dl(id + '.zip', _makeZip(files));
+    }).catch(function(e){
+      alert('Could not build the package: ' + (e && e.message || e));
+    }).then(function(){
+      if (label) label.textContent = prevTxt || 'Download Full Package'; if (btn) btn.disabled = false;
+    });
+  };
+
   window.IMPRINT_captureRender = function(){
     try {
       if (typeof drawBagTexture==='function') drawBagTexture();

@@ -237,7 +237,7 @@
   function _today() { try { return new Date().toLocaleDateString(_lang === 'zh' ? 'zh-CN' : _isAR() ? 'ar' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return new Date().toDateString(); } }
 
   /* ── main ── */
-  window.generateSpecPDF = async function (btn) {
+  window.generateSpecPDF = async function (btn, opts) {
     var jspdf = window.jspdf || window.jsPDF; var JsPDF = jspdf && (jspdf.jsPDF || jspdf);
     if (!JsPDF) { alert('PDF library not loaded.'); return; }
     var label = btn ? btn.querySelector('span') : null, oldTxt = label ? label.textContent : '';
@@ -336,7 +336,9 @@
 
       var doc = new JsPDF({ unit: 'mm', format: 'a3', orientation: 'portrait' });
       pages.forEach(function (pg, i) { if (i > 0) doc.addPage(); doc.addImage(pg.cv.toDataURL('image/png'), 'PNG', 0, 0, 297, 420, undefined, 'FAST'); });
-      doc.save('IMPRINT_' + (model.key || 'PaperBag') + '_' + ref + '.pdf');
+      var _pdfName = 'IMPRINT_' + (model.key || 'PaperBag') + '_' + ref + '.pdf';
+      if (opts && opts.returnBlob) { return { blob: doc.output('blob'), name: _pdfName }; }   /* for the Full Package ZIP */
+      doc.save(_pdfName);
     } catch (e) {
       console.error('spec PDF failed', e);
       try { if (_q.pbrExp != null && typeof onFinishQuality === 'function') onFinishQuality(_q.pbrExp); } catch (e2) {}
