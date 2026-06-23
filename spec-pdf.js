@@ -281,7 +281,23 @@
         var hcSp = (hc && window.IMP_COLOR) ? IMP_COLOR.formatSpec(hc) : null;
         var hcOog = !!(hcSp && hcSp.outOfGamut), hcHex = hc ? (hcOog ? _gamutHex(hc) : hc) : null;
         var hcCmyk = hcSp ? (hcSp.cmykStr + '  ·  ' + (hcSp.pantoneExact ? 'PMS ' : '≈ PMS ') + hcSp.pantone + (hcOog ? '  · ' + L('CMYK-adj', 'مُعدَّل', 'CMYK 调整') : '')) : '';
-        var cells = [
+        /* Price tag (detected by currentTagDims — bag/cup/box never define it) gets a tag-specific
+           spec table; everything else keeps the original paper-bag table untouched. */
+        var isTag = (typeof currentTagDims !== 'undefined' && !!currentTagDims);
+        var _bv = (typeof currentTagBevel !== 'undefined') ? currentTagBevel : 0;
+        var _sq = _bv < 0.08, _ci = _bv > 0.85, _ro = !_sq && !_ci;
+        var cells = isTag ? [
+          { title: L('Size (W × H)', 'المقاس (عرض × ارتفاع)', '尺寸 (宽 × 高)'), kind: 'val', value: dims || '—' },
+          { title: L('Material', 'الخامة', '材料'), kind: 'opts', opts: [{ t: L('Art card', 'ورق آرت', '艺术卡纸'), on: sd.type !== 'texture' }, { t: L('Kraft', 'كرافت', '牛皮纸'), on: false }, { t: L('Textured', 'محبب', '纹理纸'), on: sd.type === 'texture' }] },
+          { title: L('Thickness', 'السماكة', '厚度'), kind: 'opts', opts: [{ t: L('300 gsm', '300 gsm', '300 克'), on: false }, { t: L('350 gsm', '350 gsm', '350 克'), on: true }, { t: L('400 gsm', '400 gsm', '400 克'), on: false }] },
+          { title: L('Lamination', 'التغليف', '覆膜'), kind: 'opts', opts: [{ t: L('Matt', 'مطفي', '哑膜'), on: sd.type === 'matt' }, { t: L('Gloss', 'لامع', '亮膜'), on: sd.type === 'glossy' }, { t: L('None', 'بدون', '无'), on: sd.type !== 'matt' && sd.type !== 'glossy' }] },
+          { title: L('Printing', 'الطباعة', '印刷'), kind: 'opts', opts: [{ t: L('Double side', 'وجهين', '双面'), on: true }, { t: L('Single side', 'وجه واحد', '单面'), on: false }] },
+          { title: L('Corners', 'الزوايا', '圆角'), kind: 'opts', opts: [{ t: L('Square', 'قائمة', '直角'), on: _sq }, { t: L('Rounded', 'دائرية', '圆角'), on: _ro }, { t: L('Circle', 'دائرة', '圆形'), on: _ci }] },
+          { title: L('Hole', 'الثقب', '孔'), kind: 'opts', opts: [{ t: L('Punched hole', 'ثقب', '打孔'), on: true }, { t: L('Metal eyelet', 'عين معدنية', '金属孔'), on: false }, { t: L('No hole', 'بدون ثقب', '无孔'), on: false }] },
+          { title: L('String / loop', 'الخيط / الحلقة', '绳 / 扣'), kind: 'opts', opts: [{ t: L('Cotton string', 'خيط قطني', '棉绳'), on: true }, { t: L('Elastic loop', 'مطاطي', '弹性绳'), on: false }, { t: L('Satin ribbon', 'شريط ساتان', '缎带'), on: false }, { t: L('None', 'بدون', '无'), on: false }] },
+          { title: L('Surface treatment', 'المعالجة السطحية', '表面工艺'), kind: 'opts', opts: [{ t: L('Gold foil', 'ختم ذهبي', '烫金'), on: sd.gold }, { t: L('Silver foil', 'ختم فضي', '烫银'), on: sd.silver }, { t: L('Spot UV', 'يو في موضعي', 'UV'), on: sd.spotUV }, { t: L('Embossing', 'نقش بارز', '浮雕'), on: sd.emboss }, { t: L('Debossing', 'نقش غائر', '反凹'), on: sd.deboss }] },
+          { title: L('Quantity (MOQ)', 'الكمية', '数量 (MOQ)'), kind: 'val', value: qty.toLocaleString() + ' ' + L('pcs', 'قطعة', '个') }
+        ] : [
           { title: L('Size (L×H×W)', 'المقاس', '尺寸 (长×高×宽)'), kind: 'val', value: dims || '—' },
           { title: L('Type', 'النوع', '类型'), kind: 'opts', opts: [{ t: L('Matt lamination', 'لامينيت مطفي', '哑膜'), on: sd.type === 'matt' }, { t: L('Gloss lamination', 'لامينيت لامع', '亮膜'), on: sd.type === 'glossy' }, { t: L('Texture paper', 'ورق محبب', '纹理纸'), on: sd.type === 'texture' }] },
           { title: L('Thickness', 'السماكة', '厚度'), kind: 'opts', opts: [{ t: L('250 gsm', '250 gsm', '250 克'), on: true }, { t: L('300 gsm', '300 gsm', '300 克'), on: false }, { t: L('350 gsm', '350 gsm', '350 克'), on: false }] },
@@ -307,18 +323,18 @@
         function colorBlock(title, region, bx, bw, by) {
           var yy = section(c, by, title, bx) + 38;
           yy = _faceColorRow(c, bx, yy, bw, L('Base · ', 'أساسي · ', '基础 · ') + _capFinish(BAG[region].finish), BAG[region].color);
-          var fc = BAG[region].faceColors || {}, faces = (typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) ? Object.keys(BAG_FACES[region]) : ['front', 'back', 'left', 'right', 'base'];
+          var fc = BAG[region].faceColors || {}, faces = isTag ? [] : ((typeof BAG_FACES !== 'undefined' && BAG_FACES[region]) ? Object.keys(BAG_FACES[region]) : ['front', 'back', 'left', 'right', 'base']);
           faces.forEach(function (f) { var hex = fc[f] || BAG[region].color; yy = _faceColorRow(c, bx, yy, bw, _faceName(f) + (fc[f] ? '' : '  ' + L('(base)', '(أساسي)', '(基础)')), hex); });
           return yy;
         }
-        colorBlock(L('Exterior faces', 'أوجه الخارج', '外部面'), 'exterior', mLX, mcolW, my);
-        colorBlock(L('Interior faces', 'أوجه الداخل', '内部面'), 'interior', mRX, mcolW, my);
+        colorBlock(isTag ? L('Front', 'الأمام', '正面') : L('Exterior faces', 'أوجه الخارج', '外部面'), 'exterior', mLX, mcolW, my);
+        colorBlock(isTag ? L('Back', 'الخلف', '背面') : L('Interior faces', 'أوجه الداخل', '内部面'), 'interior', mRX, mcolW, my);
         footer(c, ref, pageBase + 1, 6); pages.push(p1);
 
         var p2 = newPage(); c = p2.c; header(c, L('2D dieline layout', 'مخطط القص المسطّح', '平面刀模图'));
         var dW = PW - 2 * M, dH = 1180, dY = 320;
-        jobs.push(placeImg(c, dieExt, M, dY, dW, dH, L('Exterior layout', 'مخطط الخارج', '外部布局')));
-        jobs.push(placeImg(c, dieInt, M, dY + dH + 40, dW, dH, L('Interior layout', 'مخطط الداخل', '内部布局')));
+        jobs.push(placeImg(c, dieExt, M, dY, dW, dH, isTag ? L('Front layout', 'مخطط الأمام', '正面布局') : L('Exterior layout', 'مخطط الخارج', '外部布局')));
+        jobs.push(placeImg(c, dieInt, M, dY + dH + 40, dW, dH, isTag ? L('Back layout', 'مخطط الخلف', '背面布局') : L('Interior layout', 'مخطط الداخل', '内部布局')));
         footer(c, ref, pageBase + 2, 6); pages.push(p2);
 
         var p3 = newPage(); c = p3.c; header(c, L('3D views', 'مناظر ثلاثية الأبعاد', '三维视图'));
