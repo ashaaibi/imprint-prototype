@@ -5366,7 +5366,11 @@ function _rebuildTagGeometry(){
   /* re-frame to ~1.4 units + pin to ground */
   bagGroup.scale.setScalar(1); bagGroup.position.set(0,0,0); bagGroup.updateMatrixWorld(true);
   var bb=new THREE.Box3().setFromObject(bagGroup), sz=new THREE.Vector3(); bb.getSize(sz);
-  var md=Math.max(sz.x,sz.y,sz.z); if(md>0){ bagNormScale=1.4/md; bagGroup.scale.setScalar(bagNormScale); }
+  /* FIXED cm→units scale (≈0.18) so the 3D preview shows the tag's TRUE proportions — increasing
+     width never shrinks the displayed height (and vice-versa). The 1.5/md clamp only engages for
+     very large customs (>~8cm) so they still fit the camera. (Was 1.4/md = fill-the-frame, which
+     re-normalised on every resize and coupled the dimensions.) */
+  var md=Math.max(sz.x,sz.y,sz.z); if(md>0){ bagNormScale=Math.min(0.18, 1.5/md); bagGroup.scale.setScalar(bagNormScale); }
   bagGroup.updateMatrixWorld(true); var bb2=new THREE.Box3().setFromObject(bagGroup); bagGroup.position.y=-bb2.min.y;
   if(typeof updateBoxFromScale==='function') updateBoxFromScale(1.0);
   if(typeof drawBagTexture==='function') drawBagTexture();
@@ -5437,13 +5441,14 @@ function buildPaperBagMesh() {
     buildUVGuide();
     bagGroup.add(bodyMesh);
 
-    // Auto-scale to fit ~1.4 units tall
+    // FIXED cm→units scale (≈0.18) so the tag shows TRUE proportions in 3D (width & height
+    // independent); the 1.5/maxDim clamp only engages for very large customs so they still fit.
     var bbox = new THREE.Box3().setFromObject(bagGroup);
     var bsize = new THREE.Vector3();
     bbox.getSize(bsize);
     var maxDim = Math.max(bsize.x, bsize.y, bsize.z);
     if (maxDim > 0) {
-      var sf = 1.4 / maxDim;
+      var sf = Math.min(0.18, 1.5 / maxDim);
       bagNormScale = sf;
       bagGroup.scale.setScalar(sf);
     }
