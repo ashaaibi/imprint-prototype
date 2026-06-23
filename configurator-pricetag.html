@@ -2255,8 +2255,8 @@
           <option value="top">Top center</option>
           <option value="topleft">Top left</option>
         </select></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">0.5</span></div>
-        <input type="range" class="test-slider" min="0" max="10" step="0.5" value="0.5" oninput="onA2Dnum('snapDist',this.value,false)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Center snap distance</span><span class="slider-val" id="a2d-snapDist-val">3</span></div>
+        <input type="range" class="test-slider" min="0" max="10" step="0.5" value="3" oninput="onA2Dnum('snapDist',this.value,false)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MIN (at 0%)</span><span class="slider-val" id="a2d-gapMin-val">0</span></div>
         <input type="range" class="test-slider" min="-1" max="1" step="0.01" value="0" oninput="onA2Dnum('gapMin',this.value,false); if(typeof drawBagTexture==='function') drawBagTexture();"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Pattern gap — real MAX (at 100%)</span><span class="slider-val" id="a2d-gapMax-val">100</span></div>
@@ -2870,7 +2870,7 @@
 
       <!-- Contact shadow -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Contact Shadow (real)</div>
-      <label class="test-check-row"><input type="checkbox" id="rlm-shadow-on" checked onchange="onRealShadowToggle(this.checked)"><span>Cast real soft shadow</span></label>
+      <label class="test-check-row"><input type="checkbox" id="rlm-shadow-on" onchange="onRealShadowToggle(this.checked)"><span>Cast real soft shadow</span></label>
       <div class="slider-row">
         <div class="slider-top"><span class="slider-name">Shadow darkness</span><span class="slider-val" id="rlm-shadow-dark-val">0.30</span></div>
         <input type="range" class="test-slider" id="rlm-shadow-dark-slider" min="0" max="1" step="0.01" value="0.30" oninput="onShadowDarkness(this.value)">
@@ -3048,10 +3048,10 @@ const S = {
 };
 /* ─── PAPER BAG STATE ───────────────── */
 const BAG = {
-  exterior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  interior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
-  rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
+  exterior: { color: '#FFFFFF', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'White', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  interior: { color: '#FFFFFF', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'White', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  ribbon:   { color: '#FFFFFF', swatchName: 'White', customHex: '#FFFFFF' },
+  rivet:    { color: '#FFFFFF', swatchName: 'White', customHex: '#FFFFFF' },
   artwork: {
     type: 'none',  /* tab highlight only — rendering is driven by each layer's .visible */
     nextId: 100,   /* id source for user-added layers */
@@ -3698,7 +3698,7 @@ function fmtBytes(b) {
 var REALISM = {
   exposure: 1.05,
   /* real soft contact shadow (replaces the fake blob) */
-  shadowOn: true, shadowDarkness: 0.30,
+  shadowOn: false, shadowDarkness: 0.30,
   /* reflective studio floor */
   floorOn: true, floorColor: '#d4cec4', floorRough: 1.00, floorMetal: 0.00, floorEnv: 0.00, floorOpacity: 1.00, floorY: -0.699,
   /* post-processing master + per-effect (all heavier — master off by default) */
@@ -5325,11 +5325,14 @@ var _bagBuildSeq = 0;   /* guards against overlapping async GLB builds (e.g. the
 /* Build the two tag face geometries (front=exterior, back=interior) for a given W×H (cm)
    and corner bevel (0→1). Shared by the full build and the light rebuild. */
 function _makeTagGeoms(tw, th, bevel){
-  /* Uniform cm→UV scale so width & height grow INDEPENDENTLY (clamped to fit the atlas) —
-     fixes the "increasing width past height shrinks height" bug. Gap = fixed fraction of the
-     tag width, centred on 0.5 → the front/back gap stays visually consistent at every size. */
-  var k = Math.min(0.040, 0.40/tw, 0.84/th);
-  var uw = tw*k, uh = th*k, gap = 0.38*uw;
+  /* FIXED UV-per-cm scale + a CONSTANT gap. Because the scale is a fixed constant for every
+     realistic tag (≤~11cm wide, ≤~23cm tall), the width and height islands grow strictly
+     independently — changing the width never resizes the height (and vice-versa) — and the
+     front/back gap is the SAME absolute UV distance at every size. The Math.min clamp only
+     engages for extreme custom sizes, purely to keep the two islands inside the atlas. */
+  var SCALE = 0.040, GAP = 0.060;
+  var k = Math.min(SCALE, (0.95 - GAP)/(2*tw), 0.92/th);
+  var uw = tw*k, uh = th*k, gap = GAP;
   var extCx = 0.5 - gap/2 - uw/2, intCx = 0.5 + gap/2 + uw/2;
   function uvRect(cx){ return { u0:cx-uw/2, v0:0.5-uh/2, u1:cx+uw/2, v1:0.5+uh/2 }; }
   var extUV=uvRect(extCx), intUV=uvRect(intCx);
@@ -7254,6 +7257,11 @@ function addLayer(kind) {
     /* Drop new Text/Graphic/Logo in the LOWER HALF of the front (28% up from the base edge), centred
        horizontally — per size, since BAG_FACES.exterior.front is the active model's front island. */
     _fp = { posU: (_ff.x + _ff.w/2 - _PADf)/2048*100, posV: (_ff.y + _ff.h*0.28 - _PADf)/2048*100 };
+  } else if (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) {
+    /* No per-face islands (price tag): drop new layers dead-centre of the FRONT (exterior region),
+       computed per size so it's always the true centre for the chosen W×H. */
+    var _ex = BAG_UV.exterior, _PADe = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
+    _fp = { posU: (_ex.x + _ex.w/2 - _PADe)/2048*100, posV: (_ex.y + _ex.h/2 - _PADe)/2048*100 };
   }
   if (kind === 'logo') {
     /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
@@ -11120,7 +11128,7 @@ var A2D = {
   subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:0.6,    /* per-face sub-label size + colour + opacity */
   measureShow:true, measureSize:14, measureColor:'#555555', measureWeight:600,   /* price-tag W/H dimension arrows (testing-tunable) */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
-  snapDist:0.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
+  snapDist:3,                                    /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
   outlineColor:'#000000',   /* '' = per-part colour; else a single colour for all */
   outlineThickness:0.05, outlineOpacity:1.0, tintOpacity:0.0,
@@ -11364,12 +11372,17 @@ function _aMove(e){
     /* magnetic snap — PER AXIS: snap U to a face center's U (vertical guide) and/or V to a
        face center's V (horizontal guide), independently. Aligning on both = center snap. */
     a2d._snapX=null; a2d._snapY=null;
-    if (typeof BAG_FACES!=='undefined' && BAG_FACES && (A2D.snapDist||0)>0){
+    if ((A2D.snapDist||0)>0){
       var _PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0, bdU=A2D.snapDist, bdV=A2D.snapDist, snU=null, snV=null, snAX=null, snAY=null;
-      ['exterior','interior'].forEach(function(grp){ var fs=BAG_FACES[grp]||{}; Object.keys(fs).forEach(function(f){ var bb=fs[f]; if(!bb) return;
+      /* Snap candidates: the FRONT & BACK region centres (so the price tag snaps to the centre
+         of each face even though it has no per-face sub-islands) + any per-face islands (bag/cup). */
+      var _cand=[];
+      if (typeof BAG_UV!=='undefined' && BAG_UV){ if(BAG_UV.exterior) _cand.push(BAG_UV.exterior); if(BAG_UV.interior) _cand.push(BAG_UV.interior); }
+      if (typeof BAG_FACES!=='undefined' && BAG_FACES){ ['exterior','interior'].forEach(function(grp){ var fs=BAG_FACES[grp]||{}; Object.keys(fs).forEach(function(f){ if(fs[f]) _cand.push(fs[f]); }); }); }
+      _cand.forEach(function(bb){
         var fu=(bb.x+bb.w/2-_PAD)/2048*100, fv=(bb.y+bb.h/2-_PAD)/2048*100;
         var du=Math.abs(L.posU-fu); if(du<bdU){ bdU=du; snU=fu; snAX=bb.x+bb.w/2; }
-        var dv=Math.abs(L.posV-fv); if(dv<bdV){ bdV=dv; snV=fv; snAY=bb.y+bb.h/2; } }); });
+        var dv=Math.abs(L.posV-fv); if(dv<bdV){ bdV=dv; snV=fv; snAY=bb.y+bb.h/2; } });
       if(snU!=null){ L.posU=snU; a2d._snapX=snAX; }
       if(snV!=null){ L.posV=snV; a2d._snapY=snAY; }
     }
