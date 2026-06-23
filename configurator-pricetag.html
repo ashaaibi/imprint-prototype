@@ -1671,8 +1671,8 @@
       </div>
       <div class="dim-pill" id="dim-pill">30 × 34 × 17 cm</div>
       <div class="mode-toggle" id="mode-toggle">
-        <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
-        <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
+        <button data-mode="3d" onclick="setViewMode('3d')">3D</button>
+        <button class="on" data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
       <div id="mini3d-resize" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 26 26" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 13 A7 7 0 0 1 13 6"/></svg></div>
@@ -1961,17 +1961,16 @@
         </button>
         <button class="bag-sopt" id="bag-sopt-custom" onclick="onBagSizeCustom(this)">
           <span class="bag-sopt-key" data-en="Custom size" data-ar="مقاس مخصص">Custom size</span>
-          <span class="bag-sopt-dims" id="custom-size-dims">— × — × — cm</span>
+          <span class="bag-sopt-dims" id="custom-size-dims">6 × 6 cm</span>
           <span class="bag-sopt-price" data-en="enter your own" data-ar="أدخل مقاسك">enter your own</span>
         </button>
       </div>
       <div id="custom-size-panel" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--imp-border);border-radius:12px;background:var(--imp-surface-2);">
         <div style="display:flex;gap:8px;align-items:flex-end;">
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Width" data-ar="العرض">Width</span><br><input id="cs-w" type="number" min="1" step="0.5" value="28" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" step="0.5" value="20" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Depth" data-ar="العمق">Depth</span><br><input id="cs-d" type="number" min="1" step="0.5" value="14" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Width" data-ar="العرض">Width</span><br><input id="cs-w" type="number" min="1" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
         </div>
-        <div style="margin-top:8px;font-size:10px;color:var(--imp-fg-3);line-height:1.45;" data-en="Updates the printed measurements only — the 3D preview keeps its current shape." data-ar="يحدّث المقاسات المطبوعة فقط — معاينة 3D تبقى بنفس الشكل.">Updates the printed measurements only — the 3D preview keeps its current shape.</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--imp-fg-3);line-height:1.45;" data-en="Resizes the tag — width × height in cm (the hole stays a standard size)." data-ar="يغيّر حجم البطاقة — العرض × الارتفاع بالسنتيمتر (الثقب يبقى بحجم قياسي).">Resizes the tag — width × height in cm (the hole stays a standard size).</div>
       </div>
     </div>
 
@@ -4240,6 +4239,7 @@ function drawBagTexture() {
     var _erase = function(clip){ if (!clip || !clip.path) return; bagCleanCtx.save(); bagCleanCtx.globalCompositeOperation='destination-out'; bagCleanCtx.fillStyle='#000'; bagCleanCtx.fill(clip.path); bagCleanCtx.lineJoin='round'; bagCleanCtx.lineWidth=Math.max(2,(A2D.padding||0)*2); bagCleanCtx.strokeStyle='#000'; bagCleanCtx.stroke(clip.path); bagCleanCtx.restore(); };
     if (!A2D.showHandles2D) _erase(bagHandleClip);
     if (!A2D.showRivets2D)  _erase(bagRivetClip);
+    if (typeof _drawTagHole==='function') _drawTagHole(bagCleanCtx);   /* transparent hole in the 2D editor too */
     _filteredBagDirty = true;   /* clean bag changed → idle backdrop cache must rebuild */
   }
   // 3D-ONLY artwork tone pass: restore the base, then re-bake the artwork through the Testing
@@ -4283,18 +4283,19 @@ function drawBagTexture() {
 }
 /* Price tag: draw the standard punched hole (5 mm Ø, fixed real size) at the top-centre of
    each face region in the atlas → it appears on the 3D tag. (2D editor draws its own guide.) */
-function _drawTagHole(){
-  if (!bagTexCtx || typeof currentTagDims==='undefined' || !currentTagDims) return;
+function _drawTagHole(ctx){
+  ctx = ctx || bagTexCtx;
+  if (!ctx || typeof currentTagDims==='undefined' || !currentTagDims) return;
   [bagExtClip, bagIntClip].forEach(function(clip){
     if(!clip||!clip.bbox) return;
     var bb=clip.bbox, r=(2.5/((currentTagDims.w||6)*10))*bb.w;
     if(!(r>1)) return;
     var cx=bb.x+bb.w/2, cy=bb.y+bb.h*0.12;
-    bagTexCtx.save(); bagTexCtx.setTransform(1,0,0,1,0,0);
-    bagTexCtx.beginPath(); bagTexCtx.arc(cx,cy,r,0,Math.PI*2);
-    bagTexCtx.fillStyle='#f3f3f3'; bagTexCtx.fill();
-    bagTexCtx.lineWidth=Math.max(2,r*0.12); bagTexCtx.strokeStyle='rgba(0,0,0,0.35)'; bagTexCtx.stroke();
-    bagTexCtx.restore();
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();   /* punch transparent (treated as background) */
+    ctx.globalCompositeOperation='source-over';
+    ctx.lineWidth=Math.max(2,r*0.10); ctx.strokeStyle='rgba(0,0,0,0.30)'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();   /* thin rim so it reads as a punched hole */
+    ctx.restore();
   });
 }
 
@@ -5321,12 +5322,54 @@ function buildUVGuide() {
 
 var _bagBuildSeq = 0;   /* guards against overlapping async GLB builds (e.g. the default-size
                            load racing a template restore that switches size) stacking two bags */
+/* Build the two tag face geometries (front=exterior, back=interior) for a given W×H (cm)
+   and corner bevel (0→1). Shared by the full build and the light rebuild. */
+function _makeTagGeoms(tw, th, bevel){
+  var asp=tw/th, maxU=0.40, uw, uh;
+  if(asp>=1){ uw=maxU; uh=maxU/asp; } else { uh=maxU; uw=maxU*asp; }
+  function uvRect(cx){ return { u0:cx-uw/2, v0:0.5-uh/2, u1:cx+uw/2, v1:0.5+uh/2 }; }
+  var extUV=uvRect(0.27), intUV=uvRect(0.73);
+  function quad(front, R){
+    var hw=tw/2, hh=th/2, z=front?0.02:-0.02, nz=front?1:-1;
+    var rr=Math.max(0,Math.min(1,bevel||0))*Math.min(tw,th)/2, seg=12;
+    var cs=[[hw-rr,hh-rr,0],[-hw+rr,hh-rr,Math.PI/2],[-hw+rr,-hh+rr,Math.PI],[hw-rr,-hh+rr,1.5*Math.PI]], P=[];
+    cs.forEach(function(cn){ for(var i=0;i<=seg;i++){ var a=cn[2]+(Math.PI/2)*(i/seg); P.push([cn[0]+rr*Math.cos(a), cn[1]+rr*Math.sin(a)]); } });
+    var pos=[0,0,z], uv=[(R.u0+R.u1)/2,(R.v0+R.v1)/2], nm=[0,0,nz], idx=[];
+    for(var i=0;i<P.length;i++){ pos.push(P[i][0],P[i][1],z); uv.push(R.u0+(P[i][0]+hw)/tw*(R.u1-R.u0), R.v0+(P[i][1]+hh)/th*(R.v1-R.v0)); nm.push(0,0,nz); }
+    for(var i=0;i<P.length;i++){ var a=1+i, b=1+((i+1)%P.length); if(front) idx.push(0,a,b); else idx.push(0,b,a); }
+    var g=new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv,2));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(nm,3));
+    g.setIndex(idx); g.computeBoundingBox(); g.computeBoundingSphere(); return g;
+  }
+  return { front: quad(true, extUV), back: quad(false, intUV) };
+}
+/* LIGHT rebuild for size/bevel/resize changes: swap the geometry + re-derive UV clips +
+   re-frame + re-bake — WITHOUT re-initialising PBR maps / realism (that churn was leaking
+   GPU resources and crashing the page). Falls back to a full build if nothing's loaded. */
+function _rebuildTagGeometry(){
+  if (!bagMeshRef || !bagGroup || !T || !T.box || typeof _makeTagGeoms!=='function'){ if(typeof buildPaperBagMesh==='function') buildPaperBagMesh(); return; }
+  var tg=_makeTagGeoms(currentTagDims.w, currentTagDims.h, currentTagBevel);
+  var merged=mergeBagGeoms([tg.front, tg.back]);
+  var old=bagMeshRef.geometry; bagMeshRef.geometry=merged; if(old&&old.dispose) old.dispose();
+  bagExtClip=computeIslandRegion(tg.front); bagIntClip=computeIslandRegion(tg.back);
+  if(bagExtClip) BAG_UV.exterior=bagExtClip.bbox; if(bagIntClip) BAG_UV.interior=bagIntClip.bbox;
+  if(typeof buildUVGuide==='function') buildUVGuide();
+  /* re-frame to ~1.4 units + pin to ground */
+  bagGroup.scale.setScalar(1); bagGroup.position.set(0,0,0); bagGroup.updateMatrixWorld(true);
+  var bb=new THREE.Box3().setFromObject(bagGroup), sz=new THREE.Vector3(); bb.getSize(sz);
+  var md=Math.max(sz.x,sz.y,sz.z); if(md>0){ bagNormScale=1.4/md; bagGroup.scale.setScalar(bagNormScale); }
+  bagGroup.updateMatrixWorld(true); var bb2=new THREE.Box3().setFromObject(bagGroup); bagGroup.position.y=-bb2.min.y;
+  if(typeof updateBoxFromScale==='function') updateBoxFromScale(1.0);
+  if(typeof drawBagTexture==='function') drawBagTexture();
+}
 var _bevelTimer=null;
 function onTagBevel(v){
   currentTagBevel = Math.max(0, Math.min(1, (parseFloat(v)||0)/100));
   var el=document.getElementById('tag-bevel-val'); if(el) el.textContent=Math.round(currentTagBevel*100)+'%';
   if(_bevelTimer) clearTimeout(_bevelTimer);
-  _bevelTimer=setTimeout(function(){ if(typeof buildPaperBagMesh==='function') buildPaperBagMesh(); }, 60);   /* coalesce drags */
+  _bevelTimer=setTimeout(function(){ if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }, 40);   /* light, coalesced */
 }
 function buildPaperBagMesh() {
   var _mySeq = ++_bagBuildSeq;
@@ -5369,27 +5412,8 @@ function buildPaperBagMesh() {
     var _tw = (model.w||6), _th = (model.h||6);
     if (typeof _customSize!=='undefined' && _customSize.on && _customSize.w && _customSize.h){ _tw=_customSize.w; _th=_customSize.h; }
     currentTagDims = { w:_tw, h:_th };
-    var _asp = _tw/_th, _maxU=0.40, _uw, _uh;
-    if(_asp>=1){ _uw=_maxU; _uh=_maxU/_asp; } else { _uh=_maxU; _uw=_maxU*_asp; }
-    function _uvRect(cx){ return { u0:cx-_uw/2, v0:0.5-_uh/2, u1:cx+_uw/2, v1:0.5+_uh/2 }; }
-    var _extUV=_uvRect(0.27), _intUV=_uvRect(0.73);
-    /* Rounded-rect outline (bevel 0→1 ⇒ corner radius 0 → min(W,H)/2 ⇒ circle when square),
-       fan-triangulated; UVs map the W×H box onto the region rect. */
-    function _tagQuad(front, R){
-      var hw=_tw/2, hh=_th/2, z=front?0.02:-0.02, nz=front?1:-1;
-      var rr=Math.max(0,Math.min(1,currentTagBevel||0))*Math.min(_tw,_th)/2, seg=12;
-      var cs=[[hw-rr,hh-rr,0],[-hw+rr,hh-rr,Math.PI/2],[-hw+rr,-hh+rr,Math.PI],[hw-rr,-hh+rr,1.5*Math.PI]], P=[];
-      cs.forEach(function(cn){ for(var i=0;i<=seg;i++){ var a=cn[2]+(Math.PI/2)*(i/seg); P.push([cn[0]+rr*Math.cos(a), cn[1]+rr*Math.sin(a)]); } });
-      var pos=[0,0,z], uv=[(R.u0+R.u1)/2,(R.v0+R.v1)/2], nm=[0,0,nz], idx=[];
-      for(var i=0;i<P.length;i++){ pos.push(P[i][0],P[i][1],z); uv.push(R.u0+(P[i][0]+hw)/_tw*(R.u1-R.u0), R.v0+(P[i][1]+hh)/_th*(R.v1-R.v0)); nm.push(0,0,nz); }
-      for(var i=0;i<P.length;i++){ var a=1+i, b=1+((i+1)%P.length); if(front) idx.push(0,a,b); else idx.push(0,b,a); }
-      var g=new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
-      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv,2));
-      g.setAttribute('normal', new THREE.Float32BufferAttribute(nm,3));
-      g.setIndex(idx); return g;
-    }
-    var frontGeom=_tagQuad(true,_extUV), backGeom=_tagQuad(false,_intUV);
+    var _tg = _makeTagGeoms(_tw, _th, currentTagBevel);
+    var frontGeom=_tg.front, backGeom=_tg.back;
     var bodyMesh = new THREE.Mesh(mergeBagGeoms([frontGeom, backGeom]), new THREE.MeshPhysicalMaterial({
       map: bagTexture, roughness: 0.92, metalness: 0.0, envMapIntensity: 0.55,
       transmission: 0.0, opacity: 1.0, transparent: true, side: THREE.DoubleSide,
@@ -5456,6 +5480,7 @@ function buildPaperBagMesh() {
     if (typeof _nudgeOnLoad === 'function') { _nudgeOnLoad(); setTimeout(_nudgeOnLoad, 120); }
     /* Model ready → hide the premium loader and play the intro 360° spin */
     finishConfigLoading();
+    if (typeof setViewMode==='function') setViewMode('2d');   /* price tag opens in the 2D editor */
   } catch(err){ console.error('Tag build threw — clearing loader so the studio is usable', err); finishConfigLoading(); }
 }
 
@@ -9127,23 +9152,29 @@ function applyBagSizeScale(sx, sy, sz, normMult) {
 }
 
 /* ─── CUSTOM SIZE (display-only: relabels the measurements, never resizes the mesh) ─── */
-var _customSize = { on:false, w:28, h:20, d:14, qty:0 };
+var _customSize = { on:false, w:6, h:6, qty:0 };
 function onBagSizeCustom(btn){
-  if (_bagLoading) return;
   _customSize.on = true;
   document.querySelectorAll('.bag-sopt').forEach(function(b){ b.classList.remove('on'); });
   if (btn) btn.classList.add('on');
+  /* seed the inputs with the size currently shown (e.g. 6×6 if 6×6 was selected) */
+  var w=(currentTagDims&&currentTagDims.w)||6, h=(currentTagDims&&currentTagDims.h)||6;
+  var ew=document.getElementById('cs-w'); if(ew) ew.value=w;
+  var eh=document.getElementById('cs-h'); if(eh) eh.value=h;
   var p = document.getElementById('custom-size-panel'); if (p) p.style.display = 'block';
   applyCustomDims();
 }
 function applyCustomDims(){
-  var gv=function(id){ var el=document.getElementById(id); return el?parseFloat(el.value):0; };
-  _customSize.w=gv('cs-w'); _customSize.h=gv('cs-h'); _customSize.d=gv('cs-d');
-  var txt=(_customSize.w||'—')+' × '+(_customSize.h||'—')+' × '+(_customSize.d||'—')+' cm';
+  var gv=function(id){ var el=document.getElementById(id); var v=el?parseFloat(el.value):0; return (v>0)?v:0; };
+  var w=gv('cs-w')||(currentTagDims&&currentTagDims.w)||6, h=gv('cs-h')||(currentTagDims&&currentTagDims.h)||6;
+  _customSize.w=w; _customSize.h=h;
+  var txt=w+' × '+h+' cm';
   var dd=document.getElementById('custom-size-dims'); if(dd) dd.textContent=txt;
   if(_customSize.on){
+    currentTagDims={ w:w, h:h };
     var pill=document.getElementById('dim-pill'); if(pill) pill.textContent=txt;
-    if(typeof S!=='undefined') S.dims=txt;   /* flows into the order summary */
+    if(typeof S!=='undefined') S.dims=txt;
+    if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry();   /* reshape the tag live */
   }
 }
 function applyCustomQty(){
@@ -9163,20 +9194,14 @@ function _exitCustomSize(modelKey){
 }
 function onBagSize(key, btn) {
   if (!BAG_MODELS[key]) return;
-  if (_bagLoading) return;            /* a model is still loading — ignore (buttons are locked) */
   _exitCustomSize(key);               /* leaving custom → restore this model's real dims */
-  if (currentBagModel === key) return;
-  if (typeof viewMode !== 'undefined' && viewMode === '2d' && typeof setViewMode === 'function') setViewMode('3d');   /* changing size → show the new bag in 3D */
   currentBagModel = key;
-  /* single-select: clear every other size, mark only this one */
   document.querySelectorAll('.bag-sopt').forEach(function(b) { b.classList.remove('on'); });
   if (btn) btn.classList.add('on');
-  setBagLoading(true);               /* lock other sizes immediately (before the async load) */
-  /* show a switching overlay */
-  var sov = document.getElementById('bag-switch-overlay');
-  if (sov) sov.style.display = 'flex';
-  if (typeof _startLoaderText === 'function') _startLoaderText('bag-switch-text','size');   /* rotating size-load copy */
-  setTimeout(function() { buildPaperBagMesh(); }, 10);
+  var m = BAG_MODELS[key]; currentTagDims = { w:m.w, h:m.h };
+  if (typeof updateBagQtyGridFromEntry === 'function') updateBagQtyGridFromEntry(m);
+  var pill=document.getElementById('dim-pill'); if(pill) pill.textContent=m.dims;
+  if (typeof _rebuildTagGeometry === 'function') _rebuildTagGeometry();   /* light geometry swap — stays in the current view (2D), no churn */
 }
 
 function updateBagQtyGridFromEntry(entry) {
@@ -11079,7 +11104,7 @@ function _markTouched(region){ stopHueGuide(false); if (!_suppressTouch && regio
    texture is the backdrop (what you see prints), and visible layers can be
    selected and moved / scaled / rotated — writing posU/posV/scale/rotation and
    repainting the 3D bag live. */
-var viewMode = '3d';
+var viewMode = '2d';   /* price tag opens in the 2D editor (flat front/back) */
 /* 2D-editor appearance settings (all live-tunable from the Testing panel). */
 var A2D = {
   gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
@@ -11855,8 +11880,7 @@ function atlas2dRender(){
       _arrowV(T, B, L-_gap);
       ctx.save(); ctx.translate(L-_gap-_mFP*0.6,(T+B)/2); ctx.rotate(-Math.PI/2);
       ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
-      var hr=(2.5/((currentTagDims.w||6)*10))*(R-L);
-      if(hr>1){ ctx.beginPath(); ctx.arc((L+R)/2, T+(B-T)*0.12, hr, 0, Math.PI*2); ctx.stroke(); }
+      /* the hole is punched into the atlas itself (transparent) — no overlay ring needed */
     });
     ctx.restore();
   }
