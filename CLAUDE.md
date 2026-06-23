@@ -32,6 +32,9 @@ mangling files/folders.
 - `configurator.html` — **the bag 3D configurator (centerpiece, ~2.5 MB)**
 - `configurator-cup.html` — **coffee-cup 3D studio = a full duplicate of `configurator.html`** with only the
   model swapped (loads `paper_cup/paper_cup_imprint.glb`; 2D faces = cup/base/sleeve/lid). See "Coffee cup studio".
+- `configurator-box.html` — **foldable ring/earring box studio** (duplicate of the bag; morph-fold scrub slider,
+  two ring UV variants). `configurator-pricetag.html` — **price-tag studio** (duplicate of the bag, procedural
+  flat card; sizes/quantities/shape/custom + Full-Package ZIP). See "Price tag studio".
 - `checkout.html` · `confirmation.html` — order flow
 - `admin.html` — testing controls · `factory/` — demo stubs
 - `designer/index.html` — **unlisted designer portal** (build/publish bag **and** cup templates)
@@ -113,6 +116,33 @@ New layers drop on the sleeve UV **top-half centre**
 sizes (8/12/16 oz, one GLB); title/breadcrumb/size-picker relabelled.
 **Still WebGL-verify in a real browser** (headless can't do WebGL): confirm ext/int/base/lid **finishes** paint and
 the per-step cameras land right. Isolated file → can't affect the bag configurator or marketplace.
+
+## Price tag studio (`configurator-pricetag.html`)  — bag duplicate, **NO GLB** (procedural), verify in a browser
+A duplicate of `configurator.html` whose bag GLB loader is **replaced by a procedural flat card**, so it inherits
+the full artwork/2D-editor/finish/template system but builds its own geometry. **Defaults to the 2D editor**
+(`viewMode='2d'`, Live preview off, Contact Shadow off). The 3D is a small throttled preview.
+- **Geometry** = `_makeTagGeoms(tw,th,bevel)` → a front quad (exterior) + back quad (interior), rounded-rect
+  fan-triangulated, V-flipped so the tag reads right-side-up. **FIXED UV-per-cm scale (0.040) + CONSTANT gap
+  (0.060)** → width & height grow strictly **independently** and the front/back gap is identical at every size
+  (the Math.min clamp only binds for extreme >~11cm customs). `buildPaperBagMesh` builds it; **`_rebuildTagGeometry()`**
+  is the LIGHT path (geometry swap + re-derive clips + re-frame + bake, **no PBR/realism re-init** — that churn
+  crashed the page) used by size/bevel/resize.
+- **Steps** = Start · Design · Review (`CONFIG_STEP_COUNT=3`; ext/int/handles sections kept inert in DOM as
+  `data-cstep=97/98/99`). Start has **Shape** (corner bevel `onTagBevel`→`currentTagBevel`, rect→circle) then
+  **Size** (`BAG_MODELS` = 6×6 / 3×5 / 4×7 cm + **Custom**; `currentTagDims`) then **Quantity** (1000/1500/2000/2500
+  with 0/12/22/30% discounts). Custom size = W×H only (no depth), seeds from the current size, reshapes live.
+- **2D editor**: front+back flat rectangles, a **transparent punched hole** (`_drawTagHole`, destination-out) near
+  the top, **W/H dimension arrows** (`A2D.measure*`, uses `currentTagDims`). **Drag any rectangle corner to resize
+  the tag** (`tagresize` op: width grows outward from the fixed centre gap = 1×, height symmetric = 2×; commits as a
+  custom size). **Magnetic centre snap** (`A2D.snapDist`, default 3%) snaps layers to the FRONT/BACK region centres.
+  New layers drop at the **front (exterior) region centre**. Region labels are **Front/Back** (not Exterior/Interior).
+- **Front/Back default colour = white** (`swatchName:'White'`).
+- **Review → "Download Full Package"** (`IMPRINT_downloadFullPackage`, in the designer closure) = a dependency-free
+  STORE-method **ZIP** (`_makeZip`/`_crc32`/`_assetBytes`) bundling `template.json` (re-importable;
+  `serializeTemplate` embeds layer images + fonts) + each uploaded/library asset as a standalone file under
+  `assets/` (+ `assets/fonts/`) + `spec-sheet.pdf` (via `generateSpecPDF(null,{returnBlob:true})`, see spec-pdf.js)
+  + README. **spec-pdf.js is still the bag spec sheet** (handles/ribbon/paste) — not yet tailored to tag fields.
+- Designer link (with Testing): `configurator-pricetag.html?designer=1`. Isolated file → can't affect bag/cup.
 
 ## The 3D configurator (`configurator.html` + `realism-engine.js`)
 - **Heavy assets are EXTERNAL (not inlined)** so they cache + are shared with the cup studio: Three.js r128 →
@@ -316,8 +346,12 @@ pointerdown/up on range inputs, and `_endSliderDrag` does one full-quality bake 
 - **`configurator.html` is large (~0.7 MB after externalizing the blobs)** — Read may still be heavy; prefer
   `grep -n` + `awk 'NR>=A && NR<=B'`. A few long base64/min lines remain (masks, etc.) — anchor edits on unique
   text, don't trust awk NR counting across a very long line. (Three.js is now external, no longer a 1 MB line.)
-- **`configurator-cup.html` is a duplicate of `configurator.html`** — most fixes to the bag studio must be
-  applied to BOTH (they share the external Three/env/kraft, but the HTML/JS is duplicated).
+- **`configurator-cup.html`, `configurator-box.html` and `configurator-pricetag.html` are duplicates of
+  `configurator.html`** — most fixes to the bag studio must be applied to ALL relevant copies (they share the
+  external Three/env/kraft, but the HTML/JS is duplicated). The box swaps in a foldable-box GLB; the price tag
+  **replaces the GLB loader with procedural flat-card geometry** (`_makeTagGeoms`/`_rebuildTagGeometry`) and
+  diverges most (3-step flow, no handles/interior steps, custom sizing, Full-Package ZIP) — port bag fixes there
+  with care.
 - **r128 shares ONE uv transform across all texture maps** (from `map`); per-map `.repeat`
   is ignored. Tiling is done by baking into a canvas via `ctx.createPattern` + scale.
   `onBeforeCompile` shader patches are unreliable (program caching) — avoid.

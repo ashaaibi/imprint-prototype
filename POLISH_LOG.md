@@ -3,6 +3,22 @@
 A running changelog of small, low-risk UI/UX refinements applied by the `/loop` polish pass.
 Each entry is one focused improvement. Newest first.
 
+## 2026-06-23 (batch 19) — Price-tag studio: sizing, snapping, packaging
+- **Constant gap + independent W/H** (`_makeTagGeoms`): fixed UV-per-cm scale (0.040) + a constant
+  gap (0.060) so width and height grow strictly independently and the front/back gap is identical at
+  every size (was `gap = 0.38·uw`, which scaled with width and coupled the dimensions past the cap).
+- **Drag-the-corner resize** in the 2D editor: corner handles on the front/back rectangles start a
+  `tagresize` drag (width grows outward from the fixed centre gap = 1×, height symmetric = 2×); the
+  measurement labels follow live and release commits it as a custom size.
+- **3D preview dimension arrows:** an overlay canvas projects the flat tag's front-face corners and
+  draws W/H arrows + cm labels matching the 2D editor (full-3D view only).
+- **New layers drop at the front (exterior) region centre**; **magnetic centre snap** now targets the
+  FRONT & BACK region centres (default radius 0.5%→3% so the magnet is felt).
+- **Front/Back default colour → white**; **Contact Shadow (real) defaults OFF**.
+- **Review → "Download Full Package"** (replaces "Download spec sheet"): a dependency-free ZIP with
+  `template.json` (re-importable), every uploaded/library asset + embedded fonts under `assets/`, and
+  `spec-sheet.pdf`. (`spec-pdf.js` gained an `opts.returnBlob` path.)
+
 ## 2026-06-15 (batch 18) — Updated cup GLB + cup interior layer drop position
 - **Updated paper-cup model:** replaced `paper_cup/paper_cup.glb` with the new export and regenerated
   `paper_cup/paper_cup_imprint.glb` (the file the studio loads) via the new, committed, reproducible
