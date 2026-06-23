@@ -9921,7 +9921,9 @@ function animate(now) {
 var _tagMeasCv=null, _tagMeasCtx=null;
 function _drawTagMeasure3D(){
   try {
-    if (typeof currentTagDims==='undefined' || !currentTagDims) return;
+    var need = (viewMode==='3d') && (typeof currentTagDims!=='undefined' && currentTagDims)
+             && (typeof A2D==='undefined' || A2D.measureShow!==false) && !!bagGroup && T && T.camera;
+    if(!need){ if(_tagMeasCv && _tagMeasCv._drawn){ _tagMeasCtx.setTransform(1,0,0,1,0,0); _tagMeasCtx.clearRect(0,0,_tagMeasCv.width,_tagMeasCv.height); _tagMeasCv._drawn=false; } return; }
     var stage=document.querySelector('.canvas-stage'); if(!stage) return;
     if(!_tagMeasCv){
       _tagMeasCv=document.createElement('canvas'); _tagMeasCv.id='tag-measure-overlay';
@@ -9931,9 +9933,7 @@ function _drawTagMeasure3D(){
     var cv=_tagMeasCv, ctx=_tagMeasCtx;
     var cssW=stage.clientWidth, cssH=stage.clientHeight, dpr=window.devicePixelRatio||1;
     if(cv.width!==Math.round(cssW*dpr)||cv.height!==Math.round(cssH*dpr)){ cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr); }
-    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH);
-    var show=(viewMode==='3d') && (typeof A2D==='undefined' || A2D.measureShow!==false) && !!bagGroup && T && T.camera;
-    if(!show) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH); cv._drawn=true;
     var bb=new THREE.Box3().setFromObject(bagGroup); if(bb.isEmpty()) return;
     var zf=bb.max.z;   /* front face is the +Z side of the flat card */
     function proj(x,y,z){ var v=new THREE.Vector3(x,y,z).project(T.camera); return { x:(v.x*0.5+0.5)*cssW, y:(-v.y*0.5+0.5)*cssH }; }
