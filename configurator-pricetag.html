@@ -4262,12 +4262,29 @@ function drawBagTexture() {
     });
   }
 
+  if (typeof _drawTagHole === 'function') _drawTagHole();   /* punch the price-tag hole onto the atlas (shows in 3D) */
   if (bagTexture) bagTexture.needsUpdate = true;
   if (!_lightBake()) {            /* skip heavy passes while dragging → smooth FPS; full redraw on release */
     rebuildBumpMap();
     if (typeof scheduleHistory === 'function') scheduleHistory();
   }
   _colorOnlyEdit = false;   /* consumed for this bake (#3) */
+}
+/* Price tag: draw the standard punched hole (5 mm Ø, fixed real size) at the top-centre of
+   each face region in the atlas → it appears on the 3D tag. (2D editor draws its own guide.) */
+function _drawTagHole(){
+  if (!bagTexCtx || typeof currentTagDims==='undefined' || !currentTagDims) return;
+  [bagExtClip, bagIntClip].forEach(function(clip){
+    if(!clip||!clip.bbox) return;
+    var bb=clip.bbox, r=(2.5/((currentTagDims.w||6)*10))*bb.w;
+    if(!(r>1)) return;
+    var cx=bb.x+bb.w/2, cy=bb.y+bb.h*0.12;
+    bagTexCtx.save(); bagTexCtx.setTransform(1,0,0,1,0,0);
+    bagTexCtx.beginPath(); bagTexCtx.arc(cx,cy,r,0,Math.PI*2);
+    bagTexCtx.fillStyle='#f3f3f3'; bagTexCtx.fill();
+    bagTexCtx.lineWidth=Math.max(2,r*0.12); bagTexCtx.strokeStyle='rgba(0,0,0,0.35)'; bagTexCtx.stroke();
+    bagTexCtx.restore();
+  });
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -11046,6 +11063,7 @@ var A2D = {
   labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
   subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:0.6,    /* per-face sub-label size + colour + opacity */
+  measureShow:true, measureSize:14, measureColor:'#555555', measureWeight:600,   /* price-tag W/H dimension arrows (testing-tunable) */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
   snapDist:0.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
@@ -11788,6 +11806,34 @@ function atlas2dRender(){
     var _chk=_isReg?_regionChecked(it.target.region):(_isHandles?!(_selL && _selL.faceHide && _selL.faceHide.handles):true);
     _drawLabelPill(p.x, cyC, it.label, _mainFP, it.target, _tog, _chk, _fin);
   });
+  /* ── PRICE TAG: width/height dimension arrows + hole guide (2D-editor overlay) ── */
+  if (A2D.measureShow !== false && typeof currentTagDims !== 'undefined' && currentTagDims) {
+    var _mC = (typeof _themeColor==='function') ? _themeColor(A2D.measureColor||'#555555') : (A2D.measureColor||'#555555');
+    var _mFP = (A2D.measureSize||14)*D, _gap = 18*D, _hl = 6*D;
+    function _S(ax,ay){ var p=_a2s(ax,ay); return { x:p.x, y:c.height-p.y }; }
+    function _arrowH(x0,x1,y){ ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y);
+      ctx.moveTo(x0,y); ctx.lineTo(x0+_hl,y-_hl*0.7); ctx.moveTo(x0,y); ctx.lineTo(x0+_hl,y+_hl*0.7);
+      ctx.moveTo(x1,y); ctx.lineTo(x1-_hl,y-_hl*0.7); ctx.moveTo(x1,y); ctx.lineTo(x1-_hl,y+_hl*0.7); ctx.stroke(); }
+    function _arrowV(y0,y1,x){ ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y1);
+      ctx.moveTo(x,y0); ctx.lineTo(x-_hl*0.7,y0+_hl); ctx.moveTo(x,y0); ctx.lineTo(x+_hl*0.7,y0+_hl);
+      ctx.moveTo(x,y1); ctx.lineTo(x-_hl*0.7,y1-_hl); ctx.moveTo(x,y1); ctx.lineTo(x+_hl*0.7,y1-_hl); ctx.stroke(); }
+    ctx.save();
+    ctx.strokeStyle=_mC; ctx.fillStyle=_mC; ctx.lineWidth=Math.max(1,1.4*D); ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.font=(A2D.measureWeight||600)+' '+_mFP+'px -apple-system, system-ui, sans-serif';
+    [uv.exterior, uv.interior].forEach(function(bb){
+      if(!bb) return;
+      var c0=_S(bb.x,bb.y), c1=_S(bb.x+bb.w,bb.y), c2=_S(bb.x+bb.w,bb.y+bb.h), c3=_S(bb.x,bb.y+bb.h);
+      var L=Math.min(c0.x,c1.x,c2.x,c3.x), R=Math.max(c0.x,c1.x,c2.x,c3.x), T=Math.min(c0.y,c1.y,c2.y,c3.y), B=Math.max(c0.y,c1.y,c2.y,c3.y);
+      _arrowH(L, R, B+_gap);
+      ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText((currentTagDims.w)+' cm', (L+R)/2, B+_gap+_mFP*0.45);
+      _arrowV(T, B, L-_gap);
+      ctx.save(); ctx.translate(L-_gap-_mFP*0.6,(T+B)/2); ctx.rotate(-Math.PI/2);
+      ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
+      var hr=(2.5/((currentTagDims.w||6)*10))*(R-L);
+      if(hr>1){ ctx.beginPath(); ctx.arc((L+R)/2, T+(B-T)*0.12, hr, 0, Math.PI*2); ctx.stroke(); }
+    });
+    ctx.restore();
+  }
   /* per-face sub-labels (front/back/left/right/base) — only when the per-face GLB populated
      BAG_FACES. Pill centred inside each face; position (top/bottom/center) testing-tunable. */
   if (typeof BAG_FACES !== 'undefined' && BAG_FACES){
