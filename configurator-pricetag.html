@@ -4306,18 +4306,13 @@ function drawBagTexture() {
 function _drawTagHole(ctx){
   ctx = ctx || bagTexCtx;
   if (!ctx || typeof currentTagDims==='undefined' || !currentTagDims) return;
-  var isClean = (typeof bagCleanCtx!=='undefined' && ctx === bagCleanCtx);   /* the 2D-editor snapshot (vs the atlas the mockup crops) */
-  var rimCol = (typeof _themeColor==='function') ? _themeColor((typeof A2D!=='undefined'&&A2D.outlineColor)||'#000000') : ((typeof A2D!=='undefined'&&A2D.outlineColor)||'#000');
   [bagExtClip, bagIntClip].forEach(function(clip){
     if(!clip||!clip.bbox) return;
     var bb=clip.bbox, r=(2.5/((currentTagDims.w||6)*10))*bb.w;
     if(!(r>1)) return;
     var cx=bb.x+bb.w/2, cy=bb.y+bb.h*0.88;   /* top of the tag after the V flip */
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();   /* punch transparent */
-    ctx.globalCompositeOperation='source-over';
-    /* 2D editor: a solid rim in the outline colour (matches the face border). The atlas (mockup) gets NO rim — the real photographed hole shows there instead. */
-    if (isClean){ ctx.lineWidth=Math.max(2,r*0.09); ctx.strokeStyle=rimCol; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }
+    ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();   /* punch transparent only — the rim is a 2D-editor overlay (renderA2D), so it never bakes into the mockup */
     ctx.restore();
   });
 }
@@ -11340,12 +11335,16 @@ function _prepMockupAssets(imgs){
 }
 /* The baked FRONT-face artwork, cropped from the colour atlas (clean — no labels/handles). */
 function _frontDesignCanvas(){
-  if (typeof bagTexCanvas==='undefined' || !bagTexCanvas || typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.exterior) return null;
+  /* crop from the CLEAN atlas (true colours, NO 3D finish/PBR albedo overlay) so the mockup
+     matches the 2D editor's brightness — bagTexCanvas has the finish baked on and reads dark. */
+  var src = (typeof bagCleanCanvas!=='undefined' && bagCleanCanvas && bagCleanCanvas.width) ? bagCleanCanvas
+          : (typeof bagTexCanvas!=='undefined' ? bagTexCanvas : null);
+  if (!src || typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.exterior) return null;
   var r = BAG_UV.exterior, w = Math.max(1, Math.round(r.w)), h = Math.max(1, Math.round(r.h));
   var c = document.createElement('canvas'); c.width = w; c.height = h;
   var cx = c.getContext('2d');
   cx.translate(0, h); cx.scale(1, -1);   /* the atlas stores the face V-flipped (geometry maps V via (hh-y)); un-flip so it reads upright on the mockup */
-  cx.drawImage(bagTexCanvas, r.x, r.y, r.w, r.h, 0, 0, w, h);
+  cx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, w, h);
   return c;
 }
 function renderTagMockup(){
@@ -12147,7 +12146,10 @@ function atlas2dRender(){
       _arrowV(T, B, L-_gap);
       ctx.save(); ctx.translate(L-_gap-_mFP*0.6,(T+B)/2); ctx.rotate(-Math.PI/2);
       ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
-      /* the hole is punched into the atlas itself (transparent) — no overlay ring needed */
+      /* hole rim — drawn as a 2D-editor OVERLAY (not baked into the texture), so the mockup, which crops the clean atlas, never shows a ring; the hole itself stays punched transparent */
+      if (currentTagDims){ var _hr=(2.5/((currentTagDims.w||6)*10))*bb.w*a2d.zoom, _hC=_S(bb.x+bb.w/2, bb.y+bb.h*0.88);
+        ctx.save(); ctx.beginPath(); ctx.arc(_hC.x,_hC.y,_hr,0,Math.PI*2);
+        ctx.lineWidth=Math.max(1.5,_hr*0.12); ctx.strokeStyle=(typeof _themeColor==='function')?_themeColor((A2D&&A2D.outlineColor)||'#000'):'#000'; ctx.stroke(); ctx.restore(); }
       /* corner resize handles — only when custom sizing is enabled (fixed sizes → no handles) */
       if (typeof TAG_ALLOW_CUSTOM!=='undefined' && TAG_ALLOW_CUSTOM){
         var _hs=4.5*D;
