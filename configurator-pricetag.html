@@ -2878,7 +2878,7 @@
 
       <!-- Floor / Ground -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Floor / Ground</div>
-      <label class="test-check-row"><input type="checkbox" id="rlm-floor-on" checked onchange="onFloorToggle(this.checked)"><span>Show floor</span></label>
+      <label class="test-check-row"><input type="checkbox" id="rlm-floor-on" onchange="onFloorToggle(this.checked)"><span>Show floor</span></label>
       <div style="display:flex;align-items:center;gap:8px;margin:6px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Floor color</span><input type="color" value="#d4cec4" oninput="onFloorColor(this.value)" style="width:40px;height:24px;border:none;background:none;cursor:pointer;"></div>
       <div class="slider-row">
         <div class="slider-top"><span class="slider-name">Floor opacity</span><span class="slider-val" id="rlm-floor-opacity-val">1.00</span></div>
@@ -3700,7 +3700,7 @@ var REALISM = {
   /* real soft contact shadow (replaces the fake blob) */
   shadowOn: false, shadowDarkness: 0.30,
   /* reflective studio floor */
-  floorOn: true, floorColor: '#d4cec4', floorRough: 1.00, floorMetal: 0.00, floorEnv: 0.00, floorOpacity: 1.00, floorY: -0.699,
+  floorOn: false, floorColor: '#d4cec4', floorRough: 1.00, floorMetal: 0.00, floorEnv: 0.00, floorOpacity: 1.00, floorY: -0.699,
   /* post-processing master + per-effect (all heavier — master off by default) */
   postOn: true,
   ssao:     { on:false, radius:0.50, minDist:0.003, maxDist:0.080 },
@@ -5362,6 +5362,8 @@ function _rebuildTagGeometry(){
   var old=bagMeshRef.geometry; bagMeshRef.geometry=merged; if(old&&old.dispose) old.dispose();
   bagExtClip=computeIslandRegion(tg.front); bagIntClip=computeIslandRegion(tg.back);
   if(bagExtClip) BAG_UV.exterior=bagExtClip.bbox; if(bagIntClip) BAG_UV.interior=bagIntClip.bbox;
+  /* re-fit full-cover backgrounds to the NEW face union so the pattern keeps covering the resized tag */
+  if(BAG.artwork && BAG.artwork.layers) BAG.artwork.layers.forEach(function(L){ if(L && L.isBackground && typeof _fitTiledBoxToBag==='function') _fitTiledBoxToBag(L); });
   if(typeof buildUVGuide==='function') buildUVGuide();
   /* re-frame to ~1.4 units + pin to ground */
   bagGroup.scale.setScalar(1); bagGroup.position.set(0,0,0); bagGroup.updateMatrixWorld(true);
@@ -9960,7 +9962,7 @@ function _drawTagMeasure3D(){
     var zf=bb.max.z;                                /* front face = +Z side of the flat card */
     var minX=bb.min.x, maxX=bb.max.x, minY=bb.min.y, maxY=bb.max.y;
     var W=maxX-minX, H=maxY-minY, S=Math.max(W,H,1e-4);
-    var off=S*0.10, ah=S*0.045, ext=off*0.45;       /* gap / arrowhead / witness overshoot — ALL in plane (world) units */
+    var off=S*0.10, ah=S*0.045;                      /* gap from edge / arrowhead size — in plane (world) units */
     /* Project a point that lies IN the tag's plane (world XY at z=zf) → screen px. By building the
        whole dimension (lines, arrowheads, labels) from in-plane points and projecting each, the arrows
        lie on the tag's surface and foreshorten with it at any camera angle (no more screen-flat look). */
@@ -9986,11 +9988,9 @@ function _drawTagMeasure3D(){
     }
     /* WIDTH — line parallel to the bottom edge, offset OUTWARD (−Y) below the tag */
     var wy=minY-off;
-    seg(P(minX,minY), P(minX,wy-ext)); seg(P(maxX,minY), P(maxX,wy-ext));   /* witness lines */
     dim(minX,wy, maxX,wy, 1,0, 0,-1, currentTagDims.w+' cm');
     /* HEIGHT — line parallel to the left edge, offset OUTWARD (−X) left of the tag */
     var hx=minX-off;
-    seg(P(minX,minY), P(hx-ext,minY)); seg(P(minX,maxY), P(hx-ext,maxY));   /* witness lines */
     dim(hx,minY, hx,maxY, 0,1, -1,0, currentTagDims.h+' cm');
   } catch(e){}
 }
@@ -12001,7 +12001,7 @@ function atlas2dRender(){
   labelDefs.forEach(function(it){
     if(!it.bb) return;
     var p=_a2s(it.bb.x + it.bb.w/2, it.bb.y + it.bb.h), ly=c.height - p.y;  /* island top edge, centered */
-    var cyC=ly - 5*D - _mainFP*0.78;   /* pill sits just above the island top edge */
+    var cyC=ly - 20*D - _mainFP*0.78;   /* pill sits above the island top edge (extra gap so it clears the working area) */
     var _isReg=(it.target.kind==='region'), _isHandles=(it.target.kind==='handles');
     var _tog=(_isReg && _selL)?{type:'facetoggle', region:it.target.region}
             :(_isHandles && _selL)?{type:'facetoggle', region:'handles'}:null;   /* per-layer show/hide on the handles too */
