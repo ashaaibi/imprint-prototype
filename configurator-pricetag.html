@@ -1669,7 +1669,7 @@
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
         <div class="cfg-loader-text" id="bag-switch-text">Reshaping your bag…</div>
       </div>
-      <div class="dim-pill" id="dim-pill">3 × 5 cm</div>
+      <div class="dim-pill" id="dim-pill">5 × 8 cm</div>
       <div class="mode-toggle" id="mode-toggle">
         <button data-mode="3d" onclick="setViewMode('3d')">3D</button>
         <button class="on" data-mode="2d" onclick="setViewMode('2d')">2D</button>
@@ -1944,12 +1944,7 @@
     <div class="cs bag-section config-step" data-cstep="1">
       <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
       <div class="bag-size-list">
-        <button class="bag-sopt" onclick="onBagSize('s6x6',this)">
-          <span class="bag-sopt-key">6 × 6 cm</span>
-          <span class="bag-sopt-dims" data-en="Square tag" data-ar="بطاقة مربعة">Square tag</span>
-          <span class="bag-sopt-price">from AED 0.90/unit</span>
-        </button>
-        <button class="bag-sopt on" onclick="onBagSize('s3x5',this)">
+        <button class="bag-sopt" onclick="onBagSize('s3x5',this)">
           <span class="bag-sopt-key">3 × 5 cm</span>
           <span class="bag-sopt-dims" data-en="Small tag" data-ar="بطاقة صغيرة">Small tag</span>
           <span class="bag-sopt-price">from AED 0.70/unit</span>
@@ -1959,18 +1954,21 @@
           <span class="bag-sopt-dims" data-en="Tall tag" data-ar="بطاقة طويلة">Tall tag</span>
           <span class="bag-sopt-price">from AED 0.95/unit</span>
         </button>
-        <button class="bag-sopt" id="bag-sopt-custom" onclick="onBagSizeCustom(this)">
-          <span class="bag-sopt-key" data-en="Custom size" data-ar="مقاس مخصص">Custom size</span>
-          <span class="bag-sopt-dims" id="custom-size-dims">6 × 6 cm</span>
-          <span class="bag-sopt-price" data-en="enter your own" data-ar="أدخل مقاسك">enter your own</span>
+        <button class="bag-sopt on" onclick="onBagSize('s5x8',this)">
+          <span class="bag-sopt-key">5 × 8 cm</span>
+          <span class="bag-sopt-dims" data-en="Standard" data-ar="قياسي">Standard</span>
+          <span class="bag-sopt-price">from AED 1.15/unit</span>
         </button>
-      </div>
-      <div id="custom-size-panel" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--imp-border);border-radius:12px;background:var(--imp-surface-2);">
-        <div style="display:flex;gap:8px;align-items:flex-end;">
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Width" data-ar="العرض">Width</span><br><input id="cs-w" type="number" min="1" max="14" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" max="30" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
-        </div>
-        <div style="margin-top:8px;font-size:10px;color:var(--imp-fg-3);line-height:1.45;" data-en="Resizes the tag — width × height in cm (the hole stays a standard size)." data-ar="يغيّر حجم البطاقة — العرض × الارتفاع بالسنتيمتر (الثقب يبقى بحجم قياسي).">Resizes the tag — width × height in cm (the hole stays a standard size).</div>
+        <button class="bag-sopt" onclick="onBagSize('s5x9',this)">
+          <span class="bag-sopt-key">5 × 9 cm</span>
+          <span class="bag-sopt-dims" data-en="Large" data-ar="كبيرة">Large</span>
+          <span class="bag-sopt-price">from AED 1.25/unit</span>
+        </button>
+        <button class="bag-sopt" onclick="onBagSize('s6x10',this)">
+          <span class="bag-sopt-key">6 × 10 cm</span>
+          <span class="bag-sopt-dims" data-en="Oversized" data-ar="كبيرة جدًا">Oversized</span>
+          <span class="bag-sopt-price">from AED 1.55/unit</span>
+        </button>
       </div>
     </div>
 
@@ -3093,20 +3091,29 @@ var BAG_UV = {
 var BAG_FACES = { exterior: {}, interior: {} };
 
 /* ─── BAG MODELS (3 sizes = 3 GLBs) ─────────────────────────────────── */
-var currentTagDims = { w:3, h:5 };   /* live tag size (cm), set by the builder — default = 3×5 "Small tag" */
+var currentTagDims = { w:5, h:8 };   /* live tag size (cm), set by the builder — default = 5×8 (retail standard) */
+var TAG_ALLOW_CUSTOM = false;        /* fixed sizes only: custom W/H inputs removed + drag-corner resize disabled */
 var currentTagBevel = 0;             /* 0 = sharp rectangle … 1 = fully rounded (a circle when square) */
 const BAG_MODELS = {
-  s6x6: { key:'s6x6', label:'6 × 6 cm', w:6, h:6, dims:'6 × 6 cm', file:'',
-    uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
-    tiers:[{qty:1000,pu:0.90,save:0},{qty:1500,pu:0.79,save:12},{qty:2000,pu:0.70,save:22},{qty:2500,pu:0.63,save:30}] },
+  /* Fixed retail tag sizes (custom sizing disabled). pu = placeholder per-unit prices scaled by
+     area — replace with real pricing. save% kept consistent: 1500/2000/2500 = base × 0.88/0.78/0.70. */
   s3x5: { key:'s3x5', label:'3 × 5 cm', w:3, h:5, dims:'3 × 5 cm', file:'',
     uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
     tiers:[{qty:1000,pu:0.70,save:0},{qty:1500,pu:0.62,save:12},{qty:2000,pu:0.55,save:22},{qty:2500,pu:0.49,save:30}] },
   s4x7: { key:'s4x7', label:'4 × 7 cm', w:4, h:7, dims:'4 × 7 cm', file:'',
     uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
     tiers:[{qty:1000,pu:0.95,save:0},{qty:1500,pu:0.84,save:12},{qty:2000,pu:0.74,save:22},{qty:2500,pu:0.67,save:30}] },
+  s5x8: { key:'s5x8', label:'5 × 8 cm', w:5, h:8, dims:'5 × 8 cm', file:'',
+    uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
+    tiers:[{qty:1000,pu:1.15,save:0},{qty:1500,pu:1.01,save:12},{qty:2000,pu:0.90,save:22},{qty:2500,pu:0.81,save:30}] },
+  s5x9: { key:'s5x9', label:'5 × 9 cm', w:5, h:9, dims:'5 × 9 cm', file:'',
+    uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
+    tiers:[{qty:1000,pu:1.25,save:0},{qty:1500,pu:1.10,save:12},{qty:2000,pu:0.98,save:22},{qty:2500,pu:0.88,save:30}] },
+  s6x10: { key:'s6x10', label:'6 × 10 cm', w:6, h:10, dims:'6 × 10 cm', file:'',
+    uv:{ exterior:{x:140,y:614,w:820,h:820}, interior:{x:1088,y:614,w:820,h:820} }, front:{ posU:27.00, posV:50.00 },
+    tiers:[{qty:1000,pu:1.55,save:0},{qty:1500,pu:1.36,save:12},{qty:2000,pu:1.21,save:22},{qty:2500,pu:1.09,save:30}] },
 };
-var currentBagModel = 's3x5';
+var currentBagModel = 's5x8';
 /* ── PDP hand-off ── product.html opens us with ?size=&qty=&pmul=&mfr=&step= so the user can
    pre-pick size/quantity/manufacturer there, then land on the Design step. Read it before the
    first build so the correct model loads and the price reflects the manufacturer. */
@@ -10978,7 +10985,7 @@ onPatternStretch('interior', 'v', 1.25);
 
 /* Update size option prices to selected country currency */
 (function() {
-  var sizePrices = [5.90, 6.20, 7.50, 8.90, 9.80];
+  var sizePrices = [0.70, 0.95, 1.15, 1.25, 1.55];   /* card "from" price per size = its 1000-qty tier (matches BAG_MODELS) */
   var priceEls = document.querySelectorAll('.bag-sopt-price');
   priceEls.forEach(function(el, i) {
     if (sizePrices[i] !== undefined) {
@@ -11037,7 +11044,7 @@ document.addEventListener('imprint:langchange', function(e) {
 document.addEventListener('imprint:countrychange', function() {
   /* shared.js triggers a reload, but if it changes behavior in future
      these handlers will refresh size prices and totals. */
-  var sizePrices = [5.90, 6.20, 7.50, 8.90, 9.80];
+  var sizePrices = [0.70, 0.95, 1.15, 1.25, 1.55];   /* card "from" price per size = its 1000-qty tier (matches BAG_MODELS) */
   document.querySelectorAll('.bag-sopt-price').forEach(function(el, i) {
     if (sizePrices[i] !== undefined) el.textContent = 'from ' + fmtUnit(sizePrices[i]) + '/unit';
   });
@@ -11372,6 +11379,7 @@ function _hitHandle(sp){
 /* Price tag: grab a CORNER of the front/back rectangle to resize the whole tag (W×H).
    Returns { region, signU, signV } (sign of the grabbed corner vs the region centre) or null. */
 function _hitTagCorner(sp){
+  if (!TAG_ALLOW_CUSTOM) return null;   /* fixed sizes only — drag-to-resize disabled */
   if (typeof currentTagDims==='undefined' || !currentTagDims || typeof BAG_UV==='undefined' || !BAG_UV) return null;
   if (typeof A2D!=='undefined' && A2D.measureShow===false) return null;   /* handles ride with the measurements */
   var R=Math.max(16,(A2D.handleSize||10)+8)*a2d.dpr, regs=[['exterior',BAG_UV.exterior],['interior',BAG_UV.interior]];
