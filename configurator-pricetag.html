@@ -379,7 +379,7 @@
     }
     /* 3D / 2D mode toggle (top-left) */
     .mode-toggle {
-      position: absolute; top: 16px; right: 16px; display: inline-flex; z-index: 3;
+      position: absolute; top: 16px; right: 16px; display: inline-flex; z-index: 8;
       background: var(--imp-surface); border: 1px solid var(--imp-border);
       border-radius: var(--imp-r-pill); padding: 3px; gap: 2px; box-shadow: var(--imp-shadow-xs);
     }
@@ -2900,8 +2900,8 @@
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:2px 0 4px;line-height:1.4;">Lower roughness → sharper reflections. Reflectivity = how strongly the environment shows in the floor. Opacity fades the whole floor out.</div>
       <div style="margin-top:16px;margin-bottom:8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Mockup preview — AO map</div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">AO intensity</span><span class="slider-val" id="mockup-ao-val">55%</span></div>
-        <input type="range" class="test-slider" id="mockup-ao" min="0" max="1" step="0.05" value="0.55" oninput="onMockupAO(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">AO intensity</span><span class="slider-val" id="mockup-ao-val">100%</span></div>
+        <input type="range" class="test-slider" id="mockup-ao" min="0" max="1" step="0.05" value="1" oninput="onMockupAO(this.value)"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0 6px;"><span style="font-size:11px;color:var(--secondary);flex:1;">Blend mode</span>
         <select id="mockup-ao-blend" onchange="onMockupAOblend(this.value)" style="flex:1;padding:5px 6px;border:1px solid var(--imp-border);border-radius:6px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;cursor:pointer;">
           <option value="multiply" selected>Multiply</option><option value="source-over">Normal</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="screen">Screen</option><option value="darken">Darken</option>
@@ -11229,7 +11229,7 @@ var A2D = {
   labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
   subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:0.6,    /* per-face sub-label size + colour + opacity */
-  measureShow:true, measureSize:14, measureColor:'#555555', measureWeight:600, mockupAO:0.55, mockupAOblend:'multiply', mockupAOinvert:false,   /* W/H arrows + mockup AO map (testing-tunable) */
+  measureShow:true, measureSize:14, measureColor:'#555555', measureWeight:600, mockupAO:1.0, mockupAOblend:'multiply', mockupAOinvert:false,   /* W/H arrows + mockup AO map (testing-tunable) */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
   snapDist:0.5,                                  /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
@@ -12137,15 +12137,16 @@ function atlas2dRender(){
     ctx.save();
     ctx.strokeStyle=_mC; ctx.fillStyle=_mC; ctx.lineWidth=Math.max(1,1.4*D); ctx.lineCap='round'; ctx.lineJoin='round';
     ctx.font=(A2D.measureWeight||600)+' '+_mFP+'px -apple-system, system-ui, sans-serif';
-    [uv.exterior, uv.interior].forEach(function(bb){
+    [uv.exterior, uv.interior].forEach(function(bb, _idx){
       if(!bb) return;
       var c0=_S(bb.x,bb.y), c1=_S(bb.x+bb.w,bb.y), c2=_S(bb.x+bb.w,bb.y+bb.h), c3=_S(bb.x,bb.y+bb.h);
       var L=Math.min(c0.x,c1.x,c2.x,c3.x), R=Math.max(c0.x,c1.x,c2.x,c3.x), T=Math.min(c0.y,c1.y,c2.y,c3.y), B=Math.max(c0.y,c1.y,c2.y,c3.y);
       _arrowH(L, R, B+_gap);
       ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText((currentTagDims.w)+' cm', (L+R)/2, B+_gap+_mFP*0.45);
-      _arrowV(T, B, L-_gap);
-      ctx.save(); ctx.translate(L-_gap-_mFP*0.6,(T+B)/2); ctx.rotate(-Math.PI/2);
-      ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
+      var _hX = (_idx===1) ? (R+_gap) : (L-_gap);   /* back (interior) → height arrow on the RIGHT so it doesn't crowd the front/back gap */
+      _arrowV(T, B, _hX);
+      ctx.save(); ctx.translate(_hX + (_idx===1?_mFP*0.6:-_mFP*0.6),(T+B)/2); ctx.rotate(-Math.PI/2);
+      ctx.textAlign='center'; ctx.textBaseline=(_idx===1?'top':'bottom'); ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
       /* hole rim — drawn as a 2D-editor OVERLAY (not baked into the texture), so the mockup, which crops the clean atlas, never shows a ring; the hole itself stays punched transparent */
       if (currentTagDims){ var _hr=(2.5/((currentTagDims.w||6)*10))*bb.w*a2d.zoom, _hC=_S(bb.x+bb.w/2, bb.y+bb.h*0.88);
         ctx.save(); ctx.beginPath(); ctx.arc(_hC.x,_hC.y,_hr,0,Math.PI*2);
