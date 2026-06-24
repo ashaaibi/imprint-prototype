@@ -1675,10 +1675,14 @@
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
         <div class="cfg-loader-text" id="bag-switch-text">Reshaping your bag…</div>
       </div>
+      <div id="mockup-loader" style="display:none;position:absolute;inset:0;z-index:6;background:var(--imp-surface);flex-direction:column;gap:16px;align-items:center;justify-content:center;border-radius:inherit;">
+        <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
+        <div class="cfg-loader-text">Rendering your mockup…</div>
+      </div>
       <div class="dim-pill" id="dim-pill">5 × 8 cm</div>
       <div class="mode-toggle" id="mode-toggle">
-        <button data-mode="preview" onclick="setViewMode('preview')">Preview</button>
         <button class="on" data-mode="2d" onclick="setViewMode('2d')">2D</button>
+        <button data-mode="preview" onclick="setViewMode('preview')">Preview</button>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
       <div id="mini3d-resize" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 26 26" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 13 A7 7 0 0 1 13 6"/></svg></div>
@@ -2901,6 +2905,14 @@
         <input type="range" class="test-slider" id="rlm-floor-env-slider" min="0" max="3" step="0.05" value="0.00" oninput="onFloorEnv(this.value)">
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:2px 0 4px;line-height:1.4;">Lower roughness → sharper reflections. Reflectivity = how strongly the environment shows in the floor. Opacity fades the whole floor out.</div>
+      <div style="margin-top:16px;margin-bottom:8px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Mockup preview — AO map</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">AO intensity</span><span class="slider-val" id="mockup-ao-val">55%</span></div>
+        <input type="range" class="test-slider" id="mockup-ao" min="0" max="1" step="0.05" value="0.55" oninput="onMockupAO(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0 6px;"><span style="font-size:11px;color:var(--secondary);flex:1;">Blend mode</span>
+        <select id="mockup-ao-blend" onchange="onMockupAOblend(this.value)" style="flex:1;padding:5px 6px;border:1px solid var(--imp-border);border-radius:6px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;cursor:pointer;">
+          <option value="multiply" selected>Multiply</option><option value="source-over">Normal</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="screen">Screen</option><option value="darken">Darken</option>
+        </select></div>
+      <label class="test-check-row"><input type="checkbox" id="mockup-ao-invert" onchange="onMockupAOinvert(this.checked)"><span>Invert AO map</span></label>
 
       <!-- Post-processing -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Post-Processing (heavier)</div>
@@ -4288,6 +4300,7 @@ function drawBagTexture() {
 
   if (typeof _drawTagHole === 'function') _drawTagHole();   /* punch the price-tag hole onto the atlas (shows in 3D) */
   if (bagTexture) bagTexture.needsUpdate = true;
+  if (viewMode === 'preview' && typeof _scheduleMockupRender === 'function') _scheduleMockupRender();   /* live-update the photoreal preview on any design change (rAF-coalesced) */
   if (!_lightBake()) {            /* skip heavy passes while dragging → smooth FPS; full redraw on release */
     rebuildBumpMap();
     if (typeof scheduleHistory === 'function') scheduleHistory();
@@ -4299,15 +4312,18 @@ function drawBagTexture() {
 function _drawTagHole(ctx){
   ctx = ctx || bagTexCtx;
   if (!ctx || typeof currentTagDims==='undefined' || !currentTagDims) return;
+  var isClean = (typeof bagCleanCtx!=='undefined' && ctx === bagCleanCtx);   /* the 2D-editor snapshot (vs the atlas the mockup crops) */
+  var rimCol = (typeof _themeColor==='function') ? _themeColor((typeof A2D!=='undefined'&&A2D.outlineColor)||'#000000') : ((typeof A2D!=='undefined'&&A2D.outlineColor)||'#000');
   [bagExtClip, bagIntClip].forEach(function(clip){
     if(!clip||!clip.bbox) return;
     var bb=clip.bbox, r=(2.5/((currentTagDims.w||6)*10))*bb.w;
     if(!(r>1)) return;
     var cx=bb.x+bb.w/2, cy=bb.y+bb.h*0.88;   /* top of the tag after the V flip */
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();   /* punch transparent (treated as background) */
+    ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();   /* punch transparent */
     ctx.globalCompositeOperation='source-over';
-    ctx.lineWidth=Math.max(2,r*0.10); ctx.strokeStyle='rgba(0,0,0,0.30)'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();   /* thin rim so it reads as a punched hole */
+    /* 2D editor: a solid rim in the outline colour (matches the face border). The atlas (mockup) gets NO rim — the real photographed hole shows there instead. */
+    if (isClean){ ctx.lineWidth=Math.max(2,r*0.09); ctx.strokeStyle=rimCol; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }
     ctx.restore();
   });
 }
@@ -11222,7 +11238,7 @@ var A2D = {
   labelStroke:5, labelStrokeColor:'#ffffff',   /* outline behind labels for contrast */
   invertLabelDark:false, invertSubLabelDark:false, invertSilhouetteDark:false,  /* auto-invert these colours in dark mode */
   subLabelSize:12, subLabelColor:'#333333', subLabelOpacity:0.6,    /* per-face sub-label size + colour + opacity */
-  measureShow:true, measureSize:14, measureColor:'#555555', measureWeight:600,   /* price-tag W/H dimension arrows (testing-tunable) */
+  measureShow:true, measureSize:14, measureColor:'#555555', measureWeight:600, mockupAO:0.55, mockupAOblend:'multiply', mockupAOinvert:false,   /* W/H arrows + mockup AO map (testing-tunable) */
   subLabelPos:'bottom',                          /* center | bottom | top | topleft */
   snapDist:3,                                    /* magnetic snap radius to a face centre (posU/posV %) */
   offIslandOpacity:0.1,                          /* opacity for the off-island area (lower = stronger fade) */
@@ -11336,23 +11352,40 @@ function _frontDesignCanvas(){
 }
 function renderTagMockup(){
   var cvs = document.getElementById('tag-mockup'); if(!cvs) return;
+  if (!_mockupAssets) _showMockupLoader(true);   /* first load only — assets are cached afterwards, so live re-renders are instant */
   _loadMockupAssets(function(A){
+    _showMockupLoader(false);
     if (viewMode !== 'preview') return;   /* user may have left the view while the assets loaded */
     cvs.width = A.W; cvs.height = A.H;
-    var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,A.W,A.H);
-    ctx.drawImage(A.base, 0, 0, A.W, A.H);                                    /* 1. scene + blank tag */
-    if (typeof drawBagTexture==='function') drawBagTexture();                 /* ensure the colour atlas is fresh */
+    var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
+    ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
     var design = _frontDesignCanvas();
-    if (design){                                                             /* 2. design, fitted to the face & clipped to the mask (hole punched) */
+    if (design){                                                              /* 2. design, fitted to the face & clipped to the mask (hole punched) */
       var tmp = document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
       tx.drawImage(design, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
       tx.globalCompositeOperation='destination-in'; tx.drawImage(A.maskAlpha, 0, 0);
       ctx.drawImage(tmp, 0, 0);
     }
-    ctx.globalCompositeOperation='multiply';    ctx.drawImage(A.shadow, 0, 0, A.W, A.H);   /* 3. tag shading + paper texture */
-    ctx.globalCompositeOperation='source-over'; ctx.drawImage(A.string, 0, 0, A.W, A.H);   /* 4. cotton string, in front */
+    /* 3. AO / shadow map — Testing-tunable intensity, blend mode + optional invert */
+    var aoImg = A2D.mockupAOinvert ? _invertedShadow(A) : A.shadow;
+    ctx.globalCompositeOperation = A2D.mockupAOblend || 'multiply';
+    ctx.globalAlpha = (A2D.mockupAO!=null ? A2D.mockupAO : 0.55);
+    ctx.drawImage(aoImg, 0, 0, A.W, A.H);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation='source-over';
+    ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. cotton string, in front */
   });
 }
+function _invertedShadow(A){
+  if (A._inv) return A._inv;
+  var c=document.createElement('canvas'); c.width=A.W; c.height=A.H; var x=c.getContext('2d');
+  x.drawImage(A.shadow,0,0); var d=x.getImageData(0,0,A.W,A.H), p=d.data;
+  for (var i=0;i<p.length;i+=4){ p[i]=255-p[i]; p[i+1]=255-p[i+1]; p[i+2]=255-p[i+2]; }
+  x.putImageData(d,0,0); A._inv=c; return c;
+}
+function _showMockupLoader(on){ var el=document.getElementById('mockup-loader'); if(el) el.style.display = on ? 'flex' : 'none'; }
+function onMockupAO(v){ A2D.mockupAO=Math.max(0,Math.min(1,parseFloat(v)||0)); var e=document.getElementById('mockup-ao-val'); if(e)e.textContent=Math.round(A2D.mockupAO*100)+'%'; if(viewMode==='preview') _scheduleMockupRender(); }
+function onMockupAOblend(v){ A2D.mockupAOblend=v||'multiply'; if(viewMode==='preview') _scheduleMockupRender(); }
+function onMockupAOinvert(on){ A2D.mockupAOinvert=!!on; if(viewMode==='preview') _scheduleMockupRender(); }
 function _scheduleMockupRender(){ if(_mockupRAF) return; _mockupRAF = requestAnimationFrame(function(){ _mockupRAF=0; if(viewMode==='preview') renderTagMockup(); }); }
 function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelector('.canvas-stage'); if(stage) stage.classList.toggle('no-preview', viewMode==='2d' && !A2D.previewOn); }
 /* Keyboard shortcuts for the selected (2D-editor) layer: Delete, Cmd/Ctrl C/V, Cmd/Ctrl D. */
@@ -12117,10 +12150,12 @@ function atlas2dRender(){
       ctx.save(); ctx.translate(L-_gap-_mFP*0.6,(T+B)/2); ctx.rotate(-Math.PI/2);
       ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText((currentTagDims.h)+' cm', 0, 0); ctx.restore();
       /* the hole is punched into the atlas itself (transparent) — no overlay ring needed */
-      /* corner resize handles — drag any corner to change the tag W×H (measurements follow live) */
-      var _hs=4.5*D;
-      [c0,c1,c2,c3].forEach(function(cp){ ctx.beginPath(); ctx.rect(cp.x-_hs,cp.y-_hs,_hs*2,_hs*2);
-        ctx.fillStyle='#ffffff'; ctx.fill(); ctx.lineWidth=Math.max(1,1.4*D); ctx.strokeStyle=_mC; ctx.stroke(); });
+      /* corner resize handles — only when custom sizing is enabled (fixed sizes → no handles) */
+      if (typeof TAG_ALLOW_CUSTOM!=='undefined' && TAG_ALLOW_CUSTOM){
+        var _hs=4.5*D;
+        [c0,c1,c2,c3].forEach(function(cp){ ctx.beginPath(); ctx.rect(cp.x-_hs,cp.y-_hs,_hs*2,_hs*2);
+          ctx.fillStyle='#ffffff'; ctx.fill(); ctx.lineWidth=Math.max(1,1.4*D); ctx.strokeStyle=_mC; ctx.stroke(); });
+      }
     });
     ctx.restore();
   }
@@ -12151,22 +12186,7 @@ function atlas2dRender(){
     });
     ctx.restore();
   }
-  /* Bag size readout (W × H × D) — top-left of the 2D editor; updates with the selected size. */
-  try {
-    var _szM = (typeof BAG_MODELS !== 'undefined' && typeof currentBagModel !== 'undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
-    if (_szM && _szM.dims) {
-      var _szTxt = (_arL ? 'المقاس: ' : 'Size: ') + _szM.dims;
-      ctx.save();
-      ctx.font = '700 ' + Math.round(13 * D) + 'px Inter, Arial, sans-serif';
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      var _szPad = 11 * D, _szW = ctx.measureText(_szTxt).width, _szBx = 14 * D, _szBy = 14 * D, _szBh = 30 * D, _szBw = _szW + _szPad * 2;
-      ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1 * D;
-      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(_szBx, _szBy, _szBw, _szBh, 8 * D); ctx.fill(); ctx.stroke(); }
-      else { ctx.fillRect(_szBx, _szBy, _szBw, _szBh); ctx.strokeRect(_szBx, _szBy, _szBw, _szBh); }
-      ctx.fillStyle = '#33312c'; ctx.fillText(_szTxt, _szBx + _szPad, _szBy + _szBh / 2);
-      ctx.restore();
-    }
-  } catch (_) {}
+  /* (the "Size: W×H" readout was removed from the 2D editor — the size lives in the right-hand panel) */
   ctx.textAlign='left';
   updateCtxBar();   /* keep the contextual toolbar pinned under the selected layer */
 }
