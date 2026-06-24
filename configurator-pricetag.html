@@ -1967,8 +1967,8 @@
       </div>
       <div id="custom-size-panel" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--imp-border);border-radius:12px;background:var(--imp-surface-2);">
         <div style="display:flex;gap:8px;align-items:flex-end;">
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Width" data-ar="العرض">Width</span><br><input id="cs-w" type="number" min="1" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
-          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Width" data-ar="العرض">Width</span><br><input id="cs-w" type="number" min="1" max="14" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
+          <label style="flex:1;font-size:11px;color:var(--imp-fg-2);"><span data-en="Height" data-ar="الارتفاع">Height</span><br><input id="cs-h" type="number" min="1" max="30" step="0.5" value="6" oninput="applyCustomDims()" style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:13px;"></label>
         </div>
         <div style="margin-top:8px;font-size:10px;color:var(--imp-fg-3);line-height:1.45;" data-en="Resizes the tag — width × height in cm (the hole stays a standard size)." data-ar="يغيّر حجم البطاقة — العرض × الارتفاع بالسنتيمتر (الثقب يبقى بحجم قياسي).">Resizes the tag — width × height in cm (the hole stays a standard size).</div>
       </div>
@@ -4500,7 +4500,7 @@ function _applyBoxCrop(ctx, L, w, h){
 function _drawTiledCell(ctx, L, cell, cAsp, sref, ms, ue, corr, mode) {
   var boxW = Math.max(8, sref * (L.scale / 100) * ms);
   var boxH = Math.max(8, sref * ((L.scaleH != null ? L.scaleH : L.scale) / 100) * ms);
-  var density = Math.max(1, L.density || 6);
+  var density = Math.max(0.5, L.density || 6);
   var tileW = (sref / density) * ms, tileH = tileW / cAsp;   /* scale tile size by ms too, so finish/bump masks (ms<1) tile at the SAME density as the visible colour map */
   var _gMin = (typeof A2D !== 'undefined' && A2D.gapMin != null) ? A2D.gapMin : 0;
   var _gMax = (typeof A2D !== 'undefined' && A2D.gapMax != null) ? A2D.gapMax : 100;
@@ -5326,11 +5326,11 @@ var _bagBuildSeq = 0;   /* guards against overlapping async GLB builds (e.g. the
    and corner bevel (0→1). Shared by the full build and the light rebuild. */
 function _makeTagGeoms(tw, th, bevel){
   /* FIXED UV-per-cm scale + a CONSTANT gap. Because the scale is a fixed constant for every
-     realistic tag (≤~11cm wide, ≤~23cm tall), the width and height islands grow strictly
+     realistic tag (≤~14cm wide, ≤~30cm tall), the width and height islands grow strictly
      independently — changing the width never resizes the height (and vice-versa) — and the
      front/back gap is the SAME absolute UV distance at every size. The Math.min clamp only
      engages for extreme custom sizes, purely to keep the two islands inside the atlas. */
-  var SCALE = 0.040, GAP = 0.060;
+  var SCALE = 0.030, GAP = 0.060;   /* 0.030 (was 0.040) → independent W/H up to ~14cm × ~30cm before the atlas clamp binds */
   var k = Math.min(SCALE, (0.95 - GAP)/(2*tw), 0.92/th);
   var uw = tw*k, uh = th*k, gap = GAP;
   var extCx = 0.5 - gap/2 - uw/2, intCx = 0.5 + gap/2 + uw/2;
@@ -7161,7 +7161,7 @@ function _tiledControlsHTML(id, L) {
 }
 /* Background tile controls — Density + Feather only (Gap removed; backgrounds pack tight). */
 function _bgTiledControlsHTML(id, L) {
-  return sliderRow(id, 'density', 'Density', 1, 100, 1, (L.density != null ? L.density : 40), '×') +
+  return sliderRow(id, 'density', 'Density', 0.5, 100, 0.5, (L.density != null ? L.density : 1), '×') +
     sliderRow(id, 'feather', 'Feather', 0, 95, 1, (L.feather || 0), '%') +
     '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize / crop the tiled box in the 2D editor.</div>';
 }
@@ -7182,7 +7182,7 @@ function onLayerLayout(id, mode) {
          + interior + handles) and move-lock — a tiled layer behaves like a background pattern.
          None later restores the saved box + lock. */
       var snap = {}; _PRELAYOUT_KEYS.forEach(function(k){ snap[k] = L[k]; }); snap.locked = L.locked; L._preLayoutBox = snap;
-      if (L.isBackground) { L.density = 3; L.gap = 0; }            /* background tile default */
+      if (L.isBackground) { L.density = 1; L.gap = 0; }            /* background tile default (1× = one large motif) */
       else if (L.kind === 'text') { L.density = 20; L.gap = 40; }  /* text tile default */
       else if (L.isLogo) { L.density = 20; L.gap = 50; }           /* logo tile default */
       else { L.density = 40; L.gap = 60; }                         /* graphic fallback */
@@ -7280,7 +7280,7 @@ function addLayer(kind) {
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:3, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:1, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new background's box covers BOTH the exterior AND interior islands (union), so toggling
@@ -9190,6 +9190,9 @@ function onBagSizeCustom(btn){
 function applyCustomDims(){
   var gv=function(id){ var el=document.getElementById(id); var v=el?parseFloat(el.value):0; return (v>0)?v:0; };
   var w=gv('cs-w')||(currentTagDims&&currentTagDims.w)||6, h=gv('cs-h')||(currentTagDims&&currentTagDims.h)||6;
+  var _rw=w, _rh=h; w=Math.min(14,Math.max(1,w)); h=Math.min(30,Math.max(1,h));   /* clamp to the UV-safe range so width/height stay independent (see _makeTagGeoms SCALE) */
+  if(_rw!==w){ var _cw=document.getElementById('cs-w'); if(_cw) _cw.value=w; }
+  if(_rh!==h){ var _ch=document.getElementById('cs-h'); if(_ch) _ch.value=h; }
   _customSize.w=w; _customSize.h=h;
   var txt=w+' × '+h+' cm';
   var dd=document.getElementById('custom-size-dims'); if(dd) dd.textContent=txt;
@@ -9954,26 +9957,41 @@ function _drawTagMeasure3D(){
     if(cv.style.height!==cssH+'px') cv.style.height=cssH+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH); cv._drawn=true;
     var bb=new THREE.Box3().setFromObject(bagGroup); if(bb.isEmpty()) return;
-    var zf=bb.max.z;   /* front face is the +Z side of the flat card */
-    function proj(x,y,z){ var v=new THREE.Vector3(x,y,z).project(T.camera); return { x:(v.x*0.5+0.5)*cssW, y:(-v.y*0.5+0.5)*cssH }; }
-    var bl=proj(bb.min.x,bb.min.y,zf), br=proj(bb.max.x,bb.min.y,zf), tl=proj(bb.min.x,bb.max.y,zf);
+    var zf=bb.max.z;                                /* front face = +Z side of the flat card */
+    var minX=bb.min.x, maxX=bb.max.x, minY=bb.min.y, maxY=bb.max.y;
+    var W=maxX-minX, H=maxY-minY, S=Math.max(W,H,1e-4);
+    var off=S*0.10, ah=S*0.045, ext=off*0.45;       /* gap / arrowhead / witness overshoot — ALL in plane (world) units */
+    /* Project a point that lies IN the tag's plane (world XY at z=zf) → screen px. By building the
+       whole dimension (lines, arrowheads, labels) from in-plane points and projecting each, the arrows
+       lie on the tag's surface and foreshorten with it at any camera angle (no more screen-flat look). */
+    function P(x,y){ var v=new THREE.Vector3(x,y,zf).project(T.camera); return { x:(v.x*0.5+0.5)*cssW, y:(-v.y*0.5+0.5)*cssH, z:v.z }; }
     var col=(typeof _themeColor==='function')?_themeColor(A2D.measureColor||'#555555'):(A2D.measureColor||'#555555');
-    var fs=(A2D.measureSize||14), gap=20, hl=7;
     ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.4; ctx.lineCap='round'; ctx.lineJoin='round';
-    ctx.font=(A2D.measureWeight||600)+' '+fs+'px -apple-system, system-ui, sans-serif';
-    /* width arrow under the bottom edge */
-    var wy=Math.max(bl.y,br.y)+gap;
-    ctx.beginPath(); ctx.moveTo(bl.x,wy); ctx.lineTo(br.x,wy);
-    ctx.moveTo(bl.x,wy); ctx.lineTo(bl.x+hl,wy-hl*0.7); ctx.moveTo(bl.x,wy); ctx.lineTo(bl.x+hl,wy+hl*0.7);
-    ctx.moveTo(br.x,wy); ctx.lineTo(br.x-hl,wy-hl*0.7); ctx.moveTo(br.x,wy); ctx.lineTo(br.x-hl,wy+hl*0.7); ctx.stroke();
-    ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(currentTagDims.w+' cm',(bl.x+br.x)/2, wy+4);
-    /* height arrow left of the left edge */
-    var hx=Math.min(bl.x,tl.x)-gap;
-    ctx.beginPath(); ctx.moveTo(hx,bl.y); ctx.lineTo(hx,tl.y);
-    ctx.moveTo(hx,bl.y); ctx.lineTo(hx-hl*0.7,bl.y-hl); ctx.moveTo(hx,bl.y); ctx.lineTo(hx+hl*0.7,bl.y-hl);
-    ctx.moveTo(hx,tl.y); ctx.lineTo(hx-hl*0.7,tl.y+hl); ctx.moveTo(hx,tl.y); ctx.lineTo(hx+hl*0.7,tl.y+hl); ctx.stroke();
-    ctx.save(); ctx.translate(hx-6,(bl.y+tl.y)/2); ctx.rotate(-Math.PI/2);
-    ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(currentTagDims.h+' cm',0,0); ctx.restore();
+    function seg(a,b){ if(Math.abs(a.z)>1.2||Math.abs(b.z)>1.2) return; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    /* one dimension: line (x0,y0)->(x1,y1), arrow axis unit (dx,dy), outward unit (ox,oy) for the label — plane coords */
+    function dim(x0,y0,x1,y1, dx,dy, ox,oy, label){
+      var A=P(x0,y0), B=P(x1,y1); if(Math.abs(A.z)>1.2||Math.abs(B.z)>1.2) return;
+      seg(A,B);
+      var px=dy, py=-dx;                            /* in-plane perpendicular for the arrowhead barbs */
+      seg(A, P(x0+dx*ah+px*ah*0.5, y0+dy*ah+py*ah*0.5));   /* arrowhead at A → inward */
+      seg(A, P(x0+dx*ah-px*ah*0.5, y0+dy*ah-py*ah*0.5));
+      seg(B, P(x1-dx*ah+px*ah*0.5, y1-dy*ah+py*ah*0.5));   /* arrowhead at B → inward */
+      seg(B, P(x1-dx*ah-px*ah*0.5, y1-dy*ah-py*ah*0.5));
+      var mx=(x0+x1)/2, my=(y0+y1)/2, M=P(mx+ox*off*0.55, my+oy*off*0.55); if(Math.abs(M.z)>1.2) return;
+      var ang=Math.atan2(B.y-A.y, B.x-A.x); if(ang>Math.PI/2)ang-=Math.PI; else if(ang<-Math.PI/2)ang+=Math.PI;  /* keep label upright */
+      var projLen=Math.hypot(B.x-A.x,B.y-A.y), fs=Math.max(9,Math.min(26,projLen*0.085));   /* scale label to the on-screen size */
+      ctx.save(); ctx.translate(M.x,M.y); ctx.rotate(ang);
+      ctx.font=(A2D.measureWeight||600)+' '+fs+'px -apple-system, system-ui, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,0,0); ctx.restore();
+    }
+    /* WIDTH — line parallel to the bottom edge, offset OUTWARD (−Y) below the tag */
+    var wy=minY-off;
+    seg(P(minX,minY), P(minX,wy-ext)); seg(P(maxX,minY), P(maxX,wy-ext));   /* witness lines */
+    dim(minX,wy, maxX,wy, 1,0, 0,-1, currentTagDims.w+' cm');
+    /* HEIGHT — line parallel to the left edge, offset OUTWARD (−X) left of the tag */
+    var hx=minX-off;
+    seg(P(minX,minY), P(hx-ext,minY)); seg(P(minX,maxY), P(hx-ext,maxY));   /* witness lines */
+    dim(hx,minY, hx,maxY, 0,1, -1,0, currentTagDims.h+' cm');
   } catch(e){}
 }
 
@@ -11454,10 +11472,10 @@ function _aMove(e){
        (Flip-safe: signV & dV are both atlas-Y, so their product is correct regardless of the V flip.)
        MUST run BEFORE the `!a2d.sel` guard below — a tag-corner drag has no selected layer (sel=null). */
     var apN=_s2a(sp.x,sp.y), st=a2d.start;
-    var dU=(apN.x-st.ap0.x)/2048/0.040, dV=(apN.y-st.ap0.y)/2048/0.040;
+    var dU=(apN.x-st.ap0.x)/2048/0.030, dV=(apN.y-st.ap0.y)/2048/0.030;   /* divisor MUST match _makeTagGeoms SCALE */
     var outU=(st.region==='interior')?1:-1;   /* exterior grows leftward, interior rightward */
-    var nw=Math.round(Math.max(1.5,Math.min(11, st.w0 + outU*dU))*10)/10;
-    var nh=Math.round(Math.max(1.5,Math.min(22, st.h0 + 2*st.signV*dV))*10)/10;
+    var nw=Math.round(Math.max(1.5,Math.min(14, st.w0 + outU*dU))*10)/10;
+    var nh=Math.round(Math.max(1.5,Math.min(30, st.h0 + 2*st.signV*dV))*10)/10;
     if (nw!==currentTagDims.w || nh!==currentTagDims.h){
       currentTagDims={ w:nw, h:nh };
       if(!a2d._tagRAF){ a2d._tagRAF=requestAnimationFrame(function(){ a2d._tagRAF=0; if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }); }
