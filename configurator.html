@@ -8538,7 +8538,7 @@ function onBagTransmission(region, v) {
   var val = parseFloat(v);
   var actual = val * PBR_MAX.transmission;           /* 0–1 slider → 0–PBR_MAX.transmission */
   var pfx = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
-  document.getElementById('bag-' + pfx + '-trans-val').textContent = val.toFixed(2);
+  var _tvEl = document.getElementById('bag-' + pfx + '-trans-val'); if (_tvEl) _tvEl.textContent = val.toFixed(2);   /* rivet region (bag/box) has no trans-val label — guard so applyBagFinish's load-time onBagTransmission('rivet') doesn't throw */
   if (region === 'exterior' || region === 'interior') {
     BAG_PBR[region].transmission = actual;
     rebuildPBRMaps();
