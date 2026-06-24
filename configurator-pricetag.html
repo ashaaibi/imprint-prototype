@@ -301,6 +301,11 @@
     }
     .canvas-stage.mode-2d #three-canvas:active { cursor: grabbing; }
     html[dir="rtl"] .canvas-stage.mode-2d #three-canvas { right: auto; left: 16px; }
+    /* ── Photoreal "Preview" mockup ── */
+    #tag-mockup { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:92%; max-height:94%; display:none; z-index:5; pointer-events:none; border-radius:6px; box-shadow:0 18px 50px rgba(0,0,0,0.18); }
+    .canvas-stage.mode-preview #tag-mockup { display:block; }
+    .canvas-stage.mode-preview #three-canvas { display:none !important; }
+    .canvas-stage.mode-preview .dim-pill { display:none; }
     .mini3d-label {
       position: absolute; right: 16px; bottom: 154px; z-index: 5;
       font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
@@ -1646,6 +1651,7 @@
 
     <div class="canvas-stage gradient-bg">
       <canvas id="three-canvas"></canvas>
+      <canvas id="tag-mockup" aria-hidden="true"></canvas>
       <div class="atlas2d" id="atlas2d" aria-hidden="true">
         <canvas id="atlas2d-canvas"></canvas>
         <div class="atlas2d-hint"></div>
@@ -1671,7 +1677,7 @@
       </div>
       <div class="dim-pill" id="dim-pill">5 × 8 cm</div>
       <div class="mode-toggle" id="mode-toggle">
-        <button data-mode="3d" onclick="setViewMode('3d')">3D</button>
+        <button data-mode="preview" onclick="setViewMode('preview')">Preview</button>
         <button class="on" data-mode="2d" onclick="setViewMode('2d')">2D</button>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
@@ -9921,7 +9927,7 @@ function animate(now) {
      every frame is what tanked drag FPS, so throttle it to once every A2D.previewInterval
      seconds (0 = real-time). Outside 2D it renders every frame as normal. */
   var _doRender = true;
-  if (viewMode === '2d') {
+  if (viewMode === '2d' || viewMode === 'preview') {
     var _iv = (A2D.previewInterval != null ? A2D.previewInterval : 0.5) * 1000;
     if (_iv > 0 && ((now||0) - _lastPreviewRender) < _iv) _doRender = false;
     else _lastPreviewRender = now || 0;
@@ -11251,13 +11257,21 @@ function _autoEdit2dAfterUpload(){
   return;
 }
 function setViewMode(mode){
-  viewMode = (mode === '2d') ? '2d' : '3d';
+  viewMode = (mode === '2d') ? '2d' : (mode === 'preview') ? 'preview' : '3d';
   if (typeof _hideFaceBar==='function') _hideFaceBar();
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
   var stage = document.querySelector('.canvas-stage');
-  if (stage) stage.classList.toggle('mode-2d', viewMode === '2d');  /* shrinks live 3D into bottom-right preview */
+  if (stage){ stage.classList.toggle('mode-2d', viewMode === '2d'); stage.classList.toggle('mode-preview', viewMode === 'preview'); }  /* shrinks live 3D into bottom-right preview */
   if (stage) stage.classList.toggle('no-preview', viewMode === '2d' && !A2D.previewOn);
-  var ov = document.getElementById('atlas2d'); if (!ov) return;
+  var ov = document.getElementById('atlas2d');
+  if (viewMode === 'preview'){   /* photoreal mockup: hide the editor + WebGL, composite the design onto the tag photo */
+    if (ov){ ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); }
+    if (typeof atlas2dStopLoop==='function') atlas2dStopLoop();
+    var _cbp=document.getElementById('a2d-ctxbar'); if(_cbp) _cbp.style.display='none';
+    if (typeof renderTagMockup==='function') renderTagMockup();
+    return;
+  }
+  if (!ov) return;
   if (viewMode === '2d'){
     if (typeof stopHueGuide === 'function') stopHueGuide(true);
     /* preview: stop auto-rotation, animate to the front, zoom out to fit the small frame */
@@ -11280,6 +11294,66 @@ function setViewMode(mode){
   }
 }
 var _saved3DView = null;
+
+/* ── Photoreal "Preview" mockup compositor ────────────────────────────────────
+   Warps the live FRONT-face design onto a real photo of a blank hang tag, then
+   re-adds the tag's shading (multiply) and the cotton string (occluder on top). */
+var MOCKUP_SRC = { base:'mockups/s5x8/base.jpg', mask:'mockups/s5x8/mask.png', shadow:'mockups/s5x8/shadow.png', string:'mockups/s5x8/string.png' };
+var _mockupAssets = null, _mockupRAF = 0;
+function _loadMockupAssets(cb){
+  if (_mockupAssets){ cb(_mockupAssets); return; }
+  var keys = Object.keys(MOCKUP_SRC), imgs = {}, done = 0, failed = false;
+  keys.forEach(function(k){
+    var im = new Image();
+    im.onload  = function(){ if(failed) return; if(++done === keys.length){ _mockupAssets = _prepMockupAssets(imgs); cb(_mockupAssets); } };
+    im.onerror = function(){ failed = true; console.warn('[mockup] failed to load', k, MOCKUP_SRC[k]); };
+    im.src = MOCKUP_SRC[k]; imgs[k] = im;
+  });
+}
+function _prepMockupAssets(imgs){
+  var W = imgs.base.naturalWidth, H = imgs.base.naturalHeight;
+  /* mask.png is white-on-black → convert to an ALPHA mask (luminance→alpha) + find the face bbox */
+  var mc = document.createElement('canvas'); mc.width = W; mc.height = H;
+  var mx = mc.getContext('2d'); mx.drawImage(imgs.mask, 0, 0, W, H);
+  var idata = mx.getImageData(0,0,W,H), p = idata.data;
+  var minX=W, minY=H, maxX=0, maxY=0, any=false;
+  for (var y=0;y<H;y++){ var row=y*W*4; for (var x=0;x<W;x++){ var i=row+x*4; var a=p[i];
+    p[i]=p[i+1]=p[i+2]=255; p[i+3]=a;
+    if (a>140){ any=true; if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; } } }
+  mx.putImageData(idata,0,0);
+  return { base:imgs.base, shadow:imgs.shadow, string:imgs.string, maskAlpha:mc,
+           bbox: any ? {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1} : {x:0,y:0,w:W,h:H}, W:W, H:H };
+}
+/* The baked FRONT-face artwork, cropped from the colour atlas (clean — no labels/handles). */
+function _frontDesignCanvas(){
+  if (typeof bagTexCanvas==='undefined' || !bagTexCanvas || typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.exterior) return null;
+  var r = BAG_UV.exterior, w = Math.max(1, Math.round(r.w)), h = Math.max(1, Math.round(r.h));
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  var cx = c.getContext('2d');
+  cx.translate(0, h); cx.scale(1, -1);   /* the atlas stores the face V-flipped (geometry maps V via (hh-y)); un-flip so it reads upright on the mockup */
+  cx.drawImage(bagTexCanvas, r.x, r.y, r.w, r.h, 0, 0, w, h);
+  return c;
+}
+function renderTagMockup(){
+  var cvs = document.getElementById('tag-mockup'); if(!cvs) return;
+  _loadMockupAssets(function(A){
+    if (viewMode !== 'preview') return;   /* user may have left the view while the assets loaded */
+    cvs.width = A.W; cvs.height = A.H;
+    var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,A.W,A.H);
+    ctx.drawImage(A.base, 0, 0, A.W, A.H);                                    /* 1. scene + blank tag */
+    if (typeof drawBagTexture==='function') drawBagTexture();                 /* ensure the colour atlas is fresh */
+    var design = _frontDesignCanvas();
+    if (design){                                                             /* 2. design, fitted to the face & clipped to the mask (hole punched) */
+      var tmp = document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
+      tx.drawImage(design, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
+      tx.globalCompositeOperation='destination-in'; tx.drawImage(A.maskAlpha, 0, 0);
+      ctx.drawImage(tmp, 0, 0);
+    }
+    ctx.globalCompositeOperation='multiply';    ctx.drawImage(A.shadow, 0, 0, A.W, A.H);   /* 3. tag shading + paper texture */
+    ctx.globalCompositeOperation='source-over'; ctx.drawImage(A.string, 0, 0, A.W, A.H);   /* 4. cotton string, in front */
+  });
+}
+function _scheduleMockupRender(){ if(_mockupRAF) return; _mockupRAF = requestAnimationFrame(function(){ _mockupRAF=0; if(viewMode==='preview') renderTagMockup(); }); }
 function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelector('.canvas-stage'); if(stage) stage.classList.toggle('no-preview', viewMode==='2d' && !A2D.previewOn); }
 /* Keyboard shortcuts for the selected (2D-editor) layer: Delete, Cmd/Ctrl C/V, Cmd/Ctrl D. */
 var _layerClipboard = null;
