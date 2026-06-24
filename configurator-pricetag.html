@@ -8870,6 +8870,12 @@ function initBagColorPickers() {
       var custHex = BAG[region].customHex || BAG[region].color || '#FFFFFF';
       renderBagSwatches(region, 0, custHex);
       updateBagColorDisplay(region, custHex);
+    } else if (BAG[region].swatchName === 'White') {
+      /* Price tag Front/Back/handles default to WHITE — preserve it instead of forcing the
+         'True' teal demo swatch (the paper bag keeps 'True' via its own default). */
+      BAG[region].color = '#FFFFFF';
+      renderBagSwatches(region, hue, '#FFFFFF');
+      updateBagColorDisplay(region, '#FFFFFF');
     } else {
       BAG[region].color = trueColor;
       BAG[region].swatchName = 'True';
@@ -9933,11 +9939,19 @@ function _drawTagMeasure3D(){
     if(!_tagMeasCv){
       _tagMeasCv=document.createElement('canvas'); _tagMeasCv.id='tag-measure-overlay';
       _tagMeasCv.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:3;';
+      /* background MUST be !important — a layered canvas rule paints an opaque studio colour
+         that would otherwise show through this transparent overlay and occlude the whole 3D view. */
+      _tagMeasCv.style.setProperty('background','transparent','important');
       stage.appendChild(_tagMeasCv); _tagMeasCtx=_tagMeasCv.getContext('2d');
     }
     var cv=_tagMeasCv, ctx=_tagMeasCtx;
     var cssW=stage.clientWidth, cssH=stage.clientHeight, dpr=window.devicePixelRatio||1;
     if(cv.width!==Math.round(cssW*dpr)||cv.height!==Math.round(cssH*dpr)){ cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr); }
+    /* a <canvas> is a replaced element with an intrinsic size, so inset:0 alone does NOT
+       stretch it to the stage — set the CSS display size to match the WebGL canvas (cssW×cssH)
+       or the overlay renders at its full device-pixel size (2× on hi-DPI) and overflows. */
+    if(cv.style.width!==cssW+'px') cv.style.width=cssW+'px';
+    if(cv.style.height!==cssH+'px') cv.style.height=cssH+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH); cv._drawn=true;
     var bb=new THREE.Box3().setFromObject(bagGroup); if(bb.isEmpty()) return;
     var zf=bb.max.z;   /* front face is the +Z side of the flat card */
@@ -11433,6 +11447,23 @@ function _aMove(e){
   if (a2d.op==='pinch'){ var ids=Object.keys(a2d.pointers); if(ids.length<2) return; var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; var d=Math.hypot(p.x-q.x,p.y-q.y)||1; var nz=Math.max(0.05,Math.min(20,a2d.pinchZ0*(d/a2d.pinchD0))); var m=a2d.pinchMid, aPt=_s2a(m.x,m.y); a2d.zoom=nz; a2d.panX=m.x-aPt.x*nz; a2d.panY=m.y-aPt.y*nz; return; }
   var e_=(a2d.sel && typeof layerBBox==='function')?layerBBox(a2d.sel):_exuv();
   if (a2d.op==='pan'){ a2d.panX=a2d.start.panX+(sp.x-a2d.start.sp.x); a2d.panY=a2d.start.panY+(sp.y-a2d.start.sp.y); return; }
+  if (a2d.op==='tagresize'){
+    /* Resize the price tag by dragging a rectangle corner (jump-free delta from the grab point).
+       The regions share a fixed centre gap and grow OUTWARD horizontally (inner edge pinned → 1×),
+       while height is symmetric about V=0.5 (2×). Atlas-px → cm uses _makeTagGeoms' 0.040 scale.
+       (Flip-safe: signV & dV are both atlas-Y, so their product is correct regardless of the V flip.)
+       MUST run BEFORE the `!a2d.sel` guard below — a tag-corner drag has no selected layer (sel=null). */
+    var apN=_s2a(sp.x,sp.y), st=a2d.start;
+    var dU=(apN.x-st.ap0.x)/2048/0.040, dV=(apN.y-st.ap0.y)/2048/0.040;
+    var outU=(st.region==='interior')?1:-1;   /* exterior grows leftward, interior rightward */
+    var nw=Math.round(Math.max(1.5,Math.min(11, st.w0 + outU*dU))*10)/10;
+    var nh=Math.round(Math.max(1.5,Math.min(22, st.h0 + 2*st.signV*dV))*10)/10;
+    if (nw!==currentTagDims.w || nh!==currentTagDims.h){
+      currentTagDims={ w:nw, h:nh };
+      if(!a2d._tagRAF){ a2d._tagRAF=requestAnimationFrame(function(){ a2d._tagRAF=0; if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }); }
+    }
+    return;
+  }
   if (!a2d.sel) return;
   var L=a2d.sel, b=a2d.start.box;
   if (a2d.op==='move'){
@@ -11457,22 +11488,6 @@ function _aMove(e){
       if(snV!=null){ L.posV=snV; a2d._snapY=snAY; }
     }
     _a2dApply();
-  }
-  else if (a2d.op==='tagresize'){
-    /* Resize the price tag by dragging a rectangle corner (jump-free delta from the grab point).
-       The regions share a fixed centre gap and grow OUTWARD horizontally (inner edge pinned → 1×),
-       while height is symmetric about V=0.5 (2×). Atlas-px → cm uses _makeTagGeoms' 0.040 scale.
-       (Flip-safe: signV & dV are both atlas-Y, so their product is correct regardless of the V flip.) */
-    var apN=_s2a(sp.x,sp.y), st=a2d.start;
-    var dU=(apN.x-st.ap0.x)/2048/0.040, dV=(apN.y-st.ap0.y)/2048/0.040;
-    var outU=(st.region==='interior')?1:-1;   /* exterior grows leftward, interior rightward */
-    var nw=Math.round(Math.max(1.5,Math.min(11, st.w0 + outU*dU))*10)/10;
-    var nh=Math.round(Math.max(1.5,Math.min(22, st.h0 + 2*st.signV*dV))*10)/10;
-    if (nw!==currentTagDims.w || nh!==currentTagDims.h){
-      currentTagDims={ w:nw, h:nh };
-      if(!a2d._tagRAF){ a2d._tagRAF=requestAnimationFrame(function(){ a2d._tagRAF=0; if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }); }
-    }
-    return;
   }
   else if (a2d.op.indexOf('sc-')===0){
     /* Resize from any corner of the VISUAL (cropped) box, anchored at the opposite cropped
