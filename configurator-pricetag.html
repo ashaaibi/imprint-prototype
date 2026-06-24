@@ -1593,6 +1593,7 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
+      .canvas-stage.mode-preview #tag-mockup { max-height: 66vh; max-width: 94%; top: 46%; }   /* mobile: fit the whole tag above the collapsed sheet */
       .mode-toggle { top: 12px; right: 12px; }
       html[dir="rtl"] .mode-toggle { right: auto; left: 12px; }
       .vp-history { top: 12px; left: 12px; }
@@ -1940,15 +1941,8 @@
 
     <!-- Quantity ───────────────────────── -->
 
-    <!-- Tag Shape (corner bevel) ─────────── -->
-    <div class="cs bag-section config-step" data-cstep="1">
-      <label class="cl"><span data-en="Shape" data-ar="الشكل">Shape</span></label>
-      <div class="ctrl-slider-row" style="margin-top:8px">
-        <div class="ctrl-slider-top"><span class="ctrl-slider-name" data-en="Corner round" data-ar="استدارة الزوايا">Corner round</span><span class="ctrl-slider-val" id="tag-bevel-val">0%</span></div>
-        <input type="range" class="test-slider" id="tag-bevel" min="0" max="100" step="1" value="0" oninput="onTagBevel(this.value)">
-      </div>
-      <div style="font-size:10.5px;color:var(--imp-fg-3);margin-top:6px;line-height:1.45;" data-en="Rounds the corners — from a sharp rectangle to fully rounded (a circle when the tag is square)." data-ar="تدوير الزوايا — من مستطيل حاد إلى دائري بالكامل (دائرة عندما تكون البطاقة مربعة).">Rounds the corners — from a sharp rectangle to fully rounded (a circle when the tag is square).</div>
-    </div>
+    <!-- Tag Shape (corner bevel) removed — tags are sharp-cornered -->
+
 
     <!-- Bag Size ───────────────────────── -->
     <div class="cs bag-section config-step" data-cstep="1">
@@ -5359,7 +5353,7 @@ function _makeTagGeoms(tw, th, bevel){
      independently — changing the width never resizes the height (and vice-versa) — and the
      front/back gap is the SAME absolute UV distance at every size. The Math.min clamp only
      engages for extreme custom sizes, purely to keep the two islands inside the atlas. */
-  var SCALE = 0.030, GAP = 0.060;   /* 0.030 (was 0.040) → independent W/H up to ~14cm × ~30cm before the atlas clamp binds */
+  var SCALE = 0.030, GAP = 0.040;   /* SCALE 0.030 → independent W/H to ~14×30cm; GAP 0.040 (was 0.060) = the front/back spacing in the 2D editor */
   var k = Math.min(SCALE, (0.95 - GAP)/(2*tw), 0.92/th);
   var uw = tw*k, uh = th*k, gap = GAP;
   var extCx = 0.5 - gap/2 - uw/2, intCx = 0.5 + gap/2 + uw/2;
@@ -10137,6 +10131,8 @@ function setupOrbit() {
     function sync() { if (isMobile()) applySnap(idx, false); else { sheet.style.removeProperty('--sheet-y'); sheet.classList.remove('sheet-min'); } }
     sync();
     window.addEventListener('resize', sync);
+    window._snapSheet = function(i){ if (isMobile()) applySnap(i, true); };   /* let other code snap the sheet (e.g. minimise it on Preview) */
+    window._sheetIsMin = function(){ return idx === 3; };
 
     var startY = 0, startPx = 0, dragging = false, moved = false;
     handle.addEventListener('pointerdown', function(e) {
@@ -11284,11 +11280,13 @@ function setViewMode(mode){
     if (ov){ ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); }
     if (typeof atlas2dStopLoop==='function') atlas2dStopLoop();
     var _cbp=document.getElementById('a2d-ctxbar'); if(_cbp) _cbp.style.display='none';
+    if (typeof _snapSheet==='function') _snapSheet(3);   /* mobile: collapse the sheet so the full mockup is visible */
     if (typeof renderTagMockup==='function') renderTagMockup();
     return;
   }
   if (!ov) return;
   if (viewMode === '2d'){
+    if (typeof _snapSheet==='function' && typeof _sheetIsMin==='function' && _sheetIsMin()) _snapSheet(0);   /* mobile: re-open the sheet when leaving Preview */
     if (typeof stopHueGuide === 'function') stopHueGuide(true);
     /* preview: stop auto-rotation, animate to the front, zoom out to fit the small frame */
     if (!_saved3DView && typeof orbit !== 'undefined' && orbit) _saved3DView = { theta:orbit.theta, phi:orbit.phi, radius:orbit.radius };
