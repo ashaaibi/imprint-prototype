@@ -3764,6 +3764,7 @@ let bagTexCanvas, bagTexCtx, bagTexture;
 /* Clean colour+artwork snapshot (no finish/PBR overlay) — what the 2D editor shows, so
    the finish maps only affect the 3D viewer. */
 var bagCleanCanvas = null, bagCleanCtx = null;
+var bagMockupCanvas = null, bagMockupCtx = null;   /* hole-free copy of the clean atlas — feeds the photoreal preview only */
 var _baseSnapCv = null;   /* base-only atlas snapshot, reused for the 3D-only artwork tone pass */
 var _intFlipCv = null;    /* pristine atlas snapshot, reused to horizontally un-mirror interior faces in 3D */
 /* Atlas padding: a transparent margin (px) around the 2048 printable core so artwork
@@ -3796,6 +3797,8 @@ function initBagTexture() {
   bagTexture.offset.set(ATLAS_PAD / W, ATLAS_PAD / W);
   bagCleanCanvas = document.createElement('canvas'); bagCleanCanvas.width = bagCleanCanvas.height = W;
   bagCleanCtx = bagCleanCanvas.getContext('2d');
+  bagMockupCanvas = document.createElement('canvas'); bagMockupCanvas.width = bagMockupCanvas.height = W;
+  bagMockupCtx = bagMockupCanvas.getContext('2d');
   loadPatternsFromFolder();
 }
 
@@ -4258,7 +4261,11 @@ function drawBagTexture() {
     var _erase = function(clip){ if (!clip || !clip.path) return; bagCleanCtx.save(); bagCleanCtx.globalCompositeOperation='destination-out'; bagCleanCtx.fillStyle='#000'; bagCleanCtx.fill(clip.path); bagCleanCtx.lineJoin='round'; bagCleanCtx.lineWidth=Math.max(2,(A2D.padding||0)*2); bagCleanCtx.strokeStyle='#000'; bagCleanCtx.stroke(clip.path); bagCleanCtx.restore(); };
     if (!A2D.showHandles2D) _erase(bagHandleClip);
     if (!A2D.showRivets2D)  _erase(bagRivetClip);
-    if (typeof _drawTagHole==='function') _drawTagHole(bagCleanCtx);   /* transparent hole in the 2D editor too */
+    if (bagMockupCtx) {   /* snapshot a HOLE-FREE copy for the photoreal preview, BEFORE the hole is punched below — the mockup's base photo already has a real eyelet, so its design layer must not punch its own */
+      if (bagMockupCanvas.width !== W) { bagMockupCanvas.width = bagMockupCanvas.height = W; }
+      bagMockupCtx.clearRect(0, 0, W, H); bagMockupCtx.drawImage(bagCleanCanvas, 0, 0);
+    }
+    if (typeof _drawTagHole==='function') _drawTagHole(bagCleanCtx);   /* transparent hole in the 2D editor only */
     _filteredBagDirty = true;   /* clean bag changed → idle backdrop cache must rebuild */
   }
   // 3D-ONLY artwork tone pass: restore the base, then re-bake the artwork through the Testing
@@ -11337,7 +11344,8 @@ function _prepMockupAssets(imgs){
 function _frontDesignCanvas(){
   /* crop from the CLEAN atlas (true colours, NO 3D finish/PBR albedo overlay) so the mockup
      matches the 2D editor's brightness — bagTexCanvas has the finish baked on and reads dark. */
-  var src = (typeof bagCleanCanvas!=='undefined' && bagCleanCanvas && bagCleanCanvas.width) ? bagCleanCanvas
+  var src = (typeof bagMockupCanvas!=='undefined' && bagMockupCanvas && bagMockupCanvas.width) ? bagMockupCanvas   /* hole-free clean atlas — keeps the 2D editor's string-hole out of the mockup */
+          : (typeof bagCleanCanvas!=='undefined' && bagCleanCanvas && bagCleanCanvas.width) ? bagCleanCanvas
           : (typeof bagTexCanvas!=='undefined' ? bagTexCanvas : null);
   if (!src || typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.exterior) return null;
   var r = BAG_UV.exterior, w = Math.max(1, Math.round(r.w)), h = Math.max(1, Math.round(r.h));
@@ -11357,7 +11365,7 @@ function renderTagMockup(){
     var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
     ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
     var design = _frontDesignCanvas();
-    if (design){                                                              /* 2. design, fitted to the face & clipped to the mask (hole punched) */
+    if (design){                                                              /* 2. design, fitted to the face & clipped to the mask (hole-free; the eyelet is in the base photo) */
       var tmp = document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
       tx.drawImage(design, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
       tx.globalCompositeOperation='destination-in'; tx.drawImage(A.maskAlpha, 0, 0);
