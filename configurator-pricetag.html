@@ -2114,6 +2114,12 @@
         <input type="range" class="test-slider" min="0" max="100" step="1" value="50" oninput="onFxAngle(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss intensity</span><span class="slider-val" id="gloss-int-val">70%</span></div>
         <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossIntensity(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Highlight map blend</span>
+        <select onchange="onSpecBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
+          <option value="color-dodge">Color dodge</option><option value="multiply">Multiply</option><option value="screen">Screen</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option></select></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Highlight map blur</span><span class="slider-val" id="spec-blur-val">0px</span></div>
+        <input type="range" class="test-slider" min="0" max="60" step="1" value="0" oninput="onSpecBlur(this.value)"></div>
+      <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Blend &amp; blur for an optional <b>mockups/&lt;size&gt;/spec.png</b> highlight map (add the map to see these take effect).</div>
 
       <!-- Motion / Intro sub-section -->
       <div style="margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Motion &amp; Intro</div>
@@ -7412,6 +7418,15 @@ function addLayer(kind) {
     var _ex = BAG_UV.exterior, _PADe = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
     _fp = { posU: (_ex.x + _ex.w/2 - _PADe)/2048*100, posV: (_ex.y + _ex.h/2 - _PADe)/2048*100 };
   }
+  /* In the EDIT (2D) view, drop the new layer at the CENTRE OF THE VIEWPORT instead of the
+     front-centre — but only when that centre actually lands on the front face (so a fit/zoomed-out
+     view whose centre sits on the front/back gap still uses the front centre, never the gap). */
+  if (typeof viewMode!=='undefined' && viewMode==='2d' && typeof a2d!=='undefined' && a2d && a2d.canvas && typeof _s2a==='function' && a2d.zoom && typeof BAG_UV!=='undefined' && BAG_UV.exterior){
+    var _vc=_s2a(a2d.canvas.width/2, a2d.canvas.height/2), _exv=BAG_UV.exterior, _pv=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+    if (_vc.x>=_exv.x && _vc.x<=_exv.x+_exv.w && _vc.y>=_exv.y && _vc.y<=_exv.y+_exv.h){
+      _fp = { posU:(_vc.x-_pv)/2048*100, posV:(_vc.y-_pv)/2048*100 };
+    }
+  }
   if (kind === 'logo') {
     /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
        the full Graphic recolor/finish/layout controls. isLogo only changes its name/label. */
@@ -11493,6 +11508,9 @@ function _frontDesignCanvas(){
 var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50 };   /* Preview foil controls (Testing) */
 var GLOSS_FX = { intensity:0.70, angle:0.50 };                           /* Preview gloss controls (Testing) */
 var FOIL_TINTS = { none:null, gold:'#d8a93a', silver:'#cfd2d6', rose:'#e3a9a0' };
+var SPEC_FX = { blend:'color-dodge', blur:0 };   /* highlight/spec-map blend mode + blur (Testing) */
+function onSpecBlend(v){ SPEC_FX.blend=v||'color-dodge'; _fxRefresh(); }
+function onSpecBlur(v){ SPEC_FX.blur=Math.max(0,parseFloat(v)||0); var e=document.getElementById('spec-blur-val'); if(e)e.textContent=SPEC_FX.blur+'px'; _fxRefresh(); }
 function _fxRefresh(){ if(typeof viewMode!=='undefined' && viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }
 function onFoilIntensity(v){ FOIL_FX.intensity=(parseFloat(v)||0)/100; var e=document.getElementById('foil-int-val'); if(e)e.textContent=Math.round(FOIL_FX.intensity*100)+'%'; _fxRefresh(); }
 function onFoilSpec(v){ FOIL_FX.spec=(parseFloat(v)||0)/100; var e=document.getElementById('foil-spec-val'); if(e)e.textContent=Math.round(FOIL_FX.spec*100)+'%'; _fxRefresh(); }
@@ -11505,7 +11523,7 @@ function _fxSpec(W,H,A,x0,x1){
   var g=x.createLinearGradient(W*x0,0, W*x1,H);
   g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
   x.fillStyle=g; x.fillRect(0,0,W,H);
-  if(A && A.spec){ x.globalCompositeOperation='multiply'; x.drawImage(A.spec,0,0,W,H); }   /* real-light placement when a spec map exists */
+  if(A && A.spec){ x.globalCompositeOperation=(SPEC_FX.blend||'multiply'); if(SPEC_FX.blur>0) x.filter='blur('+SPEC_FX.blur+'px)'; x.drawImage(A.spec,0,0,W,H); x.filter='none'; x.globalCompositeOperation='source-over'; }   /* highlight/spec map — blend mode + blur from Testing */
   return c;
 }
 function _applyFoilFx(ctx, designMasked, A){
