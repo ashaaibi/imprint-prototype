@@ -2100,6 +2100,21 @@
       </div>
       <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">String-hole centre distance from the tag's TOP edge — kept constant (mm) at every size &amp; shape.</div>
 
+      <!-- Mockup Finish FX sub-section -->
+      <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Mockup Finish FX</div>
+      <div style="font-size:10px;color:var(--secondary);margin:-2px 0 8px;line-height:1.4;">Tune the Preview <strong>Foil</strong> &amp; <strong>Gloss</strong>. Foil metallizes the design's existing colours (no overwrite); tint adds gold/silver if you want it.</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil intensity</span><span class="slider-val" id="foil-int-val">85%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="85" oninput="onFoilIntensity(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil specular</span><span class="slider-val" id="foil-spec-val">70%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onFoilSpec(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil tint</span>
+        <select onchange="onFoilTint(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
+          <option value="none">None (metallize colours)</option><option value="gold">Gold</option><option value="silver">Silver</option><option value="rose">Rose gold</option></select></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Highlight angle</span><span class="slider-val" id="fx-angle-val">50%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="50" oninput="onFxAngle(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss intensity</span><span class="slider-val" id="gloss-int-val">70%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossIntensity(this.value)"></div>
+
       <!-- Motion / Intro sub-section -->
       <div style="margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Motion &amp; Intro</div>
 
@@ -5431,10 +5446,10 @@ var TAG_MIN_CM = 1.0;              /* minimum tag side (cm) */
 var TAG_MAX_W_CM = 14.0, TAG_MAX_H_CM = 30.0;   /* max before the UV islands reach the atlas edge — keeps W/H independent */
 var currentTagShape = 'rectangle';
 var TAG_SHAPES = {
-  rectangle:  { round:false, circle:false, sizes:[[5.0,6.5],[5.5,9.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
+  rectangle:  { round:false, circle:false, sizes:[[5.5,9.5],[5.0,6.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
   square:     { round:false, circle:false, sizes:[[6.5,6.5]] },
   circle:     { round:false, circle:true,  sizes:[[6.0,6.0]] },
-  rrectangle: { round:true,  circle:false, sizes:[[5.0,6.5],[5.5,9.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
+  rrectangle: { round:true,  circle:false, sizes:[[5.5,9.5],[5.0,6.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
   rsquare:    { round:true,  circle:false, sizes:[[6.5,6.5]] }
 };
 function _tagBevelForShape(sh){ return (sh && sh.circle) ? 1 : ((sh && sh.round) ? ROUND_BEVEL : 0); }
@@ -7726,7 +7741,7 @@ function _renderPresetGrid(i){
 function choosePreset(col, file){
   var L=getLayer(_addSrc.id); if(!L){ _closeAddSourceOverlay(); return; }
   var type=_presetTypeFolder(), url=_presetUrl(type,col,file), base=file.replace(/\.[^.]+$/,'');
-  if(_addSrc.kind==='pattern'){ L.patStack='vertical'; L.fromLibrary=true; }
+  if(_addSrc.kind==='pattern'){ L.patStack=(/^(Autumn|Spring)$/i.test(col)?'diagonal':'vertical'); L.fromLibrary=true; }   /* Autumn & Spring collections tile diagonally; all others grid */
   _closeAddSourceOverlay();
   if(/\.svg$/i.test(file)){
     fetch(url).then(function(r){ return r.text(); }).then(function(svgText){
@@ -11475,6 +11490,15 @@ function _frontDesignCanvas(){
    specular sheen on top of the design. An OPTIONAL mockups/<size>/spec.png (white =
    hot reflection) places the highlight on the real scene light; without it a synthetic
    diagonal streak is used. Emboss/deboss are per-layer and come in a later pass. */
+var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50 };   /* Preview foil controls (Testing) */
+var GLOSS_FX = { intensity:0.70, angle:0.50 };                           /* Preview gloss controls (Testing) */
+var FOIL_TINTS = { none:null, gold:'#d8a93a', silver:'#cfd2d6', rose:'#e3a9a0' };
+function _fxRefresh(){ if(typeof viewMode!=='undefined' && viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }
+function onFoilIntensity(v){ FOIL_FX.intensity=(parseFloat(v)||0)/100; var e=document.getElementById('foil-int-val'); if(e)e.textContent=Math.round(FOIL_FX.intensity*100)+'%'; _fxRefresh(); }
+function onFoilSpec(v){ FOIL_FX.spec=(parseFloat(v)||0)/100; var e=document.getElementById('foil-spec-val'); if(e)e.textContent=Math.round(FOIL_FX.spec*100)+'%'; _fxRefresh(); }
+function onFoilTint(v){ FOIL_FX.tint=v||'none'; _fxRefresh(); }
+function onFxAngle(v){ FOIL_FX.angle=(parseFloat(v)||0)/100; GLOSS_FX.angle=FOIL_FX.angle; var e=document.getElementById('fx-angle-val'); if(e)e.textContent=Math.round(FOIL_FX.angle*100)+'%'; _fxRefresh(); }
+function onGlossIntensity(v){ GLOSS_FX.intensity=(parseFloat(v)||0)/100; var e=document.getElementById('gloss-int-val'); if(e)e.textContent=Math.round(GLOSS_FX.intensity*100)+'%'; _fxRefresh(); }
 function _fxCanvas(W,H){ var c=document.createElement('canvas'); c.width=W; c.height=H; return c; }
 function _fxSpec(W,H,A,x0,x1){
   var c=_fxCanvas(W,H), x=c.getContext('2d');
@@ -11485,20 +11509,29 @@ function _fxSpec(W,H,A,x0,x1){
   return c;
 }
 function _applyFoilFx(ctx, designMasked, A){
-  var W=A.W, H=A.H, fc=_fxCanvas(W,H), fx=fc.getContext('2d');
-  var g=fx.createLinearGradient(W*0.12,0, W*0.88,H);   /* metallic gold gradient (dark→bright→white→bright→dark) */
-  g.addColorStop(0.00,'#6e4f12'); g.addColorStop(0.22,'#caa53d'); g.addColorStop(0.43,'#fff3c4');
-  g.addColorStop(0.52,'#ffffff'); g.addColorStop(0.60,'#fff3c4'); g.addColorStop(0.80,'#caa53d'); g.addColorStop(1.00,'#6e4f12');
-  fx.fillStyle=g; fx.fillRect(0,0,W,H);
-  fx.globalCompositeOperation='screen'; fx.drawImage(_fxSpec(W,H,A,0.34,0.60),0,0);   /* sharp specular streak */
-  fx.globalCompositeOperation='destination-in'; fx.drawImage(designMasked,0,0);        /* clip to the printed design */
-  ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.drawImage(fc,0,0);  /* foil replaces the ink */
+  /* Foil STAMPS the existing colours metallic — it does NOT overwrite them. A neutral
+     metal ramp is hard-light-blended onto the design (keeps each colour's hue, adds
+     bright/dark metal banding); an optional tint gives gold/silver; then a sharp
+     specular streak on top. All driven by FOIL_FX (Testing controls). */
+  var W=A.W, H=A.H, sft=(FOIL_FX.angle-0.5);
+  var mc=_fxCanvas(W,H), mx=mc.getContext('2d');
+  var g=mx.createLinearGradient(W*0.12,0, W*0.88,H);   /* neutral metallic ramp (dark→light→white→light→dark) */
+  g.addColorStop(0.00,'#2e2e2e'); g.addColorStop(0.24,'#8c8c8c'); g.addColorStop(0.44,'#e6e6e6');
+  g.addColorStop(0.52,'#ffffff'); g.addColorStop(0.60,'#e6e6e6'); g.addColorStop(0.80,'#8c8c8c'); g.addColorStop(1.00,'#2e2e2e');
+  mx.fillStyle=g; mx.fillRect(0,0,W,H);
+  var tint=FOIL_TINTS[FOIL_FX.tint];
+  if(tint){ mx.globalCompositeOperation='overlay'; mx.fillStyle=tint; mx.fillRect(0,0,W,H); mx.globalCompositeOperation='source-over'; }   /* optional gold/silver/rose cast */
+  mx.globalCompositeOperation='destination-in'; mx.drawImage(designMasked,0,0);
+  ctx.globalCompositeOperation='hard-light'; ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.intensity)); ctx.drawImage(mc,0,0);   /* metallize, keeping the design's colours */
+  var scc=_fxCanvas(W,H), sx=scc.getContext('2d'); sx.drawImage(_fxSpec(W,H,A,0.34+sft*0.3,0.60+sft*0.3),0,0); sx.globalCompositeOperation='destination-in'; sx.drawImage(designMasked,0,0);
+  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec)); ctx.drawImage(scc,0,0);   /* sharp specular streak */
+  ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 function _applyGlossFx(ctx, designMasked, A){
-  var W=A.W, H=A.H, gc=_fxCanvas(W,H), gx=gc.getContext('2d');
-  gx.drawImage(_fxSpec(W,H,A,0.30,0.58),0,0);
+  var W=A.W, H=A.H, sft=(GLOSS_FX.angle-0.5), gc=_fxCanvas(W,H), gx=gc.getContext('2d');
+  gx.drawImage(_fxSpec(W,H,A,0.30+sft*0.3,0.58+sft*0.3),0,0);
   gx.globalCompositeOperation='destination-in'; gx.drawImage(designMasked,0,0);          /* only over the printed area */
-  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=0.7; ctx.drawImage(gc,0,0);      /* shine on top, design colours kept */
+  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top, design colours kept */
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 function renderTagMockup(){
