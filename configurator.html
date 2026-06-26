@@ -1671,8 +1671,8 @@
       </div>
       <div class="dim-pill" id="dim-pill">30 × 34 × 17 cm</div>
       <div class="mode-toggle" id="mode-toggle">
-        <button class="on" data-mode="3d" onclick="setViewMode('3d')">3D</button>
-        <button data-mode="2d" onclick="setViewMode('2d')">2D</button>
+        <button class="on" data-mode="3d" onclick="setViewMode('3d')">Preview</button>
+        <button data-mode="2d" onclick="setViewMode('2d')">Edit</button>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
       <div id="mini3d-resize" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 26 26" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 13 A7 7 0 0 1 13 6"/></svg></div>
@@ -1766,21 +1766,13 @@
           <div class="finish-preview" id="fp-ext-gloss" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
           <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
         </div>
-        <div class="finish-card" data-finish="matte" onclick="applyBagFinish('exterior','matte',this)">
+        <div class="finish-card on" data-finish="matte" onclick="applyBagFinish('exterior','matte',this)">
           <div class="finish-preview" id="fp-ext-matte" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
           <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
         </div>
-        <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('exterior','softtouch',this)">
-          <div class="finish-preview" id="fp-ext-softtouch" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
-          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
-        </div>
-        <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('exterior','kraft',this)">
-          <div class="finish-preview" id="fp-ext-kraft" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
-          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
-        </div>
         <div class="finish-card" data-finish="foil" onclick="applyBagFinish('exterior','foil',this)">
           <div class="finish-preview" id="fp-ext-foil" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
+          <span class="finish-name" data-en="Foil" data-ar="ختم معدني">Foil</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
         </div>
       </div>
 
@@ -1827,21 +1819,13 @@
           <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
           <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
         </div>
-        <div class="finish-card" data-finish="matte" onclick="applyBagFinish('interior','matte',this)">
+        <div class="finish-card on" data-finish="matte" onclick="applyBagFinish('interior','matte',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
           <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
         </div>
-        <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('interior','softtouch',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
-          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
-        </div>
-        <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('interior','kraft',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
-          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
-        </div>
         <div class="finish-card" data-finish="foil" onclick="applyBagFinish('interior','foil',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
+          <span class="finish-name" data-en="Foil" data-ar="ختم معدني">Foil</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
         </div>
       </div>
 
@@ -1887,21 +1871,13 @@
           <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
           <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="high-shine" data-ar="لمعان عالٍ">high-shine</span>
         </div>
-        <div class="finish-card" data-finish="matte" onclick="applyBagFinish('ribbon','matte',this)">
+        <div class="finish-card on" data-finish="matte" onclick="applyBagFinish('ribbon','matte',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
           <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="non-reflective" data-ar="غير عاكس">non-reflective</span>
         </div>
-        <div class="finish-card on" data-finish="softtouch" onclick="applyBagFinish('ribbon','softtouch',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)"></div>
-          <span class="finish-name" data-en="Soft Touch" data-ar="ملمس ناعم">Soft Touch</span><span class="finish-sub" data-en="velvet hand-feel" data-ar="ملمس مخملي">velvet hand-feel</span>
-        </div>
-        <div class="finish-card" data-finish="kraft" onclick="applyBagFinish('ribbon','kraft',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 42% 38%,#c9a96e 0%,#a8803e 55%,#7a5c22 100%)"></div>
-          <span class="finish-name" data-en="Kraft" data-ar="كرافت">Kraft</span><span class="finish-sub" data-en="natural fiber" data-ar="ألياف طبيعية">natural fiber</span>
-        </div>
         <div class="finish-card" data-finish="foil" onclick="applyBagFinish('ribbon','foil',this)">
           <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name" data-en="Foil Stamp" data-ar="ختم معدني">Foil Stamp</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
+          <span class="finish-name" data-en="Foil" data-ar="ختم معدني">Foil</span><span class="finish-sub" data-en="metallic accent" data-ar="لمسة معدنية">metallic accent</span>
         </div>
       </div>
 
@@ -3042,8 +3018,8 @@ const S = {
 };
 /* ─── PAPER BAG STATE ───────────────── */
 const BAG = {
-  exterior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
-  interior: { color: '#00E6D2', faceColors: {}, finish: 'softtouch', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  exterior: { color: '#00E6D2', faceColors: {}, finish: 'matte', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 0.65, patternStretchV: 1.0, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
+  interior: { color: '#00E6D2', faceColors: {}, finish: 'matte', pattern: -1, patternColor: '#111111', patternColorHue: 0, patternColorSwatchName: 'True', patternOpacity: 0.8, patternDensity: 1, patternStretchU: 2.05, patternStretchV: 2.05, swatchName: 'True', customHex: '#FFFFFF', patternCustomHex: '#FFFFFF', kraftTintEnabled: false, kraftTintPower: 1.0 },
   ribbon:   { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   rivet:    { color: '#00E6D2', swatchName: 'True', customHex: '#FFFFFF' },
   artwork: {
@@ -5502,9 +5478,9 @@ function buildPaperBagMesh() {
     initBagPBRMaps();
     initBagBumpMap();
     applyPaperNormal();
-    applyBagFinish('exterior', 'softtouch', null, true);
-    applyBagFinish('interior', 'softtouch', null, true);
-    applyBagFinish('ribbon',   'softtouch', null, true);
+    applyBagFinish('exterior', 'matte', null, true);
+    applyBagFinish('interior', 'matte', null, true);
+    applyBagFinish('ribbon',   'matte', null, true);
     if (typeof initRealismBag === 'function') initRealismBag();
     drawBagTexture();
     if (typeof renderLayersList === 'function') renderLayersList(); /* Layers panel is the only artwork UI now */
@@ -6121,8 +6097,7 @@ function layerFinishGridHTML(L) {
     { k:'none',      prev:'linear-gradient(135deg,#f0ece6 25%,#e4ddd6 50%,#f0ece6 75%)', overlay:true, name:'None', sub:'match exterior' },
     { k:'gloss',     prev:'radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)', name:'Gloss', sub:'high-shine' },
     { k:'matte',     prev:'radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)', name:'Matte', sub:'non-reflective' },
-    { k:'softtouch', prev:'radial-gradient(circle at 40% 38%,#e0dbd5 0%,#c2bcb6 55%,#a8a29c 100%)', name:'Soft Touch', sub:'velvet hand-feel' },
-    { k:'foil',      prev:'radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)', name:'Foil Stamp', sub:'metallic accent' }
+    { k:'foil',      prev:'radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)', name:'Foil', sub:'metallic accent' }
   ];
   var h = '<div class="finish-grid" id="lyr-' + L.id + '-finish-grid">';
   defs.forEach(function(d) {
@@ -8329,7 +8304,7 @@ function _applyDefaultControls() {
      finish cards, PBR sliders and the 3D materials all in sync. */
   try {
     [['exterior','ext'],['interior','int'],['ribbon','rib']].forEach(function(pair){
-      var rg=pair[0], fin=(BAG[rg] && BAG[rg].finish) || 'softtouch';
+      var rg=pair[0], fin=(BAG[rg] && BAG[rg].finish) || 'matte';
       if (typeof applyBagFinish === 'function') applyBagFinish(rg, fin, null, true);
     });
   } catch (e) { console.warn('default finish apply failed', e); }
@@ -9077,9 +9052,9 @@ function clearBag() {
   });
 
   /* Finishes → gloss (default) — instant on clear */
-  applyBagFinish('exterior', 'softtouch', null, true);
-  applyBagFinish('interior', 'softtouch', null, true);
-  applyBagFinish('ribbon',   'softtouch', null, true);
+  applyBagFinish('exterior', 'matte', null, true);
+  applyBagFinish('interior', 'matte', null, true);
+  applyBagFinish('ribbon',   'matte', null, true);
 
   applyRibbonColor();
   if (typeof applyRivetColor === 'function') applyRivetColor();
@@ -9406,7 +9381,7 @@ function updatePricing() {
   /* Exterior finish row */
   var extRow = document.getElementById('ext-finish-row');
   if (extPPU > 0) {
-    var extName = extFinish.charAt(0).toUpperCase() + extFinish.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp');
+    var extName = extFinish.charAt(0).toUpperCase() + extFinish.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil');
     document.getElementById('ext-finish-lbl').textContent =
       'Exterior ' + extName + ' (+' + fmtUnit(extPPU) + '/unit)';
     document.getElementById('ext-finish-val').textContent = fmt(extTotal);
@@ -9416,7 +9391,7 @@ function updatePricing() {
   /* Interior finish row */
   var intRow = document.getElementById('int-finish-row');
   if (intPPU > 0) {
-    var intName = intFinish.charAt(0).toUpperCase() + intFinish.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp');
+    var intName = intFinish.charAt(0).toUpperCase() + intFinish.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil');
     document.getElementById('int-finish-lbl').textContent =
       'Interior ' + intName + ' (+' + fmtUnit(intPPU) + '/unit)';
     document.getElementById('int-finish-val').textContent = fmt(intTotal);
@@ -10138,7 +10113,7 @@ function _nudgeHandleFinish(times){
   var delays = [0, 250, 600, 1000, 1500];
   for (var i = 0; i < times; i++){
     (function(){ setTimeout(function(){
-      var fin = (BAG.ribbon && BAG.ribbon.finish) || 'softtouch';
+      var fin = (BAG.ribbon && BAG.ribbon.finish) || 'matte';
       if (typeof applyBagFinish === 'function') applyBagFinish('ribbon', fin, null, true);
     }, delays[i] != null ? delays[i] : (600 + i*400)); })();
   }
@@ -11683,9 +11658,9 @@ function _showFinishBar(region, sp){
   var bar=document.getElementById('a2d-facebar'); if(!bar) return;
   var ar=(typeof getLang==='function'&&getLang()==='ar');
   var rn=region==='ribbon'?(ar?'المقابض':'Handles'):(ar?(region==='exterior'?'خارج الكيس':'داخل الكيس'):(region==='exterior'?'Exterior':'Interior'));
-  var cur=(BAG[region]&&BAG[region].finish)||'softtouch';
-  var fins=ar?[['gloss','لامع'],['matte','مطفّأ'],['softtouch','ناعم'],['kraft','كرافت'],['foil','معدني']]
-             :[['gloss','Gloss'],['matte','Matte'],['softtouch','Soft'],['kraft','Kraft'],['foil','Foil']];
+  var cur=(BAG[region]&&BAG[region].finish)||'matte';
+  var fins=ar?[['gloss','لامع'],['matte','مطفّأ'],['foil','معدني']]
+             :[['gloss','Gloss'],['matte','Matte'],['foil','Foil']];
   var h='<span style="font-size:10px;font-weight:600;color:var(--imp-fg-2);padding:0 6px 0 4px;white-space:nowrap;">'+rn+' · '+(ar?'تشطيب':'Finish')+'</span><span class="a2dc-sep"></span>';
   fins.forEach(function(f){ var on=(cur===f[0]);
     h+='<button class="a2dc-btn" title="'+f[1]+'" onclick="_setFaceFinish(\''+region+'\',\''+f[0]+'\')" style="flex-direction:column;gap:3px;padding:4px 5px;border-radius:8px;'+(on?'background:var(--imp-accent-weak,rgba(200,169,110,0.18));':'')+'">'+_finishSwatchSVG(f[0])+'<span style="font-size:8px;font-weight:700;letter-spacing:0.02em;color:var(--imp-fg-2);">'+f[1]+'</span></button>'; });
@@ -12024,12 +11999,12 @@ function configStepNext() { goConfigStep(currentConfigStep + 1); }
 function renderReviewSummary() {
   var host = document.getElementById('review-summary'); if (!host) return;
   function swatch(c){ return '<span style="display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,0.15);background:' + (c||'#fff') + ';vertical-align:-2px;margin-right:6px;"></span>'; }
-  function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
+  function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil'); }
   function row(label, valHTML){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--imp-border);font-size:13px;"><span style="color:var(--imp-fg-3);">'+label+'</span><span style="color:var(--imp-fg);font-weight:600;text-align:right;">'+valHTML+'</span></div>'; }
   var ar = (typeof getLang==='function' && getLang()==='ar');
   var T = ar ? { Size:'الحجم', Quantity:'الكمية', units:'وحدة', Exterior:'الخارج', Interior:'الداخل', Handles:'المقابض', Rivets:'البرشام', Artwork:'التصميم', None:'لا يوجد', Pattern:'خلفية', Graphic:'رسمة' }
              : { Size:'Size', Quantity:'Quantity', units:'units', Exterior:'Exterior', Interior:'Interior', Handles:'Handles', Rivets:'Rivets', Artwork:'Artwork', None:'None', Pattern:'Background', Graphic:'Graphic' };
-  function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil Stamp'); }
+  function cap(s){ s=(s||''); return s.charAt(0).toUpperCase()+s.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil'); }
   var model = (typeof BAG_MODELS!=='undefined' && BAG_MODELS[currentBagModel]) ? BAG_MODELS[currentBagModel] : null;
   var layers = (BAG.artwork && BAG.artwork.layers) ? BAG.artwork.layers.filter(function(L){ return L && L.visible && (L.kind==='logo'||L.kind==='sticker'||L.kind==='text'); }) : [];
   var artHTML;
