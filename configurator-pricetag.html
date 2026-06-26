@@ -5427,6 +5427,8 @@ function onTagBevel(v){
    circle → bevel 1 on a square. Each size has −/+ buttons that resize it
    UNIFORMLY by 0.5 cm (5 mm) per press (square/circle stay square). */
 var ROUND_BEVEL = 0.30;            /* corner bevel for the rounded shapes (0..1); set in Testing */
+var TAG_MIN_CM = 1.0;              /* minimum tag side (cm) */
+var TAG_MAX_W_CM = 14.0, TAG_MAX_H_CM = 30.0;   /* max before the UV islands reach the atlas edge — keeps W/H independent */
 var currentTagShape = 'rectangle';
 var TAG_SHAPES = {
   rectangle:  { round:false, circle:false, sizes:[[5.0,6.5],[5.5,9.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
@@ -5466,8 +5468,14 @@ function onTagSizePick(btn){ var row=_tagRowOf(btn); if(row) _applyTagSize(row);
 function onTagSizeStep(btn, dir){
   var row=_tagRowOf(btn); if(!row) return;
   var sh=TAG_SHAPES[currentTagShape];
-  var w=Math.max(1,(parseFloat(row.getAttribute('data-w'))||1)+dir*0.5);
-  var h=Math.max(1,(parseFloat(row.getAttribute('data-h'))||1)+dir*0.5);
+  var w=parseFloat(row.getAttribute('data-w'))||1, h=parseFloat(row.getAttribute('data-h'))||1;
+  /* uniform ±5mm, clamped to the UV-safe range: min 1cm, max ~14cm W / ~30cm H. Stops the step
+     the moment EITHER side reaches its limit so width & height stay in lockstep (uniform only). */
+  var step = dir*0.5;
+  if(step>0) step=Math.min(step, TAG_MAX_W_CM-w, TAG_MAX_H_CM-h);
+  else       step=Math.max(step, TAG_MIN_CM-w, TAG_MIN_CM-h);
+  if(Math.abs(step)<0.001) return;   /* already at the limit */
+  w=parseFloat(_fmt1(w+step)); h=parseFloat(_fmt1(h+step));
   if(_isSquareShape(currentTagShape)) h=w;
   row.setAttribute('data-w',_fmt1(w)); row.setAttribute('data-h',_fmt1(h));
   var key=row.querySelector('.bag-sopt-key'); if(key) key.textContent=_fmtTagSize(w,h,sh);
@@ -8732,6 +8740,7 @@ const BAG_FINISH_PRESETS = {
 function applyBagFinish(region, key, btn, instant) {
   var prevFinish = BAG[region].finish; /* capture before overwrite — used for kraft fade-out */
   BAG[region].finish = key;
+  if (region==='exterior' && typeof viewMode!=='undefined' && viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender();   /* refresh the Preview foil/gloss FX when the finish changes */
   var prefix = {exterior:'ext', interior:'int', ribbon:'rib', rivet:'riv'}[region];
   var p = BAG_FINISH_PRESETS[key];
   if (!p) return;
@@ -11461,21 +11470,54 @@ function _frontDesignCanvas(){
   cx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, w, h);
   return c;
 }
+/* ── Mockup material-finish FX (masked to the printed design) ─────────────────
+   Foil → metallic gold gradient + specular (the ink reads as foil); Gloss → a bright
+   specular sheen on top of the design. An OPTIONAL mockups/<size>/spec.png (white =
+   hot reflection) places the highlight on the real scene light; without it a synthetic
+   diagonal streak is used. Emboss/deboss are per-layer and come in a later pass. */
+function _fxCanvas(W,H){ var c=document.createElement('canvas'); c.width=W; c.height=H; return c; }
+function _fxSpec(W,H,A,x0,x1){
+  var c=_fxCanvas(W,H), x=c.getContext('2d');
+  var g=x.createLinearGradient(W*x0,0, W*x1,H);
+  g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  if(A && A.spec){ x.globalCompositeOperation='multiply'; x.drawImage(A.spec,0,0,W,H); }   /* real-light placement when a spec map exists */
+  return c;
+}
+function _applyFoilFx(ctx, designMasked, A){
+  var W=A.W, H=A.H, fc=_fxCanvas(W,H), fx=fc.getContext('2d');
+  var g=fx.createLinearGradient(W*0.12,0, W*0.88,H);   /* metallic gold gradient (dark→bright→white→bright→dark) */
+  g.addColorStop(0.00,'#6e4f12'); g.addColorStop(0.22,'#caa53d'); g.addColorStop(0.43,'#fff3c4');
+  g.addColorStop(0.52,'#ffffff'); g.addColorStop(0.60,'#fff3c4'); g.addColorStop(0.80,'#caa53d'); g.addColorStop(1.00,'#6e4f12');
+  fx.fillStyle=g; fx.fillRect(0,0,W,H);
+  fx.globalCompositeOperation='screen'; fx.drawImage(_fxSpec(W,H,A,0.34,0.60),0,0);   /* sharp specular streak */
+  fx.globalCompositeOperation='destination-in'; fx.drawImage(designMasked,0,0);        /* clip to the printed design */
+  ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.drawImage(fc,0,0);  /* foil replaces the ink */
+}
+function _applyGlossFx(ctx, designMasked, A){
+  var W=A.W, H=A.H, gc=_fxCanvas(W,H), gx=gc.getContext('2d');
+  gx.drawImage(_fxSpec(W,H,A,0.30,0.58),0,0);
+  gx.globalCompositeOperation='destination-in'; gx.drawImage(designMasked,0,0);          /* only over the printed area */
+  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=0.7; ctx.drawImage(gc,0,0);      /* shine on top, design colours kept */
+  ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+}
 function renderTagMockup(){
   var cvs = document.getElementById('tag-mockup'); if(!cvs) return;
   if (!_mockupAssets) _showMockupLoader(true);   /* first load only — assets are cached afterwards, so live re-renders are instant */
   _loadMockupAssets(function(A){
     _showMockupLoader(false);
     if (viewMode !== 'preview') return;   /* user may have left the view while the assets loaded */
+    /* optional highlight/spec map (mockups/<size>/spec.png, white = hot reflection) — best-effort, never blocks the render */
+    if (A.spec===undefined){ A.spec=null; var _si=new Image(); _si.onload=function(){ A.spec=_si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; _si.onerror=function(){}; _si.src='mockups/s5x8/spec.png'; }
     cvs.width = A.W; cvs.height = A.H;
     var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
     ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
-    var design = _frontDesignCanvas();
+    var design = _frontDesignCanvas(), _designMasked = null;
     if (design){                                                              /* 2. design, fitted to the face & clipped to the mask (hole-free; the eyelet is in the base photo) */
       var tmp = document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
       tx.drawImage(design, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
       tx.globalCompositeOperation='destination-in'; tx.drawImage(A.maskAlpha, 0, 0);
-      ctx.drawImage(tmp, 0, 0);
+      ctx.drawImage(tmp, 0, 0); _designMasked = tmp;
     }
     /* 3. AO / shadow map — Testing-tunable intensity, blend mode + optional invert */
     var aoImg = A2D.mockupAOinvert ? _invertedShadow(A) : A.shadow;
@@ -11483,6 +11525,13 @@ function renderTagMockup(){
     ctx.globalAlpha = (A2D.mockupAO!=null ? A2D.mockupAO : 0.55);
     ctx.drawImage(aoImg, 0, 0, A.W, A.H);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation='source-over';
+    /* 3b. material-finish FX on the printed area (kept ABOVE the AO so metallic/gloss highlights stay bright) */
+    if (_designMasked){
+      var _fin = (typeof BAG!=='undefined' && BAG.exterior && BAG.exterior.finish) || 'matte';
+      if (_fin==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _designMasked, A);
+      else if (_fin==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _designMasked, A);
+      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+    }
     ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. cotton string, in front */
   });
 }
@@ -11554,7 +11603,7 @@ function atlas2dInit(){
 function atlas2dResize(){ var c=a2d.canvas; if(!c) return; var r=c.getBoundingClientRect(); a2d.dpr=(window.devicePixelRatio||1)*((typeof A2D!=='undefined'&&A2D.editorRes)?A2D.editorRes:1); c.width=Math.max(1,Math.round(r.width*a2d.dpr)); c.height=Math.max(1,Math.round(r.height*a2d.dpr)); }
 function _exuv(){ return (typeof BAG_UV!=='undefined'&&BAG_UV.exterior)?BAG_UV.exterior:{x:0,y:0,w:2048,h:2048}; }
 function _allUVBounds(){ var uv=typeof BAG_UV!=='undefined'?BAG_UV:{}; var regions=[uv.exterior,uv.interior].filter(Boolean); if(!regions.length) return _exuv(); var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; regions.forEach(function(r){ x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w); y1=Math.max(y1,r.y+r.h); }); return {x:x0,y:y0,w:x1-x0,h:y1-y0}; }
-function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.10; a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
+function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.22;   /* breathing room around the tag (was 0.10 — too tight) */ a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
 function _a2s(ax,ay){ return { x:ax*a2d.zoom+a2d.panX, y:ay*a2d.zoom+a2d.panY }; }
 function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoom }; }
 function _evPos(e){ var r=a2d._rect||a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:a2d.canvas.height - (e.clientY-r.top)*a2d.dpr }; }  /* y flipped to match the vertically-flipped render; rect cached during a drag */
