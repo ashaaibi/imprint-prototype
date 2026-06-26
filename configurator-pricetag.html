@@ -7678,7 +7678,7 @@ function renderPresets(){
   _fetchCollections(type, function(cols){
     cols = cols || [];
     /* Text picker: append a synthetic "Social Media" collection after the artist collections. */
-    if (type === 'text') cols = cols.concat([{ name:'Social_Media', social:true, files:Object.keys(SOCIAL_ICONS) }]);
+    if (type === 'graphic') cols = cols.concat([{ name:'Social_Media', social:true, files:Object.keys(SOCIAL_ICONS) }]);   /* social icons live in the GRAPHIC picker now (insert as a recolorable icon, no text) */
     _presets.cols=cols;
     if(!_presets.cols.length){ box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No presets in <b>/'+type+'</b> yet — add files under a collection folder (e.g. <b>'+type+'/Essentials/</b>) and regenerate the manifest.</div>'; return; }
     _presets.shown=_presets.cols.map(function(){ return 3; });
@@ -7775,16 +7775,22 @@ function chooseLibraryFont(key) {
   L.font = key; updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
   _autoEdit2dAfterUpload();   /* font chosen for the text layer → animate into the 2D editor */
 }
-/* Pick a social-media template for the current text layer: sets the platform + a starter handle. */
+/* Pick a social-media icon → insert it as a recolorable SVG GRAPHIC (just the icon, no text/handle). */
+function _socialIconSVG(platform){
+  var ic=SOCIAL_ICONS[platform]; if(!ic) return null;
+  var p=(ic.fill||[]).map(function(d){return '<path d="'+d+'" fill="#111111" stroke="none"/>';}).join('')
+       +(ic.stroke||[]).map(function(d){return '<path d="'+d+'" fill="none" stroke="#111111" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>';}).join('');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="256" height="256">'+p+'</svg>';
+}
 function chooseSocial(platform) {
   var id = _addSrc.id, L = getLayer(id);
   _closeAddSourceOverlay(); _addSrc.id = null;
   if (!L || !SOCIAL_ICONS[platform]) return;
-  L.social = { platform: platform };
-  var ph = SOCIAL_PLACEHOLDER[platform] || '@username';
-  /* fill the platform-appropriate example while the user hasn't typed their own. */
-  if (!L.content || L.content === 'Your text' || L._isSocialPlaceholder) { L.content = ph; L._isSocialPlaceholder = true; }
-  updateLayerThumb(L); renderLayersList(); drawBagTexture();
+  var svg=_socialIconSVG(platform); if(!svg) return;
+  L.isSvg=true; L.svgText=svg; L.fileName=platform; L.social=null;   /* graphic, not a text-social handle */
+  if (typeof loadSvgHiRes==='function'){
+    loadSvgHiRes(svg, function(img){ if(!img) return; L.srcImg=img; if(typeof openCutoutModal==='function') openCutoutModal(L.id,img,platform,null,true,true); }, (typeof stickerQuality!=='undefined'?stickerQuality:1024));
+  }
 }
 function clearLayerSocial(id) {
   var L = getLayer(id); if (!L) return;
