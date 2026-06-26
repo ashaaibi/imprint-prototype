@@ -11562,6 +11562,59 @@ function _applyGlossFx(ctx, designMasked, A){
   ctx.globalCompositeOperation=(SPEC_FX.blend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top at the Testing blend mode, design colours kept */
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
+/* ── Per-layer finish in the mockup: each logo / graphic / text layer's OWN foil, gloss,
+   emboss or deboss — masked to just that layer, composited over the whole-tag finish.
+   Reuses buildArtworkMaskCanvas (the same per-layer mask the 3D PBR pass used) and the
+   exact atlas→face crop that _frontDesignCanvas uses, so masks line up with the design. */
+function _frontLayerMask(L){
+  if (typeof buildArtworkMaskCanvas!=='function') return null;
+  var m = buildArtworkMaskCanvas(L); if(!m || !m.width) return null;
+  if (typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.exterior) return null;
+  var r=BAG_UV.exterior, w=Math.max(1,Math.round(r.w)), h=Math.max(1,Math.round(r.h)), sc=m.width/2048;
+  var c=document.createElement('canvas'); c.width=w; c.height=h; var cx=c.getContext('2d');
+  cx.translate(0,h); cx.scale(1,-1);                                   /* same V-flip as _frontDesignCanvas */
+  cx.drawImage(m, r.x*sc, r.y*sc, r.w*sc, r.h*sc, 0,0,w,h);
+  return c;
+}
+function _layerFinishArea(L, designMasked, A){
+  var fm=_frontLayerMask(L); if(!fm) return null;
+  var c=document.createElement('canvas'); c.width=A.W; c.height=A.H; var x=c.getContext('2d');
+  x.drawImage(fm, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);             /* layer mask → face, exactly like the design */
+  x.globalCompositeOperation='destination-in'; x.drawImage(A.maskAlpha,0,0);   /* clip to the tag silhouette */
+  var out=document.createElement('canvas'); out.width=A.W; out.height=A.H; var ox=out.getContext('2d');
+  ox.drawImage(designMasked,0,0); ox.globalCompositeOperation='destination-in'; ox.drawImage(c,0,0);   /* = the design, only where this layer is */
+  return out;
+}
+function _applyEmbossFx(ctx, area, A, extrude){
+  /* fake bevel: a light rim on one edge + a dark rim opposite, clipped to the layer.
+     extrude>0 = emboss (raised, light up-left); extrude<0 = deboss (indented, swapped). */
+  var W=A.W, H=A.H, dir=(extrude>=0?1:-1), amt=Math.min((typeof EXTRUDE_MAX!=='undefined'?EXTRUDE_MAX:3), Math.abs(extrude));
+  if (amt<=0) return;
+  var d=Math.max(1, Math.round(amt*2.2));
+  var lc=_fxCanvas(W,H), lx=lc.getContext('2d');
+  lx.drawImage(area,0,0); lx.globalCompositeOperation='source-in'; lx.fillStyle='#ffffff'; lx.fillRect(0,0,W,H);
+  lx.globalCompositeOperation='destination-out'; lx.drawImage(area, dir*d, dir*d);          /* light rim */
+  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=0.6*Math.min(1,amt); ctx.drawImage(lc,0,0);
+  var dc=_fxCanvas(W,H), dx=dc.getContext('2d');
+  dx.drawImage(area,0,0); dx.globalCompositeOperation='source-in'; dx.fillStyle='#000000'; dx.fillRect(0,0,W,H);
+  dx.globalCompositeOperation='destination-out'; dx.drawImage(area, -dir*d, -dir*d);         /* dark rim */
+  ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=0.5*Math.min(1,amt); ctx.drawImage(dc,0,0);
+  ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+}
+function _applyLayerFinishes(ctx, designMasked, A){
+  if (typeof BAG==='undefined' || !BAG.artwork || !BAG.artwork.layers) return;
+  var Ls=BAG.artwork.layers;
+  for (var i=Ls.length-1; i>=0; i--){            /* bottom-first → top layer wins in overlaps */
+    var L=Ls[i]; if(!L || !L.visible) continue;
+    var f=L.finish, e=L.extrude||0;
+    if (f!=='foil' && f!=='gloss' && !e) continue;
+    var area=_layerFinishArea(L, designMasked, A); if(!area) continue;
+    if (f==='foil') _applyFoilFx(ctx, area, A);
+    else if (f==='gloss') _applyGlossFx(ctx, area, A);
+    if (e) _applyEmbossFx(ctx, area, A, e);
+    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+  }
+}
 function renderTagMockup(){
   var cvs = document.getElementById('tag-mockup'); if(!cvs) return;
   if (!_mockupAssets) _showMockupLoader(true);   /* first load only — assets are cached afterwards, so live re-renders are instant */
@@ -11591,6 +11644,7 @@ function renderTagMockup(){
       var _fin = (typeof BAG!=='undefined' && BAG.exterior && BAG.exterior.finish) || 'matte';
       if (_fin==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _designMasked, A);
       else if (_fin==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _designMasked, A);
+      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, _designMasked, A);   /* per-layer foil/gloss/emboss/deboss on top of the whole-tag finish */
       ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
     }
     ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. cotton string, in front */
