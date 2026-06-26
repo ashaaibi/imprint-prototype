@@ -329,6 +329,10 @@
     .canvas-stage.mode-2d.no-preview #three-canvas { display: none !important; }
     .canvas-stage.mode-2d.no-preview .mini3d-label,
     .canvas-stage.mode-2d.no-preview #mini3d-resize { display: none; }
+    /* 3D view removed on the price tag — always hide the live-3D thumbnail, its label & resize wedge (the 2D Edit canvas and the Preview mockup are separate elements). */
+    .canvas-stage.mode-2d #three-canvas,
+    .canvas-stage.mode-2d .mini3d-label,
+    .canvas-stage.mode-2d #mini3d-resize { display: none !important; }
     html[dir="rtl"] .mini3d-label { right: auto; left: 16px; }
     .drag-hint {
       display: none; /* removed: empty viewport pill */
@@ -9786,6 +9790,7 @@ function updateMobileCameraOffset() {
   if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
 }
 
+var NO_3D_VIEW = true;   /* Price tag: 3D view removed — only the 2D "Edit" editor + photoreal "Preview" remain. Gating the WebGL render below stops the per-frame 3D render + post-FX (the big FPS cost). Set to false to restore 3D. */
 function animate(now) {
   T.raf = requestAnimationFrame(animate);
   tickSizeAnim(now);          /* overshoot scale animation */
@@ -9924,7 +9929,7 @@ function animate(now) {
     if (((now||0) - _lastPreviewRender) < _siv) _doRender = false;
     else _lastPreviewRender = now || 0;
   }
-  if (_doRender) {
+  if (_doRender && !NO_3D_VIEW) {   /* 3D view removed on the price tag — never run the WebGL render (FPS) */
     if (typeof realismRender === 'function') realismRender();
     else T.renderer.render(T.scene, T.camera);
   }
