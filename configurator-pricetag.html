@@ -11454,7 +11454,7 @@ var _saved3DView = null;
 /* ── Photoreal "Preview" mockup compositor ────────────────────────────────────
    Warps the live FRONT-face design onto a real photo of a blank hang tag, then
    re-adds the tag's shading (multiply) and the cotton string (occluder on top). */
-var MOCKUP_SRC = { base:'mockups/s5x8/base.jpg', mask:'mockups/s5x8/mask.png', shadow:'mockups/s5x8/shadow.png', string:'mockups/s5x8/string.png' };
+var MOCKUP_SRC = { base:'mockups/s55x95/base.jpg', mask:'mockups/s55x95/mask.png', shadow:'mockups/s55x95/shadow.png', string:'mockups/s55x95/string.png' };   /* 5.5x9.5 mockup (user PSD export) */
 var _mockupAssets = null, _mockupRAF = 0;
 function _loadMockupAssets(cb){
   if (_mockupAssets){ cb(_mockupAssets); return; }
@@ -11526,10 +11526,14 @@ function onGlossIntensity(v){ GLOSS_FX.intensity=(parseFloat(v)||0)/100; var e=d
 function _fxCanvas(W,H){ var c=document.createElement('canvas'); c.width=W; c.height=H; return c; }
 function _fxSpec(W,H,A,x0,x1){
   var c=_fxCanvas(W,H), x=c.getContext('2d');
-  var g=x.createLinearGradient(W*x0,0, W*x1,H);
-  g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
-  x.fillStyle=g; x.fillRect(0,0,W,H);
-  if(A && A.spec){ x.globalCompositeOperation=(SPEC_FX.blend||'multiply'); if(SPEC_FX.blur>0) x.filter='blur('+SPEC_FX.blur+'px)'; x.drawImage(A.spec,0,0,W,H); x.filter='none'; x.globalCompositeOperation='source-over'; }   /* highlight/spec map — blend mode + blur from Testing */
+  if(A && A.spec){                    /* real highlight map = the actual scene-light placement (blurred per Testing) */
+    if(SPEC_FX.blur>0) x.filter='blur('+SPEC_FX.blur+'px)';
+    x.drawImage(A.spec,0,0,W,H); x.filter='none';
+  } else {                            /* no map → synthetic diagonal streak fallback */
+    var g=x.createLinearGradient(W*x0,0, W*x1,H);
+    g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+  }
   return c;
 }
 function _applyFoilFx(ctx, designMasked, A){
@@ -11548,14 +11552,14 @@ function _applyFoilFx(ctx, designMasked, A){
   mx.globalCompositeOperation='destination-in'; mx.drawImage(designMasked,0,0);
   ctx.globalCompositeOperation='hard-light'; ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.intensity)); ctx.drawImage(mc,0,0);   /* metallize, keeping the design's colours */
   var scc=_fxCanvas(W,H), sx=scc.getContext('2d'); sx.drawImage(_fxSpec(W,H,A,0.34+sft*0.3,0.60+sft*0.3),0,0); sx.globalCompositeOperation='destination-in'; sx.drawImage(designMasked,0,0);
-  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec)); ctx.drawImage(scc,0,0);   /* sharp specular streak */
+  ctx.globalCompositeOperation=(SPEC_FX.blend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec)); ctx.drawImage(scc,0,0);   /* highlight (map or streak) at the Testing blend mode */
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 function _applyGlossFx(ctx, designMasked, A){
   var W=A.W, H=A.H, sft=(GLOSS_FX.angle-0.5), gc=_fxCanvas(W,H), gx=gc.getContext('2d');
   gx.drawImage(_fxSpec(W,H,A,0.30+sft*0.3,0.58+sft*0.3),0,0);
   gx.globalCompositeOperation='destination-in'; gx.drawImage(designMasked,0,0);          /* only over the printed area */
-  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top, design colours kept */
+  ctx.globalCompositeOperation=(SPEC_FX.blend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top at the Testing blend mode, design colours kept */
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 function renderTagMockup(){
@@ -11565,7 +11569,7 @@ function renderTagMockup(){
     _showMockupLoader(false);
     if (viewMode !== 'preview') return;   /* user may have left the view while the assets loaded */
     /* optional highlight/spec map (mockups/<size>/spec.png, white = hot reflection) — best-effort, never blocks the render */
-    if (A.spec===undefined){ A.spec=null; var _si=new Image(); _si.onload=function(){ A.spec=_si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; _si.onerror=function(){}; _si.src='mockups/s5x8/spec.png'; }
+    if (A.spec===undefined){ A.spec=null; var _si=new Image(); _si.onload=function(){ A.spec=_si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; _si.onerror=function(){}; _si.src='mockups/s55x95/spec.png'; }
     cvs.width = A.W; cvs.height = A.H;
     var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
     ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
