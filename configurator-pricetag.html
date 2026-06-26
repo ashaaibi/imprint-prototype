@@ -1232,6 +1232,19 @@
       gap: 8px;
       margin-bottom: 4px;
     }
+    /* ── Tag shape picker + per-shape size list (with −/+ steppers) ── */
+    .tag-shape-list { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:4px; }
+    .tag-shape-opt { display:flex; flex-direction:column; align-items:center; gap:6px; padding:11px 4px; border:1px solid var(--imp-border); border-radius:10px; background:var(--imp-surface); color:var(--imp-fg-2); font-family:inherit; font-size:10px; font-weight:600; text-align:center; line-height:1.15; cursor:pointer; transition:all .15s; }
+    .tag-shape-opt:hover { border-color:var(--imp-border-hover); background:var(--imp-surface-2); }
+    .tag-shape-opt.on { border-color:var(--imp-fg); color:var(--imp-fg); box-shadow:0 0 0 1px var(--imp-fg) inset; }
+    .tag-shape-opt .tag-shape-ico { display:flex; align-items:center; justify-content:center; color:inherit; }
+    .tag-size-list { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+    .tag-size-row { display:flex; align-items:stretch; gap:6px; }
+    .tag-size-row .bag-sopt { flex:1; margin:0; align-items:center; justify-content:center; text-align:center; }
+    .tag-size-row.on .bag-sopt { border-color:var(--imp-fg); color:var(--imp-fg); box-shadow:0 0 0 1px var(--imp-fg) inset; }
+    .tag-size-step { display:flex; gap:5px; }
+    .tag-step-btn { width:36px; border:1px solid var(--imp-border); border-radius:9px; background:var(--imp-surface); color:var(--imp-fg-2); font-size:18px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .tag-step-btn:hover { border-color:var(--imp-fg); color:var(--imp-fg); background:var(--imp-surface-2); }
     .bag-sopt {
       background: var(--imp-surface);
       border: 1px solid var(--imp-border);
@@ -1925,35 +1938,38 @@
 
 
     <!-- Bag Size ───────────────────────── -->
+    <!-- Tag Shape -->
     <div class="cs bag-section config-step" data-cstep="1">
-      <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
-      <div class="bag-size-list">
-        <button class="bag-sopt" onclick="onBagSize('s3x5',this)">
-          <span class="bag-sopt-key">3 × 5 cm</span>
-          <span class="bag-sopt-dims" data-en="Small tag" data-ar="بطاقة صغيرة">Small tag</span>
-          <span class="bag-sopt-price">from AED 0.70/unit</span>
+      <label class="cl"><span data-en="Shape" data-ar="الشكل">Shape</span></label>
+      <div class="tag-shape-list" id="tag-shape-list">
+        <button class="tag-shape-opt on" data-shape="rectangle" onclick="onTagShape('rectangle',this)">
+          <span class="tag-shape-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="7" width="16" height="10"/></svg></span>
+          <span class="tag-shape-name" data-en="Rectangle" data-ar="مستطيل">Rectangle</span>
         </button>
-        <button class="bag-sopt" onclick="onBagSize('s4x7',this)">
-          <span class="bag-sopt-key">4 × 7 cm</span>
-          <span class="bag-sopt-dims" data-en="Tall tag" data-ar="بطاقة طويلة">Tall tag</span>
-          <span class="bag-sopt-price">from AED 0.95/unit</span>
+        <button class="tag-shape-opt" data-shape="square" onclick="onTagShape('square',this)">
+          <span class="tag-shape-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="6" width="12" height="12"/></svg></span>
+          <span class="tag-shape-name" data-en="Square" data-ar="مربع">Square</span>
         </button>
-        <button class="bag-sopt on" onclick="onBagSize('s5x8',this)">
-          <span class="bag-sopt-key">5 × 8 cm</span>
-          <span class="bag-sopt-dims" data-en="Standard" data-ar="قياسي">Standard</span>
-          <span class="bag-sopt-price">from AED 1.15/unit</span>
+        <button class="tag-shape-opt" data-shape="circle" onclick="onTagShape('circle',this)">
+          <span class="tag-shape-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="7"/></svg></span>
+          <span class="tag-shape-name" data-en="Circle" data-ar="دائرة">Circle</span>
         </button>
-        <button class="bag-sopt" onclick="onBagSize('s5x9',this)">
-          <span class="bag-sopt-key">5 × 9 cm</span>
-          <span class="bag-sopt-dims" data-en="Large" data-ar="كبيرة">Large</span>
-          <span class="bag-sopt-price">from AED 1.25/unit</span>
+        <button class="tag-shape-opt" data-shape="rrectangle" onclick="onTagShape('rrectangle',this)">
+          <span class="tag-shape-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="7" width="16" height="10" rx="3.5"/></svg></span>
+          <span class="tag-shape-name" data-en="Rounded rectangle" data-ar="مستطيل دائري">Rounded rect.</span>
         </button>
-        <button class="bag-sopt" onclick="onBagSize('s6x10',this)">
-          <span class="bag-sopt-key">6 × 10 cm</span>
-          <span class="bag-sopt-dims" data-en="Oversized" data-ar="كبيرة جدًا">Oversized</span>
-          <span class="bag-sopt-price">from AED 1.55/unit</span>
+        <button class="tag-shape-opt" data-shape="rsquare" onclick="onTagShape('rsquare',this)">
+          <span class="tag-shape-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="6" width="12" height="12" rx="3.5"/></svg></span>
+          <span class="tag-shape-name" data-en="Rounded square" data-ar="مربع دائري">Rounded sq.</span>
         </button>
       </div>
+    </div>
+
+    <!-- Tag Size (per shape, all cm) -->
+    <div class="cs bag-section config-step" data-cstep="1">
+      <label class="cl"><span data-en="Size" data-ar="المقاس">Size</span></label>
+      <div class="tag-size-list" id="tag-size-list"></div>
+      <p style="font-size:10px;color:var(--imp-fg-3);margin:8px 2px 0;line-height:1.4;"><span data-en="Use − / + to resize a tag uniformly in 0.5 cm steps." data-ar="استخدم − / + لتغيير المقاس بمقدار ٠٫٥ سم بالتساوي.">Use − / + to resize a tag uniformly in 0.5 cm steps.</span></p>
     </div>
 
     <!-- Bag Quantity ────────────────────── -->
@@ -2070,6 +2086,14 @@
       </div>
       <div id="rlm-export-status" style="font-size:10px;color:var(--secondary);margin:6px 0 4px;line-height:1.4;">Captures render/lighting/material settings, per-finish PBR + custom maps, and custom lights → downloads a JSON and saves it so it auto-loads as your defaults next time. (Bag artwork/patterns are the customer's design, not captured here.)</div>
       <div style="border-bottom:1px solid var(--border);margin:10px 0 14px;"></div>
+
+      <!-- Tag Shape sub-section -->
+      <div style="margin-top:6px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Tag Shape</div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-name">Round corner bevel</span><span class="slider-val" id="tag-bevel-val">30%</span></div>
+        <input type="range" class="test-slider" id="tag-bevel-slider" min="0" max="100" step="1" value="30" oninput="onRoundBevel(this.value)">
+      </div>
+      <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Corner rounding for the <strong>Rounded rectangle</strong> &amp; <strong>Rounded square</strong> shapes. 0% = sharp, 100% = fully round.</div>
 
       <!-- Motion / Intro sub-section -->
       <div style="margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Motion &amp; Intro</div>
@@ -5389,6 +5413,88 @@ function onTagBevel(v){
   if(_bevelTimer) clearTimeout(_bevelTimer);
   _bevelTimer=setTimeout(function(){ if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }, 40);   /* light, coalesced */
 }
+
+/* ════════ TAG SHAPE + per-shape SIZE PICKER (all sizes in cm) ════════════════
+   Shapes → (W, H, bevel): rectangle/square → bevel 0; rounded → ROUND_BEVEL;
+   circle → bevel 1 on a square. Each size has −/+ buttons that resize it
+   UNIFORMLY by 0.5 cm (5 mm) per press (square/circle stay square). */
+var ROUND_BEVEL = 0.30;            /* corner bevel for the rounded shapes (0..1); set in Testing */
+var currentTagShape = 'rectangle';
+var TAG_SHAPES = {
+  rectangle:  { round:false, circle:false, sizes:[[5.0,6.5],[5.5,9.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
+  square:     { round:false, circle:false, sizes:[[6.5,6.5]] },
+  circle:     { round:false, circle:true,  sizes:[[6.0,6.0]] },
+  rrectangle: { round:true,  circle:false, sizes:[[5.0,6.5],[5.5,9.5],[2.0,10.8],[4.5,13.0],[4.5,8.9]] },
+  rsquare:    { round:true,  circle:false, sizes:[[6.5,6.5]] }
+};
+function _tagBevelForShape(sh){ return (sh && sh.circle) ? 1 : ((sh && sh.round) ? ROUND_BEVEL : 0); }
+function _fmt1(n){ return (Math.round((parseFloat(n)||0)*10)/10).toFixed(1); }
+function _isSquareShape(key){ return key==='square' || key==='rsquare' || key==='circle'; }
+function _fmtTagSize(w,h,sh){ return (sh && sh.circle) ? ('⌀ '+_fmt1(w)+' cm') : (_fmt1(w)+' × '+_fmt1(h)+' cm'); }
+function onTagShape(shape, btn){
+  if(!TAG_SHAPES[shape]) return;
+  currentTagShape = shape;
+  document.querySelectorAll('.tag-shape-opt').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-shape')===shape); });
+  currentTagBevel = _tagBevelForShape(TAG_SHAPES[shape]);
+  renderTagSizes();
+}
+function renderTagSizes(){
+  var list=document.getElementById('tag-size-list'); if(!list) return;
+  var sh=TAG_SHAPES[currentTagShape]; if(!sh) return;
+  var html='';
+  sh.sizes.forEach(function(s,i){
+    html += '<div class="tag-size-row'+(i===0?' on':'')+'" data-w="'+s[0]+'" data-h="'+s[1]+'">'
+         +    '<button type="button" class="bag-sopt" onclick="onTagSizePick(this)"><span class="bag-sopt-key">'+_fmtTagSize(s[0],s[1],sh)+'</span></button>'
+         +    '<div class="tag-size-step">'
+         +      '<button type="button" class="tag-step-btn" title="-0.5 cm" onclick="onTagSizeStep(this,-1)">−</button>'
+         +      '<button type="button" class="tag-step-btn" title="+0.5 cm" onclick="onTagSizeStep(this,1)">+</button>'
+         +    '</div></div>';
+  });
+  list.innerHTML=html;
+  var first=list.querySelector('.tag-size-row'); if(first) _applyTagSize(first);
+}
+function _tagRowOf(el){ while(el && !(el.classList && el.classList.contains('tag-size-row'))) el=el.parentNode; return el; }
+function onTagSizePick(btn){ var row=_tagRowOf(btn); if(row) _applyTagSize(row); }
+function onTagSizeStep(btn, dir){
+  var row=_tagRowOf(btn); if(!row) return;
+  var sh=TAG_SHAPES[currentTagShape];
+  var w=Math.max(1,(parseFloat(row.getAttribute('data-w'))||1)+dir*0.5);
+  var h=Math.max(1,(parseFloat(row.getAttribute('data-h'))||1)+dir*0.5);
+  if(_isSquareShape(currentTagShape)) h=w;
+  row.setAttribute('data-w',_fmt1(w)); row.setAttribute('data-h',_fmt1(h));
+  var key=row.querySelector('.bag-sopt-key'); if(key) key.textContent=_fmtTagSize(w,h,sh);
+  if(row.classList.contains('on')) _applyTagSize(row);
+}
+function _applyTagSize(row){
+  if(!row) return;
+  var w=parseFloat(row.getAttribute('data-w'))||6, h=parseFloat(row.getAttribute('data-h'))||6;
+  if(_isSquareShape(currentTagShape)) h=w;
+  if(row.parentNode) row.parentNode.querySelectorAll('.tag-size-row').forEach(function(r){ r.classList.toggle('on', r===row); });
+  currentTagDims={ w:w, h:h };
+  currentTagBevel=_tagBevelForShape(TAG_SHAPES[currentTagShape]);
+  var sh=TAG_SHAPES[currentTagShape];
+  var pill=document.getElementById('dim-pill'); if(pill) pill.textContent=_fmtTagSize(w,h,sh);
+  if(typeof S!=='undefined' && S) S.dims=_fmt1(w)+' × '+_fmt1(h)+' cm';
+  if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry();
+}
+function onRoundBevel(v){
+  ROUND_BEVEL=Math.max(0, Math.min(1, (parseFloat(v)||0)/100));
+  var el=document.getElementById('tag-bevel-val'); if(el) el.textContent=Math.round(ROUND_BEVEL*100)+'%';
+  if(TAG_SHAPES[currentTagShape] && TAG_SHAPES[currentTagShape].round){ currentTagBevel=ROUND_BEVEL; if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry(); }
+}
+/* Populate the size list once the tag is built, so selecting the first size reshapes it. */
+(function _bootTagShapeUI(){
+  var tries=0;
+  function go(){
+    tries++;
+    var ready = (typeof renderTagSizes==='function') && document.getElementById('tag-size-list');
+    var built = (typeof bagMeshRef!=='undefined') && bagMeshRef;
+    if((!ready || !built) && tries<60) return setTimeout(go,80);
+    if(ready) renderTagSizes();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(go,0); });
+  else setTimeout(go,0);
+})();
 function buildPaperBagMesh() {
   var _mySeq = ++_bagBuildSeq;
   if (typeof setBagLoading === 'function') setBagLoading(true);
