@@ -7729,7 +7729,9 @@ function _renderPresetGrid(i){
       _loadFontFromUrl(url, name, function(key){          /* downloads start immediately, in parallel */
         if(!key){ card.style.display='none'; }
         else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
-          content.innerHTML='<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
+          content.innerHTML = c.arabic
+            ? '<span style="'+_fontPreviewStyle(key)+'font-size:24px;line-height:1.15;color:var(--imp-fg,#111);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">الخط العربي</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;direction:rtl;">أ ب ج</span>'
+            : '<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
         card._ready=true; if(card._readyCb) card._readyCb();
       });
     })(c.files[k]); }
