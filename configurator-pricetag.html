@@ -1723,9 +1723,9 @@
         <div style="font-size:12px;color:var(--secondary);line-height:1.5;max-width:240px;">A photoreal preview for this size &amp; shape is coming soon. The <b>4.5 × 9 cm rectangle</b> has one — pick it to see the mockup.</div>
       </div>
       <div class="dim-pill" id="dim-pill">4.5 × 9 cm</div>
-      <div class="mode-toggle" id="mode-toggle">
-        <button class="on" data-mode="2d" onclick="setViewMode('2d')">Edit</button>
-        <button data-mode="preview" onclick="setViewMode('preview')">Preview</button>
+      <div class="mode-toggle" id="mode-toggle" role="group" aria-label="Canvas view">
+        <button class="on" data-mode="2d" aria-pressed="true" onclick="setViewMode('2d')" data-en="Edit" data-ar="تحرير">Edit</button>
+        <button data-mode="preview" aria-pressed="false" onclick="setViewMode('preview')" data-en="Preview" data-ar="معاينة">Preview</button>
       </div>
       <div id="mockup-carousel" style="display:none;">
         <button class="mk-arrow mk-arrow-l" onclick="_gotoMockupSlide(_mockupSlide-1)" aria-label="Previous mockup">&#8249;</button>
@@ -3100,7 +3100,7 @@
 <!-- ── MOBILE STICKY BAR ────────────── -->
 <div class="mobile-bar">
   <div class="mb-price">
-    <span class="mb-total" id="mb-total">AED 5,800</span>
+    <span class="mb-total" id="mb-total" aria-live="polite">AED 5,800</span>
     <span class="mb-pu"    id="mb-pu">AED 5.80 / unit · 1,000 units</span>
   </div>
   <button class="mb-btn" id="mb-btn" onclick="_mobileBarAction()" data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
@@ -11603,7 +11603,7 @@ function _autoEdit2dAfterUpload(){
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : (mode === 'preview') ? 'preview' : '3d';
   if (typeof _hideFaceBar==='function') _hideFaceBar();
-  document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === viewMode); });
+  document.querySelectorAll('#mode-toggle button').forEach(function(b){ var on=b.getAttribute('data-mode') === viewMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on?'true':'false'); });
   var stage = document.querySelector('.canvas-stage');
   if (stage){ stage.classList.toggle('mode-2d', viewMode === '2d'); stage.classList.toggle('mode-preview', viewMode === 'preview'); }  /* shrinks live 3D into bottom-right preview */
   if (stage) stage.classList.toggle('no-preview', viewMode === '2d' && !A2D.previewOn);
