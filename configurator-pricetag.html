@@ -11461,7 +11461,7 @@ var _saved3DView = null;
 /* ── Photoreal "Preview" mockup compositor ────────────────────────────────────
    Warps the live FRONT-face design onto a real photo of a blank hang tag, then
    re-adds the tag's shading (multiply) and the cotton string (occluder on top). */
-var MOCKUP_SRC = { base:'mockups/s55x95/base.jpg', mask:'mockups/s55x95/mask.png', shadow:'mockups/s55x95/shadow.png', string:'mockups/s55x95/string.png' };   /* 5.5x9.5 mockup (user PSD export) */
+var MOCKUP_SRC = { base:'mockups/s55x95/base.jpg', mask:'mockups/s55x95/mask.png', maskBack:'mockups/s55x95/mask_back.png', shadow:'mockups/s55x95/shadow.png', string:'mockups/s55x95/string.png' };   /* 5.5x9.5 mockup (user PSD export) — front + back masks */
 var _mockupAssets = null, _mockupRAF = 0;
 function _loadMockupAssets(cb){
   if (_mockupAssets){ cb(_mockupAssets); return; }
@@ -11473,30 +11473,28 @@ function _loadMockupAssets(cb){
     im.src = MOCKUP_SRC[k]; imgs[k] = im;
   });
 }
-function _prepMockupAssets(imgs){
-  var W = imgs.base.naturalWidth, H = imgs.base.naturalHeight;
-  /* mask.png is white-on-black → convert to an ALPHA mask (luminance→alpha) + find the face bbox */
+function _maskAlphaAndBox(img, W, H){
+  /* mask png (white tag on black; the string-hole is cut out) → ALPHA mask + face bbox.
+     Opaque only where luminance AND existing alpha are both high (min) — robust whether the
+     hole was painted black or left transparent. The hole stays SEE-THROUGH so the base photo's
+     real eyelet shows through (we no longer fill it in). */
   var mc = document.createElement('canvas'); mc.width = W; mc.height = H;
-  var mx = mc.getContext('2d'); mx.drawImage(imgs.mask, 0, 0, W, H);
+  var mx = mc.getContext('2d'); mx.drawImage(img, 0, 0, W, H);
   var idata = mx.getImageData(0,0,W,H), p = idata.data;
   var minX=W, minY=H, maxX=0, maxY=0, any=false;
-  for (var y=0;y<H;y++){ var row=y*W*4; for (var x=0;x<W;x++){ var i=row+x*4; var a=p[i];
+  for (var y=0;y<H;y++){ var row=y*W*4; for (var x=0;x<W;x++){ var i=row+x*4; var a=Math.min(p[i], p[i+3]);
     p[i]=p[i+1]=p[i+2]=255; p[i+3]=a;
     if (a>140){ any=true; if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; } } }
-  /* Fill the punched string-hole in the mask so the live design composites as a SOLID rectangle.
-     For each tag row, force everything between the left and right edges fully opaque — the photo's
-     own eyelet/hole reads from the base layer instead of cutting a see-through circle in the print. */
-  if (any){
-    for (var hy=minY; hy<=maxY; hy++){
-      var hrow=hy*W*4, hl=-1, hr=-1;
-      for (var hx=minX; hx<=maxX; hx++){ if (p[hrow+hx*4+3] > 140){ if (hl<0) hl=hx; hr=hx; } }
-      if (hl<0) continue;
-      for (var gx=hl; gx<=hr; gx++){ p[hrow+gx*4+3]=255; }
-    }
-  }
   mx.putImageData(idata,0,0);
-  return { base:imgs.base, shadow:imgs.shadow, string:imgs.string, maskAlpha:mc,
-           bbox: any ? {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1} : {x:0,y:0,w:W,h:H}, W:W, H:H };
+  return { mask:mc, bbox: any ? {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1} : {x:0,y:0,w:W,h:H} };
+}
+function _prepMockupAssets(imgs){
+  var W = imgs.base.naturalWidth, H = imgs.base.naturalHeight;
+  var fr = _maskAlphaAndBox(imgs.mask, W, H);
+  var bk = imgs.maskBack ? _maskAlphaAndBox(imgs.maskBack, W, H) : null;   /* the SECOND (back) tag in the same photo */
+  return { base:imgs.base, shadow:imgs.shadow, string:imgs.string,
+           maskAlpha:fr.mask, bbox:fr.bbox,
+           maskBack: bk?bk.mask:null, bboxBack: bk?bk.bbox:null, W:W, H:H };
 }
 /* The baked FRONT-face artwork, cropped from the colour atlas (clean — no labels/handles). */
 function _frontDesignCanvas(){
@@ -11510,6 +11508,19 @@ function _frontDesignCanvas(){
   var c = document.createElement('canvas'); c.width = w; c.height = h;
   var cx = c.getContext('2d');
   cx.translate(0, h); cx.scale(1, -1);   /* the atlas stores the face V-flipped (geometry maps V via (hh-y)); un-flip so it reads upright on the mockup */
+  cx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, w, h);
+  return c;
+}
+/* The baked BACK-face artwork, cropped from the INTERIOR region of the colour atlas. */
+function _backDesignCanvas(){
+  var src = (typeof bagMockupCanvas!=='undefined' && bagMockupCanvas && bagMockupCanvas.width) ? bagMockupCanvas
+          : (typeof bagCleanCanvas!=='undefined' && bagCleanCanvas && bagCleanCanvas.width) ? bagCleanCanvas
+          : (typeof bagTexCanvas!=='undefined' ? bagTexCanvas : null);
+  if (!src || typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.interior) return null;
+  var r = BAG_UV.interior, w = Math.max(1, Math.round(r.w)), h = Math.max(1, Math.round(r.h));
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  var cx = c.getContext('2d');
+  cx.translate(0, h); cx.scale(1, -1);
   cx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, w, h);
   return c;
 }
@@ -11573,21 +11584,25 @@ function _applyGlossFx(ctx, designMasked, A){
    emboss or deboss — masked to just that layer, composited over the whole-tag finish.
    Reuses buildArtworkMaskCanvas (the same per-layer mask the 3D PBR pass used) and the
    exact atlas→face crop that _frontDesignCanvas uses, so masks line up with the design. */
-function _frontLayerMask(L){
+function _layerSurfaceMask(L, surface){
   if (typeof buildArtworkMaskCanvas!=='function') return null;
   var m = buildArtworkMaskCanvas(L); if(!m || !m.width) return null;
-  if (typeof BAG_UV==='undefined' || !BAG_UV || !BAG_UV.exterior) return null;
-  var r=BAG_UV.exterior, w=Math.max(1,Math.round(r.w)), h=Math.max(1,Math.round(r.h)), sc=m.width/2048;
+  var r = (surface==='interior') ? (BAG_UV && BAG_UV.interior) : (BAG_UV && BAG_UV.exterior);
+  if (!r) return null;
+  var w=Math.max(1,Math.round(r.w)), h=Math.max(1,Math.round(r.h)), sc=m.width/2048;
   var c=document.createElement('canvas'); c.width=w; c.height=h; var cx=c.getContext('2d');
-  cx.translate(0,h); cx.scale(1,-1);                                   /* same V-flip as _frontDesignCanvas */
+  cx.translate(0,h); cx.scale(1,-1);                                   /* same V-flip as _front/_backDesignCanvas */
   cx.drawImage(m, r.x*sc, r.y*sc, r.w*sc, r.h*sc, 0,0,w,h);
   return c;
 }
-function _layerFinishArea(L, designMasked, A){
-  var fm=_frontLayerMask(L); if(!fm) return null;
+function _layerFinishArea(L, designMasked, A, surface){
+  var fm=_layerSurfaceMask(L, surface); if(!fm) return null;
+  var bbox = (surface==='interior') ? A.bboxBack : A.bbox;
+  var maskA = (surface==='interior') ? A.maskBack : A.maskAlpha;
+  if (!bbox || !maskA) return null;
   var c=document.createElement('canvas'); c.width=A.W; c.height=A.H; var x=c.getContext('2d');
-  x.drawImage(fm, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);             /* layer mask → face, exactly like the design */
-  x.globalCompositeOperation='destination-in'; x.drawImage(A.maskAlpha,0,0);   /* clip to the tag silhouette */
+  x.drawImage(fm, bbox.x, bbox.y, bbox.w, bbox.h);                     /* layer mask → its face, exactly like the design */
+  x.globalCompositeOperation='destination-in'; x.drawImage(maskA,0,0);  /* clip to that tag's silhouette */
   var out=document.createElement('canvas'); out.width=A.W; out.height=A.H; var ox=out.getContext('2d');
   ox.drawImage(designMasked,0,0); ox.globalCompositeOperation='destination-in'; ox.drawImage(c,0,0);   /* = the design, only where this layer is */
   return out;
@@ -11608,14 +11623,16 @@ function _applyEmbossFx(ctx, area, A, extrude){
   ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=0.5*Math.min(1,amt); ctx.drawImage(dc,0,0);
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
-function _applyLayerFinishes(ctx, designMasked, A){
+function _applyLayerFinishes(ctx, designMasked, A, surface){
   if (typeof BAG==='undefined' || !BAG.artwork || !BAG.artwork.layers) return;
   var Ls=BAG.artwork.layers;
   for (var i=Ls.length-1; i>=0; i--){            /* bottom-first → top layer wins in overlaps */
     var L=Ls[i]; if(!L || !L.visible) continue;
+    var lsurf = (L.surface==='interior') ? 'interior' : 'exterior';
+    if (lsurf !== surface) continue;             /* only the layers on this face */
     var f=L.finish, e=L.extrude||0;
     if (f!=='foil' && f!=='gloss' && !e) continue;
-    var area=_layerFinishArea(L, designMasked, A); if(!area) continue;
+    var area=_layerFinishArea(L, designMasked, A, surface); if(!area) continue;
     if (f==='foil') _applyFoilFx(ctx, area, A);
     else if (f==='gloss') _applyGlossFx(ctx, area, A);
     if (e) _applyEmbossFx(ctx, area, A, e);
@@ -11633,12 +11650,22 @@ function renderTagMockup(){
     cvs.width = A.W; cvs.height = A.H;
     var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
     ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
-    var design = _frontDesignCanvas(), _designMasked = null;
-    if (design){                                                              /* 2. design, fitted to the face & clipped to the mask (hole-free; the eyelet is in the base photo) */
+    var _designMasked = null, _backMasked = null;                            /* 2. design on BOTH tags in the photo, each clipped to its own mask (string-hole stays see-through) */
+    var _fdes = _frontDesignCanvas();
+    if (_fdes){
       var tmp = document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
-      tx.drawImage(design, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
+      tx.drawImage(_fdes, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
       tx.globalCompositeOperation='destination-in'; tx.drawImage(A.maskAlpha, 0, 0);
       ctx.drawImage(tmp, 0, 0); _designMasked = tmp;
+    }
+    if (A.maskBack && A.bboxBack){
+      var _bdes = (typeof _backDesignCanvas==='function') ? _backDesignCanvas() : null;
+      if (_bdes){
+        var tb = document.createElement('canvas'); tb.width=A.W; tb.height=A.H; var tbx=tb.getContext('2d');
+        tbx.drawImage(_bdes, A.bboxBack.x, A.bboxBack.y, A.bboxBack.w, A.bboxBack.h);
+        tbx.globalCompositeOperation='destination-in'; tbx.drawImage(A.maskBack, 0, 0);
+        ctx.drawImage(tb, 0, 0); _backMasked = tb;
+      }
     }
     /* 3. AO / shadow map — Testing-tunable intensity, blend mode + optional invert */
     var aoImg = A2D.mockupAOinvert ? _invertedShadow(A) : A.shadow;
@@ -11647,11 +11674,18 @@ function renderTagMockup(){
     ctx.drawImage(aoImg, 0, 0, A.W, A.H);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation='source-over';
     /* 3b. material-finish FX on the printed area (kept ABOVE the AO so metallic/gloss highlights stay bright) */
+    var _finE = (typeof BAG!=='undefined' && BAG.exterior && BAG.exterior.finish) || 'matte';
+    var _finI = (typeof BAG!=='undefined' && BAG.interior && BAG.interior.finish) || 'matte';
     if (_designMasked){
-      var _fin = (typeof BAG!=='undefined' && BAG.exterior && BAG.exterior.finish) || 'matte';
-      if (_fin==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _designMasked, A);
-      else if (_fin==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _designMasked, A);
-      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, _designMasked, A);   /* per-layer foil/gloss/emboss/deboss on top of the whole-tag finish */
+      if (_finE==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _designMasked, A);
+      else if (_finE==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _designMasked, A);
+      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, _designMasked, A, 'exterior');   /* per-layer finish on the FRONT */
+      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+    }
+    if (_backMasked){
+      if (_finI==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _backMasked, A);
+      else if (_finI==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _backMasked, A);
+      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, _backMasked, A, 'interior');   /* per-layer finish on the BACK */
       ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
     }
     ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. cotton string, in front */
