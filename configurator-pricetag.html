@@ -7085,15 +7085,8 @@ function buildLayerBodyHTML(L) {
   /* Material finish (gloss/matte/soft-touch/foil + Advanced PBR) — offered on ALL layer types now.
      Emboss/Deboss + Layout stay on Logo & Text only. */
   var _fl = kindLabel + ' Finish';
-  var _finishHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
-    /* Raw PBR sliders are manufacturing internals — designer view only, never shown to buyers */
-    (_designerMode ?
-      ('<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
-       '<div class="advanced-body" id="lyr-' + id + '-adv">' +
-         sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
-         sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
-         sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
-       '</div>') : '');
+  var _finishHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L);
+    /* Advanced PBR (roughness/metalness/transmission) removed from the layer panel — the 3 material finishes (matte/gloss/foil) are enough. */
   if (_lkd('controls.finish')) _finishHTML = '';   /* client finish lock → hide the whole Finish section */
   var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
   var _embossLayoutHTML = '';
@@ -7110,19 +7103,19 @@ function buildLayerBodyHTML(L) {
     h += _bgTiledControlsHTML(id, L);
     h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
     h += _colorSec;
-    h += _layerMoreOptions(id, _areasSectionHTML(id, L) + _finishHTML);
+    h += _layerMoreOptions(id, _finishHTML);
   } else if (L.kind === 'text') {
     /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → Finish → Emboss/Layout. */
     h += (_lkd('controls.move') ? '' : _transformHTML(id, L, true));   /* transform follows the move/resize lock */
     h += _colorSec;
     h += _moveSectionHTML(id, L);
-    h += _layerMoreOptions(id, _areasSectionHTML(id, L) + _finishHTML + _embossLayoutHTML);
+    h += _layerMoreOptions(id, _finishHTML + _embossLayoutHTML);
   } else {
     /* Logo / Graphic: Scale → Opacity → Rotation → Move → Areas → Recolor → Finish → (Emboss/Layout: Logo only). */
     h += (_lkd('controls.move') ? '' : _transformHTML(id, L));   /* transform follows the move/resize lock */
     h += _moveSectionHTML(id, L);
     h += _colorSec;
-    h += _layerMoreOptions(id, _areasSectionHTML(id, L) + _finishHTML + _embossLayoutHTML);
+    h += _layerMoreOptions(id, _finishHTML + _embossLayoutHTML);
   }
   return h;
 }
@@ -7131,8 +7124,7 @@ function buildLayerBodyHTML(L) {
    the tile box, so they're locked (disabled, not-allowed cursor). */
 function _layerMoreOptions(id, inner){
   if(!inner) return '';
-  return '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-'+id+'-more\')" style="margin-top:16px;"><span class="adv-arrow">&#9658;</span> <span'+_arAttr('More options')+'>More options</span></div>'+
-    '<div class="advanced-body" id="lyr-'+id+'-more">'+inner+'</div>';
+  return inner;   /* flattened — finish (+ emboss/layout) shown inline, no collapse */
 }
 function _transformHTML(id, L, rotFirst) {
   var isText = (L.kind === 'text' && !L.tiled);
