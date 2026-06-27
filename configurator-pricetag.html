@@ -9923,6 +9923,11 @@ function onQty(qty, pu, save, btn) {
   if (vmsgEl) vmsgEl.innerHTML = msg;
   updatePricing();
 }
+function _pl(en, ar){ return (typeof S!=='undefined' && S.lang==='ar') ? ar : en; }   /* bilingual picker for JS-built (computed) labels */
+var _FIN_AR = { 'Foil':'ختم معدني', 'Matte':'مطفّأ', 'Gloss':'لامع', 'Soft Touch':'لمسة ناعمة', 'Kraft':'كرافت' };
+var _SHP_AR = { 'Rectangle':'مستطيل', 'Square':'مربع', 'Circle (custom die)':'دائرة (قالب خاص)', 'Rounded rectangle':'مستطيل دائري', 'Rounded square':'مربع دائري' };
+function _finAr(n){ return _FIN_AR[n] || n; }
+function _shpAr(n){ return _SHP_AR[n] || n; }
 function updatePricing() {
   var qty = S.qty, pu = S.pu * (window._entryPmul || 1);   /* manufacturer price multiplier from the PDP hand-off */
   var base = qty * pu;
@@ -9972,16 +9977,18 @@ function updatePricing() {
   var total = base + extTotal + intTotal + embossTotal + sizeTotal + shapeTotal + layerFinishTotal + logoSetup + dieSetup;
 
   /* Base row */
-  document.getElementById('base-lbl').textContent =
-    qty.toLocaleString() + ' units × ' + fmtUnit(pu);
+  document.getElementById('base-lbl').textContent = _pl(
+    qty.toLocaleString() + ' units × ' + fmtUnit(pu),
+    qty.toLocaleString() + ' وحدة × ' + fmtUnit(pu));
   document.getElementById('base-val').textContent = fmt(base);
 
   /* Exterior finish row */
   var extRow = document.getElementById('ext-finish-row');
   if (extPPU > 0) {
     var extName = extFinish.charAt(0).toUpperCase() + extFinish.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil');
-    document.getElementById('ext-finish-lbl').textContent =
-      'Exterior ' + extName + ' (+' + fmtUnit(extPPU) + '/unit)';
+    document.getElementById('ext-finish-lbl').textContent = _pl(
+      'Exterior ' + extName + ' (+' + fmtUnit(extPPU) + '/unit)',
+      _finAr(extName) + ' (خارجي) (+' + fmtUnit(extPPU) + '/وحدة)');
     document.getElementById('ext-finish-val').textContent = fmt(extTotal);
     extRow.style.display = '';
   } else { extRow.style.display = 'none'; }
@@ -9990,8 +9997,9 @@ function updatePricing() {
   var intRow = document.getElementById('int-finish-row');
   if (intPPU > 0) {
     var intName = intFinish.charAt(0).toUpperCase() + intFinish.slice(1).replace('softtouch','Soft Touch').replace('foil','Foil');
-    document.getElementById('int-finish-lbl').textContent =
-      'Interior ' + intName + ' (+' + fmtUnit(intPPU) + '/unit)';
+    document.getElementById('int-finish-lbl').textContent = _pl(
+      'Interior ' + intName + ' (+' + fmtUnit(intPPU) + '/unit)',
+      _finAr(intName) + ' (داخلي) (+' + fmtUnit(intPPU) + '/وحدة)');
     document.getElementById('int-finish-val').textContent = fmt(intTotal);
     intRow.style.display = '';
   } else { intRow.style.display = 'none'; }
@@ -10000,8 +10008,9 @@ function updatePricing() {
   var lfRow = document.getElementById('layer-finish-row');
   if (lfRow) {
     if (layerFinishPPU > 0) {
-      document.getElementById('layer-finish-lbl').textContent =
-        'Layer finishes — ' + layerFinishCount + (layerFinishCount === 1 ? ' layer' : ' layers') + ' (+' + fmtUnit(layerFinishPPU) + '/unit)';
+      document.getElementById('layer-finish-lbl').textContent = _pl(
+        'Layer finishes — ' + layerFinishCount + (layerFinishCount === 1 ? ' layer' : ' layers') + ' (+' + fmtUnit(layerFinishPPU) + '/unit)',
+        'تشطيبات الطبقات — ' + layerFinishCount + ' ' + (layerFinishCount === 1 ? 'طبقة' : 'طبقات') + ' (+' + fmtUnit(layerFinishPPU) + '/وحدة)');
       document.getElementById('layer-finish-val').textContent = fmt(layerFinishTotal);
       lfRow.style.display = '';
     } else { lfRow.style.display = 'none'; }
@@ -10012,8 +10021,11 @@ function updatePricing() {
   if (embossPPU > 0) {
     var depth = Math.abs(extrude) <= 1 ? 'Light' : Math.abs(extrude) <= 2 ? 'Medium' : 'Deep';
     var kind = extrude > 0 ? 'Emboss' : 'Deboss';
-    document.getElementById('emboss-lbl').textContent =
-      depth + ' ' + kind + ' (+' + fmtUnit(embossPPU) + '/unit)';
+    var depthAr = Math.abs(extrude) <= 1 ? 'خفيف' : Math.abs(extrude) <= 2 ? 'متوسط' : 'عميق';
+    var kindAr = extrude > 0 ? 'نقش بارز' : 'نقش غائر';
+    document.getElementById('emboss-lbl').textContent = _pl(
+      depth + ' ' + kind + ' (+' + fmtUnit(embossPPU) + '/unit)',
+      kindAr + ' ' + depthAr + ' (+' + fmtUnit(embossPPU) + '/وحدة)');
     document.getElementById('emboss-val').textContent = fmt(embossTotal);
     embossRow.style.display = '';
   } else { embossRow.style.display = 'none'; }
@@ -10023,8 +10035,8 @@ function updatePricing() {
   if (sizeRow) {
     if (sizePPU > 0) {
       var _szLbl = (typeof _fmtTagSize === 'function' && typeof TAG_SHAPES !== 'undefined')
-        ? _fmtTagSize(currentTagDims.w, currentTagDims.h, TAG_SHAPES[currentTagShape]) : 'Larger size';
-      document.getElementById('size-lbl').textContent = _szLbl + ' (+' + fmtUnit(sizePPU) + '/unit)';
+        ? _fmtTagSize(currentTagDims.w, currentTagDims.h, TAG_SHAPES[currentTagShape]) : _pl('Larger size','مقاس أكبر');
+      document.getElementById('size-lbl').textContent = _pl(_szLbl + ' (+' + fmtUnit(sizePPU) + '/unit)', _szLbl + ' (+' + fmtUnit(sizePPU) + '/وحدة)');
       document.getElementById('size-val').textContent = fmt(sizeTotal);
       sizeRow.style.display = '';
     } else { sizeRow.style.display = 'none'; }
@@ -10034,7 +10046,7 @@ function updatePricing() {
   var shapeRow = document.getElementById('shape-row');
   if (shapeRow) {
     if (shapePPU > 0) {
-      document.getElementById('shape-lbl').textContent = _shp.label + ' (+' + fmtUnit(shapePPU) + '/unit)';
+      document.getElementById('shape-lbl').textContent = _pl(_shp.label + ' (+' + fmtUnit(shapePPU) + '/unit)', _shpAr(_shp.label) + ' (+' + fmtUnit(shapePPU) + '/وحدة)');
       document.getElementById('shape-val').textContent = fmt(shapeTotal);
       shapeRow.style.display = '';
     } else { shapeRow.style.display = 'none'; }
@@ -10052,7 +10064,7 @@ function updatePricing() {
   /* Artwork setup row */
   var lrow = document.getElementById('lrow');
   if (logoSetup > 0) {
-    var setupLabel = art.type === 'logo' ? 'Logo digitising (one-time)' : 'Text layout (one-time)';
+    var setupLabel = _pl(art.type === 'logo' ? 'Logo digitising (one-time)' : 'Text layout (one-time)', art.type === 'logo' ? 'تجهيز الشعار (مرة واحدة)' : 'تنسيق النص (مرة واحدة)');
     lrow.querySelector('.pr-lbl').innerHTML = setupLabel;
     document.getElementById('logo-setup-val').textContent = fmt(logoSetup);
     lrow.style.display = '';
@@ -10061,21 +10073,23 @@ function updatePricing() {
   /* Per-unit breakdown hint */
   var puRow = document.getElementById('pu-breakdown-row');
   if (addOnPPU > 0) {
-    document.getElementById('pu-breakdown-lbl').textContent =
-      fmtUnit(pu) + ' tag + ' + fmtUnit(addOnPPU) + ' add-ons = ' + fmtUnit(effectivePPU) + '/unit';
+    document.getElementById('pu-breakdown-lbl').textContent = _pl(
+      fmtUnit(pu) + ' tag + ' + fmtUnit(addOnPPU) + ' add-ons = ' + fmtUnit(effectivePPU) + '/unit',
+      fmtUnit(pu) + ' بطاقة + ' + fmtUnit(addOnPPU) + ' إضافات = ' + fmtUnit(effectivePPU) + '/وحدة');
     puRow.style.display = '';
   } else { puRow.style.display = 'none'; }
 
   /* Totals */
   document.getElementById('total-val').textContent = fmt(total);
-  document.getElementById('pu-note').textContent =
-    fmtUnit(effectivePPU) + ' per unit · ' + qty.toLocaleString() + ' units';
+  document.getElementById('pu-note').textContent = _pl(
+    fmtUnit(effectivePPU) + ' per unit · ' + qty.toLocaleString() + ' units',
+    fmtUnit(effectivePPU) + ' لكل وحدة · ' + qty.toLocaleString() + ' وحدة');
   var _mbt = document.getElementById('mb-total'); if (_mbt) _mbt.textContent = fmt(total);
-  var _mbp = document.getElementById('mb-pu'); if (_mbp) _mbp.textContent = fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units';
+  var _mbp = document.getElementById('mb-pu'); if (_mbp) _mbp.textContent = _pl(fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units', fmtUnit(effectivePPU) + ' / وحدة · ' + qty.toLocaleString() + ' وحدة');
 
   /* Always-visible per-unit chip in the step header (desktop) */
-  var _hpu = document.getElementById('hdr-pu'); if (_hpu) _hpu.textContent = fmtUnit(effectivePPU) + ' / unit';
-  var _ht  = document.getElementById('hdr-total'); if (_ht) _ht.textContent = fmt(total) + ' total';
+  var _hpu = document.getElementById('hdr-pu'); if (_hpu) _hpu.textContent = _pl(fmtUnit(effectivePPU) + ' / unit', fmtUnit(effectivePPU) + ' / وحدة');
+  var _ht  = document.getElementById('hdr-total'); if (_ht) _ht.textContent = _pl(fmt(total) + ' total', fmt(total) + ' الإجمالي');
 }
 /* ── Performance HUD (Testing) — live FPS / frame time, measured from requestAnimationFrame ── */
 var _perfHUD = { on:false, raf:0, last:0, frames:0, fps:0, ms:0, stats:{ fps:true, frameMs:true, mobile:true, draws:true, tris:false, ping:true } };
@@ -10213,6 +10227,7 @@ function toggleLang() {
   // Finish desc
   document.getElementById('fdesc').textContent =
     isAr ? FINISH_DESC_AR[S.finish] : FINISH_DESC[S.finish];
+  if (typeof updatePricing === 'function') updatePricing();   /* refresh JS-built price labels into the new language */
   checkCart();
 }
 
