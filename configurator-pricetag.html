@@ -2013,24 +2013,7 @@
       <p style="font-size:10px;color:var(--imp-fg-3);margin:8px 2px 0;line-height:1.4;"><span data-en="Use − / + to resize a tag uniformly in 0.5 cm steps." data-ar="استخدم − / + لتغيير المقاس بمقدار ٠٫٥ سم بالتساوي.">Use − / + to resize a tag uniformly in 0.5 cm steps.</span></p>
     </div>
 
-    <!-- Tag Finish — surfaced in step 1 (the headline premium choice) -->
-    <div class="cs bag-section config-step" data-cstep="1">
-      <label class="cl"><span data-en="Finish" data-ar="التشطيب">Finish</span></label>
-      <div class="finish-grid" id="tag-finish-grid">
-        <div class="finish-card on" data-finish="matte" onclick="onTagFinish('matte',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
-          <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="Soft, non-reflective" data-ar="ناعم، غير عاكس">Soft, non-reflective</span>
-        </div>
-        <div class="finish-card" data-finish="gloss" onclick="onTagFinish('gloss',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
-          <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="Bright, high-shine" data-ar="لامع وبرّاق">Bright, high-shine</span>
-        </div>
-        <div class="finish-card" data-finish="foil" onclick="onTagFinish('foil',this)">
-          <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
-          <span class="finish-name" data-en="Foil" data-ar="ختم معدني">Foil</span><span class="finish-sub" data-en="Metallic · +AED 0.95/unit" data-ar="معدني · +0.95 ر.ع/وحدة">Metallic · +AED 0.95/unit</span>
-        </div>
-      </div>
-    </div>
+    <!-- Tag Finish removed from the Shape & Size step per request (still set per-layer + in designer Testing). -->
 
     <!-- Bag Quantity ────────────────────── -->
     <div class="cs bag-section config-step" data-cstep="3">
@@ -4822,7 +4805,6 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
   var sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : ue.w;  /* scale base: exterior width */
   if (L.kind === 'logo' || L.kind === 'sticker') {
     if (L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) { _drawBgFill(ctx, L, ms, mode); return; }
-    if (L.isDraw && L.drawCanvas) { ctx.drawImage(L.drawCanvas, 0, 0, L.drawCanvas.width, L.drawCanvas.height, 0, 0, L.drawCanvas.width * ms, L.drawCanvas.height * ms); return; }
     if (!L.img || !L.img.naturalWidth) return;
     if (L.tiled) {
       /* TILED (any layout): tile the (recolored) image inside the layer's box. */
@@ -4973,7 +4955,7 @@ function drawArtworkOnBag() {
   for (var li = BAG.artwork.layers.length - 1; li >= 0; li--) {
     var L = BAG.artwork.layers[li];
     if (!L || !L.visible) continue;
-    if ((L.kind === 'logo' || L.kind === 'sticker') && !(L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) && !L.isDraw && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
+    if ((L.kind === 'logo' || L.kind === 'sticker') && !(L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
     /* per-face / handle hide: if this layer is hidden on one or more faces (or on the
@@ -7107,9 +7089,7 @@ function buildLayerBodyHTML(L) {
   var imageKind = (L.kind === 'logo' || L.kind === 'sticker');
   var kindLabel = L.isLogo ? 'Logo' : L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Sticker') : (L.kind === 'text' ? 'Text' : L.kind === 'logo' ? 'Logo' : 'Sticker');
   if (imageKind) {
-    if (L.isDraw) {
-      h += '<button style="width:100%;margin:14px 0 12px;font-size:12px;font-weight:600;color:var(--imp-surface);background:var(--imp-fg);border:none;border-radius:8px;cursor:pointer;padding:11px;display:flex;align-items:center;justify-content:center;gap:7px;" onclick="_enterDrawMode(' + id + ')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg> <span data-en="Edit drawing" data-ar="تعديل الرسم">Edit drawing</span></button>';
-    } else if (L.isBackground && L.fillType) {
+    if (L.isBackground && L.fillType) {
       var _fillPrev = (L.fillType === 'gradient' && L.gradient)
         ? (L.gradient.type === 'radial' ? ('radial-gradient(circle,' + L.gradient.c1 + ',' + L.gradient.c2 + ')') : ('linear-gradient(' + (L.gradient.angle||135) + 'deg,' + L.gradient.c1 + ',' + L.gradient.c2 + ')'))
         : (L.fillColor || '#ffffff');
@@ -7685,16 +7665,6 @@ function addLayer(kind) {
       /* Inside (interior) faces OFF by default. */
       if (typeof BAG_FACES!=='undefined' && BAG_FACES.interior){ L.faceHide=L.faceHide||{}; Object.keys(BAG_FACES.interior).forEach(function(f){ L.faceHide['interior_'+f]=true; }); }
     }
-  } else if (kind === 'draw') {
-    /* A Draw layer is a full-atlas raster canvas painted in the 2D editor (bagTexCanvas pixel space). */
-    var _dc = document.createElement('canvas');
-    var _ds = (typeof bagTexCanvas!=='undefined' && bagTexCanvas && bagTexCanvas.width) ? bagTexCanvas.width : 2048;
-    _dc.width = _dc.height = _ds;
-    L = { id:id, kind:'sticker', isDraw:true, drawCanvas:_dc, tiled:false, isDefault:false, visible:true, img:null, srcImg:null, fileName:'Drawing',
-          posU:_fp.posU, posV:_fp.posV, rotation:0, scale:18, scaleH:18,
-          color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF',
-          finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
-          cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0 };
   } else {
     L = { id:id, kind:'ai', isDefault:false, visible:false, prompt:'', areas:allAreas };
   }
@@ -7718,7 +7688,6 @@ function addLayer(kind) {
   if (kind === 'logo') pickLayerLogoFile(id);
   else if (kind === 'sticker' || kind === 'pattern') openAddSourcePrompt(id, kind);
   else if (kind === 'text') openAddSourcePrompt(id, 'font');
-  else if (kind === 'draw') _enterDrawMode(id);
   drawBagTexture();
   if (typeof setBagView === 'function') setBagView('front');
 }
@@ -7734,7 +7703,6 @@ function _ensureAddLayerModal() {
     { k:'text',    en:'Text',       ar:'نص',   svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>' },
     { k:'logo',    en:'Logo',       ar:'شعار', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' },
     { k:'sticker', en:'Sticker',    ar:'ملصق',  svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8.5" height="8.5" rx="1.5"/><circle cx="17.5" cy="7.25" r="4.25"/><path d="M7.25 13.5 L3 21 H11.5 Z"/></svg>' },
-    { k:'draw',    en:'Draw',       ar:'رسم',   svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>' },
     { k:'pattern', en:'Background', ar:'خلفية', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M3 9.5 L9.5 3 M3 16 L16 3 M5.5 21 L21 5.5 M12 21 L21 12 M18.5 21 L21 18.5"/></svg>' }
   ];
   var cards = opts.map(function(o){ return '<button class="_al-card" onclick="_pickAddLayer(\'' + o.k + '\')">' + o.svg + '<span data-en="' + o.en + '" data-ar="' + o.ar + '">' + o.en + '</span></button>'; }).join('');
@@ -10062,7 +10030,7 @@ function _perfRenderHUD(){
 function _hasArtwork(){
   try {
     return !!(typeof BAG!=='undefined' && BAG.artwork && BAG.artwork.layers &&
-      BAG.artwork.layers.some(function(L){ return L && L.visible && (L.content || L.img || L.cutCanvas || L.svgText || L.tiled || (L.isDraw && L._painted) || (L.isBackground && L.fillType)); }));
+      BAG.artwork.layers.some(function(L){ return L && L.visible && (L.content || L.img || L.cutCanvas || L.svgText || L.tiled); }));
   } catch(e){ return false; }
 }
 function checkCart() {
@@ -12458,96 +12426,6 @@ function _hitTagCorner(sp){
       if(Math.hypot(sp.x-h.x,sp.y-h.y)<=R) return { region:regs[r][0], signU:(cs[i][0]>cxA?1:-1), signV:(cs[i][1]>cyA?1:-1) }; } }
   return null;
 }
-/* ── Draw / brush tool — paint onto a full-atlas canvas, in 2D-editor (bagTexCanvas pixel) space ── */
-var DRAW = { active:false, layerId:null, ctx:null, size:26, hardness:0.8, opacity:1.0, texture:'round', color:'#111111', erase:false, _last:null, _on:false };
-var BRUSH_TEXTURES = [ {k:'round',n:'Round'}, {k:'soft',n:'Soft'}, {k:'marker',n:'Marker'}, {k:'chalk',n:'Chalk'}, {k:'pencil',n:'Pencil'} ];
-var _drawRAF = 0;
-function _hexA(hex, a){ hex=String(hex||'#000000').replace('#',''); if(hex.length===3) hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; var r=parseInt(hex.substr(0,2),16)||0, g=parseInt(hex.substr(2,2),16)||0, b=parseInt(hex.substr(4,2),16)||0; return 'rgba('+r+','+g+','+b+','+a+')'; }
-function _drawDab(x, y){
-  var d=DRAW.ctx; if(!d) return; var r=Math.max(0.5, DRAW.size/2), col=DRAW.color, op=DRAW.opacity, h=DRAW.hardness;
-  d.save();
-  if (DRAW.erase) d.globalCompositeOperation='destination-out';
-  if (DRAW.texture==='soft'){
-    d.globalAlpha=op*0.55; var g=d.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,_hexA(col,1)); g.addColorStop(1,_hexA(col,0)); d.fillStyle=g; d.beginPath(); d.arc(x,y,r,0,6.2832); d.fill();
-  } else if (DRAW.texture==='marker'){
-    d.globalAlpha=op*0.82; d.fillStyle=col; d.beginPath(); d.arc(x,y,r,0,6.2832); d.fill();
-  } else if (DRAW.texture==='chalk'){
-    d.fillStyle=col; var n=Math.max(8, Math.floor(r*r*0.55));
-    for(var i=0;i<n;i++){ var a=Math.random()*6.2832, rr=Math.sqrt(Math.random())*r; d.globalAlpha=op*(0.2+Math.random()*0.6); d.fillRect(x+Math.cos(a)*rr, y+Math.sin(a)*rr, 1.5, 1.5); }
-  } else if (DRAW.texture==='pencil'){
-    d.fillStyle=col; var n2=Math.max(5, Math.floor(r*r*0.38));
-    for(var j=0;j<n2;j++){ var a2=Math.random()*6.2832, rr2=Math.sqrt(Math.random())*r*0.85; d.globalAlpha=op*(0.12+Math.random()*0.4); d.fillRect(x+Math.cos(a2)*rr2, y+Math.sin(a2)*rr2, 1.1, 1.1); }
-  } else {
-    d.globalAlpha=op;
-    if (h>=0.985){ d.fillStyle=col; } else { var g2=d.createRadialGradient(x,y,r*h,x,y,r); g2.addColorStop(0,_hexA(col,1)); g2.addColorStop(1,_hexA(col,0)); d.fillStyle=g2; }
-    d.beginPath(); d.arc(x,y,r,0,6.2832); d.fill();
-  }
-  d.restore();
-}
-function _drawScheduleBake(){ if(_drawRAF) return; _drawRAF=requestAnimationFrame(function(){ _drawRAF=0; if(typeof drawBagTexture==='function') drawBagTexture(); }); }
-function _drawStroke(phase, sp){
-  if(!DRAW.ctx){ var L0=getLayer(DRAW.layerId); if(L0 && L0.drawCanvas) DRAW.ctx=L0.drawCanvas.getContext('2d'); if(!DRAW.ctx) return; }
-  if(phase==='start'){
-    var ap=_s2a(sp.x, sp.y); DRAW._last=ap; DRAW._on=true; _a2dDragging=true;
-    var Ls=getLayer(DRAW.layerId); if(Ls) Ls._painted=true;
-    _drawDab(ap.x, ap.y); _drawScheduleBake();
-  } else if(phase==='move' && DRAW._on){
-    var ap2=_s2a(sp.x, sp.y), dx=ap2.x-DRAW._last.x, dy=ap2.y-DRAW._last.y, dist=Math.hypot(dx,dy);
-    var step=Math.max(1, DRAW.size*0.16), n=Math.min(400, Math.max(1, Math.round(dist/step)));
-    for(var i=1;i<=n;i++){ _drawDab(DRAW._last.x+dx*i/n, DRAW._last.y+dy*i/n); }
-    DRAW._last=ap2; _drawScheduleBake();
-  } else if(phase==='end'){
-    DRAW._on=false; DRAW._last=null; _a2dDragging=false;
-    if(typeof drawBagTexture==='function') drawBagTexture();
-    if(typeof pushHistory==='function') pushHistory();
-    if(typeof checkCart==='function') checkCart();
-  }
-}
-function _enterDrawMode(id){
-  var L=getLayer(id); if(!L || !L.isDraw) return;
-  DRAW.active=true; DRAW.layerId=id; DRAW.ctx = L.drawCanvas ? L.drawCanvas.getContext('2d') : null;
-  if (typeof viewMode!=='undefined' && viewMode!=='2d' && typeof setViewMode==='function') setViewMode('2d');
-  if (typeof a2d!=='undefined') a2d.sel=null;
-  _renderBrushBar();
-  if (typeof drawBagTexture==='function') drawBagTexture();
-}
-function _exitDrawMode(){ DRAW.active=false; DRAW._on=false; var bar=document.getElementById('brush-bar'); if(bar) bar.style.display='none'; }
-function _brushLbl(id, t){ var e=document.getElementById('brush-'+id+'-lbl'); if(e) e.textContent=t; }
-function _brushSet(k, v){
-  if(k==='texture'){ DRAW.texture=v; DRAW.erase=false; _renderBrushBar(); }
-  else if(k==='erase'){ DRAW.erase=!DRAW.erase; _renderBrushBar(); }
-  else if(k==='color'){ DRAW.color=v; }
-  else if(k==='size'){ DRAW.size=parseFloat(v)||1; _brushLbl('size','Size '+Math.round(DRAW.size)); }
-  else if(k==='hardness'){ DRAW.hardness=(parseFloat(v)||0)/100; _brushLbl('hardness','Hardness '+Math.round(DRAW.hardness*100)+'%'); }
-  else if(k==='opacity'){ DRAW.opacity=Math.max(0.05,(parseFloat(v)||0)/100); _brushLbl('opacity','Opacity '+Math.round(DRAW.opacity*100)+'%'); }
-}
-function _renderBrushBar(){
-  var bar=document.getElementById('brush-bar');
-  if(!bar){
-    var st=document.createElement('style');
-    st.textContent='#brush-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:75;background:var(--imp-surface,#fff);border:1px solid var(--imp-border,#e5e5e5);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.18);padding:9px 12px;display:none;max-width:94vw;font-family:inherit;}'
-      +'.brush-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:3px 0;}'
-      +'.brush-tex{padding:6px 11px;border:1px solid var(--imp-border,#ddd);border-radius:8px;background:var(--imp-surface-2,#f5f5f5);color:var(--imp-fg-2,#555);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}.brush-tex.on{background:var(--imp-fg,#111);color:var(--imp-surface,#fff);border-color:var(--imp-fg,#111);}'
-      +'.brush-color{width:34px;height:30px;border:1px solid var(--imp-border,#ddd);border-radius:8px;padding:0;background:none;cursor:pointer;}'
-      +'.brush-sl{display:flex;flex-direction:column;font-size:10px;color:var(--imp-fg-2,#666);gap:2px;min-width:92px;}.brush-sl input{width:100%;}'
-      +'.brush-done{margin-left:auto;padding:8px 16px;border:none;border-radius:8px;background:var(--imp-fg,#111);color:var(--imp-surface,#fff);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}';
-    document.head.appendChild(st);
-    bar=document.createElement('div'); bar.id='brush-bar'; document.body.appendChild(bar);
-  }
-  if(!DRAW.active){ bar.style.display='none'; return; }
-  var tex=BRUSH_TEXTURES.map(function(t){ return '<button class="brush-tex'+(DRAW.texture===t.k&&!DRAW.erase?' on':'')+'" onclick="_brushSet(\'texture\',\''+t.k+'\')">'+t.n+'</button>'; }).join('');
-  bar.innerHTML='<div class="brush-row">'+tex
-      +'<button class="brush-tex'+(DRAW.erase?' on':'')+'" onclick="_brushSet(\'erase\')" title="Eraser">&#9003; Eraser</button>'
-      +'<input type="color" value="'+DRAW.color+'" oninput="_brushSet(\'color\',this.value)" class="brush-color" title="Brush colour">'
-    +'</div>'
-    +'<div class="brush-row">'
-      +'<label class="brush-sl"><span id="brush-size-lbl">Size '+Math.round(DRAW.size)+'</span><input type="range" min="2" max="160" value="'+DRAW.size+'" oninput="_brushSet(\'size\',this.value)"></label>'
-      +'<label class="brush-sl"><span id="brush-hardness-lbl">Hardness '+Math.round(DRAW.hardness*100)+'%</span><input type="range" min="0" max="100" value="'+Math.round(DRAW.hardness*100)+'" oninput="_brushSet(\'hardness\',this.value)"></label>'
-      +'<label class="brush-sl"><span id="brush-opacity-lbl">Opacity '+Math.round(DRAW.opacity*100)+'%</span><input type="range" min="5" max="100" value="'+Math.round(DRAW.opacity*100)+'" oninput="_brushSet(\'opacity\',this.value)"></label>'
-      +'<button class="brush-done" onclick="_exitDrawMode()" data-en="Done" data-ar="تم">Done</button>'
-    +'</div>';
-  bar.style.display='block';
-}
 function _atlasBind(c){
   c.addEventListener('pointerdown', _aDown);
   c.addEventListener('pointermove', _aMove);
@@ -12563,7 +12441,6 @@ function _aDown(e){
   if (typeof _hideFaceBar==='function') _hideFaceBar();   /* any new press closes the face bar */
   var ids=Object.keys(a2d.pointers);
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
-  if (typeof DRAW!=='undefined' && DRAW.active){ _drawStroke('start', sp); return; }   /* draw mode: paint instead of select/move */
   var hh=_hitHandle(sp);
   if (hh){ a2d.op=hh; _a2dDragging=true;
     var _selR=a2d.sel, _aspR=(_selR.img&&_selR.img.naturalWidth)?_selR.img.naturalWidth/_selR.img.naturalHeight:1;
@@ -12616,7 +12493,6 @@ function _aDown(e){
 }
 function _aMove(e){
   var sp=_evPos(e);
-  if (typeof DRAW!=='undefined' && DRAW.active){ if(DRAW._on) _drawStroke('move', sp); return; }
   if (!a2d.op){
     /* hover cursor feedback */
     var cur='grab';
@@ -12756,7 +12632,6 @@ function _aMove(e){
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
   delete a2d.pointers[e.pointerId];
-  if (typeof DRAW!=='undefined' && DRAW.active && DRAW._on){ _drawStroke('end', _evPos(e)); a2d.op=null; return; }
   var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
   var endedOp=a2d.op;
   /* A click on a locked layer just SELECTS it (so its toolbar — incl. the lock toggle — shows);
