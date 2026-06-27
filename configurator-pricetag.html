@@ -609,12 +609,24 @@
     .cstep-next:hover { background: #262626; }
     html[data-theme="dark"] .cstep-next:hover { background: #fff; }
     .cstep-next:disabled { opacity: 0.35; cursor: not-allowed; }
+    .cstep-pager { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 2px 8px; }
+    .cstep-arrow { width:42px; height:42px; flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--imp-border); border-radius:50%; background:var(--imp-surface); color:var(--imp-fg); cursor:pointer; transition:background .15s, border-color .15s, opacity .15s; }
+    .cstep-arrow:hover { background:var(--imp-surface-2); border-color:var(--imp-border-hover); }
+    .cstep-arrow:disabled { opacity:0.3; cursor:not-allowed; }
+    .cstep-arrow:focus-visible { outline:2px solid var(--imp-accent,#c8a96e); outline-offset:2px; }
+    .cstep-center { display:flex; align-items:baseline; justify-content:center; gap:9px; min-width:0; flex:1; }
+    .cstep-title { font-size:17px; font-weight:700; color:var(--imp-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cstep-counter {
       font-family: var(--imp-font-mono);
-      font-size: 12px;
+      font-size: 14px;
       color: var(--imp-fg-3);
       font-variant-numeric: tabular-nums;
+      flex: 0 0 auto;
     }
+    #corner-price { position:absolute; top:16px; left:16px; z-index:8; display:flex; flex-direction:column; gap:0; background:var(--imp-surface); border:1px solid var(--imp-border); border-radius:10px; padding:5px 10px; box-shadow:var(--imp-shadow-xs); pointer-events:none; opacity:0.96; }
+    #corner-price #hdr-pu { font-size:12.5px; font-weight:700; color:var(--imp-fg); line-height:1.25; }
+    #corner-price #hdr-total { font-size:10.5px; color:var(--imp-fg-3); line-height:1.2; }
+    html[dir="rtl"] #corner-price { left:auto; right:16px; }
 
     /* ─── SWATCHES (circle UI — matches JS markup) ─── */
     .mono-swatches {
@@ -1692,6 +1704,7 @@
     </div>
 
     <div class="canvas-stage gradient-bg">
+      <div id="corner-price" aria-live="polite"><span id="hdr-pu">AED 0.90 / unit</span><span id="hdr-total">AED 900 total</span></div>
       <canvas id="three-canvas"></canvas>
       <canvas id="tag-mockup" aria-hidden="true"></canvas>
       <div class="atlas2d" id="atlas2d" aria-hidden="true">
@@ -1748,28 +1761,18 @@
   <section class="controls-panel product-bag" aria-label="Customization controls">
     <!-- Sticky top bar: drag handle (mobile) + step pagination + step pills -->
     <div class="sheet-topbar" id="sheet-topbar">
-      <div class="sheet-handle" id="sheet-handle" role="button" tabindex="0" aria-label="Drag or tap to expand the customization controls"><span class="sheet-grip"></span><span class="sheet-cue" data-en="Pull up to customize" data-ar="اسحب للأعلى للتخصيص">Pull up to customize</span></div>
+      <div class="sheet-handle" id="sheet-handle" role="button" tabindex="0" aria-label="Drag or tap to expand the customization controls"><span class="sheet-grip"></span></div>
       <div class="cstep-pager">
-        <button class="cstep-btn cstep-back" id="cstep-back" onclick="configStepPrev()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          <span data-en="Back" data-ar="رجوع">Back</span>
+        <button class="cstep-arrow" id="cstep-back" onclick="configStepPrev()" aria-label="Previous step">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
-        <span class="cstep-counter" id="cstep-counter">1 / 3</span>
-        <button class="cstep-btn cstep-next" id="cstep-next" onclick="configStepNext()">
-          <span id="cstep-next-label" data-en="Next" data-ar="التالي">Next</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="cstep-center">
+          <span class="cstep-title" id="cstep-title" data-en="Shape &amp; Size" data-ar="الشكل والحجم">Shape &amp; Size</span>
+          <span class="cstep-counter" id="cstep-counter">1/3</span>
+        </div>
+        <button class="cstep-arrow" id="cstep-next" onclick="configStepNext()" aria-label="Next step">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
-      </div>
-      <div class="cstep-nav" id="cstep-nav">
-        <div class="cstep-pills" id="cstep-pills">
-          <button class="cstep-pill on" onclick="goConfigStep(1)" data-cstep-pill="1"><span class="cstep-pill-num">1</span><span data-en="Shape &amp; Size" data-ar="الشكل والحجم">Shape &amp; Size</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Add Your Design" data-ar="أضف تصميمك">Add Your Design</span></button>
-          <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Quantity &amp; Review" data-ar="الكمية والمراجعة">Quantity &amp; Review</span></button>
-        </div>
-        <div class="cstep-price" id="cstep-price" aria-live="polite">
-          <span class="cstep-price-pu" id="hdr-pu">AED 0.90 / unit</span>
-          <span class="cstep-price-qty" id="hdr-qty">1,000 units</span>
-        </div>
       </div>
     </div>
 
@@ -3131,11 +3134,7 @@
 
 <!-- ── MOBILE STICKY BAR ────────────── -->
 <div class="mobile-bar">
-  <div class="mb-price">
-    <span class="mb-total" id="mb-total" aria-live="polite">AED 5,800</span>
-    <span class="mb-pu"    id="mb-pu">AED 5.80 / unit · 1,000 units</span>
-  </div>
-  <button class="mb-btn" id="mb-btn" onclick="_mobileBarAction()" data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
+  <button class="mb-btn" id="mb-btn" onclick="_mobileBarAction()" style="flex:1;" data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
 </div>
 
 
@@ -7644,29 +7643,32 @@ function addLayer(kind) {
     var _ex = BAG_UV.exterior, _PADe = (typeof ATLAS_PAD!=='undefined') ? ATLAS_PAD : 0;
     _fp = { posU: (_ex.x + _ex.w/2 - _PADe)/2048*100, posV: (_ex.y + _ex.h/2 - _PADe)/2048*100 };
   }
-  /* In the EDIT (2D) view, drop the new layer at the CENTRE OF THE VIEWPORT instead of the
-     front-centre — but only when that centre actually lands on the front face (so a fit/zoomed-out
-     view whose centre sits on the front/back gap still uses the front centre, never the gap). */
-  if (typeof viewMode!=='undefined' && viewMode==='2d' && typeof a2d!=='undefined' && a2d && a2d.canvas && typeof _s2a==='function' && a2d.zoom && typeof BAG_UV!=='undefined' && BAG_UV.exterior){
-    var _vc=_s2a(a2d.canvas.width/2, a2d.canvas.height/2), _exv=BAG_UV.exterior, _pv=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
-    if (_vc.x>=_exv.x && _vc.x<=_exv.x+_exv.w && _vc.y>=_exv.y && _vc.y<=_exv.y+_exv.h){
-      _fp = { posU:(_vc.x-_pv)/2048*100, posV:(_vc.y-_pv)/2048*100 };
-    }
+  /* In the EDIT (2D) view, drop the new layer at the CENTRE OF WHAT YOU'RE LOOKING AT, and size it
+     to a fraction of the viewport (so at any zoom it lands a sensible on-screen size, never too big
+     or too small). Not gated to the front face — it goes wherever you're looking. */
+  var _vpScale = null, _vpFont = null;
+  if (typeof viewMode!=='undefined' && viewMode==='2d' && typeof a2d!=='undefined' && a2d && a2d.canvas && typeof _s2a==='function' && a2d.zoom){
+    var _vc=_s2a(a2d.canvas.width/2, a2d.canvas.height/2), _pv=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+    _fp = { posU:(_vc.x-_pv)/2048*100, posV:(_vc.y-_pv)/2048*100 };
+    var _visW=a2d.canvas.width/a2d.zoom, _visH=a2d.canvas.height/a2d.zoom;
+    var _sref=(typeof _layerScaleRef==='function')?_layerScaleRef():((typeof BAG_UV!=='undefined'&&BAG_UV.exterior)?BAG_UV.exterior.w:982);
+    _vpScale=Math.max(4, Math.min(120, 0.30*_visW/_sref*100));   /* sticker/logo ~ 30% of the viewport width */
+    _vpFont =Math.max(16, Math.min(400, 0.12*_visH));            /* text ~ 12% of the viewport height */
   }
   if (kind === 'logo') {
     /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
        the full Graphic recolor/finish/layout controls. isLogo only changes its name/label. */
-    L = { id:id, kind:'sticker', isLogo:true, tiled:false, patStack:'vertical', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:18, scaleH:18, posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isLogo:true, tiled:false, patStack:'vertical', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(_vpScale!=null?_vpScale:18), scaleH:(_vpScale!=null?_vpScale:18), posU:_fp.posU, posV:_fp.posV, rotation:0,
           color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else if (kind === 'text') {
-    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:45, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
+    L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:(_vpFont!=null?_vpFont:45), posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
           color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           align:'center', tracking:0, lineHeight:1.25, bold:false, italic:false, strokeWidth:0, strokeColor:'#000000', shadow:false, shadowColor:'#000000', shadowBlur:4, shadowX:0, shadowY:2 };
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
-    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:1, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
+    L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:1, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : (_vpScale!=null?_vpScale:18)), scaleH:(kind === 'pattern' ? 40 : (_vpScale!=null?_vpScale:18)), posU:_fp.posU, posV:_fp.posV, rotation:0,
           finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new background's box covers BOTH the exterior AND interior islands (union), so toggling
@@ -10021,13 +10023,12 @@ function updatePricing() {
   document.getElementById('total-val').textContent = fmt(total);
   document.getElementById('pu-note').textContent =
     fmtUnit(effectivePPU) + ' per unit · ' + qty.toLocaleString() + ' units';
-  document.getElementById('mb-total').textContent = fmt(total);
-  document.getElementById('mb-pu').textContent =
-    fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units';
+  var _mbt = document.getElementById('mb-total'); if (_mbt) _mbt.textContent = fmt(total);
+  var _mbp = document.getElementById('mb-pu'); if (_mbp) _mbp.textContent = fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units';
 
   /* Always-visible per-unit chip in the step header (desktop) */
   var _hpu = document.getElementById('hdr-pu'); if (_hpu) _hpu.textContent = fmtUnit(effectivePPU) + ' / unit';
-  var _hq  = document.getElementById('hdr-qty'); if (_hq) _hq.textContent = qty.toLocaleString() + ' units';
+  var _ht  = document.getElementById('hdr-total'); if (_ht) _ht.textContent = fmt(total) + ' total';
 }
 /* ── Performance HUD (Testing) — live FPS / frame time, measured from requestAnimationFrame ── */
 var _perfHUD = { on:false, raf:0, last:0, frames:0, fps:0, ms:0, stats:{ fps:true, frameMs:true, mobile:true, draws:true, tris:false, ping:true } };
@@ -13288,9 +13289,12 @@ function goConfigStep(n) {
     var pr = pills.getBoundingClientRect(), ar = activePill.getBoundingClientRect();
     pills.scrollBy({ left: (ar.left + ar.width/2) - (pr.left + pr.width/2), behavior: 'smooth' });
   }
-  /* Counter */
+  /* Title + counter (Nike-style: "Shape & Size  1/3") */
+  var _stepNames = { 1:{en:'Shape & Size',ar:'الشكل والحجم'}, 2:{en:'Add Your Design',ar:'أضف تصميمك'}, 3:{en:'Quantity & Review',ar:'الكمية والمراجعة'} };
+  var _ttl = document.getElementById('cstep-title'), _sn = _stepNames[n] || {en:'',ar:''};
+  if (_ttl){ _ttl.setAttribute('data-en', _sn.en); _ttl.setAttribute('data-ar', _sn.ar); _ttl.textContent = ((typeof S!=='undefined' && S.lang==='ar') ? _sn.ar : _sn.en); }
   var counter = document.getElementById('cstep-counter');
-  if (counter) counter.textContent = n + ' / ' + CONFIG_STEP_COUNT;
+  if (counter) counter.textContent = n + '/' + CONFIG_STEP_COUNT;
   /* Back/Next states */
   var back = document.getElementById('cstep-back');
   var next = document.getElementById('cstep-next');
