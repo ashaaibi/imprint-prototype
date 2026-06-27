@@ -302,15 +302,15 @@
     .canvas-stage.mode-2d #three-canvas:active { cursor: grabbing; }
     html[dir="rtl"] .canvas-stage.mode-2d #three-canvas { right: auto; left: 16px; }
     /* ── Photoreal "Preview" mockup ── */
-    #tag-mockup { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:92%; max-height:94%; display:none; z-index:5; pointer-events:none; border-radius:6px; box-shadow:0 18px 50px rgba(0,0,0,0.18); }
+    #tag-mockup { position:absolute; left:50%; bottom:4%; transform:translateX(-50%); transform-origin:50% 100%; max-width:92%; max-height:92%; display:none; z-index:5; pointer-events:none; border-radius:6px; box-shadow:0 18px 50px rgba(0,0,0,0.18); }   /* anchored bottom-centre → scales from the bottom */
     .canvas-stage.mode-preview { overflow:hidden; }   /* clip the zoomed/panned mockup to the stage */
     .canvas-stage.mode-preview #tag-mockup { display:block; will-change:transform; }
-    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:100%; max-width:100%; height:auto; max-height:none; border-radius:0; } }   /* portrait phones + tablets: mockup fills the viewport width */
+    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:100%; max-width:100%; height:auto; max-height:none; bottom:12vh; border-radius:0; } .mk-dots { bottom:14vh; } }   /* portrait: mockup fills width, anchored above the sheet; dots above the sheet */
     #mockup-carousel { position:absolute; inset:0; z-index:7; pointer-events:none; }
     .canvas-stage:not(.mode-preview) #mockup-carousel { display:none !important; }
     .mk-arrow { pointer-events:auto; position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.82); color:#111; font-size:24px; line-height:38px; text-align:center; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.18); transition:background .15s; padding:0; }
     .mk-arrow:hover { background:#fff; } .mk-arrow-l { left:14px; } .mk-arrow-r { right:14px; }
-    .mk-dots { pointer-events:auto; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:7px; padding:7px 10px; border-radius:14px; background:rgba(0,0,0,0.18); backdrop-filter:blur(4px); }
+    .mk-dots { pointer-events:auto; position:absolute; bottom:6%; left:50%; transform:translateX(-50%); display:flex; gap:7px; padding:7px 10px; border-radius:14px; background:rgba(0,0,0,0.18); backdrop-filter:blur(4px); z-index:8; }
     .mk-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.55); cursor:pointer; border:none; padding:0; transition:all .2s; }
     .mk-dot.on { background:#fff; }
     .canvas-stage.mode-preview #three-canvas { display:none !important; }
@@ -1619,7 +1619,8 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
-      .canvas-stage.mode-preview #tag-mockup { width: 100%; max-width: 100%; height: auto; max-height: none; top: 44%; border-radius: 0; }   /* mobile: fit the mockup to the full viewport width */
+      .canvas-stage.mode-preview #tag-mockup { width: 100%; max-width: 100%; height: auto; max-height: none; bottom: 12vh; border-radius: 0; }   /* mobile: full width, anchored above the sheet */
+      .mk-dots { bottom: 14vh; }   /* mobile: lift the dots above the collapsed sheet */
       .mode-toggle { top: 12px; right: 12px; }
       html[dir="rtl"] .mode-toggle { right: auto; left: 12px; }
       .vp-history { top: 12px; left: 12px; }
@@ -6345,6 +6346,7 @@ function sliderRowPBR(id, prop, label, value) {
 }
 function layerFinishGridHTML(L) {
   var defs = [
+    { k:'none',      prev:'linear-gradient(135deg,#f0ece6 25%,#e4ddd6 50%,#f0ece6 75%)', overlay:true, name:'None', sub:'match card' },
     { k:'matte',     prev:'radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)', name:'Matte', sub:'non-reflective' },
     { k:'gloss',     prev:'radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)', name:'Gloss', sub:'high-shine' },
     { k:'foil',      prev:'radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)', name:'Foil', sub:'metallic accent' }
@@ -7540,17 +7542,17 @@ function addLayer(kind) {
     /* A Logo is a single (non-tiled) sticker that uploads directly (no Presets) — so it gets
        the full Graphic recolor/finish/layout controls. isLogo only changes its name/label. */
     L = { id:id, kind:'sticker', isLogo:true, tiled:false, patStack:'vertical', gap:0, density:6, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:18, scaleH:18, posU:_fp.posU, posV:_fp.posV, rotation:0,
-          color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'matte', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+          color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else if (kind === 'text') {
     L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:45, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
-          color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'matte', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+          color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           align:'center', tracking:0, lineHeight:1.25, bold:false, italic:false, strokeWidth:0, strokeColor:'#000000', shadow:false, shadowColor:'#000000', shadowBlur:4, shadowX:0, shadowY:2 };
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
     L = { id:id, kind:'sticker', isBackground:(kind === 'pattern'), tiled:(kind === 'pattern'), patStack:'vertical', gap:0, density:1, feather:0, cropT:0, cropB:0, cropL:0, cropR:0, fade:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, isDefault:false, visible:true, img:null, srcImg:null, fileName:'', scale:(kind === 'pattern' ? 40 : 18), scaleH:(kind === 'pattern' ? 40 : 18), posU:_fp.posU, posV:_fp.posV, rotation:0,
-          finish:'matte', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+          finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
           recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
     /* A new background's box covers BOTH the exterior AND interior islands (union), so toggling
        Inside on later needs no resize. Only the Outside faces are shown by default. */
@@ -11920,7 +11922,7 @@ function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelect
 var _pvNav = { zoom:1, x:0, y:0 }, _pvStage=null, _pvDrag=null;
 function _pvApply(){
   var cvs=document.getElementById('tag-mockup');
-  if(cvs) cvs.style.transform='translate(-50%,-50%) translate('+_pvNav.x+'px,'+_pvNav.y+'px) scale('+_pvNav.zoom+')';
+  if(cvs) cvs.style.transform='translateX(-50%) translate('+_pvNav.x+'px,'+_pvNav.y+'px) scale('+_pvNav.zoom+')';
   if(_pvStage) _pvStage.style.cursor = (_pvNav.zoom>1.01) ? (_pvDrag?'grabbing':'grab') : '';
 }
 function _pvReset(){ _pvNav={zoom:1,x:0,y:0}; _pvDrag=null; _pvApply(); }
@@ -11930,10 +11932,9 @@ function _pvReset(){ _pvNav={zoom:1,x:0,y:0}; _pvDrag=null; _pvApply(); }
     if (typeof viewMode==='undefined' || viewMode!=='preview') return;
     e.preventDefault();
     var cvs=document.getElementById('tag-mockup'); if(!cvs) return;
-    var r=cvs.getBoundingClientRect(), mx=e.clientX-(r.left+r.width/2), my=e.clientY-(r.top+r.height/2);
-    var nz=Math.max(1, Math.min(8, _pvNav.zoom*Math.exp(-e.deltaY*0.0015))), k=nz/_pvNav.zoom;
-    _pvNav.x=(_pvNav.x-mx)*k+mx; _pvNav.y=(_pvNav.y-my)*k+my; _pvNav.zoom=nz;        /* keep the point under the cursor fixed */
-    if (nz<=1.001){ _pvNav.x=0; _pvNav.y=0; }                                        /* snap back to centre at 1x */
+    var nz=Math.max(1, Math.min(8, _pvNav.zoom*Math.exp(-e.deltaY*0.0015)));
+    _pvNav.zoom=nz;                                                                  /* scale grows from the bottom-centre origin */
+    if (nz<=1.001){ _pvNav.x=0; _pvNav.y=0; }                                        /* snap back at 1x */
     _pvApply();
   }, { passive:false });
   _pvStage.addEventListener('pointerdown', function(e){
