@@ -1617,7 +1617,12 @@
     @media (max-width: 760px) {
       .preview-header { display: none; }                 /* drop the "Paper bag" title block */
       .dim-pill, .drag-hint { display: none; }
-      .mobile-bar { display: none !important; }
+      .mobile-bar { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: var(--imp-surface); border-top: 1px solid var(--imp-border); box-shadow: 0 -4px 16px rgba(10,10,10,0.06); }
+      .mobile-bar .mb-price { display: flex; flex-direction: column; min-width: 0; }
+      .mobile-bar .mb-total { font-size: 16px; font-weight: 700; color: var(--imp-fg); }
+      .mobile-bar .mb-pu { font-size: 10.5px; color: var(--imp-fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mobile-bar .mb-btn { background: var(--imp-gold,#c8a96e); color: #2a1e00; border: none; border-radius: var(--imp-r-md); padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+      .mobile-bar .mb-btn:disabled { opacity: 0.45; cursor: default; }
       .configurator { display: block; min-height: 0; }
       .preview-panel {
         position: fixed; top: var(--imp-header-h); left: 0; right: 0; bottom: 0;
@@ -3079,7 +3084,7 @@
     <span class="mb-total" id="mb-total">AED 5,800</span>
     <span class="mb-pu"    id="mb-pu">AED 5.80 / unit · 1,000 units</span>
   </div>
-  <button class="mb-btn" onclick="addCart()" data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
+  <button class="mb-btn" id="mb-btn" onclick="_mobileBarAction()" data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
 </div>
 
 
@@ -9742,32 +9747,38 @@ function updatePricing() {
   document.getElementById('mb-pu').textContent =
     fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units';
 }
+/* True once the tag has any visible artwork (text / image / sticker / pattern). */
+function _hasArtwork(){
+  try {
+    return !!(typeof BAG!=='undefined' && BAG.artwork && BAG.artwork.layers &&
+      BAG.artwork.layers.some(function(L){ return L && L.visible && (L.content || L.img || L.cutCanvas || L.svgText || L.tiled); }));
+  } catch(e){ return false; }
+}
 function checkCart() {
-  const btn    = document.getElementById('atcbtn');
-  const hint   = document.getElementById('cta-hint');
-  if (!btn) return;
-  const rightsEl = document.getElementById('rights');
-  const rights = rightsEl ? rightsEl.checked : true;
-  if (S.mode === 'logo' && !S.hasLogo) {
-    btn.disabled = true;
-    if (hint) hint.textContent = S.lang === 'ar'
-      ? 'ارفع الشعار وأكّد الحقوق للمتابعة.'
-      : 'Upload a logo and confirm rights to continue.';
-  } else if (S.mode === 'logo' && !rights) {
-    btn.disabled = true;
-    if (hint) hint.textContent = S.lang === 'ar'
-      ? 'يُرجى تأكيد ملكية التصميم.'
-      : 'Please confirm you own the rights to the uploaded artwork.';
-  } else {
-    btn.disabled = false;
-    if (hint) hint.textContent = '';
-  }
+  var btn  = document.getElementById('atcbtn');
+  var hint = document.getElementById('cta-hint');
+  var has  = _hasArtwork();
+  if (btn) btn.disabled = !has;
+  if (hint) hint.textContent = has ? '' : (S.lang === 'ar'
+    ? 'أضف نصاً أو صورة إلى البطاقة للمتابعة'
+    : 'Add text or an image to your tag to continue');
+  if (typeof _syncMobileBar === 'function') _syncMobileBar();
+}
+/* Sticky mobile bar: 'Review' on the design steps, 'Add to Cart' on the final step. */
+function _syncMobileBar(){
+  var b=document.getElementById('mb-btn'); if(!b) return;
+  var last=(typeof CONFIG_STEP_COUNT!=='undefined')?CONFIG_STEP_COUNT:3;
+  var atReview=(typeof currentConfigStep!=='undefined' && currentConfigStep>=last);
+  if(atReview){ b.textContent=(S.lang==='ar'?'أضف إلى السلة':'Add to Cart'); b.disabled=!_hasArtwork(); }
+  else { b.textContent=(S.lang==='ar'?'مراجعة':'Review'); b.disabled=false; }
+}
+function _mobileBarAction(){
+  var last=(typeof CONFIG_STEP_COUNT!=='undefined')?CONFIG_STEP_COUNT:3;
+  if(typeof currentConfigStep!=='undefined' && currentConfigStep>=last){ if(typeof addCart==='function') addCart(); }
+  else if(typeof goConfigStep==='function'){ goConfigStep(last); }
 }
 function addCart() {
-  var rightsEl = document.getElementById('rights');
-  if (S.mode === 'logo' && (!S.hasLogo || (rightsEl && !rightsEl.checked))) {
-    checkCart(); return;
-  }
+  if (!_hasArtwork()) { checkCart(); return; }
   if (typeof playUISound === 'function') playUISound('cart');
 
   /* Compute current total for cart */
@@ -12844,6 +12855,7 @@ function _a2dHandleBar(ctx, x, y, ang, len, thick, color){
 function goConfigStep(n) {
   n = Math.max(1, Math.min(CONFIG_STEP_COUNT, n));
   currentConfigStep = n;
+  if (typeof _syncMobileBar === 'function') _syncMobileBar();
   /* Show/hide sections */
   document.querySelectorAll('.config-step').forEach(function(el) {
     el.classList.toggle('active', parseInt(el.getAttribute('data-cstep'), 10) === n);
