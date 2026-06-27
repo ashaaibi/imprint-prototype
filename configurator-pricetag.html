@@ -2159,6 +2159,14 @@
 
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Gloss streak color</span><input type="color" value="#ffffff" oninput="onGlossStreakColor(this.value)" style="width:42px;height:26px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;"></div>
 
+      <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:12px 0 6px;">Streak animation (foil + gloss)</div>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin:6px 0;font-size:12px;color:var(--imp-fg);"><input type="checkbox" onchange="onStreakAnimToggle(this.checked)"> Animate streak (vertical sweep)</label>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Speed</span><span class="slider-val" id="sanim-speed-val">1x</span></div>
+        <input type="range" class="test-slider" min="3" max="30" step="1" value="10" oninput="onStreakAnimSpeed(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">How often</span><span class="slider-val" id="sanim-int-val">3s</span></div>
+        <input type="range" class="test-slider" min="1" max="10" step="0.5" value="3" oninput="onStreakAnimInterval(this.value)"></div>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin:6px 0 4px;font-size:12px;color:var(--imp-fg);"><input type="checkbox" checked onchange="onStreakAnimMobile(this.checked)"> Run on mobile (uncheck if FPS drops)</label>
+
       <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:12px 0 6px;">Emboss / Deboss (Bevel &amp; Emboss)</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Depth</span><span class="slider-val" id="emb-dep-val">100%</span></div>
         <input type="range" class="test-slider" min="0" max="300" step="1" value="100" oninput="onEmbFxDepth(this.value)"></div>
@@ -11547,6 +11555,7 @@ function setViewMode(mode){
     _mockupSlide = 0;   /* open the carousel on slide 1 (Front & back) */
     if (typeof renderTagMockup==='function') renderTagMockup();
     if (typeof _pvReset==='function') _pvReset();   /* start the preview at 1x, centred */
+    if (typeof STREAK_ANIM!=='undefined' && STREAK_ANIM.on && typeof _startStreakAnim==='function') _startStreakAnim();   /* resume streak animation in Preview */
     return;
   }
   if (!ov) return;
@@ -11688,6 +11697,33 @@ function onFoilStreakAngle(v){ FOIL_FX.streakAngle=(parseFloat(v)||0)/100; var e
 function onGlossStreakAngle(v){ GLOSS_FX.streakAngle=(parseFloat(v)||0)/100; var e=document.getElementById('gloss-sang-val'); if(e)e.textContent=Math.round(GLOSS_FX.streakAngle*100)+'%'; _fxRefresh(); }
 function onFoilStreakColor(v){ FOIL_FX.streakColor=v||'#ffffff'; _fxRefresh(); }
 function onGlossStreakColor(v){ GLOSS_FX.streakColor=v||'#ffffff'; _fxRefresh(); }
+/* ── Animated streak — periodically sweeps the streak's V position for foil + gloss ── */
+var STREAK_ANIM = { on:false, speed:1.0, interval:3.0, mobile:true, _savedFoil:null, _savedGloss:null };
+var _streakRAF = 0, _streakLastPos = -999;
+function _streakIsMobile(){ return (typeof window!=='undefined' && window.innerWidth<=760); }
+function _streakTick(now){
+  if (!STREAK_ANIM.on || typeof viewMode==='undefined' || viewMode!=='preview' || (typeof _mockupAvailable==='function' && !_mockupAvailable()) || (STREAK_ANIM.mobile===false && _streakIsMobile())){ _streakRAF=0; return; }
+  var t=(now||0)/1000;
+  var cycle=Math.max(0.4, STREAK_ANIM.interval||3);
+  var sweepDur=Math.max(0.2, 1.4/Math.max(0.1, STREAK_ANIM.speed||1));
+  var phase=t % cycle;
+  var pos = (phase<sweepDur) ? (-0.3 + (phase/sweepDur)*1.6) : 1.6;   /* sweep top→bottom, then off-screen until the next cycle */
+  if (Math.abs(pos-_streakLastPos)>0.003){                            /* only re-render while the streak is actually moving (idle between sweeps is free) */
+    _streakLastPos=pos; FOIL_FX.streakPos=pos; GLOSS_FX.streakPos=pos;
+    if (typeof renderTagMockup==='function') renderTagMockup();
+  }
+  _streakRAF=requestAnimationFrame(_streakTick);
+}
+function _startStreakAnim(){ if(!_streakRAF){ _streakLastPos=-999; _streakRAF=requestAnimationFrame(_streakTick); } }
+function _stopStreakAnim(){ if(_streakRAF){ cancelAnimationFrame(_streakRAF); _streakRAF=0; } }
+function onStreakAnimToggle(on){
+  STREAK_ANIM.on=!!on;
+  if(STREAK_ANIM.on){ STREAK_ANIM._savedFoil=FOIL_FX.streakPos; STREAK_ANIM._savedGloss=GLOSS_FX.streakPos; _startStreakAnim(); }
+  else { _stopStreakAnim(); if(STREAK_ANIM._savedFoil!=null){ FOIL_FX.streakPos=STREAK_ANIM._savedFoil; GLOSS_FX.streakPos=STREAK_ANIM._savedGloss; } if(typeof viewMode!=='undefined'&&viewMode==='preview'&&typeof renderTagMockup==='function') renderTagMockup(); }
+}
+function onStreakAnimSpeed(v){ STREAK_ANIM.speed=Math.max(0.1,(parseFloat(v)||10)/10); var e=document.getElementById('sanim-speed-val'); if(e)e.textContent=(Math.round(STREAK_ANIM.speed*10)/10)+'x'; }
+function onStreakAnimInterval(v){ STREAK_ANIM.interval=Math.max(0.4,parseFloat(v)||3); var e=document.getElementById('sanim-int-val'); if(e)e.textContent=(Math.round(STREAK_ANIM.interval*10)/10)+'s'; }
+function onStreakAnimMobile(on){ STREAK_ANIM.mobile=!!on; if(STREAK_ANIM.on && !_streakRAF) _startStreakAnim(); }
 var EMBOSS_FX = { size:7, soften:2, angle:120, altitude:35, depth:1.0, hiOpacity:0.6, hiBlend:'screen', hiColor:'#ffffff', shOpacity:0.55, shBlend:'multiply', shColor:'#000000' };   /* Photoshop-style Bevel & Emboss (Testing) */
 function onEmbFxSize(v){ EMBOSS_FX.size=Math.max(0,parseFloat(v)||0); var e=document.getElementById('emb-size-val'); if(e)e.textContent=EMBOSS_FX.size+'px'; _fxRefresh(); }
 function onEmbFxSoften(v){ EMBOSS_FX.soften=Math.max(0,parseFloat(v)||0); var e=document.getElementById('emb-soft-val'); if(e)e.textContent=EMBOSS_FX.soften+'px'; _fxRefresh(); }
