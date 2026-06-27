@@ -9774,6 +9774,34 @@ function updatePricing() {
   document.getElementById('mb-pu').textContent =
     fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units';
 }
+/* ── Performance HUD (Testing) — live FPS / frame time, measured from requestAnimationFrame ── */
+var _perfHUD = { on:false, raf:0, last:0, frames:0, fps:0, ms:0, stats:{ fps:true, frameMs:true, mobile:true, draws:true, tris:false, ping:true } };
+function _perfHUDEl(){
+  var el=document.getElementById('perf-hud');
+  if(!el){ el=document.createElement('div'); el.id='perf-hud'; el.setAttribute('aria-hidden','true');
+    el.style.cssText='position:fixed;top:64px;left:12px;z-index:9999;background:rgba(0,0,0,0.78);color:#7CFC7C;font:600 11px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;padding:8px 11px;border-radius:9px;pointer-events:none;white-space:pre;min-width:128px;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+    document.body.appendChild(el); }
+  return el;
+}
+function onPerfToggle(on){
+  _perfHUD.on=!!on; var el=_perfHUDEl();
+  if(_perfHUD.on){ el.style.display='block'; _perfHUD.last=performance.now(); _perfHUD.frames=0;
+    if(!_perfHUD.raf){ var tick=function(now){ if(!_perfHUD.on){ _perfHUD.raf=0; return; } _perfHUD.frames++; var dt=now-_perfHUD.last; if(dt>=500){ _perfHUD.fps=Math.round(_perfHUD.frames*1000/dt); _perfHUD.ms=Math.round((dt/_perfHUD.frames)*10)/10; _perfHUD.frames=0; _perfHUD.last=now; _perfRenderHUD(); } _perfHUD.raf=requestAnimationFrame(tick); }; _perfHUD.raf=requestAnimationFrame(tick); }
+  } else { el.style.display='none'; if(_perfHUD.raf){ cancelAnimationFrame(_perfHUD.raf); _perfHUD.raf=0; } }
+}
+function onPerfStat(stat, on){ _perfHUD.stats[stat]=!!on; _perfRenderHUD(); }
+function _perfRenderHUD(){
+  var el=document.getElementById('perf-hud'); if(!el||!_perfHUD.on) return;
+  var s=_perfHUD.stats, L=[];
+  if(s.fps)     L.push('FPS     '+_perfHUD.fps);
+  if(s.frameMs) L.push('frame   '+_perfHUD.ms+' ms');
+  if(s.mobile)  L.push('mobile~ '+Math.round(_perfHUD.fps/3.5)+' fps');
+  if(s.draws)   L.push('draws   - (2D)');
+  if(s.tris)    L.push('tris    - (2D)');
+  if(s.ping)    L.push('ping    -');
+  el.textContent=L.join('\n');
+  el.style.color=_perfHUD.fps>=50?'#7CFC7C':_perfHUD.fps>=30?'#FFD166':'#FF6B6B';
+}
 /* True once the tag has any visible artwork (text / image / sticker / pattern). */
 function _hasArtwork(){
   try {
