@@ -2099,6 +2099,12 @@
         <span class="pr-val" id="int-finish-val">AED 0</span>
       </div>
 
+      <!-- Per-layer (spot) finishes -->
+      <div class="price-row" id="layer-finish-row" style="display:none;">
+        <span class="pr-lbl" id="layer-finish-lbl">Layer finishes</span>
+        <span class="pr-val" id="layer-finish-val">AED 0</span>
+      </div>
+
       <!-- Emboss / Deboss -->
       <div class="price-row" id="emboss-row" style="display:none;">
         <span class="pr-lbl" id="emboss-lbl">Emboss / Deboss</span>
@@ -2179,17 +2185,17 @@
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Mockup Finish FX</div>
       <div style="font-size:10px;color:var(--secondary);margin:-2px 0 8px;line-height:1.4;">Tune the Preview <strong>Foil</strong> &amp; <strong>Gloss</strong>. Foil metallizes the design's existing colours (no overwrite); tint adds gold/silver if you want it.</div>
       <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:2px 0 6px;">Foil (metal + streak + highlight map)</div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil intensity</span><span class="slider-val" id="foil-int-val">85%</span></div>
-        <input type="range" class="test-slider" min="0" max="100" step="1" value="85" oninput="onFoilIntensity(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil specular</span><span class="slider-val" id="foil-spec-val">70%</span></div>
-        <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onFoilSpec(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil intensity</span><span class="slider-val" id="foil-int-val">0%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="0" oninput="onFoilIntensity(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil specular</span><span class="slider-val" id="foil-spec-val">100%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="100" oninput="onFoilSpec(this.value)"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil tint</span>
         <select onchange="onFoilTint(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
           <option value="none">None (metallize colours)</option><option value="gold">Gold</option><option value="silver">Silver</option><option value="rose">Rose gold</option></select></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak size (vertical)</span><span class="slider-val" id="foil-ssz-val">34%</span></div>
-        <input type="range" class="test-slider" min="2" max="200" step="1" value="34" oninput="onFoilStreakSize(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak position (V)</span><span class="slider-val" id="foil-spos-val">50%</span></div>
-        <input type="range" class="test-slider" min="-50" max="150" step="1" value="50" oninput="onFoilStreakPos(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak size (vertical)</span><span class="slider-val" id="foil-ssz-val">80%</span></div>
+        <input type="range" class="test-slider" min="2" max="200" step="1" value="80" oninput="onFoilStreakSize(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak position (V)</span><span class="slider-val" id="foil-spos-val">65%</span></div>
+        <input type="range" class="test-slider" min="-50" max="150" step="1" value="65" oninput="onFoilStreakPos(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak angle</span><span class="slider-val" id="foil-sang-val">70%</span></div>
         <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onFoilStreakAngle(this.value)"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil streak blend</span>
@@ -2201,12 +2207,12 @@
         <input type="range" class="test-slider" min="0" max="60" step="1" value="0" oninput="onSpecBlur(this.value)"></div>
 
       <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:12px 0 6px;">Gloss (light streak only)</div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss intensity</span><span class="slider-val" id="gloss-int-val">70%</span></div>
-        <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossIntensity(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak size (vertical)</span><span class="slider-val" id="gloss-ssz-val">40%</span></div>
-        <input type="range" class="test-slider" min="2" max="200" step="1" value="40" oninput="onGlossStreakSize(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak position (V)</span><span class="slider-val" id="gloss-spos-val">50%</span></div>
-        <input type="range" class="test-slider" min="-50" max="150" step="1" value="50" oninput="onGlossStreakPos(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss intensity</span><span class="slider-val" id="gloss-int-val">90%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="90" oninput="onGlossIntensity(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak size (vertical)</span><span class="slider-val" id="gloss-ssz-val">80%</span></div>
+        <input type="range" class="test-slider" min="2" max="200" step="1" value="80" oninput="onGlossStreakSize(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak position (V)</span><span class="slider-val" id="gloss-spos-val">65%</span></div>
+        <input type="range" class="test-slider" min="-50" max="150" step="1" value="65" oninput="onGlossStreakPos(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak angle</span><span class="slider-val" id="gloss-sang-val">70%</span></div>
         <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossStreakAngle(this.value)"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Gloss streak blend</span>
@@ -7129,6 +7135,7 @@ function buildLayerBodyHTML(L) {
     /* Background: Density (+ Feather) → Opacity → Areas → Recolor → Finish. (No Gap, no Move/Emboss/Layout.) */
     h += _bgTiledControlsHTML(id, L);
     h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
+    h += sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, ((Math.round(L.rotation||0)%360)+360)%360, '°');   /* backgrounds get a rotation slider too (5° increments) */
     h += _colorSec;
     h += _layerMoreOptions(id, _finishHTML);
   } else if (L.kind === 'text') {
@@ -7164,7 +7171,7 @@ function _transformHTML(id, L, rotFirst) {
   var scaleRow = '<div class="ctrl-slider-row"' + sRowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
     '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '"' + sInSty + ' oninput="onLayerScale(' + id + ',this.value)"' + (lock ? ' disabled' : '') + '></div>';
   var opRow = sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
-  var rotRow = sliderRow(id, 'rotation', 'Rotation', 0, 360, 1, rVal, '°', lock);
+  var rotRow = sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, rVal, '°', lock);   /* slide by 5° increments */
   return scaleRow + (rotFirst ? (rotRow + opRow) : (opRow + rotRow));
 }
 function onLayerScale(id, val) {
@@ -7404,6 +7411,7 @@ function onLayerFinish(id, key, btn) {
     }
   }
   drawBagTexture();
+  if (typeof updatePricing === 'function') updatePricing();   /* layer (spot) finish changes the price */
 }
 function onLayerPBR(id, prop, val) {
   var L = getLayer(id); if (!L) return;
@@ -9754,13 +9762,24 @@ function updatePricing() {
   var shapeTotal = shapePPU > 0 ? qty * shapePPU : 0;
   var dieSetup = _shp.setup || 0;
 
+  /* Per-layer (spot) material finishes on text/logo/graphic layers — each adds its finish rate */
+  var layerFinishPPU = 0, layerFinishCount = 0;
+  try {
+    (BAG.artwork.layers || []).forEach(function(L){
+      if (L && L.visible !== false && L.finish && L.finish !== 'none' && FINISH_PRICE[L.finish]) {
+        layerFinishPPU += FINISH_PRICE[L.finish]; layerFinishCount++;
+      }
+    });
+  } catch(e){}
+  var layerFinishTotal = layerFinishPPU > 0 ? qty * layerFinishPPU : 0;
+
   /* Artwork setup (one-time) */
   var logoSetup = (art.type === 'logo' && art.logo.img) ? 180 :
                   (art.type === 'text' && art.text.content) ? 60 : 0;
 
-  var addOnPPU = extPPU + intPPU + embossPPU + sizePPU + shapePPU;
+  var addOnPPU = extPPU + intPPU + embossPPU + sizePPU + shapePPU + layerFinishPPU;
   var effectivePPU = pu + addOnPPU;
-  var total = base + extTotal + intTotal + embossTotal + sizeTotal + shapeTotal + logoSetup + dieSetup;
+  var total = base + extTotal + intTotal + embossTotal + sizeTotal + shapeTotal + layerFinishTotal + logoSetup + dieSetup;
 
   /* Base row */
   document.getElementById('base-lbl').textContent =
@@ -9786,6 +9805,17 @@ function updatePricing() {
     document.getElementById('int-finish-val').textContent = fmt(intTotal);
     intRow.style.display = '';
   } else { intRow.style.display = 'none'; }
+
+  /* Layer (spot) finishes row */
+  var lfRow = document.getElementById('layer-finish-row');
+  if (lfRow) {
+    if (layerFinishPPU > 0) {
+      document.getElementById('layer-finish-lbl').textContent =
+        'Layer finishes — ' + layerFinishCount + (layerFinishCount === 1 ? ' layer' : ' layers') + ' (+' + fmtUnit(layerFinishPPU) + '/unit)';
+      document.getElementById('layer-finish-val').textContent = fmt(layerFinishTotal);
+      lfRow.style.display = '';
+    } else { lfRow.style.display = 'none'; }
+  }
 
   /* Emboss row */
   var embossRow = document.getElementById('emboss-row');
@@ -11848,8 +11878,8 @@ function _backDesignCanvas(){
    specular sheen on top of the design. An OPTIONAL mockups/<size>/spec.png (white =
    hot reflection) places the highlight on the real scene light; without it a synthetic
    diagonal streak is used. Emboss/deboss are per-layer and come in a later pass. */
-var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50, streakPos:0.50, streakSize:0.34, streakAngle:0.70, streakBlend:'screen', streakColor:'#ffffff' };   /* foil controls (Testing) */
-var GLOSS_FX = { intensity:0.70, angle:0.50, streakPos:0.50, streakSize:0.40, streakAngle:0.70, streakBlend:'screen', streakColor:'#ffffff' };                           /* gloss controls (Testing) */
+var FOIL_FX  = { intensity:0.00, spec:1.00, tint:'none', angle:0.50, streakPos:0.65, streakSize:0.80, streakAngle:0.70, streakBlend:'screen', streakColor:'#ffffff' };   /* foil controls (Testing) — defaults */
+var GLOSS_FX = { intensity:0.90, angle:0.50, streakPos:0.65, streakSize:0.80, streakAngle:0.70, streakBlend:'screen', streakColor:'#ffffff' };                           /* gloss controls (Testing) — defaults */
 var FOIL_TINTS = { none:null, gold:'#d8a93a', silver:'#cfd2d6', rose:'#e3a9a0' };
 var SPEC_FX = { blend:'color-dodge', blur:0 };   /* highlight/spec-map blend mode + blur (Testing) */
 function onSpecBlend(v){ SPEC_FX.blend=v||'color-dodge'; _fxRefresh(); }
