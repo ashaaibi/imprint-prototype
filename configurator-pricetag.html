@@ -2000,6 +2000,25 @@
       <p style="font-size:10px;color:var(--imp-fg-3);margin:8px 2px 0;line-height:1.4;"><span data-en="Use − / + to resize a tag uniformly in 0.5 cm steps." data-ar="استخدم − / + لتغيير المقاس بمقدار ٠٫٥ سم بالتساوي.">Use − / + to resize a tag uniformly in 0.5 cm steps.</span></p>
     </div>
 
+    <!-- Tag Finish — surfaced in step 1 (the headline premium choice) -->
+    <div class="cs bag-section config-step" data-cstep="1">
+      <label class="cl"><span data-en="Finish" data-ar="التشطيب">Finish</span></label>
+      <div class="finish-grid" id="tag-finish-grid">
+        <div class="finish-card on" data-finish="matte" onclick="onTagFinish('matte',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 50% 45%,#d4cfc9 0%,#b0aaa4 60%,#9a948e 100%)"></div>
+          <span class="finish-name" data-en="Matte" data-ar="مطفّأ">Matte</span><span class="finish-sub" data-en="Soft, non-reflective" data-ar="ناعم، غير عاكس">Soft, non-reflective</span>
+        </div>
+        <div class="finish-card" data-finish="gloss" onclick="onTagFinish('gloss',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 35% 35%,#fff 0%,#ccc 40%,#888 100%)"></div>
+          <span class="finish-name" data-en="Gloss" data-ar="لامع">Gloss</span><span class="finish-sub" data-en="Bright, high-shine" data-ar="لامع وبرّاق">Bright, high-shine</span>
+        </div>
+        <div class="finish-card" data-finish="foil" onclick="onTagFinish('foil',this)">
+          <div class="finish-preview" style="background:radial-gradient(circle at 32% 32%,#fff 0%,#e8e0c0 25%,#c0a84a 55%,#8a7020 100%)"></div>
+          <span class="finish-name" data-en="Foil" data-ar="ختم معدني">Foil</span><span class="finish-sub" data-en="Metallic · +AED 0.95/unit" data-ar="معدني · +0.95 ر.ع/وحدة">Metallic · +AED 0.95/unit</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Bag Quantity ────────────────────── -->
     <div class="cs bag-section config-step" data-cstep="3">
       <label class="cl"><span data-en="Quantity" data-ar="الكمية">Quantity</span></label>
@@ -8929,6 +8948,12 @@ const BAG_FINISH_PRESETS = {
   foil:      { roughness:0.22, metalness:1.00, transmission:0.00, envFactor:1.20, clearcoat:0.30, clearcoatRoughness:0.15, sheen:0.00, ior:1.50, specular:1.00, normalMul:0.12 },
 };
 
+/* Tag-level finish picker (step 1): set the exterior finish + keep this grid's active state. */
+function onTagFinish(key, btn){
+  if(typeof applyBagFinish==='function') applyBagFinish('exterior', key, btn);
+  var g=document.getElementById('tag-finish-grid');
+  if(g) g.querySelectorAll('.finish-card').forEach(function(c){ c.classList.toggle('on', c.getAttribute('data-finish')===key); });
+}
 function applyBagFinish(region, key, btn, instant) {
   var prevFinish = BAG[region].finish; /* capture before overwrite — used for kraft fade-out */
   BAG[region].finish = key;
