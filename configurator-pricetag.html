@@ -2103,6 +2103,7 @@
       <!-- Mockup Finish FX sub-section -->
       <div style="margin-top:18px;margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Mockup Finish FX</div>
       <div style="font-size:10px;color:var(--secondary);margin:-2px 0 8px;line-height:1.4;">Tune the Preview <strong>Foil</strong> &amp; <strong>Gloss</strong>. Foil metallizes the design's existing colours (no overwrite); tint adds gold/silver if you want it.</div>
+      <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:2px 0 6px;">Foil (metal + streak + highlight map)</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil intensity</span><span class="slider-val" id="foil-int-val">85%</span></div>
         <input type="range" class="test-slider" min="0" max="100" step="1" value="85" oninput="onFoilIntensity(this.value)"></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil specular</span><span class="slider-val" id="foil-spec-val">70%</span></div>
@@ -2110,16 +2111,52 @@
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil tint</span>
         <select onchange="onFoilTint(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
           <option value="none">None (metallize colours)</option><option value="gold">Gold</option><option value="silver">Silver</option><option value="rose">Rose gold</option></select></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Highlight angle</span><span class="slider-val" id="fx-angle-val">50%</span></div>
-        <input type="range" class="test-slider" min="0" max="100" step="1" value="50" oninput="onFxAngle(this.value)"></div>
-      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss intensity</span><span class="slider-val" id="gloss-int-val">70%</span></div>
-        <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossIntensity(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak size</span><span class="slider-val" id="foil-ssz-val">34%</span></div>
+        <input type="range" class="test-slider" min="2" max="100" step="1" value="34" oninput="onFoilStreakSize(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Foil streak position</span><span class="slider-val" id="foil-spos-val">50%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="50" oninput="onFoilStreakPos(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil streak blend</span>
+        <select onchange="onFoilStreakBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
+          <option value="screen">Screen</option><option value="color-dodge">Color dodge</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="lighten">Lighten</option></select></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Highlight map blend</span>
         <select onchange="onSpecBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
           <option value="color-dodge">Color dodge</option><option value="multiply">Multiply</option><option value="screen">Screen</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option></select></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Highlight map blur</span><span class="slider-val" id="spec-blur-val">0px</span></div>
         <input type="range" class="test-slider" min="0" max="60" step="1" value="0" oninput="onSpecBlur(this.value)"></div>
-      <div style="font-size:10px;color:var(--secondary);margin:-4px 0 8px;line-height:1.4;">Blend &amp; blur for an optional <b>mockups/&lt;size&gt;/spec.png</b> highlight map (add the map to see these take effect).</div>
+
+      <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:12px 0 6px;">Gloss (light streak only)</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss intensity</span><span class="slider-val" id="gloss-int-val">70%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossIntensity(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak size</span><span class="slider-val" id="gloss-ssz-val">40%</span></div>
+        <input type="range" class="test-slider" min="2" max="100" step="1" value="40" oninput="onGlossStreakSize(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Gloss streak position</span><span class="slider-val" id="gloss-spos-val">50%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="50" oninput="onGlossStreakPos(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Gloss streak blend</span>
+        <select onchange="onGlossStreakBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
+          <option value="screen">Screen</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="color-dodge">Color dodge</option><option value="lighten">Lighten</option></select></div>
+
+      <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:12px 0 6px;">Emboss / Deboss (Bevel &amp; Emboss)</div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Depth</span><span class="slider-val" id="emb-dep-val">100%</span></div>
+        <input type="range" class="test-slider" min="0" max="300" step="1" value="100" oninput="onEmbFxDepth(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Size</span><span class="slider-val" id="emb-size-val">7px</span></div>
+        <input type="range" class="test-slider" min="1" max="40" step="1" value="7" oninput="onEmbFxSize(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Soften</span><span class="slider-val" id="emb-soft-val">2px</span></div>
+        <input type="range" class="test-slider" min="0" max="20" step="1" value="2" oninput="onEmbFxSoften(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Light angle</span><span class="slider-val" id="emb-ang-val">120°</span></div>
+        <input type="range" class="test-slider" min="0" max="360" step="1" value="120" oninput="onEmbFxAngle(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Altitude</span><span class="slider-val" id="emb-alt-val">35°</span></div>
+        <input type="range" class="test-slider" min="0" max="90" step="1" value="35" oninput="onEmbFxAltitude(this.value)"></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Highlight opacity</span><span class="slider-val" id="emb-hiop-val">60%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="60" oninput="onEmbFxHiOpacity(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Highlight blend</span>
+        <select onchange="onEmbFxHiBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
+          <option value="screen">Screen</option><option value="color-dodge">Color dodge</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="lighten">Lighten</option></select></div>
+      <div class="slider-row"><div class="slider-top"><span class="slider-name">Shadow opacity</span><span class="slider-val" id="emb-shop-val">55%</span></div>
+        <input type="range" class="test-slider" min="0" max="100" step="1" value="55" oninput="onEmbFxShOpacity(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Shadow blend</span>
+        <select onchange="onEmbFxShBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;">
+          <option value="multiply">Multiply</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="darken">Darken</option><option value="color-burn">Color burn</option></select></div>
+      <div style="font-size:10px;color:var(--secondary);margin:-2px 0 8px;line-height:1.4;">Bevel &amp; Emboss shows on any layer set to Emboss (raised) or Deboss (pressed-in). Per-layer raise/indent amount = that layer's Emboss/Deboss depth.</div>
 
       <!-- Motion / Intro sub-section -->
       <div style="margin-bottom:10px;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--secondary);font-weight:500;">Motion &amp; Intro</div>
@@ -11547,6 +11584,22 @@ function onFoilSpec(v){ FOIL_FX.spec=(parseFloat(v)||0)/100; var e=document.getE
 function onFoilTint(v){ FOIL_FX.tint=v||'none'; _fxRefresh(); }
 function onFxAngle(v){ FOIL_FX.angle=(parseFloat(v)||0)/100; GLOSS_FX.angle=FOIL_FX.angle; var e=document.getElementById('fx-angle-val'); if(e)e.textContent=Math.round(FOIL_FX.angle*100)+'%'; _fxRefresh(); }
 function onGlossIntensity(v){ GLOSS_FX.intensity=(parseFloat(v)||0)/100; var e=document.getElementById('gloss-int-val'); if(e)e.textContent=Math.round(GLOSS_FX.intensity*100)+'%'; _fxRefresh(); }
+function onFoilStreakSize(v){ FOIL_FX.streakSize=(parseFloat(v)||0)/100; var e=document.getElementById('foil-ssz-val'); if(e)e.textContent=Math.round(FOIL_FX.streakSize*100)+'%'; _fxRefresh(); }
+function onFoilStreakPos(v){ FOIL_FX.streakPos=(parseFloat(v)||0)/100; var e=document.getElementById('foil-spos-val'); if(e)e.textContent=Math.round(FOIL_FX.streakPos*100)+'%'; _fxRefresh(); }
+function onFoilStreakBlend(v){ FOIL_FX.streakBlend=v||'screen'; _fxRefresh(); }
+function onGlossStreakSize(v){ GLOSS_FX.streakSize=(parseFloat(v)||0)/100; var e=document.getElementById('gloss-ssz-val'); if(e)e.textContent=Math.round(GLOSS_FX.streakSize*100)+'%'; _fxRefresh(); }
+function onGlossStreakPos(v){ GLOSS_FX.streakPos=(parseFloat(v)||0)/100; var e=document.getElementById('gloss-spos-val'); if(e)e.textContent=Math.round(GLOSS_FX.streakPos*100)+'%'; _fxRefresh(); }
+function onGlossStreakBlend(v){ GLOSS_FX.streakBlend=v||'screen'; _fxRefresh(); }
+var EMBOSS_FX = { size:7, soften:2, angle:120, altitude:35, depth:1.0, hiOpacity:0.6, hiBlend:'screen', hiColor:'#ffffff', shOpacity:0.55, shBlend:'multiply', shColor:'#000000' };   /* Photoshop-style Bevel & Emboss (Testing) */
+function onEmbFxSize(v){ EMBOSS_FX.size=Math.max(0,parseFloat(v)||0); var e=document.getElementById('emb-size-val'); if(e)e.textContent=EMBOSS_FX.size+'px'; _fxRefresh(); }
+function onEmbFxSoften(v){ EMBOSS_FX.soften=Math.max(0,parseFloat(v)||0); var e=document.getElementById('emb-soft-val'); if(e)e.textContent=EMBOSS_FX.soften+'px'; _fxRefresh(); }
+function onEmbFxAngle(v){ EMBOSS_FX.angle=parseFloat(v)||0; var e=document.getElementById('emb-ang-val'); if(e)e.textContent=Math.round(EMBOSS_FX.angle)+'°'; _fxRefresh(); }
+function onEmbFxAltitude(v){ EMBOSS_FX.altitude=parseFloat(v)||0; var e=document.getElementById('emb-alt-val'); if(e)e.textContent=Math.round(EMBOSS_FX.altitude)+'°'; _fxRefresh(); }
+function onEmbFxDepth(v){ EMBOSS_FX.depth=(parseFloat(v)||0)/100; var e=document.getElementById('emb-dep-val'); if(e)e.textContent=Math.round(EMBOSS_FX.depth*100)+'%'; _fxRefresh(); }
+function onEmbFxHiOpacity(v){ EMBOSS_FX.hiOpacity=(parseFloat(v)||0)/100; var e=document.getElementById('emb-hiop-val'); if(e)e.textContent=Math.round(EMBOSS_FX.hiOpacity*100)+'%'; _fxRefresh(); }
+function onEmbFxShOpacity(v){ EMBOSS_FX.shOpacity=(parseFloat(v)||0)/100; var e=document.getElementById('emb-shop-val'); if(e)e.textContent=Math.round(EMBOSS_FX.shOpacity*100)+'%'; _fxRefresh(); }
+function onEmbFxHiBlend(v){ EMBOSS_FX.hiBlend=v||'screen'; _fxRefresh(); }
+function onEmbFxShBlend(v){ EMBOSS_FX.shBlend=v||'multiply'; _fxRefresh(); }
 function _fxCanvas(W,H){ var c=document.createElement('canvas'); c.width=W; c.height=H; return c; }
 function _fxSpec(W,H,A,x0,x1){
   var c=_fxCanvas(W,H), x=c.getContext('2d');
@@ -11637,19 +11690,28 @@ function _layerFinishArea(L, designMasked, A, surface){
   return out;
 }
 function _applyEmbossFx(ctx, area, A, extrude){
-  /* fake bevel: a light rim on one edge + a dark rim opposite, clipped to the layer.
-     extrude>0 = emboss (raised, light up-left); extrude<0 = deboss (indented, swapped). */
-  var W=A.W, H=A.H, dir=(extrude>=0?1:-1), amt=Math.min((typeof EXTRUDE_MAX!=='undefined'?EXTRUDE_MAX:3), Math.abs(extrude));
-  if (amt<=0) return;
-  var d=Math.max(1, Math.round(amt*2.2));
-  var lc=_fxCanvas(W,H), lx=lc.getContext('2d');
-  lx.drawImage(area,0,0); lx.globalCompositeOperation='source-in'; lx.fillStyle='#ffffff'; lx.fillRect(0,0,W,H);
-  lx.globalCompositeOperation='destination-out'; lx.drawImage(area, dir*d, dir*d);          /* light rim */
-  ctx.globalCompositeOperation='screen'; ctx.globalAlpha=0.6*Math.min(1,amt); ctx.drawImage(lc,0,0);
+  /* Photoshop-style Bevel & Emboss: a soft directional HIGHLIGHT rim on the lit side + a
+     SHADOW rim opposite, so the shape reads as raised (emboss) or pressed-in (deboss).
+     extrude>0 = emboss, extrude<0 = deboss. Look tuned by EMBOSS_FX (Testing). */
+  var W=A.W, H=A.H, E=(typeof EMBOSS_FX!=='undefined')?EMBOSS_FX:{size:7,soften:2,angle:120,altitude:35,depth:1,hiOpacity:0.6,hiBlend:'screen',hiColor:'#fff',shOpacity:0.55,shBlend:'multiply',shColor:'#000'};
+  var MX=(typeof EXTRUDE_MAX!=='undefined'?EXTRUDE_MAX:3);
+  var mag=Math.min(MX, Math.abs(extrude)); if(mag<=0) return;
+  var k=(E.depth!=null?E.depth:1)*(mag/MX);                 /* global depth × per-layer extrude magnitude */
+  var down=(extrude<0);
+  var ar=(E.angle||120)*Math.PI/180, lx=Math.cos(ar), ly=-Math.sin(ar);
+  if(down){ lx=-lx; ly=-ly; }                               /* deboss = flip the light → pressed-in */
+  var altK=Math.max(0.2, 1-((E.altitude||35)/90));          /* lower altitude = grazing light = stronger bevel */
+  var sz=Math.max(1, E.size||1), sf=Math.max(0, E.soften||0);
+  /* HIGHLIGHT rim (toward the light) = silhouette − silhouette shifted AWAY from the light */
+  var hc=_fxCanvas(W,H), hx=hc.getContext('2d');
+  hx.drawImage(area,0,0); hx.globalCompositeOperation='source-in'; hx.fillStyle=E.hiColor||'#ffffff'; hx.fillRect(0,0,W,H);
+  hx.globalCompositeOperation='destination-out'; if(sf>0) hx.filter='blur('+sf+'px)'; hx.drawImage(area, -lx*sz, -ly*sz); hx.filter='none';
+  ctx.globalCompositeOperation=(E.hiBlend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,(E.hiOpacity!=null?E.hiOpacity:0.6)*altK*k)); ctx.drawImage(hc,0,0);
+  /* SHADOW rim (away from the light) = silhouette − silhouette shifted TOWARD the light */
   var dc=_fxCanvas(W,H), dx=dc.getContext('2d');
-  dx.drawImage(area,0,0); dx.globalCompositeOperation='source-in'; dx.fillStyle='#000000'; dx.fillRect(0,0,W,H);
-  dx.globalCompositeOperation='destination-out'; dx.drawImage(area, -dir*d, -dir*d);         /* dark rim */
-  ctx.globalCompositeOperation='multiply'; ctx.globalAlpha=0.5*Math.min(1,amt); ctx.drawImage(dc,0,0);
+  dx.drawImage(area,0,0); dx.globalCompositeOperation='source-in'; dx.fillStyle=E.shColor||'#000000'; dx.fillRect(0,0,W,H);
+  dx.globalCompositeOperation='destination-out'; if(sf>0) dx.filter='blur('+sf+'px)'; dx.drawImage(area, lx*sz, ly*sz); dx.filter='none';
+  ctx.globalCompositeOperation=(E.shBlend||'multiply'); ctx.globalAlpha=Math.max(0,Math.min(1,(E.shOpacity!=null?E.shOpacity:0.55)*altK*k)); ctx.drawImage(dc,0,0);
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 function _applyLayerFinishes(ctx, designMasked, A, surface){
