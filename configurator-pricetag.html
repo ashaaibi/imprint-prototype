@@ -1667,7 +1667,8 @@
         transition: transform 0.32s cubic-bezier(0.22, 0.8, 0.22, 1);
       }
       html[data-theme="dark"] .controls-panel { box-shadow: 0 -10px 34px rgba(0,0,0,0.55); }
-      .sheet-topbar { margin: 0 -18px; padding: 0 18px; border-radius: 20px 20px 0 0; }
+      .sheet-topbar { margin: 0 -18px; padding: 0 18px; border-radius: 20px 20px 0 0; touch-action: none; cursor: grab; }
+      .sheet-topbar:active { cursor: grabbing; }
       .sheet-handle {
         display: flex; align-items: center; justify-content: center;
         padding: 11px 0 6px;
@@ -10720,15 +10721,17 @@ function setupOrbit() {
     window._sheetIsMin = function(){ return idx === 3; };
 
     var startY = 0, startPx = 0, dragging = false, moved = false;
-    handle.addEventListener('pointerdown', function(e) {
+    var dragTarget = document.getElementById('sheet-topbar') || handle;   /* the WHOLE top bar is draggable — the grip alone is too small for a finger */
+    dragTarget.addEventListener('pointerdown', function(e) {
       if (!isMobile()) return;
+      if (e.target && e.target.closest && e.target.closest('button, a, input, select')) return;   /* let the step arrows tap, don't hijack them into a drag */
       dragging = true; moved = false; startY = e.clientY;
       startPx = parseFloat(sheet.style.getPropertyValue('--sheet-y')) || snaps()[idx];
       sheet.style.transition = 'none';
-      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      try { dragTarget.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
     });
-    handle.addEventListener('pointermove', function(e) {
+    dragTarget.addEventListener('pointermove', function(e) {
       if (!dragging) return;
       var dy = e.clientY - startY;
       if (Math.abs(dy) > 4) moved = true;
@@ -10744,8 +10747,8 @@ function setupOrbit() {
       s.forEach(function(sp, i) { var d = Math.abs(sp - y); if (d < bd) { bd = d; best = i; } });
       applySnap(best, true);
     }
-    handle.addEventListener('pointerup', end);
-    handle.addEventListener('pointercancel', end);
+    dragTarget.addEventListener('pointerup', end);
+    dragTarget.addEventListener('pointercancel', end);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
