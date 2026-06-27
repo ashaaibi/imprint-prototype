@@ -7088,31 +7088,31 @@ function buildLayerBodyHTML(L) {
     /* Background: Density (+ Feather) → Opacity → Areas → Recolor → Finish. (No Gap, no Move/Emboss/Layout.) */
     h += _bgTiledControlsHTML(id, L);
     h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
-    h += _areasSectionHTML(id, L);
     h += _colorSec;
-    h += _finishHTML;
+    h += _layerMoreOptions(id, _areasSectionHTML(id, L) + _finishHTML);
   } else if (L.kind === 'text') {
     /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → Finish → Emboss/Layout. */
     h += (_lkd('controls.move') ? '' : _transformHTML(id, L, true));   /* transform follows the move/resize lock */
     h += _colorSec;
     h += _moveSectionHTML(id, L);
-    h += _areasSectionHTML(id, L);
-    h += _finishHTML;
-    h += _embossLayoutHTML;
+    h += _layerMoreOptions(id, _areasSectionHTML(id, L) + _finishHTML + _embossLayoutHTML);
   } else {
     /* Logo / Graphic: Scale → Opacity → Rotation → Move → Areas → Recolor → Finish → (Emboss/Layout: Logo only). */
     h += (_lkd('controls.move') ? '' : _transformHTML(id, L));   /* transform follows the move/resize lock */
     h += _moveSectionHTML(id, L);
-    h += _areasSectionHTML(id, L);
     h += _colorSec;
-    h += _finishHTML;
-    h += _embossLayoutHTML;
+    h += _layerMoreOptions(id, _areasSectionHTML(id, L) + _finishHTML + _embossLayoutHTML);
   }
   return h;
 }
 /* Scale (font-size for text) + Opacity + Rotation. `rotFirst` → Scale/Rotation/Opacity (text);
    otherwise Scale/Opacity/Rotation. When a tile Layout is active, Scale & Rotation are driven by
    the tile box, so they're locked (disabled, not-allowed cursor). */
+function _layerMoreOptions(id, inner){
+  if(!inner) return '';
+  return '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-'+id+'-more\')" style="margin-top:16px;"><span class="adv-arrow">&#9658;</span> <span'+_arAttr('More options')+'>More options</span></div>'+
+    '<div class="advanced-body" id="lyr-'+id+'-more">'+inner+'</div>';
+}
 function _transformHTML(id, L, rotFirst) {
   var isText = (L.kind === 'text' && !L.tiled);
   var sVal = Math.round(isText ? (L.fontSize || 130) : (L.scale || 18));
