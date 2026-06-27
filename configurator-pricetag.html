@@ -4042,8 +4042,6 @@ function buildPatternPickers() {
     var grid = document.getElementById('bag-' + prefix + '-pattern-grid');
     if (!grid) return;
     var html = '<div class="pattern-thumb on" data-idx="-1" onclick="pickPattern(\'' + region + '\',-1,this)"><div class="pattern-none">NONE</div></div>';
-    html += '<div class="pattern-thumb" data-idx="ai" onclick="void(0)" title="Coming soon" style="opacity:0.55;">' +
-      '<div class="pattern-none" style="font-size:9px;text-align:center;line-height:1.3;">&#10022;<br>Create<br>with AI</div></div>';
     html += '<div class="pattern-thumb" data-idx="upload" onclick="document.getElementById(\'pat-upload-' + prefix + '\').click()" title="Upload Pattern — Tip: use SVG or PNG, 500×500 px">' +
       '<div class="pattern-none" style="font-size:9px;text-align:center;line-height:1.3;">&#8679;<br>Upload<br>Pattern</div></div>';
     bagPatternImgs.forEach(function(img, i) {
@@ -7728,7 +7726,6 @@ function _ensureAddSourceModal() {
       '<div id="add-source-title" style="font-size:16px;font-weight:700;margin-bottom:3px;">Add</div>' +
       '<div style="font-size:12px;color:var(--imp-fg-2,#777);margin-bottom:16px;" data-en="How do you want to add it?" data-ar="كيف تريد إضافته؟">How do you want to add it?</div>' +
       '<button class="_as-btn" id="add-source-upload-btn" onclick="addSourceChoose(\'upload\')"><span>⬆</span> <span class="_as-label" data-en="Upload your own" data-ar="ارفع ملفك">Upload your own</span></button>' +
-      '<button class="_as-btn" id="add-source-ai-btn" onclick="addSourceChoose(\'ai\')"><span>✦</span> <span class="_as-label" data-en="Create with AI" data-ar="أنشئ بالذكاء الاصطناعي">Create with AI</span></button>' +
       '<button class="_as-btn" id="add-source-library-btn" onclick="addSourceChoose(\'library\')"><span>▦</span> <span class="_as-label" data-en="Presets" data-ar="القوالب الجاهزة">Presets</span></button>' +
       '<div id="add-source-ai" style="display:none;margin-top:6px;">' +
         '<textarea id="add-source-ai-prompt" rows="2" placeholder="Describe your design…" data-en="Describe your design…" data-ar="صف تصميمك…" style="width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--imp-border,#ddd);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>' +
@@ -7750,7 +7747,6 @@ function openAddSourcePrompt(id, kind) {
   var _kindName = _ar ? (kind === 'pattern' ? 'خلفية' : isFont ? 'خط' : 'رسمة')
                       : (kind === 'pattern' ? 'Background' : isFont ? 'Font' : 'Sticker');
   document.getElementById('add-source-title').textContent = (_ar ? 'إضافة ' : 'Add ') + _kindName;
-  var aiBtn = document.getElementById('add-source-ai-btn'); if (aiBtn) aiBtn.style.display = isFont ? 'none' : 'flex';
   var upLbl = document.querySelector('#add-source-upload-btn ._as-label');
   if (upLbl){
     var upEn = isFont ? 'Upload your own font' : 'Upload your own';
@@ -7775,10 +7771,7 @@ function cancelAddSource() {
 function addSourceChoose(src) {
   var isFont = (_addSrc.kind === 'font');
   if (src === 'upload') { _closeAddSourceOverlay(); if (isFont) pickLayerFontFile(_addSrc.id); else pickLayerLogoFile(_addSrc.id); }
-  else if (src === 'ai') {
-    document.getElementById('add-source-ai').style.display = 'block';
-    document.getElementById('add-source-library').style.display = 'none';
-  } else if (src === 'library') {
+  else if (src === 'library') {
     document.getElementById('add-source-library').style.display = 'block';
     document.getElementById('add-source-ai').style.display = 'none';
     renderPresets();
