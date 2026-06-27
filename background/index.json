@@ -1,51 +1,6 @@
 [
 {
-"name": "Essentials",
-"files": [
-"pattern_1.svg",
-"pattern_2.svg",
-"pattern_3.svg",
-"pattern_4.svg",
-"pattern_5.svg",
-"pattern_7.svg",
-"pattern_8.svg",
-"pattern_9.svg"
-]
-},
-{
-"name": "Arabesque",
-"files": [
-"Asset 1arab.svg",
-"Asset 2arab.svg",
-"Asset 3arab.svg",
-"Asset 4arab.svg",
-"Asset 5arab.svg"
-]
-},
-{
-"name": "Autumn",
-"files": [
-"Asset 1floral.svg",
-"Asset 2floral.svg",
-"Asset 3floral.svg",
-"Asset 4floral.svg",
-"Asset 5floral.svg",
-"Asset 6floral.svg"
-]
-},
-{
-"name": "Cosmic",
-"files": [
-"Untitled-2_0003_Layer-7.png",
-"Untitled-2_0004_Layer-6.png",
-"Untitled-2_0005_Layer-5.png",
-"Untitled-2_0006_Layer-4.png",
-"Untitled-2_0007_Layer-3.png",
-"Untitled-2_0009_Layer-1.png"
-]
-},
-{
-"name": "Florals",
+"name": "Air",
 "files": [
 "Seamless Floral Pattern 10floral.svg",
 "Seamless Floral Pattern 1floral.svg",
@@ -74,6 +29,28 @@
 ]
 },
 {
+"name": "Autumn",
+"files": [
+"Asset 1floral.svg",
+"Asset 2floral.svg",
+"Asset 3floral.svg",
+"Asset 4floral.svg",
+"Asset 5floral.svg",
+"Asset 6floral.svg"
+]
+},
+{
+"name": "Cosmic",
+"files": [
+"Untitled-2_0003_Layer-7.png",
+"Untitled-2_0004_Layer-6.png",
+"Untitled-2_0005_Layer-5.png",
+"Untitled-2_0006_Layer-4.png",
+"Untitled-2_0007_Layer-3.png",
+"Untitled-2_0009_Layer-1.png"
+]
+},
+{
 "name": "Summer",
 "files": [
 "Asset 1summerr.svg",
@@ -83,6 +60,29 @@
 "Layer 6summer.svg",
 "Layer 7summer.svg",
 "Layer 8summer.svg"
+]
+},
+{
+"name": "Arabesque",
+"files": [
+"Asset 1arab.svg",
+"Asset 2arab.svg",
+"Asset 3arab.svg",
+"Asset 4arab.svg",
+"Asset 5arab.svg"
+]
+},
+{
+"name": "Floral",
+"files": [
+"pattern_1.svg",
+"pattern_3.svg",
+"pattern_4.svg",
+"pattern_2.svg",
+"pattern_5.svg",
+"pattern_7.svg",
+"pattern_8.svg",
+"pattern_9.svg"
 ]
 }
 ]

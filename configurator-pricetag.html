@@ -7719,7 +7719,7 @@ function renderPresets(){
   _fetchCollections(type, function(cols){
     cols = cols || [];
     /* Text picker: append a synthetic "Social Media" collection after the artist collections. */
-    if (type === 'graphic') cols = cols.concat([{ name:'Social_Media', social:true, files:Object.keys(SOCIAL_ICONS) }]);   /* social icons live in the GRAPHIC picker now (insert as a recolorable icon, no text) */
+    if (type === 'graphic') cols.splice(Math.min(1,cols.length), 0, { name:'Social_Media', social:true, files:Object.keys(SOCIAL_ICONS) });   /* Social Media = 2nd graphic category (after Essentials), icon-only */
     _presets.cols=cols;
     if(!_presets.cols.length){ box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No presets in <b>/'+type+'</b> yet — add files under a collection folder (e.g. <b>'+type+'/Essentials/</b>) and regenerate the manifest.</div>'; return; }
     _presets.shown=_presets.cols.map(function(){ return 3; });
