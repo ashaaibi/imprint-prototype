@@ -6483,6 +6483,11 @@ function applyStickerRecolor(L, cb) {
   var octx = out.getContext('2d');
   var changed = ext.map(function(e, i){ var t = tgt[i] || e; return (Math.abs(e[0]-t[0]) + Math.abs(e[1]-t[1]) + Math.abs(e[2]-t[2])) > 4; });
   if (ext.length && changed.some(Boolean)) {
+    /* A per-colour wheel remap is now the active recolor → drop any flat swatch tint so the
+       source-atop L.color fill in drawLayerContent stops flattening the remap. This was the
+       "when I recolor, the layer's blend/look changes too" bug: the flat-swatch tint and the
+       wheel remap were stacking, so the wheel result got overwritten by one flat colour. */
+    if (L.swatchName !== 'Original'){ L.swatchName='Original'; L.color=null; if(typeof renderLayerSwatches==='function') renderLayerSwatches(L); }
     var im = L.cutCanvas.getContext('2d').getImageData(0, 0, w, h), d = im.data;
     for (var i = 0; i < d.length; i += 4) {
       if (d[i + 3] === 0) continue;
