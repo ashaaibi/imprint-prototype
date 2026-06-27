@@ -7900,12 +7900,28 @@ function onBgFillColor(id, color){ var L=getLayer(id); if(!L) return; L.fillType
 /* ── Embedded background picker (Solid / Gradient) — lives IN the layer body, applies live ──── */
 var _bgUI = { tab:'solid', hue:8, g:{ c1:'#FF7E5F', c2:'#FEB47B', type:'linear', angle:135 } };
 function _bgiSolidRow(id){ return _bgSwCell('','Custom','_bgiCustom('+id+')',true) + _bgShades(_bgUI.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join(''); }
+function _bgiEnsureCSS(){
+  if(document.getElementById('bgi-style')) return;
+  var st=document.createElement('style'); st.id='bgi-style';
+  st.textContent='.as-tab{flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--imp-fg-2,#666);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}.as-tab.on{background:var(--imp-surface,#fff);color:var(--imp-fg,#111);box-shadow:0 1px 3px rgba(0,0,0,0.10);}'
+    +'.bg-sw-row{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0;}.bg-sw{width:44px;height:44px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;position:relative;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);}.bg-sw:hover{border-color:var(--imp-accent,#c8a96e);}.bg-sw-lbl{font-size:9.5px;color:var(--imp-fg-2,#666);text-align:center;margin-top:4px;line-height:1.15;width:44px;}'
+    +'.bg-hue{width:100%;height:14px;-webkit-appearance:none;appearance:none;border-radius:7px;background:linear-gradient(90deg,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000);outline:none;cursor:pointer;margin:2px 0 4px;}.bg-hue::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}'
+    +'.bgi-grad-editor{margin:2px 0 14px;}.bgi-grad-bar{height:30px;border-radius:6px;border:1px solid var(--imp-border,#ddd);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.4);}'
+    +'.bgi-grad-stops{position:relative;height:20px;margin-top:9px;}.bgi-stop{position:absolute;top:0;transform:translateX(-50%);width:18px;height:18px;border-radius:4px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 1px 3px rgba(0,0,0,0.25);cursor:pointer;padding:0;}.bgi-stop::before{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid #fff;}';
+  document.head.appendChild(st);
+}
+function _bgAreasHTML(id){
+  var L=getLayer(id)||{}, a=L._bgArea||'both';
+  function btn(k,en,ar){ return '<button class="as-tab'+(a===k?' on':'')+'" style="flex:1;padding:7px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgSetArea('+id+',\''+k+'\')" data-en="'+en+'" data-ar="'+ar+'">'+en+'</button>'; }
+  return '<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:14px 2px 6px;" data-en="Areas" data-ar="المناطق">Areas</div>'
+    +'<div style="display:flex;gap:6px;">'+btn('front','Front','الأمام')+btn('back','Back','الخلف')+btn('both','Both','كلاهما')+'</div>';
+}
 function _bgiContent(id){
-  var tab=_bgUI.tab;
+  _bgiEnsureCSS();
+  var tab=_bgUI.tab; if(tab!=='gradient' && tab!=='presets') tab='solid';
+  var t=function(k,en,ar){ return '<button class="as-tab'+(tab===k?' on':'')+'" onclick="_bgiTab('+id+',\''+k+'\')" data-en="'+en+'" data-ar="'+ar+'">'+en+'</button>'; };
   var tabs='<div style="display:flex;gap:6px;margin:8px 0 12px;background:var(--imp-surface-2,#f3f3f3);padding:4px;border-radius:10px;">'
-    +'<button class="as-tab'+(tab==='solid'?' on':'')+'" onclick="_bgiTab('+id+',\'solid\')" data-en="Solid color" data-ar="لون سادة">Solid color</button>'
-    +'<button class="as-tab'+(tab==='gradient'?' on':'')+'" onclick="_bgiTab('+id+',\'gradient\')" data-en="Gradient" data-ar="تدرّج">Gradient</button>'
-    +'</div>';
+    +t('solid','Color','لون')+t('gradient','Gradient','تدرّج')+t('presets','Presets','أنماط')+'</div>';
   var body;
   if(tab==='solid'){
     var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join('');
@@ -7913,26 +7929,25 @@ function _bgiContent(id){
       +'<div class="bg-sw-row" id="bgi-shades-'+id+'">'+_bgiSolidRow(id)+'</div>'
       +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:4px 2px 2px;" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
       +'<div class="bg-sw-row">'+nu+'</div>';
-  } else {
-    var gp=_bgUI.g, prev=gp.type==='radial'?('radial-gradient(circle,'+gp.c1+','+gp.c2+')'):('linear-gradient('+gp.angle+'deg,'+gp.c1+','+gp.c2+')');
-    var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgiGradPreset('+id+','+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
-    body='<div class="bg-grad-prev" id="bgi-prev-'+id+'" style="background:'+prev+';"></div>'
-      +'<div class="bg-sw-row">'+presets+'</div>'
-      +'<div style="display:flex;gap:14px;align-items:center;margin:10px 0;">'
-        +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--imp-fg-2,#666);"><span data-en="Start" data-ar="من">Start</span><input type="color" value="'+gp.c1+'" oninput="_bgiGradLive('+id+',\'c1\',this.value)" style="width:34px;height:26px;border:1px solid var(--imp-border,#ddd);border-radius:6px;padding:0;background:none;cursor:pointer;"></label>'
-        +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--imp-fg-2,#666);"><span data-en="End" data-ar="إلى">End</span><input type="color" value="'+gp.c2+'" oninput="_bgiGradLive('+id+',\'c2\',this.value)" style="width:34px;height:26px;border:1px solid var(--imp-border,#ddd);border-radius:6px;padding:0;background:none;cursor:pointer;"></label>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;align-items:flex-end;">'
+  } else if(tab==='gradient'){
+    var gp=_bgUI.g;
+    var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background-image:linear-gradient(135deg,'+g.c1+','+g.c2+');background-size:170%;background-position:center;" onclick="_bgiGradPreset('+id+','+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
+    body='<div class="bgi-grad-editor"><div class="bgi-grad-bar" id="bgi-prev-'+id+'" style="background:linear-gradient(90deg,'+gp.c1+','+gp.c2+');"></div>'
+        +'<div class="bgi-grad-stops"><button class="bgi-stop" style="left:0%;background:'+gp.c1+';" title="Start colour" onclick="_bgiStopPick('+id+',\'c1\')"></button><button class="bgi-stop" style="left:100%;background:'+gp.c2+';" title="End colour" onclick="_bgiStopPick('+id+',\'c2\')"></button></div></div>'
+      +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;">'
         +'<button class="as-tab'+(gp.type==='linear'?' on':'')+'" style="flex:0 0 auto;padding:6px 12px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgiGradType('+id+',\'linear\')" data-en="Linear" data-ar="خطي">Linear</button>'
         +'<button class="as-tab'+(gp.type==='radial'?' on':'')+'" style="flex:0 0 auto;padding:6px 12px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgiGradType('+id+',\'radial\')" data-en="Radial" data-ar="شعاعي">Radial</button>'
         +'<div style="flex:1;'+(gp.type==='radial'?'opacity:.35;pointer-events:none;':'')+'"><div style="font-size:10px;color:var(--imp-fg-3,#999);" id="bgi-ang-'+id+'">Angle '+gp.angle+'&deg;</div><input type="range" min="0" max="360" step="5" value="'+gp.angle+'" oninput="_bgiGradLive('+id+',\'angle\',this.value)"></div>'
-      +'</div>';
+      +'</div>'
+      +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:4px 2px 6px;" data-en="Presets" data-ar="قوالب">Presets</div>'
+      +'<div class="bg-sw-row">'+presets+'</div>';
+  } else {
+    body='<div id="bgi-presets-'+id+'" style="min-height:60px;"></div>'
+      +'<button class="_as-btn" style="margin:10px 0 0;justify-content:center;width:100%;" onclick="pickLayerLogoFile('+id+')"><span>&#8679;</span> <span data-en="Upload your own" data-ar="ارفع صورتك">Upload your own</span></button>';
   }
-  var extra='<div style="display:flex;gap:8px;margin-top:14px;">'
-    +'<button class="_as-btn" style="margin:0;justify-content:center;flex:1;" onclick="openAddSourcePrompt('+id+',\'pattern\')"><span>&#9638;</span> <span data-en="Pattern presets" data-ar="أنماط">Pattern presets</span></button>'
-    +'<button class="_as-btn" style="margin:0;justify-content:center;flex:1;" onclick="pickLayerLogoFile('+id+')"><span>&#8679;</span> <span data-en="Upload" data-ar="رفع">Upload</span></button>'
-    +'</div>';
-  return tabs+body+extra;
+  var html=tabs+body+_bgAreasHTML(id);
+  if(tab==='presets') setTimeout(function(){ if(_bgUI.tab==='presets') _bgiShowPresets(id); }, 0);
+  return html;
 }
 function _bgiRender(id){ var box=document.getElementById('bg-pick-'+id); if(box){ box.innerHTML=_bgiContent(id); if(typeof applyTranslations==='function') applyTranslations(); } }
 function _bgiTab(id, tab){ _bgUI.tab=tab; _bgiRender(id); }
@@ -7944,10 +7959,25 @@ function _bgiGradType(id, t){ _bgUI.g.type=t; _bgiApplyGradient(id, false); }
 function _bgiApplyGradient(id, noRender){ var L=getLayer(id); if(!L)return; L.fillType='gradient'; L.gradient={ c1:_bgUI.g.c1, c2:_bgUI.g.c2, type:_bgUI.g.type, angle:_bgUI.g.angle }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L, noRender); }
 function _bgiGradLive(id, k, v){
   _bgUI.g[k]=(k==='angle'?(parseFloat(v)||0):v);
-  var prev=document.getElementById('bgi-prev-'+id); if(prev){ var gp=_bgUI.g; prev.style.background = gp.type==='radial'?('radial-gradient(circle,'+gp.c1+','+gp.c2+')'):('linear-gradient('+gp.angle+'deg,'+gp.c1+','+gp.c2+')'); }
+  var prev=document.getElementById('bgi-prev-'+id); if(prev) prev.style.background='linear-gradient(90deg,'+_bgUI.g.c1+','+_bgUI.g.c2+')';   /* editor bar shows the colour ramp; the angle/radial applies on the tag */
   var al=document.getElementById('bgi-ang-'+id); if(al) al.textContent='Angle '+_bgUI.g.angle+'°';
+  _bgiUpdateStops(id);
   _bgiApplyGradient(id, true);
 }
+function _bgiUpdateStops(id){ var s=document.querySelectorAll('#bg-pick-'+id+' .bgi-stop'); if(s[0]) s[0].style.background=_bgUI.g.c1; if(s[1]) s[1].style.background=_bgUI.g.c2; }
+function _bgiStopPick(id, which){ var inp=document.createElement('input'); inp.type='color'; inp.value=_bgUI.g[which]||'#000000'; inp.addEventListener('input', function(){ _bgUI.tab='gradient'; _bgiGradLive(id, which, this.value); }); inp.click(); }
+function _bgSetArea(id, area){
+  var L=getLayer(id); if(!L) return; L.faceHide=L.faceHide||{};
+  Object.keys(L.faceHide).forEach(function(k){ if(/^(exterior|interior)_/.test(k)) delete L.faceHide[k]; });
+  function hide(region){ if(typeof BAG_FACES!=='undefined' && BAG_FACES[region]){ Object.keys(BAG_FACES[region]).forEach(function(f){ L.faceHide[region+'_'+f]=true; }); } }
+  if(area==='front') hide('interior'); else if(area==='back') hide('exterior');   /* front = exterior, back = interior */
+  L._bgArea=area;
+  if(typeof updateLayerThumb==='function') updateLayerThumb(L);
+  if(typeof drawBagTexture==='function') drawBagTexture();
+  if(typeof scheduleHistory==='function') scheduleHistory();
+  _bgiRender(id);
+}
+function _bgiShowPresets(id){ _addSrc.id=id; _addSrc.kind='pattern'; if(typeof renderPresets==='function') renderPresets('bgi-presets-'+id); }
 function _bgiLive(L, noRender){ if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof checkCart==='function') checkCart(); if(typeof scheduleHistory==='function') scheduleHistory(); if(!noRender) _bgiRender(L.id); }
 /* ── Font upload + artist font library (fonts/ folder) ─────────────────────── */
 var _pendingFontLayerId = null;
@@ -8015,8 +8045,8 @@ function _fetchCollections(type, cb){
     cb([]);
   });
 }
-function renderPresets(){
-  var box=document.getElementById('add-source-library'); if(!box) return;
+function renderPresets(targetId){
+  var box=document.getElementById(targetId||'add-source-library'); if(!box) return;
   var type=_presetTypeFolder(); _presets.type=type;
   _presetGen++; _revealing=false;   /* invalidate any in-flight reveal from a previous render */
   box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading presets…</div>';
