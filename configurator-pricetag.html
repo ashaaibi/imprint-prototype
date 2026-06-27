@@ -306,6 +306,13 @@
     .canvas-stage.mode-preview { overflow:hidden; }   /* clip the zoomed/panned mockup to the stage */
     .canvas-stage.mode-preview #tag-mockup { display:block; will-change:transform; }
     @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:100%; max-width:100%; height:auto; max-height:none; border-radius:0; } }   /* portrait phones + tablets: mockup fills the viewport width */
+    #mockup-carousel { position:absolute; inset:0; z-index:7; pointer-events:none; }
+    .canvas-stage:not(.mode-preview) #mockup-carousel { display:none !important; }
+    .mk-arrow { pointer-events:auto; position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.82); color:#111; font-size:24px; line-height:38px; text-align:center; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.18); transition:background .15s; padding:0; }
+    .mk-arrow:hover { background:#fff; } .mk-arrow-l { left:14px; } .mk-arrow-r { right:14px; }
+    .mk-dots { pointer-events:auto; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:7px; padding:7px 10px; border-radius:14px; background:rgba(0,0,0,0.18); backdrop-filter:blur(4px); }
+    .mk-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.55); cursor:pointer; border:none; padding:0; transition:all .2s; }
+    .mk-dot.on { background:#fff; }
     .canvas-stage.mode-preview #three-canvas { display:none !important; }
     .canvas-stage.mode-preview .dim-pill { display:none; }
     .mini3d-label {
@@ -1708,6 +1715,11 @@
       <div class="mode-toggle" id="mode-toggle">
         <button class="on" data-mode="2d" onclick="setViewMode('2d')">Edit</button>
         <button data-mode="preview" onclick="setViewMode('preview')">Preview</button>
+      </div>
+      <div id="mockup-carousel" style="display:none;">
+        <button class="mk-arrow mk-arrow-l" onclick="_gotoMockupSlide(_mockupSlide-1)" aria-label="Previous mockup">&#8249;</button>
+        <button class="mk-arrow mk-arrow-r" onclick="_gotoMockupSlide(_mockupSlide+1)" aria-label="Next mockup">&#8250;</button>
+        <div class="mk-dots" id="mk-dots"></div>
       </div>
       <div class="mini3d-label" data-en="Live preview" data-ar="معاينة حية">Live preview</div>
       <div id="mini3d-resize" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 26 26" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 13 A7 7 0 0 1 13 6"/></svg></div>
@@ -11530,6 +11542,7 @@ function setViewMode(mode){
     if (typeof atlas2dStopLoop==='function') atlas2dStopLoop();
     var _cbp=document.getElementById('a2d-ctxbar'); if(_cbp) _cbp.style.display='none';
     if (typeof _snapSheet==='function') _snapSheet(3);   /* mobile: collapse the sheet so the full mockup is visible */
+    _mockupSlide = 0;   /* open the carousel on slide 1 (Front & back) */
     if (typeof renderTagMockup==='function') renderTagMockup();
     if (typeof _pvReset==='function') _pvReset();   /* start the preview at 1x, centred */
     return;
@@ -11562,17 +11575,38 @@ var _saved3DView = null;
 /* ── Photoreal "Preview" mockup compositor ────────────────────────────────────
    Warps the live FRONT-face design onto a real photo of a blank hang tag, then
    re-adds the tag's shading (multiply) and the cotton string (occluder on top). */
-var MOCKUP_SRC = { base:'mockups/s45x90/base.jpg', mask:'mockups/s45x90/mask.png', maskBack:'mockups/s45x90/mask_back.png', shadow:'mockups/s45x90/shadow.png', string:'mockups/s45x90/string.png' };   /* 4.5x9 mockup (user PSD export) — front + back masks; only this size has a mockup */
-var _mockupAssets = null, _mockupRAF = 0;
-function _loadMockupAssets(cb){
-  if (_mockupAssets){ cb(_mockupAssets); return; }
-  var keys = Object.keys(MOCKUP_SRC), imgs = {}, done = 0, failed = false;
+/* 4.5x9 mockups — a 3-slide carousel from two asset sets: the "both" front+back photo, and a
+   single-tag "solo" photo reused for a Front-only and a Back-only slide. */
+var MOCKUP_SETS_SRC = {
+  both: { base:'mockups/s45x90/base.jpg', mask:'mockups/s45x90/mask.png', maskBack:'mockups/s45x90/mask_back.png', shadow:'mockups/s45x90/shadow.png', string:'mockups/s45x90/string.png', spec:'mockups/s45x90/spec.png' },
+  solo: { base:'mockups/s45x90_solo/base.jpg', mask:'mockups/s45x90_solo/mask.png', shadow:'mockups/s45x90_solo/shadow.png', string:'mockups/s45x90_solo/string.png', spec:'mockups/s45x90_solo/spec.png' }
+};
+var MOCKUP_SLIDES = [ { set:'both', faces:'both', label:'Front & back' }, { set:'solo', faces:'front', label:'Front' }, { set:'solo', faces:'back', label:'Back' } ];
+var _mockupSlide = 0, _mockupCache = {}, _mockupRAF = 0;
+function _loadMockupSet(setKey, cb){
+  if (_mockupCache[setKey]){ cb(_mockupCache[setKey]); return; }
+  var src = MOCKUP_SETS_SRC[setKey]; if(!src){ cb(null); return; }
+  var keys = ['base','mask','shadow','string']; if(src.maskBack) keys.push('maskBack');
+  var imgs = {}, done = 0, failed = false;
   keys.forEach(function(k){
     var im = new Image();
-    im.onload  = function(){ if(failed) return; if(++done === keys.length){ _mockupAssets = _prepMockupAssets(imgs); cb(_mockupAssets); } };
-    im.onerror = function(){ failed = true; console.warn('[mockup] failed to load', k, MOCKUP_SRC[k]); };
-    im.src = MOCKUP_SRC[k]; imgs[k] = im;
+    im.onload = function(){ if(failed) return; if(++done === keys.length){
+      var A = _prepMockupAssets(imgs); A._setKey = setKey; A.spec = null;
+      if(src.spec){ var si = new Image(); si.onload = function(){ A.spec = si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; si.onerror = function(){ A.spec = null; }; si.src = src.spec; }
+      _mockupCache[setKey] = A; cb(A);
+    } };
+    im.onerror = function(){ failed = true; console.warn('[mockup] failed to load', setKey, k, src[k]); };
+    im.src = src[k]; imgs[k] = im;
   });
+}
+/* composite one face's design onto the mockup, clipped to its mask; returns the masked canvas (or null) */
+function _compositeFace(ctx, A, design, bbox, maskAlpha){
+  if(!design || !bbox || !maskAlpha) return null;
+  var tmp=document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
+  tx.drawImage(design, bbox.x, bbox.y, bbox.w, bbox.h);
+  tx.globalCompositeOperation='destination-in'; tx.drawImage(maskAlpha,0,0);
+  ctx.drawImage(tmp,0,0);
+  return tmp;
 }
 function _maskAlphaAndBox(img, W, H){
   /* mask png (white tag on black; the string-hole is cut out) → ALPHA mask + face bbox.
@@ -11749,10 +11783,10 @@ function _dilateMask(src, r){
   x.drawImage(src,0,0);
   return c;
 }
-function _layerFinishArea(L, designMasked, A, surface){
+function _layerFinishArea(L, designMasked, A, surface, bbox, maskA){
   var fm=_layerSurfaceMask(L, surface); if(!fm) return null;
-  var bbox = (surface==='interior') ? A.bboxBack : A.bbox;
-  var maskA = (surface==='interior') ? A.maskBack : A.maskAlpha;
+  if (!bbox) bbox = (surface==='interior') ? A.bboxBack : A.bbox;
+  if (!maskA) maskA = (surface==='interior') ? A.maskBack : A.maskAlpha;
   if (!bbox || !maskA) return null;
   var c=document.createElement('canvas'); c.width=A.W; c.height=A.H; var x=c.getContext('2d');
   x.drawImage(fm, bbox.x, bbox.y, bbox.w, bbox.h);                     /* layer mask → its face */
@@ -11787,7 +11821,7 @@ function _applyEmbossFx(ctx, area, A, extrude){
   ctx.globalCompositeOperation=(E.shBlend||'multiply'); ctx.globalAlpha=Math.max(0,Math.min(1,(E.shOpacity!=null?E.shOpacity:0.55)*altK*k)); ctx.drawImage(dc,0,0);
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
-function _applyLayerFinishes(ctx, designMasked, A, surface){
+function _applyLayerFinishes(ctx, designMasked, A, surface, bbox, maskA){
   if (typeof BAG==='undefined' || !BAG.artwork || !BAG.artwork.layers) return;
   var Ls=BAG.artwork.layers;
   for (var i=Ls.length-1; i>=0; i--){            /* bottom-first → top layer wins in overlaps */
@@ -11796,7 +11830,7 @@ function _applyLayerFinishes(ctx, designMasked, A, surface){
     if (lsurf !== surface) continue;             /* only the layers on this face */
     var f=L.finish, e=L.extrude||0;
     if (f!=='foil' && f!=='gloss' && !e) continue;
-    var area=_layerFinishArea(L, designMasked, A, surface); if(!area) continue;
+    var area=_layerFinishArea(L, designMasked, A, surface, bbox, maskA); if(!area) continue;
     if (f==='foil') _applyFoilFx(ctx, area, A);
     else if (f==='gloss') _applyGlossFx(ctx, area, A);
     if (e) _applyEmbossFx(ctx, area, A, e);
@@ -11813,57 +11847,43 @@ function renderTagMockup(){
   var _unav = document.getElementById('mockup-unavail');
   if (!_mockupAvailable()){
     _showMockupLoader(false); cvs.style.display='none'; if(_unav) _unav.style.display='flex';
+    if (typeof _updateMockupCarousel==='function') _updateMockupCarousel(false);
     return;
   }
   if(_unav) _unav.style.display='none'; cvs.style.display='';
-  if (!_mockupAssets) _showMockupLoader(true);   /* first load only — assets are cached afterwards, so live re-renders are instant */
-  _loadMockupAssets(function(A){
+  if (typeof _updateMockupCarousel==='function') _updateMockupCarousel(true);
+  var slide = MOCKUP_SLIDES[_mockupSlide] || MOCKUP_SLIDES[0];
+  if (!_mockupCache[slide.set]) _showMockupLoader(true);   /* first load of a set; cached afterwards */
+  _loadMockupSet(slide.set, function(A){
     _showMockupLoader(false);
-    if (viewMode !== 'preview') return;   /* user may have left the view while the assets loaded */
-    /* optional highlight/spec map (mockups/<size>/spec.png, white = hot reflection) — best-effort, never blocks the render */
-    if (A.spec===undefined){ A.spec=null; var _si=new Image(); _si.onload=function(){ A.spec=_si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; _si.onerror=function(){}; _si.src='mockups/s45x90/spec.png'; }
+    if (viewMode !== 'preview' || !A) return;   /* user may have left the view while the assets loaded */
     cvs.width = A.W; cvs.height = A.H;
     var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
-    ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
-    var _designMasked = null, _backMasked = null;                            /* 2. design on BOTH tags in the photo, each clipped to its own mask (string-hole stays see-through) */
-    var _fdes = _frontDesignCanvas();
-    if (_fdes){
-      var tmp = document.createElement('canvas'); tmp.width=A.W; tmp.height=A.H; var tx=tmp.getContext('2d');
-      tx.drawImage(_fdes, A.bbox.x, A.bbox.y, A.bbox.w, A.bbox.h);
-      tx.globalCompositeOperation='destination-in'; tx.drawImage(A.maskAlpha, 0, 0);
-      ctx.drawImage(tmp, 0, 0); _designMasked = tmp;
+    ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag(s) */
+    var items = [];                                                           /* 2. design(s) for this slide, each clipped to its mask (hole stays see-through) */
+    if (slide.faces==='both'){
+      var fm = _compositeFace(ctx, A, _frontDesignCanvas(), A.bbox, A.maskAlpha); if(fm) items.push({m:fm, surf:'exterior', bbox:A.bbox, mask:A.maskAlpha});
+      if (A.maskBack && A.bboxBack){ var bm = _compositeFace(ctx, A, (typeof _backDesignCanvas==='function'?_backDesignCanvas():null), A.bboxBack, A.maskBack); if(bm) items.push({m:bm, surf:'interior', bbox:A.bboxBack, mask:A.maskBack}); }
+    } else if (slide.faces==='front'){
+      var fm2 = _compositeFace(ctx, A, _frontDesignCanvas(), A.bbox, A.maskAlpha); if(fm2) items.push({m:fm2, surf:'exterior', bbox:A.bbox, mask:A.maskAlpha});
+    } else if (slide.faces==='back'){
+      var bm2 = _compositeFace(ctx, A, (typeof _backDesignCanvas==='function'?_backDesignCanvas():null), A.bbox, A.maskAlpha); if(bm2) items.push({m:bm2, surf:'interior', bbox:A.bbox, mask:A.maskAlpha});
     }
-    if (A.maskBack && A.bboxBack){
-      var _bdes = (typeof _backDesignCanvas==='function') ? _backDesignCanvas() : null;
-      if (_bdes){
-        var tb = document.createElement('canvas'); tb.width=A.W; tb.height=A.H; var tbx=tb.getContext('2d');
-        tbx.drawImage(_bdes, A.bboxBack.x, A.bboxBack.y, A.bboxBack.w, A.bboxBack.h);
-        tbx.globalCompositeOperation='destination-in'; tbx.drawImage(A.maskBack, 0, 0);
-        ctx.drawImage(tb, 0, 0); _backMasked = tb;
-      }
-    }
-    /* 3. AO / shadow map — Testing-tunable intensity, blend mode + optional invert */
+    /* 3. AO / shadow map */
     var aoImg = A2D.mockupAOinvert ? _invertedShadow(A) : A.shadow;
     ctx.globalCompositeOperation = A2D.mockupAOblend || 'multiply';
     ctx.globalAlpha = (A2D.mockupAO!=null ? A2D.mockupAO : 0.55);
     ctx.drawImage(aoImg, 0, 0, A.W, A.H);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation='source-over';
-    /* 3b. material-finish FX on the printed area (kept ABOVE the AO so metallic/gloss highlights stay bright) */
-    var _finE = (typeof BAG!=='undefined' && BAG.exterior && BAG.exterior.finish) || 'matte';
-    var _finI = (typeof BAG!=='undefined' && BAG.interior && BAG.interior.finish) || 'matte';
-    if (_designMasked){
-      if (_finE==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _designMasked, A);
-      else if (_finE==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _designMasked, A);
-      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, _designMasked, A, 'exterior');   /* per-layer finish on the FRONT */
+    /* 3b. material-finish FX per visible face (above the AO so highlights stay bright) */
+    items.forEach(function(it){
+      var fin = (it.surf==='interior') ? ((typeof BAG!=='undefined'&&BAG.interior&&BAG.interior.finish)||'matte') : ((typeof BAG!=='undefined'&&BAG.exterior&&BAG.exterior.finish)||'matte');
+      if (fin==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, it.m, A);
+      else if (fin==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, it.m, A);
+      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, it.m, A, it.surf, it.bbox, it.mask);
       ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
-    }
-    if (_backMasked){
-      if (_finI==='foil' && typeof _applyFoilFx==='function') _applyFoilFx(ctx, _backMasked, A);
-      else if (_finI==='gloss' && typeof _applyGlossFx==='function') _applyGlossFx(ctx, _backMasked, A);
-      if (typeof _applyLayerFinishes==='function') _applyLayerFinishes(ctx, _backMasked, A, 'interior');   /* per-layer finish on the BACK */
-      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
-    }
-    ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. cotton string, in front */
+    });
+    ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. string/handles in front */
   });
 }
 function _invertedShadow(A){
@@ -11878,6 +11898,23 @@ function onMockupAO(v){ A2D.mockupAO=Math.max(0,Math.min(1,parseFloat(v)||0)); v
 function onMockupAOblend(v){ A2D.mockupAOblend=v||'multiply'; if(viewMode==='preview') _scheduleMockupRender(); }
 function onMockupAOinvert(on){ A2D.mockupAOinvert=!!on; if(viewMode==='preview') _scheduleMockupRender(); }
 function _scheduleMockupRender(){ if(_mockupRAF) return; _mockupRAF = requestAnimationFrame(function(){ _mockupRAF=0; if(viewMode==='preview') renderTagMockup(); }); }
+/* ── Mockup carousel: 3 slides (Front&back / Front / Back) with arrows, dots + swipe ── */
+function _gotoMockupSlide(i){
+  var n=MOCKUP_SLIDES.length; _mockupSlide=((i%n)+n)%n;
+  if (typeof _pvReset==='function') _pvReset();                 /* reset zoom/pan when switching slides */
+  if (typeof viewMode!=='undefined' && viewMode==='preview') renderTagMockup();
+  _updateMockupCarousel(true);
+}
+function _updateMockupCarousel(show){
+  var car=document.getElementById('mockup-carousel'); if(!car) return;
+  car.style.display = (show && typeof viewMode!=='undefined' && viewMode==='preview') ? 'block' : 'none';
+  var dots=document.getElementById('mk-dots'); if(!dots) return;
+  if (dots.children.length!==MOCKUP_SLIDES.length){
+    dots.innerHTML='';
+    MOCKUP_SLIDES.forEach(function(s,i){ var b=document.createElement('button'); b.className='mk-dot'; b.title=s.label||('Mockup '+(i+1)); b.onclick=(function(idx){ return function(){ _gotoMockupSlide(idx); }; })(i); dots.appendChild(b); });
+  }
+  for (var i=0;i<dots.children.length;i++) dots.children[i].classList.toggle('on', i===_mockupSlide);
+}
 function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelector('.canvas-stage'); if(stage) stage.classList.toggle('no-preview', viewMode==='2d' && !A2D.previewOn); }
 /* ── Preview (mockup) navigation — wheel = zoom toward cursor, drag = pan, double-click = reset ── */
 var _pvNav = { zoom:1, x:0, y:0 }, _pvStage=null, _pvDrag=null;
@@ -11900,15 +11937,23 @@ function _pvReset(){ _pvNav={zoom:1,x:0,y:0}; _pvDrag=null; _pvApply(); }
     _pvApply();
   }, { passive:false });
   _pvStage.addEventListener('pointerdown', function(e){
-    if (typeof viewMode==='undefined' || viewMode!=='preview' || _pvNav.zoom<=1.01) return;
-    _pvDrag={ x:e.clientX, y:e.clientY, px:_pvNav.x, py:_pvNav.y }; _pvApply();
-    try{ _pvStage.setPointerCapture(e.pointerId); }catch(_){}
+    if (typeof viewMode==='undefined' || viewMode!=='preview') return;
+    _pvDrag={ x:e.clientX, y:e.clientY, px:_pvNav.x, py:_pvNav.y, swipe:(_pvNav.zoom<=1.01) }; _pvApply();
+    if (!_pvDrag.swipe){ try{ _pvStage.setPointerCapture(e.pointerId); }catch(_){} }   /* capture only for pan, so arrow/dot taps still fire */
   });
   _pvStage.addEventListener('pointermove', function(e){
-    if (!_pvDrag) return;
+    if (!_pvDrag || _pvDrag.swipe) return;                       /* swipe gesture pans nothing while dragging */
     _pvNav.x=_pvDrag.px+(e.clientX-_pvDrag.x); _pvNav.y=_pvDrag.py+(e.clientY-_pvDrag.y); _pvApply();
   });
-  function _up(){ if(_pvDrag){ _pvDrag=null; _pvApply(); } }
+  function _up(e){
+    if(_pvDrag){
+      if (_pvDrag.swipe && _pvNav.zoom<=1.01 && e){             /* not zoomed → a horizontal flick swaps mockup slides */
+        var dx=e.clientX-_pvDrag.x, dy=e.clientY-_pvDrag.y;
+        if (Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.3 && typeof _gotoMockupSlide==='function') _gotoMockupSlide(_mockupSlide + (dx<0?1:-1));
+      }
+      _pvDrag=null; _pvApply();
+    }
+  }
   _pvStage.addEventListener('pointerup', _up); _pvStage.addEventListener('pointercancel', _up);
   _pvStage.addEventListener('dblclick', function(){ if(viewMode==='preview') _pvReset(); });
 })();
