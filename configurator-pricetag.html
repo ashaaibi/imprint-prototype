@@ -798,6 +798,14 @@
     .font-card .fc-sample { font-size: 26px; line-height: 1; }
     .font-card .fc-name { font-size: 10px; color: var(--imp-fg-3); font-weight: 500; }
     .font-card.on .fc-name { color: var(--imp-fg); }
+    .starter-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:9px; }
+    .starter-card { display:flex; flex-direction:column; gap:0; padding:0; border:1px solid var(--imp-border); border-radius:11px; background:var(--imp-surface); cursor:pointer; overflow:hidden; font-family:inherit; text-align:center; transition:border-color .15s, transform .12s; }
+    .starter-card:hover { border-color:var(--imp-accent,#c8a96e); transform:translateY(-1px); }
+    .starter-card:focus-visible { outline:2px solid var(--imp-accent,#c8a96e); outline-offset:2px; }
+    .starter-prev { aspect-ratio:1/2; display:flex; align-items:center; justify-content:center; padding:8px 6px; box-sizing:border-box; }
+    .starter-prev span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .starter-name { font-size:10px; font-weight:600; color:var(--imp-fg-2); padding:6px 4px 8px; }
+    .starter-card.blank .starter-prev { color:var(--imp-fg-3); }
 
     /* ─── AI PANEL ────────────────────────── */
     .ai-prompt-row {
@@ -1966,6 +1974,12 @@
 
     <!-- Tag Shape (corner bevel) removed — tags are sharp-cornered -->
 
+    <!-- Start with a style — one tap fills colour + finish + a styled (editable) name -->
+    <div class="cs bag-section config-step" data-cstep="1">
+      <label class="cl"><span data-en="Start with a style" data-ar="ابدأ بنمط">Start with a style</span></label>
+      <p style="font-size:10px;color:var(--imp-fg-3);margin:2px 2px 9px;line-height:1.4;"><span data-en="Optional — tap a look to fill your tag, then edit the text. Or just scroll down to build your own." data-ar="اختياري — اختر نمطًا لتعبئة بطاقتك ثم عدّل النص، أو مرّر للأسفل لتصميم بطاقتك بنفسك.">Optional — tap a look to fill your tag, then edit the text. Or just scroll down to build your own.</span></p>
+      <div id="starter-gallery" class="starter-gallery"></div>
+    </div>
 
     <!-- Bag Size ───────────────────────── -->
     <!-- Tag Shape -->
@@ -5852,6 +5866,7 @@ function finishConfigLoading() {
     if (sov) sov.style.display = 'none';
     if (typeof pushHistory === 'function') pushHistory(); /* seed undo/redo baseline */
     if (typeof _prewarmLibrary === 'function') _prewarmLibrary();   /* warm artist-library thumbnails on idle */
+    if (typeof _renderStarterGallery === 'function') _renderStarterGallery();   /* fill the "Start with a style" gallery */
     if (typeof _isMobileView === 'function' && _isMobileView()) orbit.radius = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM_OUT, MOBILE_ZOOM)); /* pull back a touch on phones */
     if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); /* center bag in mobile gap */
     /* preload sibling bag models in background on first load */
@@ -6122,6 +6137,7 @@ var FONT_OPTIONS = {
   inter:     { weight: '700', css: 'Inter, sans-serif',             label: 'Sans'  },
   barlow:    { weight: '700', css: "'Barlow Condensed', sans-serif", label: 'Bold' },
   playfair:  { weight: '700', css: "'Playfair Display', serif",     label: 'Luxe'  },
+  cairo:     { weight: '700', css: "'Cairo', sans-serif",           label: 'Arabic' },
 };
 var FONT_BUILTIN_KEYS = ['cormorant', 'inter', 'barlow', 'playfair'];
 function layerFontString(L, sizeOverride) {
@@ -7542,6 +7558,76 @@ function duplicateLayer(id) {
   renderLayersList(); drawBagTexture();
   /* new layers stay collapsed by default — the user expands to edit settings */
   if (typeof scheduleHistory === 'function') scheduleHistory();
+}
+/* ── "Start with a style" starter gallery (Step 1) ──────────────────────────────
+   One tap fills the tag with a colour + finish + a single styled, fully-editable
+   name layer, then lands the user in the Design editor. Uses only the pre-loaded
+   built-in fonts (Inter/Cormorant/Barlow/Playfair/Cairo) so nothing needs fetching. */
+var STARTER_STYLES = [
+  { id:'minimal', name:'Minimal', nameAr:'بسيط',  card:'#FFFFFF', finish:'matte', fontKey:'inter',     sample:'BRAND',  text:'BRAND',     color:'#111111', fontSize:40, tracking:6 },
+  { id:'luxe',    name:'Luxe',    nameAr:'فاخر',  card:'#F4EFE6', finish:'gloss', fontKey:'playfair',  sample:'Maison', text:'Maison',    color:'#3A2F22', fontSize:46 },
+  { id:'elegant', name:'Elegant', nameAr:'أنيق',  card:'#FFFFFF', finish:'matte', fontKey:'cormorant', sample:'Atelier',text:'Atelier',   color:'#1A1A1A', fontSize:50, italic:true },
+  { id:'bold',    name:'Bold',    nameAr:'جريء',  card:'#141414', finish:'foil',  fontKey:'barlow',    sample:'SALE',   text:'SALE',      color:'#F3D58B', fontSize:58, tracking:2 },
+  { id:'arabic',  name:'Arabic',  nameAr:'عربي',  card:'#FFFFFF', finish:'gloss', fontKey:'cairo',     sample:'متجرك',  text:'اسم متجرك', color:'#111111', fontSize:46, rtl:true }
+];
+function _starterFrontCenter(){
+  try{
+    var PAD=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+    if (typeof BAG_FACES!=='undefined' && BAG_FACES.exterior && BAG_FACES.exterior.front){
+      var ff=BAG_FACES.exterior.front; return { u:(ff.x+ff.w/2-PAD)/2048*100, v:(ff.y+ff.h/2-PAD)/2048*100 };
+    }
+    if (typeof BAG_UV!=='undefined' && BAG_UV.exterior){
+      var ex=BAG_UV.exterior; return { u:(ex.x+ex.w/2-PAD)/2048*100, v:(ex.y+ex.h/2-PAD)/2048*100 };
+    }
+  }catch(e){}
+  return { u:25.5, v:73.6 };
+}
+function _starterTextLayer(s){
+  var id=BAG.artwork.nextId++, fc=_starterFrontCenter();
+  var allAreas={ front:true, back:true, left:true, right:true, bottom:true, interior:true };
+  return { id:id, kind:'text', isDefault:false, visible:true, content:s.text, fontSize:s.fontSize||45,
+    posU:fc.u, posV:fc.v, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:s.fontKey||'inter',
+    color:s.color||'#111111', swatchName:'Custom', hue:0, customHex:s.color||'#111111',
+    finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+    align:'center', tracking:s.tracking||0, lineHeight:1.2, bold:!!s.bold, italic:!!s.italic,
+    strokeWidth:0, strokeColor:'#000000', shadow:false, shadowColor:'#000000', shadowBlur:4, shadowX:0, shadowY:2,
+    rtl:!!s.rtl, _isArPlaceholder:!!s.rtl, faceHide:{ handles:true }, opacity:100 };
+}
+function applyStarterStyle(id){
+  var s=null; for(var i=0;i<STARTER_STYLES.length;i++){ if(STARTER_STYLES[i].id===id){ s=STARTER_STYLES[i]; break; } }
+  if(!s || typeof BAG==='undefined') return;
+  BAG.exterior.color=s.card; BAG.exterior.customHex=s.card; BAG.exterior.swatchName='Custom';
+  var L=_starterTextLayer(s);
+  BAG.artwork.layers=[L];                                   /* fresh start — one editable name layer */
+  if(typeof applyBagFinish==='function') applyBagFinish('exterior', s.finish, null, true);
+  if(typeof _syncBagColorPanel==='function') _syncBagColorPanel('exterior');
+  var fg=document.getElementById('tag-finish-grid'); if(fg) fg.querySelectorAll('.finish-card').forEach(function(c){ c.classList.toggle('on', c.getAttribute('data-finish')===s.finish); });
+  var _ll=document.getElementById('layers-list'); if(_ll) _ll.setAttribute('data-expanded', String(L.id));
+  if(typeof renderLayersList==='function') renderLayersList();
+  if(typeof drawBagTexture==='function') drawBagTexture();
+  if(typeof updatePricing==='function') updatePricing();
+  if(typeof pushHistory==='function') pushHistory();
+  if(typeof checkCart==='function') checkCart();
+  if(typeof goConfigStep==='function') goConfigStep(2);     /* land on Design */
+  if(typeof _autoEdit2dAfterUpload==='function') _autoEdit2dAfterUpload();
+}
+function startBlankTag(){ if(typeof goConfigStep==='function') goConfigStep(2); }
+function _renderStarterGallery(){
+  var box=document.getElementById('starter-gallery'); if(!box || typeof escapeHTML!=='function') return;
+  var ar=(typeof S!=='undefined' && S.lang==='ar') || (document.documentElement.getAttribute('lang')==='ar');
+  var html=STARTER_STYLES.map(function(s){
+    var fo=(typeof FONT_OPTIONS!=='undefined' && FONT_OPTIONS[s.fontKey]) || {css:'Inter,sans-serif',weight:'700'};
+    var nm=(ar && s.nameAr)?s.nameAr:s.name;
+    var st='font-family:'+fo.css+';font-weight:'+fo.weight+';font-size:20px;line-height:1.05;color:'+s.color+';'
+      +(s.rtl?'direction:rtl;':'')+(s.italic?'font-style:italic;':'')+(s.tracking?'letter-spacing:'+(s.tracking*0.55)+'px;':'');
+    return '<button class="starter-card" type="button" onclick="applyStarterStyle(\''+s.id+'\')" aria-label="'+escapeHTML(nm)+'">'
+      +'<div class="starter-prev" style="background:'+s.card+';"><span style="'+st+'">'+escapeHTML(s.sample)+'</span></div>'
+      +'<span class="starter-name">'+escapeHTML(nm)+'</span></button>';
+  }).join('');
+  html+='<button class="starter-card blank" type="button" onclick="startBlankTag()" aria-label="'+(ar?'فارغة':'Start from blank')+'">'
+    +'<div class="starter-prev" style="background:var(--imp-surface-2);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>'
+    +'<span class="starter-name">'+(ar?'فارغة':'Blank')+'</span></button>';
+  box.innerHTML=html;
 }
 function addLayer(kind) {
   closeAddLayerMenu();
@@ -9898,6 +9984,7 @@ function toggleLang() {
   // Finish desc
   document.getElementById('fdesc').textContent =
     isAr ? FINISH_DESC_AR[S.finish] : FINISH_DESC[S.finish];
+  if (typeof _renderStarterGallery === 'function') _renderStarterGallery();   /* refresh starter names in the new language */
   checkCart();
 }
 
