@@ -7065,12 +7065,14 @@ function buildLayerBodyHTML(L) {
      Emboss/Deboss + Layout stay on Logo & Text only. */
   var _fl = kindLabel + ' Finish';
   var _finishHTML = '<div class="ctrl-color-label" style="margin-top:18px;margin-bottom:10px"' + _arAttr(_fl) + '>' + _fl + '</div>' + layerFinishGridHTML(L) +
-    '<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
-    '<div class="advanced-body" id="lyr-' + id + '-adv">' +
-      sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
-      sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
-      sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
-    '</div>';
+    /* Raw PBR sliders are manufacturing internals — designer view only, never shown to buyers */
+    (_designerMode ?
+      ('<div class="advanced-toggle" onclick="toggleAdvanced(\'lyr-' + id + '-adv\')"><span class="adv-arrow">&#9658;</span> <span' + _arAttr('Advanced') + '>Advanced</span></div>' +
+       '<div class="advanced-body" id="lyr-' + id + '-adv">' +
+         sliderRowPBR(id, 'roughness', 'Roughness', L.roughness) +
+         sliderRowPBR(id, 'metalness', 'Metalness', L.metalness) +
+         sliderRowPBR(id, 'transmission', 'Transmission', L.transmission) +
+       '</div>') : '');
   if (_lkd('controls.finish')) _finishHTML = '';   /* client finish lock → hide the whole Finish section */
   var _isGraphic = (L.kind === 'sticker' && !L.isLogo && !L.isBackground);
   var _embossLayoutHTML = '';
