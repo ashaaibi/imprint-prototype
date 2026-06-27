@@ -11535,8 +11535,8 @@ function _backDesignCanvas(){
    specular sheen on top of the design. An OPTIONAL mockups/<size>/spec.png (white =
    hot reflection) places the highlight on the real scene light; without it a synthetic
    diagonal streak is used. Emboss/deboss are per-layer and come in a later pass. */
-var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50 };   /* Preview foil controls (Testing) */
-var GLOSS_FX = { intensity:0.70, angle:0.50 };                           /* Preview gloss controls (Testing) */
+var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50, streakPos:0.50, streakSize:0.34, streakBlend:'screen' };   /* foil controls (Testing) */
+var GLOSS_FX = { intensity:0.70, angle:0.50, streakPos:0.50, streakSize:0.40, streakBlend:'screen' };                           /* gloss controls (Testing) */
 var FOIL_TINTS = { none:null, gold:'#d8a93a', silver:'#cfd2d6', rose:'#e3a9a0' };
 var SPEC_FX = { blend:'color-dodge', blur:0 };   /* highlight/spec-map blend mode + blur (Testing) */
 function onSpecBlend(v){ SPEC_FX.blend=v||'color-dodge'; _fxRefresh(); }
@@ -11560,12 +11560,19 @@ function _fxSpec(W,H,A,x0,x1){
   }
   return c;
 }
+/* synthetic light streak (gloss + foil) — pos = centre 0..1 across the width, size = width 0..1 */
+function _fxStreak(W,H,pos,size){
+  var c=_fxCanvas(W,H), x=c.getContext('2d');
+  var x0=(pos-size*0.5), x1=(pos+size*0.5);
+  var g=x.createLinearGradient(W*x0,0, W*x1,H);
+  g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  return c;
+}
 function _applyFoilFx(ctx, designMasked, A){
-  /* Foil STAMPS the existing colours metallic — it does NOT overwrite them. A neutral
-     metal ramp is hard-light-blended onto the design (keeps each colour's hue, adds
-     bright/dark metal banding); an optional tint gives gold/silver; then a sharp
-     specular streak on top. All driven by FOIL_FX (Testing controls). */
-  var W=A.W, H=A.H, sft=(FOIL_FX.angle-0.5);
+  /* Foil = metallic ramp (hard-light, keeps the design's colours) + a light STREAK + the real
+     highlight map (spec.png). Driven by FOIL_FX + SPEC_FX (Testing). */
+  var W=A.W, H=A.H;
   var mc=_fxCanvas(W,H), mx=mc.getContext('2d');
   var g=mx.createLinearGradient(W*0.12,0, W*0.88,H);   /* neutral metallic ramp (dark→light→white→light→dark) */
   g.addColorStop(0.00,'#2e2e2e'); g.addColorStop(0.24,'#8c8c8c'); g.addColorStop(0.44,'#e6e6e6');
@@ -11575,15 +11582,22 @@ function _applyFoilFx(ctx, designMasked, A){
   if(tint){ mx.globalCompositeOperation='overlay'; mx.fillStyle=tint; mx.fillRect(0,0,W,H); mx.globalCompositeOperation='source-over'; }   /* optional gold/silver/rose cast */
   mx.globalCompositeOperation='destination-in'; mx.drawImage(designMasked,0,0);
   ctx.globalCompositeOperation='hard-light'; ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.intensity)); ctx.drawImage(mc,0,0);   /* metallize, keeping the design's colours */
-  var scc=_fxCanvas(W,H), sx=scc.getContext('2d'); sx.drawImage(_fxSpec(W,H,A,0.34+sft*0.3,0.60+sft*0.3),0,0); sx.globalCompositeOperation='destination-in'; sx.drawImage(designMasked,0,0);
-  ctx.globalCompositeOperation=(SPEC_FX.blend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec)); ctx.drawImage(scc,0,0);   /* highlight (map or streak) at the Testing blend mode */
+  var sc=_fxStreak(W,H, FOIL_FX.streakPos!=null?FOIL_FX.streakPos:0.5, FOIL_FX.streakSize!=null?FOIL_FX.streakSize:0.34);
+  var sx=sc.getContext('2d'); sx.globalCompositeOperation='destination-in'; sx.drawImage(designMasked,0,0);
+  ctx.globalCompositeOperation=(FOIL_FX.streakBlend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec*0.6)); ctx.drawImage(sc,0,0);   /* sharp streak */
+  if(A && A.spec){   /* real highlight map → places the reflection on the actual scene light */
+    var pc=_fxCanvas(W,H), px=pc.getContext('2d'); if(SPEC_FX.blur>0) px.filter='blur('+SPEC_FX.blur+'px)'; px.drawImage(A.spec,0,0,W,H); px.filter='none';
+    px.globalCompositeOperation='destination-in'; px.drawImage(designMasked,0,0);
+    ctx.globalCompositeOperation=(SPEC_FX.blend||'color-dodge'); ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec)); ctx.drawImage(pc,0,0);
+  }
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 function _applyGlossFx(ctx, designMasked, A){
-  var W=A.W, H=A.H, sft=(GLOSS_FX.angle-0.5), gc=_fxCanvas(W,H), gx=gc.getContext('2d');
-  gx.drawImage(_fxSpec(W,H,A,0.30+sft*0.3,0.58+sft*0.3),0,0);
-  gx.globalCompositeOperation='destination-in'; gx.drawImage(designMasked,0,0);          /* only over the printed area */
-  ctx.globalCompositeOperation=(SPEC_FX.blend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top at the Testing blend mode, design colours kept */
+  /* Gloss = a soft light STREAK only — no metal ramp, no spec map. */
+  var W=A.W, H=A.H;
+  var gc=_fxStreak(W,H, GLOSS_FX.streakPos!=null?GLOSS_FX.streakPos:0.5, GLOSS_FX.streakSize!=null?GLOSS_FX.streakSize:0.4);
+  var gx=gc.getContext('2d'); gx.globalCompositeOperation='destination-in'; gx.drawImage(designMasked,0,0);          /* only over the printed area */
+  ctx.globalCompositeOperation=(GLOSS_FX.streakBlend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top, design colours kept */
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
 }
 /* ── Per-layer finish in the mockup: each logo / graphic / text layer's OWN foil, gloss,
@@ -11601,16 +11615,25 @@ function _layerSurfaceMask(L, surface){
   cx.drawImage(m, r.x*sc, r.y*sc, r.w*sc, r.h*sc, 0,0,w,h);
   return c;
 }
+/* grow a mask outward by r px (cheap 8-direction dilation) so a finish reaches the design's true edge */
+function _dilateMask(src, r){
+  if (r<=0) return src;
+  var W=src.width, H=src.height, c=_fxCanvas(W,H), x=c.getContext('2d');
+  for (var a=0;a<8;a++){ var ang=a*Math.PI/4; x.drawImage(src, Math.round(Math.cos(ang)*r), Math.round(Math.sin(ang)*r)); }
+  x.drawImage(src,0,0);
+  return c;
+}
 function _layerFinishArea(L, designMasked, A, surface){
   var fm=_layerSurfaceMask(L, surface); if(!fm) return null;
   var bbox = (surface==='interior') ? A.bboxBack : A.bbox;
   var maskA = (surface==='interior') ? A.maskBack : A.maskAlpha;
   if (!bbox || !maskA) return null;
   var c=document.createElement('canvas'); c.width=A.W; c.height=A.H; var x=c.getContext('2d');
-  x.drawImage(fm, bbox.x, bbox.y, bbox.w, bbox.h);                     /* layer mask → its face, exactly like the design */
-  x.globalCompositeOperation='destination-in'; x.drawImage(maskA,0,0);  /* clip to that tag's silhouette */
+  x.drawImage(fm, bbox.x, bbox.y, bbox.w, bbox.h);                     /* layer mask → its face */
+  c = _dilateMask(c, 3);                                               /* the contrast(1000%) layer mask sits a couple px INSIDE the design edge, which left a thin un-foiled dark rim — grow it back out */
+  var xc=c.getContext('2d'); xc.globalCompositeOperation='destination-in'; xc.drawImage(maskA,0,0);   /* clip to that tag's silhouette */
   var out=document.createElement('canvas'); out.width=A.W; out.height=A.H; var ox=out.getContext('2d');
-  ox.drawImage(designMasked,0,0); ox.globalCompositeOperation='destination-in'; ox.drawImage(c,0,0);   /* = the design, only where this layer is */
+  ox.drawImage(designMasked,0,0); ox.globalCompositeOperation='destination-in'; ox.drawImage(c,0,0);   /* design ∩ (grown layer mask) = the FULL design for this layer, with the design's own clean anti-aliased edge */
   return out;
 }
 function _applyEmbossFx(ctx, area, A, extrude){
