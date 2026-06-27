@@ -6167,14 +6167,20 @@ function _txtSlider(id,prop,label,val,min,max,step,unit){
 }
 function textControlsHTML(L){
   var id=L.id, al=L.align||'center';
-  function tb(active,label,handler,extra){ return '<button onclick="'+handler+'" style="flex:1;padding:7px 0;border:1px solid var(--imp-border);border-radius:6px;background:'+(active?'var(--imp-fg)':'var(--imp-surface)')+';color:'+(active?'#fff':'var(--imp-fg-2)')+';cursor:pointer;font-size:12px;font-weight:700;'+(extra||'')+'">'+label+'</button>'; }
+  function tb(active,label,handler,extra){ return '<button onclick="'+handler+'" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:8px 0;border:1px solid var(--imp-border);border-radius:6px;background:'+(active?'var(--imp-fg)':'var(--imp-surface)')+';color:'+(active?'#fff':'var(--imp-fg-2)')+';cursor:pointer;font-size:13px;font-weight:700;'+(extra||'')+'">'+label+'</button>'; }
+  var _sv='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">';
+  var _icL=_sv+'<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="17" x2="17" y2="17"/></svg>';
+  var _icC=_sv+'<line x1="4" y1="7" x2="20" y2="7"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>';
+  var _icR=_sv+'<line x1="4" y1="7" x2="20" y2="7"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="7" y1="17" x2="20" y2="17"/></svg>';
+  var _icB='<span style="font-weight:800;font-size:14px;">B</span>';
+  var _icI='<span style="font-style:italic;font-family:Georgia,&#39;Times New Roman&#39;,serif;font-size:15px;">I</span>';
   var h='<div style="margin-top:14px;">';
   h+='<div style="display:flex;gap:6px;margin-bottom:10px;">'+
-     tb(al==='left','L','onLayerTextAlign('+id+',\'left\')')+
-     tb(al==='center','C','onLayerTextAlign('+id+',\'center\')')+
-     tb(al==='right','R','onLayerTextAlign('+id+',\'right\')')+
-     tb(!!L.bold,'B','onLayerTextToggle('+id+',\'bold\')','font-weight:800;')+
-     tb(!!L.italic,'I','onLayerTextToggle('+id+',\'italic\')','font-style:italic;font-family:serif;')+
+     tb(al==='left',_icL,'onLayerTextAlign('+id+',\'left\')')+
+     tb(al==='center',_icC,'onLayerTextAlign('+id+',\'center\')')+
+     tb(al==='right',_icR,'onLayerTextAlign('+id+',\'right\')')+
+     tb(!!L.bold,_icB,'onLayerTextToggle('+id+',\'bold\')')+
+     tb(!!L.italic,_icI,'onLayerTextToggle('+id+',\'italic\')')+
      '</div>';
   h+=_txtSlider(id,'tracking','Letter spacing',(L.tracking||0),-10,40,0.5,'px');
   h+=_txtSlider(id,'lineHeight','Line height',(L.lineHeight!=null?L.lineHeight:1.25),0.8,2.5,0.05,'');
@@ -7850,7 +7856,7 @@ function _renderPresetGrid(i){
         if(!key){ card.style.display='none'; }
         else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"',"+(c.arabic?'true':'false')+")");
           content.innerHTML = c.arabic
-            ? '<span style="'+_fontPreviewStyle(key)+'font-size:24px;line-height:1.15;color:var(--imp-fg,#111);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">الخط العربي</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;direction:rtl;">أ ب ج</span>'
+            ? '<span style="'+_fontPreviewStyle(key)+'font-size:24px;line-height:1.15;color:var(--imp-fg,#111);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(_arabicFontName(name))+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;direction:rtl;">أ ب ج</span>'
             : '<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
         card._ready=true; if(card._readyCb) card._readyCb();
       });
@@ -7890,6 +7896,16 @@ function choosePreset(col, file){
     var im=new Image(); im.onload=function(){ L.srcImg=im; openCutoutModal(L.id,im,base,null,true,true); }; im.onerror=function(){}; im.src=url;
   }
 }
+/* Each Arabic font's name written in Arabic, so its thumbnail reads as its own name. */
+var ARABIC_FONT_NAMES = {
+  'Cairo':'القاهرة','Tajawal':'تجوال','Almarai':'المراعي','Amiri':'أميري','Reem Kufi':'ريم كوفي',
+  'El Messiri':'المسيري','Changa':'تشانغا','Mada':'مدى','Lateef':'لطيف','Scheherazade New':'شهرزاد',
+  'Markazi Text':'مركزي','Lalezar':'لاله زار','Lemonada':'ليموندا','Aref Ruqaa':'عارف رقعة','Harmattan':'هرمتان',
+  'Mirza':'ميرزا','Rakkas':'رقّاص','Katibeh':'كاتبة','Jomhuria':'جمهورية','Vibes':'فايبس',
+  'Gulzar':'غولزار','Marhey':'مرحى','Qahiri':'قاهري','Alkalami':'القلمي','IBM Plex Sans Arabic':'آي بي إم بلكس',
+  'Noto Sans Arabic':'نوتو سانس','Noto Kufi Arabic':'نوتو كوفي','Noto Naskh Arabic':'نوتو نسخ','Baloo Bhaijaan 2':'بالو بهيجان','Readex Pro':'ريدكس برو'
+};
+function _arabicFontName(n){ return ARABIC_FONT_NAMES[n] || n; }
 function chooseLibraryFont(key, isArabic) {
   var id = _addSrc.id, L = getLayer(id);
   _closeAddSourceOverlay(); _addSrc.id = null;
@@ -7902,6 +7918,7 @@ function chooseLibraryFont(key, isArabic) {
     L.content = 'Your text'; L._isArPlaceholder = false; L.rtl = false;
   }
   updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
+  var _ta=document.getElementById('lyr-'+id+'-text'); if(_ta){ _ta.value=L.content; _ta.style.direction=L.rtl?'rtl':'ltr'; _ta.style.textAlign=L.rtl?'right':''; }   /* reflect the (Arabic) placeholder + RTL in the text box */
   _autoEdit2dAfterUpload();   /* font chosen for the text layer → animate into the 2D editor */
 }
 /* Pick a social-media icon → insert it as a recolorable SVG GRAPHIC (just the icon, no text/handle). */
