@@ -1698,7 +1698,12 @@
         <div class="cfg-loader-orbit"><div class="cfg-loader-ring"></div><div class="cfg-loader-dot"></div></div>
         <div class="cfg-loader-text">Rendering your mockup…</div>
       </div>
-      <div class="dim-pill" id="dim-pill">5 × 8 cm</div>
+      <div id="mockup-unavail" style="display:none;position:absolute;inset:0;z-index:6;flex-direction:column;gap:12px;align-items:center;justify-content:center;text-align:center;padding:0 30px;">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--imp-fg-3,#aaa)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="6.5" r="0.8"/></svg>
+        <div style="font-size:14px;font-weight:600;color:var(--imp-fg);">Mockup not available yet</div>
+        <div style="font-size:12px;color:var(--secondary);line-height:1.5;max-width:240px;">A photoreal preview for this size &amp; shape is coming soon. The <b>4.5 × 9 cm rectangle</b> has one — pick it to see the mockup.</div>
+      </div>
+      <div class="dim-pill" id="dim-pill">4.5 × 9 cm</div>
       <div class="mode-toggle" id="mode-toggle">
         <button class="on" data-mode="2d" onclick="setViewMode('2d')">Edit</button>
         <button data-mode="preview" onclick="setViewMode('preview')">Preview</button>
@@ -11553,7 +11558,7 @@ var _saved3DView = null;
 /* ── Photoreal "Preview" mockup compositor ────────────────────────────────────
    Warps the live FRONT-face design onto a real photo of a blank hang tag, then
    re-adds the tag's shading (multiply) and the cotton string (occluder on top). */
-var MOCKUP_SRC = { base:'mockups/s55x95/base.jpg', mask:'mockups/s55x95/mask.png', maskBack:'mockups/s55x95/mask_back.png', shadow:'mockups/s55x95/shadow.png', string:'mockups/s55x95/string.png' };   /* 5.5x9.5 mockup (user PSD export) — front + back masks */
+var MOCKUP_SRC = { base:'mockups/s45x90/base.jpg', mask:'mockups/s45x90/mask.png', maskBack:'mockups/s45x90/mask_back.png', shadow:'mockups/s45x90/shadow.png', string:'mockups/s45x90/string.png' };   /* 4.5x9 mockup (user PSD export) — front + back masks; only this size has a mockup */
 var _mockupAssets = null, _mockupRAF = 0;
 function _loadMockupAssets(cb){
   if (_mockupAssets){ cb(_mockupAssets); return; }
@@ -11787,14 +11792,25 @@ function _applyLayerFinishes(ctx, designMasked, A, surface){
     ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
   }
 }
+function _mockupAvailable(){
+  /* only the 4.5 x 9 cm rectangle has a photoreal mockup so far — others show "not available yet" */
+  return (typeof currentTagDims!=='undefined' && currentTagDims &&
+          Math.abs((currentTagDims.w||0)-4.5)<0.06 && Math.abs((currentTagDims.h||0)-9)<0.06);
+}
 function renderTagMockup(){
   var cvs = document.getElementById('tag-mockup'); if(!cvs) return;
+  var _unav = document.getElementById('mockup-unavail');
+  if (!_mockupAvailable()){
+    _showMockupLoader(false); cvs.style.display='none'; if(_unav) _unav.style.display='flex';
+    return;
+  }
+  if(_unav) _unav.style.display='none'; cvs.style.display='';
   if (!_mockupAssets) _showMockupLoader(true);   /* first load only — assets are cached afterwards, so live re-renders are instant */
   _loadMockupAssets(function(A){
     _showMockupLoader(false);
     if (viewMode !== 'preview') return;   /* user may have left the view while the assets loaded */
     /* optional highlight/spec map (mockups/<size>/spec.png, white = hot reflection) — best-effort, never blocks the render */
-    if (A.spec===undefined){ A.spec=null; var _si=new Image(); _si.onload=function(){ A.spec=_si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; _si.onerror=function(){}; _si.src='mockups/s55x95/spec.png'; }
+    if (A.spec===undefined){ A.spec=null; var _si=new Image(); _si.onload=function(){ A.spec=_si; if(viewMode==='preview' && typeof _scheduleMockupRender==='function') _scheduleMockupRender(); }; _si.onerror=function(){}; _si.src='mockups/s45x90/spec.png'; }
     cvs.width = A.W; cvs.height = A.H;
     var ctx = cvs.getContext('2d'); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.clearRect(0,0,A.W,A.H);
     ctx.drawImage(A.base, 0, 0, A.W, A.H);                                     /* 1. scene + blank tag (atlas is kept fresh by the drawBagTexture hook) */
