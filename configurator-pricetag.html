@@ -1611,7 +1611,7 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
-      .canvas-stage.mode-preview #tag-mockup { max-height: 66vh; max-width: 94%; top: 46%; }   /* mobile: fit the whole tag above the collapsed sheet */
+      .canvas-stage.mode-preview #tag-mockup { width: 100%; max-width: 100%; height: auto; max-height: none; top: 44%; border-radius: 0; }   /* mobile: fit the mockup to the full viewport width */
       .mode-toggle { top: 12px; right: 12px; }
       html[dir="rtl"] .mode-toggle { right: auto; left: 12px; }
       .vp-history { top: 12px; left: 12px; }
@@ -2125,6 +2125,7 @@
         <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onFoilStreakAngle(this.value)"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil streak blend</span>
         <select onchange="onFoilStreakBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;"><option value="screen">Screen</option><option value="lighten">Lighten</option><option value="color-dodge">Color dodge</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="hard-light">Hard light</option><option value="multiply">Multiply</option><option value="darken">Darken</option><option value="color-burn">Color burn</option><option value="difference">Difference</option><option value="exclusion">Exclusion</option><option value="hue">Hue</option><option value="saturation">Saturation</option><option value="color">Color</option><option value="luminosity">Luminosity</option><option value="source-over">Normal</option></select></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Foil streak color</span><input type="color" value="#ffffff" oninput="onFoilStreakColor(this.value)" style="width:42px;height:26px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Highlight map blend</span>
         <select onchange="onSpecBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;"><option value="color-dodge">Color dodge</option><option value="screen">Screen</option><option value="lighten">Lighten</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="hard-light">Hard light</option><option value="multiply">Multiply</option><option value="darken">Darken</option><option value="color-burn">Color burn</option><option value="difference">Difference</option><option value="exclusion">Exclusion</option><option value="hue">Hue</option><option value="saturation">Saturation</option><option value="color">Color</option><option value="luminosity">Luminosity</option><option value="source-over">Normal</option></select></div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Highlight map blur</span><span class="slider-val" id="spec-blur-val">0px</span></div>
@@ -2141,6 +2142,8 @@
         <input type="range" class="test-slider" min="0" max="100" step="1" value="70" oninput="onGlossStreakAngle(this.value)"></div>
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Gloss streak blend</span>
         <select onchange="onGlossStreakBlend(this.value)" style="flex:1.2;padding:6px;border:1px solid var(--imp-border);border-radius:7px;background:var(--imp-surface);color:var(--imp-fg);font-family:inherit;font-size:12px;"><option value="screen">Screen</option><option value="lighten">Lighten</option><option value="color-dodge">Color dodge</option><option value="overlay">Overlay</option><option value="soft-light">Soft light</option><option value="hard-light">Hard light</option><option value="multiply">Multiply</option><option value="darken">Darken</option><option value="color-burn">Color burn</option><option value="difference">Difference</option><option value="exclusion">Exclusion</option><option value="hue">Hue</option><option value="saturation">Saturation</option><option value="color">Color</option><option value="luminosity">Luminosity</option><option value="source-over">Normal</option></select></div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Gloss streak color</span><input type="color" value="#ffffff" oninput="onGlossStreakColor(this.value)" style="width:42px;height:26px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;"></div>
 
       <div style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--secondary);font-weight:600;margin:12px 0 6px;">Emboss / Deboss (Bevel &amp; Emboss)</div>
       <div class="slider-row"><div class="slider-top"><span class="slider-name">Depth</span><span class="slider-val" id="emb-dep-val">100%</span></div>
@@ -11626,8 +11629,8 @@ function _backDesignCanvas(){
    specular sheen on top of the design. An OPTIONAL mockups/<size>/spec.png (white =
    hot reflection) places the highlight on the real scene light; without it a synthetic
    diagonal streak is used. Emboss/deboss are per-layer and come in a later pass. */
-var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50, streakPos:0.50, streakSize:0.34, streakAngle:0.70, streakBlend:'screen' };   /* foil controls (Testing) */
-var GLOSS_FX = { intensity:0.70, angle:0.50, streakPos:0.50, streakSize:0.40, streakAngle:0.70, streakBlend:'screen' };                           /* gloss controls (Testing) */
+var FOIL_FX  = { intensity:0.85, spec:0.70, tint:'none', angle:0.50, streakPos:0.50, streakSize:0.34, streakAngle:0.70, streakBlend:'screen', streakColor:'#ffffff' };   /* foil controls (Testing) */
+var GLOSS_FX = { intensity:0.70, angle:0.50, streakPos:0.50, streakSize:0.40, streakAngle:0.70, streakBlend:'screen', streakColor:'#ffffff' };                           /* gloss controls (Testing) */
 var FOIL_TINTS = { none:null, gold:'#d8a93a', silver:'#cfd2d6', rose:'#e3a9a0' };
 var SPEC_FX = { blend:'color-dodge', blur:0 };   /* highlight/spec-map blend mode + blur (Testing) */
 function onSpecBlend(v){ SPEC_FX.blend=v||'color-dodge'; _fxRefresh(); }
@@ -11646,6 +11649,8 @@ function onGlossStreakPos(v){ GLOSS_FX.streakPos=(parseFloat(v)||0)/100; var e=d
 function onGlossStreakBlend(v){ GLOSS_FX.streakBlend=v||'screen'; _fxRefresh(); }
 function onFoilStreakAngle(v){ FOIL_FX.streakAngle=(parseFloat(v)||0)/100; var e=document.getElementById('foil-sang-val'); if(e)e.textContent=Math.round(FOIL_FX.streakAngle*100)+'%'; _fxRefresh(); }
 function onGlossStreakAngle(v){ GLOSS_FX.streakAngle=(parseFloat(v)||0)/100; var e=document.getElementById('gloss-sang-val'); if(e)e.textContent=Math.round(GLOSS_FX.streakAngle*100)+'%'; _fxRefresh(); }
+function onFoilStreakColor(v){ FOIL_FX.streakColor=v||'#ffffff'; _fxRefresh(); }
+function onGlossStreakColor(v){ GLOSS_FX.streakColor=v||'#ffffff'; _fxRefresh(); }
 var EMBOSS_FX = { size:7, soften:2, angle:120, altitude:35, depth:1.0, hiOpacity:0.6, hiBlend:'screen', hiColor:'#ffffff', shOpacity:0.55, shBlend:'multiply', shColor:'#000000' };   /* Photoshop-style Bevel & Emboss (Testing) */
 function onEmbFxSize(v){ EMBOSS_FX.size=Math.max(0,parseFloat(v)||0); var e=document.getElementById('emb-size-val'); if(e)e.textContent=EMBOSS_FX.size+'px'; _fxRefresh(); }
 function onEmbFxSoften(v){ EMBOSS_FX.soften=Math.max(0,parseFloat(v)||0); var e=document.getElementById('emb-soft-val'); if(e)e.textContent=EMBOSS_FX.soften+'px'; _fxRefresh(); }
@@ -11670,16 +11675,21 @@ function _fxSpec(W,H,A,x0,x1){
   return c;
 }
 /* synthetic light streak (gloss + foil) — pos = centre 0..1 across the width, size = width 0..1 */
-function _fxStreak(W,H,pos,size,tilt){
-  /* A diagonal light band: centred at V = pos (so POSITION slides it vertically), thickness = size
-     (so SIZE scales it vertically), rotated by tilt (0.5 = horizontal; away from 0.5 = diagonal).
-     pos & size may run past 0..1 so the streak can slide fully off or flood the design. */
-  var c=_fxCanvas(W,H), x=c.getContext('2d');
+function _hexRGBA(hex, a){
+  hex=String(hex||'#ffffff').replace('#',''); if(hex.length===3) hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  var r=parseInt(hex.substr(0,2),16)||0, g=parseInt(hex.substr(2,2),16)||0, b=parseInt(hex.substr(4,2),16)||0;
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+function _fxStreak(W,H,pos,size,tilt,color){
+  /* A diagonal band in `color` (default white): centred at V = pos (POSITION slides it vertically),
+     thickness = size (SIZE scales it vertically), rotated by tilt (0.5 = horizontal; away = diagonal).
+     A non-white colour makes darkening blends (Multiply/Darken/…) visible too. */
+  var c=_fxCanvas(W,H), x=c.getContext('2d'), col=color||'#ffffff';
   var ang=((tilt==null?0.7:tilt)-0.5)*Math.PI;          /* 0.5→0 (flat) … 0/1→±90° */
   var cx=W/2, cy=pos*H, thick=Math.max(2, size*H), len=Math.hypot(W,H)*1.6;
   x.save(); x.translate(cx, cy); x.rotate(ang);
   var g=x.createLinearGradient(0, -thick/2, 0, thick/2);  /* bright in the middle, fading to the edges */
-  g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.5,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  g.addColorStop(0,_hexRGBA(col,0)); g.addColorStop(0.5,_hexRGBA(col,1)); g.addColorStop(1,_hexRGBA(col,0));
   x.fillStyle=g; x.fillRect(-len/2, -thick/2, len, thick);
   x.restore();
   return c;
@@ -11697,7 +11707,7 @@ function _applyFoilFx(ctx, designMasked, A){
   if(tint){ mx.globalCompositeOperation='overlay'; mx.fillStyle=tint; mx.fillRect(0,0,W,H); mx.globalCompositeOperation='source-over'; }   /* optional gold/silver/rose cast */
   mx.globalCompositeOperation='destination-in'; mx.drawImage(designMasked,0,0);
   ctx.globalCompositeOperation='hard-light'; ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.intensity)); ctx.drawImage(mc,0,0);   /* metallize, keeping the design's colours */
-  var sc=_fxStreak(W,H, FOIL_FX.streakPos!=null?FOIL_FX.streakPos:0.5, FOIL_FX.streakSize!=null?FOIL_FX.streakSize:0.34, FOIL_FX.streakAngle);
+  var sc=_fxStreak(W,H, FOIL_FX.streakPos!=null?FOIL_FX.streakPos:0.5, FOIL_FX.streakSize!=null?FOIL_FX.streakSize:0.34, FOIL_FX.streakAngle, FOIL_FX.streakColor);
   var sx=sc.getContext('2d'); sx.globalCompositeOperation='destination-in'; sx.drawImage(designMasked,0,0);
   ctx.globalCompositeOperation=(FOIL_FX.streakBlend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,FOIL_FX.spec*0.6)); ctx.drawImage(sc,0,0);   /* sharp streak */
   if(A && A.spec){   /* real highlight map → places the reflection on the actual scene light */
@@ -11710,7 +11720,7 @@ function _applyFoilFx(ctx, designMasked, A){
 function _applyGlossFx(ctx, designMasked, A){
   /* Gloss = a soft light STREAK only — no metal ramp, no spec map. */
   var W=A.W, H=A.H;
-  var gc=_fxStreak(W,H, GLOSS_FX.streakPos!=null?GLOSS_FX.streakPos:0.5, GLOSS_FX.streakSize!=null?GLOSS_FX.streakSize:0.4, GLOSS_FX.streakAngle);
+  var gc=_fxStreak(W,H, GLOSS_FX.streakPos!=null?GLOSS_FX.streakPos:0.5, GLOSS_FX.streakSize!=null?GLOSS_FX.streakSize:0.4, GLOSS_FX.streakAngle, GLOSS_FX.streakColor);
   var gx=gc.getContext('2d'); gx.globalCompositeOperation='destination-in'; gx.drawImage(designMasked,0,0);          /* only over the printed area */
   ctx.globalCompositeOperation=(GLOSS_FX.streakBlend||'screen'); ctx.globalAlpha=Math.max(0,Math.min(1,GLOSS_FX.intensity)); ctx.drawImage(gc,0,0);   /* shine on top, design colours kept */
   ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
