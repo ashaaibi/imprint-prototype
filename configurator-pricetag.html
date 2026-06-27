@@ -1646,8 +1646,8 @@
         /* bottom padding = breathing room + the off-screen amount the sheet is pushed
            down by, so the last controls (Add to Cart) can be scrolled into view at
            every snap point — not just Full */
-        padding: 0 18px calc(72px + var(--sheet-y, 52vh));
-        transform: translateY(var(--sheet-y, 52vh));
+        padding: 0 18px calc(72px + var(--sheet-y, 34vh));
+        transform: translateY(var(--sheet-y, 34vh));
         transition: transform 0.32s cubic-bezier(0.22, 0.8, 0.22, 1);
       }
       html[data-theme="dark"] .controls-panel { box-shadow: 0 -10px 34px rgba(0,0,0,0.55); }
@@ -1658,6 +1658,8 @@
         cursor: grab; touch-action: none;
       }
       .sheet-handle:active { cursor: grabbing; }
+      .sheet-cue { display: none; font-size: 10.5px; color: var(--imp-fg-3); margin-top: 4px; text-align: center; letter-spacing: 0.02em; }
+      .controls-panel.sheet-peek .sheet-cue { display: block; }   /* cue only while the sheet is at its resting peek */
       .sheet-grip { width: 42px; height: 5px; border-radius: 3px; background: var(--imp-border-hover); }
       /* minimized snap: only the handle + pager (Back · 1/3 · Next) stays visible */
       .controls-panel.sheet-min .cstep-nav { display: none; }
@@ -1742,7 +1744,7 @@
   <section class="controls-panel product-bag" aria-label="Customization controls">
     <!-- Sticky top bar: drag handle (mobile) + step pagination + step pills -->
     <div class="sheet-topbar" id="sheet-topbar">
-      <div class="sheet-handle" id="sheet-handle" aria-hidden="true"><span class="sheet-grip"></span></div>
+      <div class="sheet-handle" id="sheet-handle" role="button" tabindex="0" aria-label="Drag or tap to expand the customization controls"><span class="sheet-grip"></span><span class="sheet-cue" data-en="Pull up to customize" data-ar="اسحب للأعلى للتخصيص">Pull up to customize</span></div>
       <div class="cstep-pager">
         <button class="cstep-btn cstep-back" id="cstep-back" onclick="configStepPrev()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imp-flip-mirror"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -10448,12 +10450,13 @@ function setupOrbit() {
       var visH = (handle ? handle.offsetHeight : 34) + (pager ? pager.offsetHeight : 54) + 10;
       return Math.max(56 * vhpx(), 90 * vhpx() - visH);
     }
-    function snaps() { return [52 * vhpx(), 28 * vhpx(), 0, minY()]; } /* peek, half, full, minimized (translateY px) */
+    function snaps() { return [34 * vhpx(), 20 * vhpx(), 0, minY()]; } /* peek (raised so Shape shows on load), half, full, minimized */
     var idx = 0; /* start at peek */
     function setY(px) { sheet.style.setProperty('--sheet-y', px + 'px'); if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); }
     function applySnap(i, animate) {
       idx = Math.max(0, Math.min(snaps().length - 1, i));
       sheet.classList.toggle('sheet-min', idx === 3);   /* minimized → hide the step pills, show only the pager */
+      sheet.classList.toggle('sheet-peek', idx === 0);   /* peek → show the 'pull up to customize' cue */
       sheet.style.transition = (animate === false) ? 'none' : '';
       setY(snaps()[idx]);
     }
