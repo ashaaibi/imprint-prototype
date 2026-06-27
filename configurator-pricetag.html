@@ -532,6 +532,10 @@
       -ms-overflow-style: none;
     }
     .cstep-pills::-webkit-scrollbar { display: none; }
+    .cstep-price { display:flex; align-items:baseline; justify-content:flex-end; gap:8px; padding:7px 2px 0; }
+    .cstep-price-pu { font-size:13px; font-weight:700; color:var(--imp-fg); letter-spacing:0.01em; }
+    .cstep-price-qty { font-size:11px; color:var(--imp-fg-3); }
+    @media (max-width:760px){ .cstep-price { display:none; } }   /* mobile shows the price in the bottom bar */
     .cstep-pill {
       display: inline-flex;
       align-items: center;
@@ -1762,6 +1766,10 @@
           <button class="cstep-pill" onclick="goConfigStep(2)" data-cstep-pill="2"><span class="cstep-pill-num">2</span><span data-en="Add Your Design" data-ar="أضف تصميمك">Add Your Design</span></button>
           <button class="cstep-pill" onclick="goConfigStep(3)" data-cstep-pill="3"><span class="cstep-pill-num">3</span><span data-en="Quantity &amp; Review" data-ar="الكمية والمراجعة">Quantity &amp; Review</span></button>
         </div>
+        <div class="cstep-price" id="cstep-price" aria-live="polite">
+          <span class="cstep-price-pu" id="hdr-pu">AED 0.90 / unit</span>
+          <span class="cstep-price-qty" id="hdr-qty">1,000 units</span>
+        </div>
       </div>
     </div>
 
@@ -2067,6 +2075,18 @@
         <span class="pr-val" id="base-val">AED 1,240</span>
       </div>
 
+      <!-- Size add-on (per unit, by area) -->
+      <div class="price-row" id="size-row" style="display:none;">
+        <span class="pr-lbl" id="size-lbl">Size</span>
+        <span class="pr-val" id="size-val">AED 0</span>
+      </div>
+
+      <!-- Shape die-cut waste (per unit) -->
+      <div class="price-row" id="shape-row" style="display:none;">
+        <span class="pr-lbl" id="shape-lbl">Shape</span>
+        <span class="pr-val" id="shape-val">AED 0</span>
+      </div>
+
       <!-- Exterior finish -->
       <div class="price-row" id="ext-finish-row" style="display:none;">
         <span class="pr-lbl" id="ext-finish-lbl">Exterior finish</span>
@@ -2083,6 +2103,12 @@
       <div class="price-row" id="emboss-row" style="display:none;">
         <span class="pr-lbl" id="emboss-lbl">Emboss / Deboss</span>
         <span class="pr-val" id="emboss-val">AED 0</span>
+      </div>
+
+      <!-- Cutting-die setup (one-time, custom shapes) -->
+      <div class="price-row" id="die-row" style="display:none;">
+        <span class="pr-lbl">Cutting die <span style="font-size:10px;opacity:0.6;">(one-time)</span></span>
+        <span class="pr-val" id="die-val">AED 0</span>
       </div>
 
       <!-- Artwork setup (one-time) -->
@@ -5621,6 +5647,7 @@ function _applyTagSize(row){
   if(typeof S!=='undefined' && S) S.dims=_fmt1(w)+' × '+_fmt1(h)+' cm';
   if(typeof _rebuildTagGeometry==='function') _rebuildTagGeometry();
   if(typeof atlas2dFit==='function' && typeof a2d!=='undefined' && a2d && a2d.canvas) atlas2dFit();   /* always fit & centre the 2D editor to the new size so it never overflows the screen */
+  if(typeof updatePricing==='function') updatePricing();   /* size / shape change → refresh the live price */
 }
 function onRoundBevel(v){
   ROUND_BEVEL=Math.max(0, Math.min(1, (parseFloat(v)||0)/100));
@@ -8917,7 +8944,7 @@ const FINISH_PRICE = {
   matte:     0.45,
   softtouch: 0.65,
   kraft:     0.25,
-  foil:      1.40,
+  foil:      0.95,
 };
 
 /* Emboss/deboss per-unit add-on based on |extrude| magnitude */
@@ -8928,6 +8955,27 @@ function extrudePricePerUnit(extrudeVal) {
   if (e <= 2) return 1.00;
   return 1.50;
 }
+
+/* ── Size & shape price add-ons (per unit) + one-time die setup ──────────────────
+   Bigger tags use more material & print area; non-rectangular shapes need a custom
+   cutting die (one-time) and carry slightly higher per-unit waste. Reference = the
+   default 4.5×9 cm (40.5 cm²), which carries no size add-on. AED throughout. */
+var SIZE_REF_CM2 = 40.5, SIZE_RATE = 0.014;   /* AED per cm² above the reference area */
+function _tagAreaCm2() {
+  var w = (typeof currentTagDims!=='undefined' && currentTagDims && currentTagDims.w) || 4.5;
+  var h = (typeof currentTagDims!=='undefined' && currentTagDims && currentTagDims.h) || 9;
+  var sh = (typeof TAG_SHAPES!=='undefined') ? TAG_SHAPES[currentTagShape] : null;
+  return (sh && sh.circle) ? (Math.PI * (w/2) * (w/2)) : (w * h);   /* round tags → circle area */
+}
+function _sizePPU() { return Math.max(0, (_tagAreaCm2() - SIZE_REF_CM2) * SIZE_RATE); }
+var SHAPE_PRICE = {
+  rectangle:  { ppu:0.00, setup:0,   label:'Rectangle' },
+  square:     { ppu:0.00, setup:0,   label:'Square' },
+  rrectangle: { ppu:0.06, setup:90,  label:'Rounded rectangle' },
+  rsquare:    { ppu:0.06, setup:90,  label:'Rounded square' },
+  circle:     { ppu:0.12, setup:150, label:'Circle (custom die)' }
+};
+function _shapeInfo() { return (typeof SHAPE_PRICE!=='undefined' && SHAPE_PRICE[currentTagShape]) || { ppu:0, setup:0, label:'Rectangle' }; }
 
 /* envFactor   — per-finish environment-reflection multiplier (× HDRI intensity).
    clearcoat   — thin glossy lamination layer OVER the paper (gloss/foil), so the
@@ -9697,13 +9745,22 @@ function updatePricing() {
   var embossPPU = extrudePricePerUnit(extrude);
   var embossTotal = embossPPU > 0 ? qty * embossPPU : 0;
 
+  /* Size add-on (per unit) — bigger tags use more material & print area */
+  var sizePPU = (typeof _sizePPU === 'function') ? _sizePPU() : 0;
+  var sizeTotal = sizePPU > 0 ? qty * sizePPU : 0;
+  /* Shape — non-rectangular tags need a custom cutting die (one-time) + slight per-unit waste */
+  var _shp = (typeof _shapeInfo === 'function') ? _shapeInfo() : { ppu:0, setup:0, label:'Rectangle' };
+  var shapePPU = _shp.ppu || 0;
+  var shapeTotal = shapePPU > 0 ? qty * shapePPU : 0;
+  var dieSetup = _shp.setup || 0;
+
   /* Artwork setup (one-time) */
   var logoSetup = (art.type === 'logo' && art.logo.img) ? 180 :
                   (art.type === 'text' && art.text.content) ? 60 : 0;
 
-  var addOnPPU = extPPU + intPPU + embossPPU;
+  var addOnPPU = extPPU + intPPU + embossPPU + sizePPU + shapePPU;
   var effectivePPU = pu + addOnPPU;
-  var total = base + extTotal + intTotal + embossTotal + logoSetup;
+  var total = base + extTotal + intTotal + embossTotal + sizeTotal + shapeTotal + logoSetup + dieSetup;
 
   /* Base row */
   document.getElementById('base-lbl').textContent =
@@ -9741,6 +9798,37 @@ function updatePricing() {
     embossRow.style.display = '';
   } else { embossRow.style.display = 'none'; }
 
+  /* Size row (per-unit material/print add-on) */
+  var sizeRow = document.getElementById('size-row');
+  if (sizeRow) {
+    if (sizePPU > 0) {
+      var _szLbl = (typeof _fmtTagSize === 'function' && typeof TAG_SHAPES !== 'undefined')
+        ? _fmtTagSize(currentTagDims.w, currentTagDims.h, TAG_SHAPES[currentTagShape]) : 'Larger size';
+      document.getElementById('size-lbl').textContent = _szLbl + ' (+' + fmtUnit(sizePPU) + '/unit)';
+      document.getElementById('size-val').textContent = fmt(sizeTotal);
+      sizeRow.style.display = '';
+    } else { sizeRow.style.display = 'none'; }
+  }
+
+  /* Shape row (per-unit die-cut waste) */
+  var shapeRow = document.getElementById('shape-row');
+  if (shapeRow) {
+    if (shapePPU > 0) {
+      document.getElementById('shape-lbl').textContent = _shp.label + ' (+' + fmtUnit(shapePPU) + '/unit)';
+      document.getElementById('shape-val').textContent = fmt(shapeTotal);
+      shapeRow.style.display = '';
+    } else { shapeRow.style.display = 'none'; }
+  }
+
+  /* Cutting-die setup row (one-time, for non-rectangular shapes) */
+  var dieRow = document.getElementById('die-row');
+  if (dieRow) {
+    if (dieSetup > 0) {
+      document.getElementById('die-val').textContent = fmt(dieSetup);
+      dieRow.style.display = '';
+    } else { dieRow.style.display = 'none'; }
+  }
+
   /* Artwork setup row */
   var lrow = document.getElementById('lrow');
   if (logoSetup > 0) {
@@ -9754,7 +9842,7 @@ function updatePricing() {
   var puRow = document.getElementById('pu-breakdown-row');
   if (addOnPPU > 0) {
     document.getElementById('pu-breakdown-lbl').textContent =
-      fmtUnit(pu) + ' bag + ' + fmtUnit(addOnPPU) + ' add-ons = ' + fmtUnit(effectivePPU) + '/unit';
+      fmtUnit(pu) + ' tag + ' + fmtUnit(addOnPPU) + ' add-ons = ' + fmtUnit(effectivePPU) + '/unit';
     puRow.style.display = '';
   } else { puRow.style.display = 'none'; }
 
@@ -9765,6 +9853,10 @@ function updatePricing() {
   document.getElementById('mb-total').textContent = fmt(total);
   document.getElementById('mb-pu').textContent =
     fmtUnit(effectivePPU) + ' / unit · ' + qty.toLocaleString() + ' units';
+
+  /* Always-visible per-unit chip in the step header (desktop) */
+  var _hpu = document.getElementById('hdr-pu'); if (_hpu) _hpu.textContent = fmtUnit(effectivePPU) + ' / unit';
+  var _hq  = document.getElementById('hdr-qty'); if (_hq) _hq.textContent = qty.toLocaleString() + ' units';
 }
 /* ── Performance HUD (Testing) — live FPS / frame time, measured from requestAnimationFrame ── */
 var _perfHUD = { on:false, raf:0, last:0, frames:0, fps:0, ms:0, stats:{ fps:true, frameMs:true, mobile:true, draws:true, tris:false, ping:true } };
@@ -11853,9 +11945,9 @@ function _applyFoilFx(ctx, designMasked, A){
      highlight map (spec.png). Driven by FOIL_FX + SPEC_FX (Testing). */
   var W=A.W, H=A.H;
   var mc=_fxCanvas(W,H), mx=mc.getContext('2d');
-  var g=mx.createLinearGradient(W*0.12,0, W*0.88,H);   /* neutral metallic ramp (dark→light→white→light→dark) */
-  g.addColorStop(0.00,'#2e2e2e'); g.addColorStop(0.24,'#8c8c8c'); g.addColorStop(0.44,'#e6e6e6');
-  g.addColorStop(0.52,'#ffffff'); g.addColorStop(0.60,'#e6e6e6'); g.addColorStop(0.80,'#8c8c8c'); g.addColorStop(1.00,'#2e2e2e');
+  var g=mx.createLinearGradient(W*0.12,0, W*0.88,H);   /* gentle metallic SHEEN — muted, no bright band, so Foil intensity gives metal tone WITHOUT a 2nd streak (the single streak is the animatable specular one) */
+  g.addColorStop(0.00,'#7d7d7d'); g.addColorStop(0.24,'#9c9c9c'); g.addColorStop(0.44,'#bcbcbc');
+  g.addColorStop(0.52,'#cdcdcd'); g.addColorStop(0.60,'#bcbcbc'); g.addColorStop(0.80,'#9c9c9c'); g.addColorStop(1.00,'#7d7d7d');
   mx.fillStyle=g; mx.fillRect(0,0,W,H);
   var tint=FOIL_TINTS[FOIL_FX.tint];
   if(tint){ mx.globalCompositeOperation='overlay'; mx.fillStyle=tint; mx.fillRect(0,0,W,H); mx.globalCompositeOperation='source-over'; }   /* optional gold/silver/rose cast */
