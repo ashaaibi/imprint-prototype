@@ -4775,10 +4775,19 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
       _drawSocialIcon(ctx, L.social.platform, _isz, (mode === 'mask') ? '#ffffff' : L.color, -_tot/2 + _isz/2);
       ctx.fillText(_hdl, -_tot/2 + _isz + _gap, 0);
     } else {
+      if (L.tracking) ctx.letterSpacing = (L.tracking*ms)+'px';                       /* tracking / letter-spacing */
+      ctx.textAlign = (L.align==='left'||L.align==='right') ? L.align : 'center';      /* alignment */
       var lines = L.content.split('\n');
-      var lineH = L.fontSize * ms * 1.25;
+      var lineH = L.fontSize * ms * (L.lineHeight!=null?L.lineHeight:1.25);            /* line height */
       var totalH = lineH * (lines.length - 1);
-      lines.forEach(function(line, i) { ctx.fillText(line, 0, i * lineH - totalH / 2); });
+      var bw=0; if(L.align==='left'||L.align==='right'){ for(var _bi=0;_bi<lines.length;_bi++){ bw=Math.max(bw, ctx.measureText(lines[_bi]).width); } }
+      var ax = (L.align==='left') ? -bw/2 : (L.align==='right') ? bw/2 : 0;            /* keep the block centred, align lines within it */
+      lines.forEach(function(line, i) {
+        var yy = i * lineH - totalH / 2;
+        if (mode!=='mask' && L.shadow){ ctx.shadowColor=L.shadowColor||'rgba(0,0,0,0.55)'; ctx.shadowBlur=(L.shadowBlur||0)*ms; ctx.shadowOffsetX=(L.shadowX||0)*ms; ctx.shadowOffsetY=-(L.shadowY||0)*ms; }   /* drop shadow */
+        if (mode!=='mask' && L.strokeWidth>0){ ctx.lineJoin='round'; ctx.lineWidth=L.strokeWidth*ms*2; ctx.strokeStyle=L.strokeColor||'#000000'; ctx.strokeText(line, ax, yy); ctx.shadowColor='transparent'; ctx.shadowBlur=0; }   /* outline under the fill; shadow only once */
+        ctx.fillText(line, ax, yy);
+      });
     }
     ctx.restore();
   }
@@ -6069,7 +6078,9 @@ var FONT_BUILTIN_KEYS = ['cormorant', 'inter', 'barlow', 'playfair'];
 function layerFontString(L, sizeOverride) {
   var f = FONT_OPTIONS[L && L.font] || FONT_OPTIONS.cormorant;
   var size = (sizeOverride != null) ? sizeOverride : (L ? L.fontSize : 130);
-  return f.weight + ' ' + size + 'px ' + f.css;
+  var style = (L && L.italic) ? 'italic ' : '';
+  var weight = (L && L.bold) ? '700' : f.weight;   /* Bold toggle overrides the font's own weight */
+  return style + weight + ' ' + size + 'px ' + f.css;
 }
 function textFontString(size) {
   return layerFontString(BAG.artwork.text, size);
@@ -6117,6 +6128,40 @@ function layerFontRowHTML(L) {
       '<button onclick="openAddSourcePrompt(' + L.id + ',&#39;font&#39;)" style="flex-shrink:0;padding:11px 14px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface);color:var(--imp-fg);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Replace</button>' +
     '</div>';
 }
+/* ── Full text controls (alignment, weight, tracking, line height, outline, drop shadow) ── */
+function _txtSlider(id,prop,label,val,min,max,step,unit){
+  return '<div class="slider-row"><div class="slider-top"><span class="slider-name">'+label+'</span><span class="slider-val" id="lyr-'+id+'-'+prop+'-val">'+val+unit+'</span></div>'+
+    '<input type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" oninput="onLayerTextProp('+id+',\''+prop+'\',this.value,\''+unit+'\')" style="width:100%;"></div>';
+}
+function textControlsHTML(L){
+  var id=L.id, al=L.align||'center';
+  function tb(active,label,handler,extra){ return '<button onclick="'+handler+'" style="flex:1;padding:7px 0;border:1px solid var(--imp-border);border-radius:6px;background:'+(active?'var(--imp-fg)':'var(--imp-surface)')+';color:'+(active?'#fff':'var(--imp-fg-2)')+';cursor:pointer;font-size:12px;font-weight:700;'+(extra||'')+'">'+label+'</button>'; }
+  var h='<div style="margin-top:14px;">';
+  h+='<div style="display:flex;gap:6px;margin-bottom:10px;">'+
+     tb(al==='left','L','onLayerTextAlign('+id+',\'left\')')+
+     tb(al==='center','C','onLayerTextAlign('+id+',\'center\')')+
+     tb(al==='right','R','onLayerTextAlign('+id+',\'right\')')+
+     tb(!!L.bold,'B','onLayerTextToggle('+id+',\'bold\')','font-weight:800;')+
+     tb(!!L.italic,'I','onLayerTextToggle('+id+',\'italic\')','font-style:italic;font-family:serif;')+
+     '</div>';
+  h+=_txtSlider(id,'tracking','Letter spacing',(L.tracking||0),-10,40,0.5,'px');
+  h+=_txtSlider(id,'lineHeight','Line height',(L.lineHeight!=null?L.lineHeight:1.25),0.8,2.5,0.05,'');
+  h+=_txtSlider(id,'strokeWidth','Outline width',(L.strokeWidth||0),0,12,0.5,'px');
+  h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Outline color</span><input type="color" value="'+(L.strokeColor||'#000000')+'" oninput="onLayerTextColor('+id+',\'strokeColor\',this.value)" style="width:42px;height:26px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;"></div>';
+  h+='<label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin:10px 0 4px;font-size:12px;color:var(--imp-fg);"><input type="checkbox" '+(L.shadow?'checked':'')+' onchange="onLayerTextToggle('+id+',\'shadow\')"> Drop shadow</label>';
+  if (L.shadow){
+    h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;"><span style="font-size:11px;color:var(--secondary);flex:1;">Shadow color</span><input type="color" value="'+(L.shadowColor||'#000000')+'" oninput="onLayerTextColor('+id+',\'shadowColor\',this.value)" style="width:42px;height:26px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;"></div>';
+    h+=_txtSlider(id,'shadowBlur','Shadow blur',(L.shadowBlur||0),0,30,1,'px');
+    h+=_txtSlider(id,'shadowX','Shadow X',(L.shadowX||0),-20,20,1,'px');
+    h+=_txtSlider(id,'shadowY','Shadow Y',(L.shadowY||0),-20,20,1,'px');
+  }
+  h+='</div>';
+  return h;
+}
+function onLayerTextProp(id,prop,val,unit){ var L=getLayer(id); if(!L) return; L[prop]=parseFloat(val)||0; var e=document.getElementById('lyr-'+id+'-'+prop+'-val'); if(e)e.textContent=(Math.round(L[prop]*100)/100)+(unit||''); drawBagTexture(); }
+function onLayerTextAlign(id,a){ var L=getLayer(id); if(!L) return; L.align=a; renderLayersList(); drawBagTexture(); }
+function onLayerTextToggle(id,prop){ var L=getLayer(id); if(!L) return; L[prop]=!L[prop]; renderLayersList(); drawBagTexture(); }
+function onLayerTextColor(id,prop,val){ var L=getLayer(id); if(!L) return; L[prop]=val; drawBagTexture(); }
 function onArtworkFont(key, el) {
   BAG.artwork.text.font = key;
   if (el && el.parentNode) {
@@ -6952,7 +6997,7 @@ function buildLayerBodyHTML(L) {
     }
     var _canTxt = (_tplCanEdit('text') || (L.social && _tplCanEdit('social')));   /* client may edit the words / social handle */
     if (_canTxt) h += '<textarea id="lyr-' + id + '-text" rows="2" placeholder="' + (L.social ? (SOCIAL_PLACEHOLDER[L.social.platform] || 'Username / handle') : 'Text') + '" oninput="onLayerTextChange(' + id + ',this.value)" style="width:100%;box-sizing:border-box;padding:10px;margin-top:' + (L.social ? '8' : '14') + 'px;border:1px solid var(--imp-border);border-radius:8px;background:var(--imp-surface-2);color:var(--imp-fg);font-family:inherit;font-size:14px;resize:vertical;outline:none;">' + escapeHTML(L.content) + '</textarea>' +
-      (_tplCanEdit('text') ? layerFontRowHTML(L) : '');
+      (_tplCanEdit('text') ? (layerFontRowHTML(L) + (L.social ? '' : textControlsHTML(L))) : '');
   }
   /* Colour / Recolor section — built here but placed LAST among the common controls
      (after Areas), per the requested control order. */
@@ -7476,7 +7521,8 @@ function addLayer(kind) {
           recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null };
   } else if (kind === 'text') {
     L = { id:id, kind:'text', isDefault:false, visible:true, content:'Your text', fontSize:45, posU:_fp.posU, posV:_fp.posV, rotation:0, cropBoxL:0, cropBoxR:0, cropBoxT:0, cropBoxB:0, font:'inter',
-          color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'matte', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas };
+          color:'#111111', swatchName:'Custom', hue:0, customHex:'#111111', finish:'matte', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+          align:'center', tracking:0, lineHeight:1.25, bold:false, italic:false, strokeWidth:0, strokeColor:'#000000', shadow:false, shadowColor:'#000000', shadowBlur:4, shadowX:0, shadowY:2 };
   } else if (kind === 'sticker' || kind === 'pattern') {
     /* A Pattern is a sticker that tiles (tiled:true) — it reuses every sticker control
        (upload, background removal, recolor, quality, finish, emboss). */
