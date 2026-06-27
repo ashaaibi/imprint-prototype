@@ -7732,7 +7732,7 @@ function _renderPresetGrid(i){
       var content=card.querySelector('.pf-content'), name=f.replace(/\.[^.]+$/,'').replace(/_/g,' ');
       _loadFontFromUrl(url, name, function(key){          /* downloads start immediately, in parallel */
         if(!key){ card.style.display='none'; }
-        else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"')");
+        else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"',"+(c.arabic?'true':'false')+")");
           content.innerHTML = c.arabic
             ? '<span style="'+_fontPreviewStyle(key)+'font-size:24px;line-height:1.15;color:var(--imp-fg,#111);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">الخط العربي</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;direction:rtl;">أ ب ج</span>'
             : '<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
@@ -7774,11 +7774,18 @@ function choosePreset(col, file){
     var im=new Image(); im.onload=function(){ L.srcImg=im; openCutoutModal(L.id,im,base,null,true,true); }; im.onerror=function(){}; im.src=url;
   }
 }
-function chooseLibraryFont(key) {
+function chooseLibraryFont(key, isArabic) {
   var id = _addSrc.id, L = getLayer(id);
   _closeAddSourceOverlay(); _addSrc.id = null;
   if (!L || !key) return;
-  L.font = key; updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
+  L.font = key;
+  if (isArabic){                          /* Arabic font → seed an Arabic sample + RTL so it reads right */
+    L.rtl = true;
+    if (!L.content || L.content === 'Your text' || L._isArPlaceholder){ L.content = 'اكتب نصك هنا'; L._isArPlaceholder = true; }
+  } else if (L._isArPlaceholder && L.content === 'اكتب نصك هنا'){   /* back to a Latin font → restore the Latin default */
+    L.content = 'Your text'; L._isArPlaceholder = false; L.rtl = false;
+  }
+  updateLayerThumb(L); drawBagTexture(); _updateFontNameDisplay(id, key);
   _autoEdit2dAfterUpload();   /* font chosen for the text layer → animate into the 2D editor */
 }
 /* Pick a social-media icon → insert it as a recolorable SVG GRAPHIC (just the icon, no text/handle). */
