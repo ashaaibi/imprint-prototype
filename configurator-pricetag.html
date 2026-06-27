@@ -305,6 +305,7 @@
     #tag-mockup { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:92%; max-height:94%; display:none; z-index:5; pointer-events:none; border-radius:6px; box-shadow:0 18px 50px rgba(0,0,0,0.18); }
     .canvas-stage.mode-preview { overflow:hidden; }   /* clip the zoomed/panned mockup to the stage */
     .canvas-stage.mode-preview #tag-mockup { display:block; will-change:transform; }
+    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:100%; max-width:100%; height:auto; max-height:none; border-radius:0; } }   /* portrait phones + tablets: mockup fills the viewport width */
     .canvas-stage.mode-preview #three-canvas { display:none !important; }
     .canvas-stage.mode-preview .dim-pill { display:none; }
     .mini3d-label {
