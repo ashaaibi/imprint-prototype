@@ -4792,11 +4792,37 @@ function _drawSocialIcon(ctx, platform, size, color, cx) {
   (ic.stroke || []).forEach(function(d){ try { ctx.stroke(new Path2D(d)); } catch(_){} });
   ctx.restore();
 }
+/* Solid / gradient background fill — fills the atlas (the bake's clip/face-hide restricts it to
+   the tag faces). Gradient spans the front (exterior) UV region so it reads full-range on the tag. */
+function _drawBgFill(ctx, L, ms, mode) {
+  var ue = layerBBox(L);
+  var fx = ue.x * ms, fy = ue.y * ms, fw = ue.w * ms, fh = ue.h * ms;
+  if (mode === 'mask') { ctx.fillStyle = '#ffffff'; ctx.fillRect(fx, fy, fw, fh); return; }
+  if (L.fillType === 'gradient' && L.gradient) {
+    var R = (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) ? BAG_UV.exterior : { x: ue.x, y: ue.y, w: ue.w, h: ue.h };
+    var gx = R.x * ms, gy = R.y * ms, gw = R.w * ms, gh = R.h * ms;
+    var g = L.gradient, cx = gx + gw / 2, cy = gy + gh / 2, fill;
+    if (g.type === 'radial') {
+      fill = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(gw, gh) / 2 * 1.05);
+    } else {
+      var ang = ((g.angle || 0) - 90) * Math.PI / 180;   /* 0deg = top -> bottom */
+      var rr = (Math.abs(Math.cos(ang)) * gw + Math.abs(Math.sin(ang)) * gh) / 2;
+      fill = ctx.createLinearGradient(cx - Math.cos(ang) * rr, cy - Math.sin(ang) * rr, cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
+    }
+    fill.addColorStop(0, g.c1 || '#ffffff');
+    fill.addColorStop(1, g.c2 || '#000000');
+    ctx.fillStyle = fill;
+  } else {
+    ctx.fillStyle = L.fillColor || '#ffffff';
+  }
+  ctx.fillRect(fx, fy, fw, fh);
+}
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
   var ue = layerBBox(L);
   var sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : ue.w;  /* scale base: exterior width */
   if (L.kind === 'logo' || L.kind === 'sticker') {
+    if (L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) { _drawBgFill(ctx, L, ms, mode); return; }
     if (!L.img || !L.img.naturalWidth) return;
     if (L.tiled) {
       /* TILED (any layout): tile the (recolored) image inside the layer's box. */
@@ -4947,7 +4973,7 @@ function drawArtworkOnBag() {
   for (var li = BAG.artwork.layers.length - 1; li >= 0; li--) {
     var L = BAG.artwork.layers[li];
     if (!L || !L.visible) continue;
-    if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
+    if ((L.kind === 'logo' || L.kind === 'sticker') && !(L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
     /* per-face / handle hide: if this layer is hidden on one or more faces (or on the
@@ -6302,6 +6328,12 @@ function layerAutoName(L) {
 }
 function layerThumbHTML(L) {
   if (L.kind === 'logo' || L.kind === 'sticker') {
+    if (L.isBackground && L.fillType) {
+      var _fp = (L.fillType === 'gradient' && L.gradient)
+        ? (L.gradient.type === 'radial' ? ('radial-gradient(circle,' + L.gradient.c1 + ',' + L.gradient.c2 + ')') : ('linear-gradient(' + (L.gradient.angle||135) + 'deg,' + L.gradient.c1 + ',' + L.gradient.c2 + ')'))
+        : (L.fillColor || '#ffffff');
+      return '<span style="display:block;width:100%;height:100%;border-radius:5px;background:' + _fp + ';"></span>';
+    }
     if (L.img && L.img.src) return '<img src="' + L.img.src + '" alt="">';
     return '<span style="opacity:.65;">' + (L.kind === 'sticker' ? (L.tiled ? '&#9638;' : '&#9733;') : '&#8679;') + '</span>';
   }
@@ -7075,7 +7107,17 @@ function buildLayerBodyHTML(L) {
   var imageKind = (L.kind === 'logo' || L.kind === 'sticker');
   var kindLabel = L.isLogo ? 'Logo' : L.kind === 'sticker' ? (L.tiled ? 'Background' : 'Sticker') : (L.kind === 'text' ? 'Text' : L.kind === 'logo' ? 'Logo' : 'Sticker');
   if (imageKind) {
-    if (L.img) {
+    if (L.isBackground && L.fillType) {
+      var _fillPrev = (L.fillType === 'gradient' && L.gradient)
+        ? (L.gradient.type === 'radial' ? ('radial-gradient(circle,' + L.gradient.c1 + ',' + L.gradient.c2 + ')') : ('linear-gradient(' + (L.gradient.angle||135) + 'deg,' + L.gradient.c1 + ',' + L.gradient.c2 + ')'))
+        : (L.fillColor || '#ffffff');
+      h += '<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--imp-border);border-radius:8px;padding:10px;margin:14px 0 12px;">' +
+        '<span style="width:46px;height:46px;border-radius:8px;border:1px solid var(--imp-border);background:' + _fillPrev + ';flex:0 0 auto;"></span>' +
+        '<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--imp-fg);">' + (L.fillType === 'gradient' ? 'Gradient' : 'Solid colour') + '</div>' +
+        '<button style="' + btnStyle + '" onclick="openAddSourcePrompt(' + id + ',&#39;pattern&#39;)" data-en="Change" data-ar="تغيير">Change</button>' +
+        '</div>';
+      if (L.fillType === 'solid') h += '<div style="display:flex;align-items:center;gap:8px;margin:0 0 12px;"><span style="font-size:11px;color:var(--secondary);flex:1;" data-en="Colour" data-ar="اللون">Colour</span><input type="color" value="' + (L.fillColor||'#ffffff') + '" oninput="onBgFillColor(' + id + ',this.value)" style="width:42px;height:26px;border:1px solid var(--imp-border);border-radius:6px;background:none;cursor:pointer;padding:0;"></div>';
+    } else if (L.img) {
       h += '<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--imp-border);border-radius:8px;padding:10px;margin:14px 0 12px;">' +
         '<img src="' + (L.img.src || '') + '" style="max-width:60px;max-height:42px;object-fit:contain;border-radius:4px;">' +
         '<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--imp-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(L.fileName || 'Image') + '</div>' +
@@ -7131,10 +7173,10 @@ function buildLayerBodyHTML(L) {
 
   if (L.isBackground) {
     /* Background: Density (+ Feather) → Opacity → Areas → Recolor → Finish. (No Gap, no Move/Emboss/Layout.) */
-    h += _bgTiledControlsHTML(id, L);
+    if (!L.fillType) h += _bgTiledControlsHTML(id, L);   /* solid/gradient fills skip the tiling controls */
     h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
-    h += sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, ((Math.round(L.rotation||0)%360)+360)%360, '°');   /* backgrounds get a rotation slider too (5° increments) */
-    h += _colorSec;
+    if (!L.fillType) h += sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, ((Math.round(L.rotation||0)%360)+360)%360, '°');   /* image backgrounds get a rotation slider (5° increments); fills don't need it */
+    if (!L.fillType) h += _colorSec;                      /* fills set their colour in the picker / inline swatch */
     h += _layerMoreOptions(id, _finishHTML);
   } else if (L.kind === 'text') {
     /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → Finish → Emboss/Layout. */
@@ -7716,7 +7758,11 @@ function _ensureAddSourceModal() {
     + '@keyframes presetSpin{to{transform:rotate(360deg);}}'
     + '.preset-thumb img{opacity:0;transition:opacity .25s ease;}.preset-thumb.preset-shown img{opacity:1;}.preset-thumb.preset-shown .preset-spin{display:none;}'
     + '.preset-font .pf-content{opacity:0;transition:opacity .25s ease;}.preset-font.preset-shown .pf-content{opacity:1;}.preset-font.preset-shown .preset-spin{display:none;}'
-    + '.preset-more-btn{width:100%;padding:8px;border:1px dashed var(--imp-border,#ccc);border-radius:8px;background:var(--imp-surface-2,#f5f5f5);color:var(--imp-fg-2,#666);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}.preset-more-btn:hover{border-color:var(--imp-accent,#c8a96e);color:var(--imp-fg,#111);}';
+    + '.preset-more-btn{width:100%;padding:8px;border:1px dashed var(--imp-border,#ccc);border-radius:8px;background:var(--imp-surface-2,#f5f5f5);color:var(--imp-fg-2,#666);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}.preset-more-btn:hover{border-color:var(--imp-accent,#c8a96e);color:var(--imp-fg,#111);}'
+    + '.as-tab{flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--imp-fg-2,#666);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}.as-tab.on{background:var(--imp-surface,#fff);color:var(--imp-fg,#111);box-shadow:0 1px 3px rgba(0,0,0,0.10);}'
+    + '.bg-sw-row{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0;}.bg-sw{width:44px;height:44px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;position:relative;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);}.bg-sw:hover{border-color:var(--imp-accent,#c8a96e);}.bg-sw-lbl{font-size:9.5px;color:var(--imp-fg-2,#666);text-align:center;margin-top:4px;line-height:1.15;width:44px;}'
+    + '.bg-hue{width:100%;height:14px;-webkit-appearance:none;appearance:none;border-radius:7px;background:linear-gradient(90deg,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000);outline:none;cursor:pointer;margin:2px 0 4px;}.bg-hue::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}.bg-hue::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}'
+    + '.bg-grad-prev{height:54px;border-radius:10px;border:1px solid var(--imp-border,#e5e5e5);margin-bottom:10px;}';
   document.head.appendChild(st);
   var ov = document.createElement('div');
   ov.id = 'add-source-overlay';
@@ -7724,7 +7770,8 @@ function _ensureAddSourceModal() {
   ov.innerHTML =
     '<div style="background:var(--imp-surface,#fff);color:var(--imp-fg,#111);border-radius:16px;padding:22px;width:min(380px,92vw);max-height:86vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,0.35);">' +
       '<div id="add-source-title" style="font-size:16px;font-weight:700;margin-bottom:3px;">Add</div>' +
-      '<div style="font-size:12px;color:var(--imp-fg-2,#777);margin-bottom:16px;" data-en="How do you want to add it?" data-ar="كيف تريد إضافته؟">How do you want to add it?</div>' +
+      '<div id="add-source-subtitle" style="font-size:12px;color:var(--imp-fg-2,#777);margin-bottom:16px;" data-en="How do you want to add it?" data-ar="كيف تريد إضافته؟">How do you want to add it?</div>' +
+      '<div id="as-bg" style="display:none;"></div>' +
       '<button class="_as-btn" id="add-source-upload-btn" onclick="addSourceChoose(\'upload\')"><span>⬆</span> <span class="_as-label" data-en="Upload your own" data-ar="ارفع ملفك">Upload your own</span></button>' +
       '<button class="_as-btn" id="add-source-library-btn" onclick="addSourceChoose(\'library\')"><span>▦</span> <span class="_as-label" data-en="Presets" data-ar="القوالب الجاهزة">Presets</span></button>' +
       '<div id="add-source-ai" style="display:none;margin-top:6px;">' +
@@ -7758,14 +7805,32 @@ function openAddSourcePrompt(id, kind) {
   document.getElementById('add-source-library').style.display = 'none';
   var note = document.getElementById('add-source-ai-note'); if (note) note.textContent = '';
   document.getElementById('add-source-overlay').style.display = 'flex';
-  addSourceChoose('library');   /* auto-expand the artist library on open */
+  var _isBg = (kind === 'pattern');
+  var _bgEl = document.getElementById('as-bg');
+  var _sub = document.getElementById('add-source-subtitle');
+  var _upBtn = document.getElementById('add-source-upload-btn');
+  var _libBtn = document.getElementById('add-source-library-btn');
+  if (_isBg) {                                  /* Background → Solid / Gradient / Presets picker */
+    if (_sub) _sub.style.display = 'none';
+    if (_upBtn) _upBtn.style.display = 'none';
+    if (_libBtn) _libBtn.style.display = 'none';
+    if (_bgEl) _bgEl.style.display = 'block';
+    document.getElementById('add-source-library').style.display = 'none';
+    _renderBgPicker('solid');
+  } else {
+    if (_sub) _sub.style.display = '';
+    if (_upBtn) _upBtn.style.display = 'flex';
+    if (_libBtn) _libBtn.style.display = 'flex';
+    if (_bgEl) _bgEl.style.display = 'none';
+    addSourceChoose('library');   /* auto-expand the artist library on open */
+  }
 }
 function _closeAddSourceOverlay() { var ov = document.getElementById('add-source-overlay'); if (ov) ov.style.display = 'none'; }
 function cancelAddSource() {
   _closeAddSourceOverlay();
   var L = getLayer(_addSrc.id);
   /* Only empty graphic/pattern placeholders are removed on cancel — a text layer keeps its default font. */
-  if (L && L.kind === 'sticker' && !L.img && !L.srcImg) deleteLayer(_addSrc.id);
+  if (L && L.kind === 'sticker' && !L.img && !L.srcImg && !L.fillType) deleteLayer(_addSrc.id);
   _addSrc.id = null;
 }
 function addSourceChoose(src) {
@@ -7781,6 +7846,74 @@ function addSourceAiGenerate() {
   var note = document.getElementById('add-source-ai-note');
   if (note) note.textContent = '✨ AI generation is coming soon. For now, upload your own or pick from the artist library.';
 }
+/* ── Background fill picker (Solid colour / Gradient) — shown when adding a Background ───── */
+var _bgPick = { hue: 8, g: { c1:'#FF7E5F', c2:'#FEB47B', type:'linear', angle:135 } };
+var BG_NEUTRALS = [ {c:'#FFFFFF',n:'White'}, {c:'#F4EFE6',n:'Cream'}, {c:'#9A9A9A',n:'Grey'}, {c:'#141414',n:'Black'}, {c:'#C8A36A',n:'Kraft'} ];
+var BG_GRADIENTS = [ {c1:'#FF7E5F',c2:'#FEB47B',n:'Sunset'}, {c1:'#2193B0',c2:'#6DD5ED',n:'Ocean'}, {c1:'#F4D03F',c2:'#C8A36A',n:'Gold'}, {c1:'#F8CDDA',c2:'#E27396',n:'Rose'}, {c1:'#0F2027',c2:'#2C5364',n:'Night'}, {c1:'#FFFFFF',c2:'#111111',n:'Mono'} ];
+function _bgHslHex(h,s,l){ s/=100; l/=100; var a=s*Math.min(l,1-l); var f=function(n){var k=(n+h/30)%12; var x=l-a*Math.max(-1,Math.min(k-3,Math.min(9-k,1))); return Math.round(255*x);}; var to=function(x){return ('0'+x.toString(16)).slice(-2);}; return '#'+to(f(0))+to(f(8))+to(f(4)); }
+function _bgShades(h){ return [ {c:_bgHslHex(h,60,86),n:'Pale'}, {c:_bgHslHex(h,68,70),n:'Soft'}, {c:_bgHslHex(h,80,55),n:'Vivid'}, {c:_bgHslHex(h,66,40),n:'Rich'}, {c:_bgHslHex(h,58,26),n:'Deep'} ]; }
+function _bgSwCell(color,label,handler,isCustom){
+  var inner = isCustom ? '<span style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(red,#ff0,#0f0,#0ff,#00f,#f0f,red);"></span><span style="position:absolute;inset:5px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;">+</span>' : '';
+  return '<div style="display:flex;flex-direction:column;align-items:center;">'
+    +'<button class="bg-sw" style="background:'+(isCustom?'transparent':color)+';" onclick="'+handler+'">'+inner+'</button>'
+    +'<span class="bg-sw-lbl">'+label+'</span></div>';
+}
+function _bgSolidHTML(){
+  var shades=_bgShades(_bgPick.hue);
+  var sw=_bgSwCell('','Custom','_bgCustomColor()',true) + shades.map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join('');
+  var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join('');
+  return '<input type="range" class="bg-hue" min="0" max="360" value="'+_bgPick.hue+'" oninput="_bgHue(this.value)">'
+    +'<div class="bg-sw-row">'+sw+'</div>'
+    +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:4px 2px 2px;" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
+    +'<div class="bg-sw-row">'+nu+'</div>'
+    +'<div style="font-size:11px;color:var(--imp-fg-3,#999);margin-top:4px;" data-en="Tap a colour to apply it." data-ar="انقر على لون لتطبيقه.">Tap a colour to apply it.</div>';
+}
+function _bgGradientHTML(){
+  var gp=_bgPick.g;
+  var prev=gp.type==='radial' ? ('radial-gradient(circle,'+gp.c1+','+gp.c2+')') : ('linear-gradient('+gp.angle+'deg,'+gp.c1+','+gp.c2+')');
+  var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgApplyGradientPreset('+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
+  return '<div class="bg-grad-prev" style="background:'+prev+';"></div>'
+    +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:0 2px 6px;" data-en="Presets" data-ar="قوالب">Presets</div>'
+    +'<div class="bg-sw-row">'+presets+'</div>'
+    +'<div style="display:flex;gap:16px;align-items:center;margin:12px 0 10px;">'
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--imp-fg-2,#666);"><span data-en="Start" data-ar="من">Start</span><input type="color" value="'+gp.c1+'" oninput="_bgGrad(\'c1\',this.value)" style="width:36px;height:28px;border:1px solid var(--imp-border,#ddd);border-radius:6px;padding:0;background:none;cursor:pointer;"></label>'
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--imp-fg-2,#666);"><span data-en="End" data-ar="إلى">End</span><input type="color" value="'+gp.c2+'" oninput="_bgGrad(\'c2\',this.value)" style="width:36px;height:28px;border:1px solid var(--imp-border,#ddd);border-radius:6px;padding:0;background:none;cursor:pointer;"></label>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;">'
+      +'<button class="as-tab'+(gp.type==='linear'?' on':'')+'" style="flex:0 0 auto;padding:7px 14px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgGrad(\'type\',\'linear\')" data-en="Linear" data-ar="خطي">Linear</button>'
+      +'<button class="as-tab'+(gp.type==='radial'?' on':'')+'" style="flex:0 0 auto;padding:7px 14px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgGrad(\'type\',\'radial\')" data-en="Radial" data-ar="شعاعي">Radial</button>'
+      +'<div style="flex:1;'+(gp.type==='radial'?'opacity:.35;pointer-events:none;':'')+'"><div style="font-size:10px;color:var(--imp-fg-3,#999);margin-bottom:2px;"><span data-en="Angle" data-ar="الزاوية">Angle</span> '+gp.angle+'&deg;</div><input type="range" min="0" max="360" step="5" value="'+gp.angle+'" oninput="_bgGrad(\'angle\',this.value)" style="width:100%;"></div>'
+    +'</div>'
+    +'<button class="_as-btn" style="justify-content:center;background:var(--imp-fg,#111);color:var(--imp-surface,#fff);border-color:var(--imp-fg,#111);" onclick="_bgApplyGradient()" data-en="Apply gradient" data-ar="تطبيق التدرّج">Apply gradient</button>';
+}
+function _renderBgPicker(tab){
+  var box=document.getElementById('as-bg'); if(!box) return;
+  tab=tab||'solid';
+  var lib=document.getElementById('add-source-library');
+  var tabs='<div style="display:flex;gap:6px;margin-bottom:14px;background:var(--imp-surface-2,#f3f3f3);padding:4px;border-radius:10px;">'
+    +'<button class="as-tab'+(tab==='solid'?' on':'')+'" onclick="_renderBgPicker(\'solid\')" data-en="Solid color" data-ar="لون سادة">Solid color</button>'
+    +'<button class="as-tab'+(tab==='gradient'?' on':'')+'" onclick="_renderBgPicker(\'gradient\')" data-en="Gradient" data-ar="تدرّج">Gradient</button>'
+    +'<button class="as-tab'+(tab==='presets'?' on':'')+'" onclick="_renderBgPicker(\'presets\')" data-en="Presets" data-ar="قوالب">Presets</button>'
+    +'</div>';
+  if(tab==='presets'){
+    box.innerHTML=tabs;
+    if(lib) lib.style.display='block';
+    if(typeof renderPresets==='function') renderPresets();
+  } else {
+    if(lib) lib.style.display='none';
+    box.innerHTML=tabs + (tab==='solid' ? _bgSolidHTML() : _bgGradientHTML())
+      + '<button onclick="addSourceChoose(\'upload\')" style="width:100%;margin-top:12px;background:none;border:none;color:var(--imp-fg-3,#999);font-size:11px;cursor:pointer;padding:6px;font-family:inherit;" data-en="Or upload an image…" data-ar="أو ارفع صورة…">Or upload an image…</button>';
+  }
+  if(typeof applyTranslations==='function') applyTranslations();
+}
+function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; _renderBgPicker('solid'); }
+function _bgGrad(k,v){ if(k==='angle') v=parseFloat(v)||0; _bgPick.g[k]=v; _renderBgPicker('gradient'); }
+function _bgCustomColor(){ var inp=document.createElement('input'); inp.type='color'; inp.value='#3366cc'; inp.addEventListener('input', function(){ _bgApplySolid(this.value); }); inp.click(); }
+function _bgApplySolid(color){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
+function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; _bgApplyGradient(); }
+function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='gradient'; L.gradient={c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
+function _bgFinishApply(L){ _closeAddSourceOverlay(); _addSrc.id=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof renderLayersList==='function') renderLayersList(); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof _autoEdit2dAfterUpload==='function') _autoEdit2dAfterUpload(); }
+function onBgFillColor(id, color){ var L=getLayer(id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); }
 /* ── Font upload + artist font library (fonts/ folder) ─────────────────────── */
 var _pendingFontLayerId = null;
 function pickLayerFontFile(id) {
