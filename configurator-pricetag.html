@@ -4777,28 +4777,32 @@ function _drawSocialIcon(ctx, platform, size, color, cx) {
 }
 /* Solid / gradient background fill — fills the atlas (the bake's clip/face-hide restricts it to
    the tag faces). Gradient spans the front (exterior) UV region so it reads full-range on the tag. */
-function _drawBgFill(ctx, L, ms, mode) {
-  var ue = layerBBox(L);
-  var fx = ue.x * ms, fy = ue.y * ms, fw = ue.w * ms, fh = ue.h * ms;
-  if (mode === 'mask') { ctx.fillStyle = '#ffffff'; ctx.fillRect(fx, fy, fw, fh); return; }
-  if (L.fillType === 'gradient' && L.gradient) {
-    var R = (typeof BAG_UV !== 'undefined' && BAG_UV.exterior) ? BAG_UV.exterior : { x: ue.x, y: ue.y, w: ue.w, h: ue.h };
-    var gx = R.x * ms, gy = R.y * ms, gw = R.w * ms, gh = R.h * ms;
-    var g = L.gradient, cx = gx + gw / 2, cy = gy + gh / 2, fill;
-    if (g.type === 'radial') {
-      fill = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(gw, gh) / 2 * 1.05);
-    } else {
-      var ang = ((g.angle || 0) - 90) * Math.PI / 180;   /* 0deg = top -> bottom */
-      var rr = (Math.abs(Math.cos(ang)) * gw + Math.abs(Math.sin(ang)) * gh) / 2;
-      fill = ctx.createLinearGradient(cx - Math.cos(ang) * rr, cy - Math.sin(ang) * rr, cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
-    }
-    fill.addColorStop(0, g.c1 || '#ffffff');
-    fill.addColorStop(1, g.c2 || '#000000');
-    ctx.fillStyle = fill;
+function _bgGradFill(ctx, g, x, y, w, h) {
+  var cx = x + w/2, cy = y + h/2, fill;
+  if (g.type === 'radial') {
+    fill = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) / 2 * 1.05);
   } else {
-    ctx.fillStyle = L.fillColor || '#ffffff';
+    var ang = ((g.angle || 0) + 90) * Math.PI / 180;   /* reversed so 0deg matches the mockup (was -90) */
+    var rr = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * h) / 2;
+    fill = ctx.createLinearGradient(cx - Math.cos(ang) * rr, cy - Math.sin(ang) * rr, cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
   }
-  ctx.fillRect(fx, fy, fw, fh);
+  fill.addColorStop(0, g.c1 || '#ffffff');
+  fill.addColorStop(1, g.c2 || '#000000');
+  return fill;
+}
+function _drawBgFill(ctx, L, ms, mode) {
+  /* Fill EACH face region (front = exterior, back = interior) identically, so the same colour /
+     gradient appears on both sides. The bake's face-hide then restricts it to the chosen Areas. */
+  var regions = [];
+  if (typeof BAG_UV !== 'undefined' && BAG_UV) { if (BAG_UV.exterior) regions.push(BAG_UV.exterior); if (BAG_UV.interior) regions.push(BAG_UV.interior); }
+  if (!regions.length) { var ue = layerBBox(L); regions.push({ x:ue.x, y:ue.y, w:ue.w, h:ue.h }); }
+  for (var i = 0; i < regions.length; i++) {
+    var R = regions[i], x = R.x*ms, y = R.y*ms, w = R.w*ms, h = R.h*ms;
+    if (mode === 'mask') ctx.fillStyle = '#ffffff';
+    else if (L.fillType === 'gradient' && L.gradient) ctx.fillStyle = _bgGradFill(ctx, L.gradient, x, y, w, h);
+    else ctx.fillStyle = L.fillColor || '#ffffff';
+    ctx.fillRect(x, y, w, h);
+  }
 }
 function drawLayerContent(ctx, L, ms, corr, mode) {
   ms = ms || 1;
@@ -5064,7 +5068,7 @@ function initBagBumpMap() {
 function buildArtworkMaskCanvas(L) {
   if (!L) return null;
   if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') return null;
-  if ((L.kind === 'logo' || L.kind === 'sticker') && (!L.img || !L.img.naturalWidth)) return null;
+  if ((L.kind === 'logo' || L.kind === 'sticker') && !(L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) && (!L.img || !L.img.naturalWidth)) return null;
   if (L.kind === 'text' && !L.content) return null;
 
   var ms = PBR_SIZE / 2048;
