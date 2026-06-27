@@ -7977,7 +7977,8 @@ function renderPresets(){
     _presets.cols=cols;
     if(!_presets.cols.length){ box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No presets in <b>/'+type+'</b> yet — add files under a collection folder (e.g. <b>'+type+'/Essentials/</b>) and regenerate the manifest.</div>'; return; }
     _presets.shown=_presets.cols.map(function(){ return 3; });
-    box.innerHTML=_presets.cols.map(function(c,i){
+    var _shapeHdr = (type === 'graphic' && typeof _shapeToolsHTML === 'function') ? _shapeToolsHTML() : '';
+    box.innerHTML=_shapeHdr + _presets.cols.map(function(c,i){
       return '<div class="preset-col">'+
         '<div style="font-size:11px;font-weight:700;color:var(--imp-fg,#111);margin:'+(i?16:2)+'px 0 7px;letter-spacing:0.02em;">'+escapeHTML(_collDisplayName(c.name))+'</div>'+
         '<div class="preset-grid'+(type==='text'?' preset-grid-col':'')+'" id="pg-'+i+'"></div>'+
@@ -12426,6 +12427,106 @@ function _hitTagCorner(sp){
       if(Math.hypot(sp.x-h.x,sp.y-h.y)<=R) return { region:regs[r][0], signU:(cs[i][0]>cxA?1:-1), signV:(cs[i][1]>cyA?1:-1) }; } }
   return null;
 }
+/* ── Custom shape tool — draw a Polygon or freeform Lasso in the 2D editor → a recolourable sticker ── */
+var SHAPE = { active:false, mode:null, pts:[], _hover:null, _drawing:false };
+function _shapeToolsHTML(){
+  return '<div class="preset-col"><div style="font-size:11px;font-weight:700;color:var(--imp-fg,#111);margin:2px 0 7px;letter-spacing:0.02em;" data-en="Custom shape" data-ar="شكل مخصص">Custom shape</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;">'
+      +'<button class="_as-btn" style="justify-content:center;margin:0;" onclick="_enterShapeMode(\'polygon\')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l8 5-3 9H7L4 8z"/></svg> <span data-en="Polygon" data-ar="مضلّع">Polygon</span></button>'
+      +'<button class="_as-btn" style="justify-content:center;margin:0;" onclick="_enterShapeMode(\'lasso\')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11c0-4 4-7 9-7s9 3 9 7-4 7-9 7c-1.6 0-2.5.6-2.5 2"/><circle cx="9.5" cy="20" r="1.6"/></svg> <span data-en="Lasso" data-ar="حر">Lasso</span></button>'
+    +'</div></div>';
+}
+function _a2screen(ax, ay){ return { x:ax*a2d.zoom+a2d.panX, y:a2d.canvas.height-(ay*a2d.zoom+a2d.panY) }; }
+function _shapeEnsureOverlay(){
+  var stage=document.getElementById('atlas2d'); if(!stage||!a2d.canvas) return null;
+  var ov=document.getElementById('shape-overlay');
+  if(!ov){ ov=document.createElement('canvas'); ov.id='shape-overlay'; ov.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;'; stage.appendChild(ov); }
+  if(ov.width!==a2d.canvas.width) ov.width=a2d.canvas.width;
+  if(ov.height!==a2d.canvas.height) ov.height=a2d.canvas.height;
+  return ov;
+}
+function _shapeRenderOverlay(){
+  var ov=_shapeEnsureOverlay(); if(!ov) return; var c=ov.getContext('2d'); c.clearRect(0,0,ov.width,ov.height);
+  if(!SHAPE.active || !SHAPE.pts.length) return;
+  var pts=SHAPE.pts.map(function(p){ return _a2screen(p.x,p.y); });
+  if(SHAPE.pts.length>1){
+    c.save(); c.globalAlpha=0.18; c.fillStyle='#c8a96e'; c.beginPath();
+    pts.forEach(function(p,i){ if(i===0)c.moveTo(p.x,p.y); else c.lineTo(p.x,p.y); }); c.closePath(); c.fill(); c.restore();
+  }
+  c.lineWidth=Math.max(1.5,2*a2d.dpr); c.strokeStyle='#c8a96e'; c.beginPath();
+  pts.forEach(function(p,i){ if(i===0)c.moveTo(p.x,p.y); else c.lineTo(p.x,p.y); });
+  if(SHAPE.mode==='polygon' && SHAPE._hover){ var hv=_a2screen(SHAPE._hover.x,SHAPE._hover.y); c.lineTo(hv.x,hv.y); }
+  if(SHAPE.mode==='lasso') c.closePath();
+  c.stroke();
+  if(SHAPE.mode==='polygon'){ pts.forEach(function(p,i){ c.beginPath(); c.arc(p.x,p.y,(i===0?6:4)*a2d.dpr,0,6.2832); c.fillStyle=(i===0?'#c8a96e':'#fff'); c.fill(); c.lineWidth=1.5*a2d.dpr; c.strokeStyle='#c8a96e'; c.stroke(); }); }
+}
+function _shapeDown(sp){
+  var ap=_s2a(sp.x,sp.y);
+  if(SHAPE.mode==='lasso'){ SHAPE.pts=[ap]; SHAPE._drawing=true; _shapeRenderOverlay(); return; }
+  if(SHAPE.pts.length>=3){ var f=_a2screen(SHAPE.pts[0].x,SHAPE.pts[0].y), cc=_a2screen(ap.x,ap.y); if(Math.hypot(f.x-cc.x,f.y-cc.y)<=15*a2d.dpr){ _shapeFinalize(); return; } }
+  SHAPE.pts.push(ap); SHAPE._hover=ap; _shapeRenderOverlay(); _shapeBar();
+}
+function _shapeMove(sp){
+  var ap=_s2a(sp.x,sp.y);
+  if(SHAPE.mode==='lasso'){ if(SHAPE._drawing){ var last=SHAPE.pts[SHAPE.pts.length-1]; if(!last||Math.hypot(ap.x-last.x,ap.y-last.y)>=3){ SHAPE.pts.push(ap); _shapeRenderOverlay(); } } return; }
+  SHAPE._hover=ap; _shapeRenderOverlay();
+}
+function _shapeUp(){ if(SHAPE.mode==='lasso' && SHAPE._drawing){ SHAPE._drawing=false; _shapeFinalize(); } }
+function _enterShapeMode(mode){
+  if(typeof _closeAddSourceOverlay==='function') _closeAddSourceOverlay(); _addSrc.id=null;
+  SHAPE.active=true; SHAPE.mode=mode; SHAPE.pts=[]; SHAPE._hover=null; SHAPE._drawing=false;
+  if(typeof viewMode!=='undefined' && viewMode!=='2d' && typeof setViewMode==='function') setViewMode('2d');
+  if(typeof a2d!=='undefined') a2d.sel=null;
+  _shapeBar(); setTimeout(_shapeRenderOverlay, 60);
+}
+function _shapeExit(){ SHAPE.active=false; SHAPE.pts=[]; SHAPE._hover=null; SHAPE._drawing=false; var ov=document.getElementById('shape-overlay'); if(ov){ ov.getContext('2d').clearRect(0,0,ov.width,ov.height); } var bar=document.getElementById('shape-bar'); if(bar) bar.style.display='none'; }
+function _shapeCancel(){ _shapeExit(); if(typeof drawBagTexture==='function') drawBagTexture(); }
+function _shapeFinalize(){
+  if(SHAPE.pts.length<3){ _shapeCancel(); return; }
+  var pts=SHAPE.pts.slice(), minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  pts.forEach(function(p){ minX=Math.min(minX,p.x); minY=Math.min(minY,p.y); maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y); });
+  var w=maxX-minX, h=maxY-minY; if(w<6||h<6){ _shapeCancel(); return; }
+  var pad=4, sc=document.createElement('canvas'); sc.width=Math.ceil(w+pad*2); sc.height=Math.ceil(h+pad*2);
+  var scx=sc.getContext('2d'); scx.beginPath();
+  pts.forEach(function(p,i){ var x=p.x-minX+pad, y=p.y-minY+pad; if(i===0)scx.moveTo(x,y); else scx.lineTo(x,y); });
+  scx.closePath(); scx.fillStyle='#6B7280'; scx.fill();
+  var cx=minX-pad+sc.width/2, cy=minY-pad+sc.height/2, scW=sc.width;
+  var dataUrl; try { dataUrl=sc.toDataURL(); } catch(e){ _shapeCancel(); return; }
+  var img=new Image();
+  img.onload=function(){
+    var id=BAG.artwork.nextId++, sref=(typeof _layerScaleRef==='function')?_layerScaleRef():982, _pad=(typeof ATLAS_PAD!=='undefined')?ATLAS_PAD:0;
+    var allAreas={ front:true, back:true, left:true, right:true, bottom:true, interior:true };
+    var L={ id:id, kind:'sticker', tiled:false, patStack:'vertical', gap:0, density:6, feather:0, cropT:0,cropB:0,cropL:0,cropR:0, fade:0, cropBoxL:0,cropBoxR:0,cropBoxT:0,cropBoxB:0, isDefault:false, visible:true,
+      img:img, srcImg:img, fileName:'Custom shape', isCustomShape:true,
+      scale:Math.max(2,Math.min(200, scW/sref*100)), scaleH:Math.max(2,Math.min(200, scW/sref*100)),
+      posU:(cx-_pad)/2048*100, posV:(cy-_pad)/2048*100, rotation:0,
+      color:'#FFFFFF', swatchName:'Original', hue:0, customHex:'#FFFFFF', finish:'none', roughness:0.05, metalness:0.10, transmission:0.00, extrude:0.0, areas:allAreas,
+      recolorOn:true, recolor:{ extracted:[], targets:[], hue:0, sat:100, colorCount:'auto' }, cutCanvas:null, opacity:100, faceHide:{handles:true} };
+    BAG.artwork.layers.unshift(L);
+    _shapeExit();
+    var _ll=document.getElementById('layers-list'); if(_ll) _ll.setAttribute('data-expanded', String(id));
+    try { if(typeof _rebuildStickerCutAndRecolor==='function') _rebuildStickerCutAndRecolor(L); } catch(e){}
+    if(typeof renderLayersList==='function') renderLayersList();
+    if(typeof drawBagTexture==='function') drawBagTexture();
+    if(typeof updatePricing==='function') updatePricing();
+    if(typeof pushHistory==='function') pushHistory();
+    if(typeof checkCart==='function') checkCart();
+  };
+  img.onerror=function(){ _shapeCancel(); };
+  img.src=dataUrl;
+}
+function _shapeBar(){
+  var bar=document.getElementById('shape-bar');
+  if(!bar){
+    var st=document.createElement('style');
+    st.textContent='#shape-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:75;background:var(--imp-surface,#fff);border:1px solid var(--imp-border,#e5e5e5);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.18);padding:10px 14px;display:none;align-items:center;gap:12px;max-width:94vw;font-family:inherit;}#shape-bar .sb-hint{font-size:12px;color:var(--imp-fg-2,#555);}#shape-bar button{padding:8px 16px;border-radius:8px;border:1px solid var(--imp-border,#ddd);background:var(--imp-surface-2,#f5f5f5);color:var(--imp-fg,#111);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}#shape-bar .sb-done{background:var(--imp-fg,#111);color:var(--imp-surface,#fff);border-color:var(--imp-fg,#111);}';
+    document.head.appendChild(st); bar=document.createElement('div'); bar.id='shape-bar'; document.body.appendChild(bar);
+  }
+  if(!SHAPE.active){ bar.style.display='none'; return; }
+  var hint = SHAPE.mode==='lasso' ? 'Drag on the tag to draw a shape, then release.' : ('Tap to add points'+(SHAPE.pts.length>=3?' · tap the first point or Finish':'')+' ('+SHAPE.pts.length+')');
+  bar.innerHTML='<span class="sb-hint">'+hint+'</span>'+(SHAPE.mode==='polygon'?'<button class="sb-done" onclick="_shapeFinalize()">Finish</button>':'')+'<button onclick="_shapeCancel()">Cancel</button>';
+  bar.style.display='flex';
+}
 function _atlasBind(c){
   c.addEventListener('pointerdown', _aDown);
   c.addEventListener('pointermove', _aMove);
@@ -12441,6 +12542,7 @@ function _aDown(e){
   if (typeof _hideFaceBar==='function') _hideFaceBar();   /* any new press closes the face bar */
   var ids=Object.keys(a2d.pointers);
   if (ids.length===2){ var p=a2d.pointers[ids[0]], q=a2d.pointers[ids[1]]; a2d.pinchD0=Math.hypot(p.x-q.x,p.y-q.y)||1; a2d.pinchZ0=a2d.zoom; a2d.pinchMid={x:(p.x+q.x)/2,y:(p.y+q.y)/2}; a2d.op='pinch'; return; }
+  if (typeof SHAPE!=='undefined' && SHAPE.active){ _shapeDown(sp); return; }   /* custom-shape mode: place a vertex / draw */
   var hh=_hitHandle(sp);
   if (hh){ a2d.op=hh; _a2dDragging=true;
     var _selR=a2d.sel, _aspR=(_selR.img&&_selR.img.naturalWidth)?_selR.img.naturalWidth/_selR.img.naturalHeight:1;
@@ -12493,6 +12595,7 @@ function _aDown(e){
 }
 function _aMove(e){
   var sp=_evPos(e);
+  if (typeof SHAPE!=='undefined' && SHAPE.active){ _shapeMove(sp); return; }
   if (!a2d.op){
     /* hover cursor feedback */
     var cur='grab';
@@ -12632,6 +12735,7 @@ function _aMove(e){
 function _aUp(e){
   try { a2d.canvas.releasePointerCapture(e.pointerId); } catch(_){}
   delete a2d.pointers[e.pointerId];
+  if (typeof SHAPE!=='undefined' && SHAPE.active){ _shapeUp(); return; }
   var ov=document.getElementById('atlas2d'); if(ov) ov.classList.remove('dragging');
   var endedOp=a2d.op;
   /* A click on a locked layer just SELECTS it (so its toolbar — incl. the lock toggle — shows);
