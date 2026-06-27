@@ -12141,13 +12141,24 @@ function _pvReset(){ _pvNav={zoom:1,x:0,y:0}; _pvDrag=null; _pvApply(); }
     if (typeof viewMode==='undefined' || viewMode!=='preview') return;
     e.preventDefault();
     var cvs=document.getElementById('tag-mockup'); if(!cvs) return;
-    var nz=Math.max(1, Math.min(8, _pvNav.zoom*Math.exp(-e.deltaY*0.0015)));
-    _pvNav.zoom=nz;                                                                  /* scale grows from the bottom-centre origin */
-    if (nz<=1.001){ _pvNav.x=0; _pvNav.y=0; }                                        /* snap back at 1x */
+    var oldZoom=_pvNav.zoom;
+    var nz=Math.max(1, Math.min(8, oldZoom*Math.exp(-e.deltaY*0.0015)));
+    if (Math.abs(nz-oldZoom)<1e-4) return;
+    if (nz<=1.001){ _pvNav.zoom=1; _pvNav.x=0; _pvNav.y=0; _pvApply(); return; }      /* snap back at 1x */
+    /* Zoom toward the cursor: keep the point under the pointer fixed. The transform-origin is the
+       canvas bottom-centre, whose live screen position is the current rect's bottom-centre. The
+       translate(x,y) is applied after scale, so a screen-px pan delta compensates the zoom shift. */
+    var r=cvs.getBoundingClientRect(), Ox=r.left+r.width/2, Oy=r.top+r.height, f=nz/oldZoom;
+    _pvNav.x += (e.clientX-Ox)*(1-f);
+    _pvNav.y += (e.clientY-Oy)*(1-f);
+    _pvNav.zoom=nz;
     _pvApply();
   }, { passive:false });
   _pvStage.addEventListener('pointerdown', function(e){
     if (typeof viewMode==='undefined' || viewMode!=='preview') return;
+    /* Don't start a pan/capture on overlay UI (Edit/Preview toggle, carousel arrows/dots, any
+       button) — pointer-capture would otherwise swallow their click while the mockup is zoomed. */
+    if (e.target && e.target.closest && e.target.closest('#mode-toggle, #mockup-carousel, .mk-arrow, .mk-dot, .mk-dots, button, a, input, select, label')) return;
     _pvDrag={ x:e.clientX, y:e.clientY, px:_pvNav.x, py:_pvNav.y, swipe:(_pvNav.zoom<=1.01) }; _pvApply();
     if (!_pvDrag.swipe){ try{ _pvStage.setPointerCapture(e.pointerId); }catch(_){} }   /* capture only for pan, so arrow/dot taps still fire */
   });
