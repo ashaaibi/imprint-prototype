@@ -5095,9 +5095,17 @@ function buildArtworkMaskCanvas(L) {
   mCtx.imageSmoothingEnabled = false;
   mCtx.filter = 'contrast(1000%)';
 
-  /* Single placement, clipped to the layer's checked faces (matches the visible draw). */
+  /* Single placement, clipped to the layer's checked faces (matches the visible draw).
+     Fill backgrounds are the exception: _drawBgFill self-places into the right face
+     region(s) per _bgArea, while clipToLayerAreas clips to a SINGLE face (exterior for a
+     background, which has no L.surface) — that wrongly dropped the back-face mask, so the
+     finish never reached the back. Skip the area clip for fill backgrounds. */
   mCtx.save();
-  if (clipToLayerAreas(mCtx, L, ms) > 0) drawLayerContent(mCtx, L, ms, corr, 'mask');
+  if (L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) {
+    drawLayerContent(mCtx, L, ms, corr, 'mask');
+  } else if (clipToLayerAreas(mCtx, L, ms) > 0) {
+    drawLayerContent(mCtx, L, ms, corr, 'mask');
+  }
   mCtx.restore();
   return mc;
 }
@@ -7845,7 +7853,14 @@ function addSourceAiGenerate() {
 /* ── Background fill picker (Solid colour / Gradient) — shown when adding a Background ───── */
 var _bgPick = { hue: 8, g: { c1:'#FF7E5F', c2:'#FEB47B', type:'linear', angle:135 } };
 var BG_NEUTRALS = [ {c:'#FFFFFF',n:'White'}, {c:'#F4EFE6',n:'Cream'}, {c:'#9A9A9A',n:'Grey'}, {c:'#141414',n:'Black'}, {c:'#C8A36A',n:'Kraft'} ];
-var BG_GRADIENTS = [ {c1:'#FF7E5F',c2:'#FEB47B',n:'Sunset'}, {c1:'#2193B0',c2:'#6DD5ED',n:'Ocean'}, {c1:'#F4D03F',c2:'#C8A36A',n:'Gold'}, {c1:'#F8CDDA',c2:'#E27396',n:'Rose'}, {c1:'#0F2027',c2:'#2C5364',n:'Night'}, {c1:'#FFFFFF',c2:'#111111',n:'Mono'} ];
+var BG_GRADIENTS = [
+  {c1:'#FF7E5F',c2:'#FEB47B',n:'Sunset'}, {c1:'#2193B0',c2:'#6DD5ED',n:'Ocean'}, {c1:'#F4D03F',c2:'#C8A36A',n:'Gold'},
+  {c1:'#F8CDDA',c2:'#E27396',n:'Rose'},   {c1:'#0F2027',c2:'#2C5364',n:'Night'}, {c1:'#FFFFFF',c2:'#111111',n:'Mono'},
+  {c1:'#43E97B',c2:'#38F9D7',n:'Mint'},   {c1:'#FF9A8B',c2:'#FF6A88',n:'Coral'}, {c1:'#DA22FF',c2:'#9733EE',n:'Grape'},
+  {c1:'#56CCF2',c2:'#2F80ED',n:'Sky'},    {c1:'#F12711',c2:'#F5AF19',n:'Flame'}, {c1:'#0BA360',c2:'#3CBA92',n:'Forest'},
+  {c1:'#13547A',c2:'#80D0C7',n:'Lagoon'}, {c1:'#5F2C82',c2:'#49A09D',n:'Plum'},  {c1:'#EB3349',c2:'#F45C43',n:'Cherry'},
+  {c1:'#A8FF78',c2:'#78FFD6',n:'Lime'},   {c1:'#BDC3C7',c2:'#2C3E50',n:'Slate'}, {c1:'#C9A26A',c2:'#5C3A21',n:'Bronze'}
+];
 function _bgHslHex(h,s,l){ s/=100; l/=100; var a=s*Math.min(l,1-l); var f=function(n){var k=(n+h/30)%12; var x=l-a*Math.max(-1,Math.min(k-3,Math.min(9-k,1))); return Math.round(255*x);}; var to=function(x){return ('0'+x.toString(16)).slice(-2);}; return '#'+to(f(0))+to(f(8))+to(f(4)); }
 function _bgShades(h){ return [ {c:_bgHslHex(h,60,86),n:'Pale'}, {c:_bgHslHex(h,68,70),n:'Soft'}, {c:_bgHslHex(h,80,55),n:'Vivid'}, {c:_bgHslHex(h,66,40),n:'Rich'}, {c:_bgHslHex(h,58,26),n:'Deep'} ]; }
 function _bgSwCell(color,label,handler,isCustom){
