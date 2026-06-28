@@ -4858,6 +4858,11 @@ function _drawSocialIcon(ctx, platform, size, color, cx) {
    the tag faces). Gradient spans the front (exterior) UV region so it reads full-range on the tag. */
 /* A solid/gradient background is a self-placing colour fill, not an image layer. */
 function isFillBackground(L) { return !!(L && L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')); }
+/* One gradient model: any shape -> {type, angle, stops:[{c,p}] sorted by p}. Synthesizes two
+   stops from legacy c1/c2/p1/p2 so gradients saved before multi-stop support still read. */
+function normalizeGradient(g){ g=g||{}; var st=(g.stops && g.stops.length>=2) ? g.stops.map(function(s){ return {c:s.c||'#ffffff', p:Math.max(0,Math.min(100,s.p||0))}; }) : [{c:g.c1||'#ffffff', p:(g.p1!=null?g.p1:0)}, {c:g.c2||'#000000', p:(g.p2!=null?g.p2:100)}]; st.sort(function(a,b){ return a.p-b.p; }); return {type:g.type||'linear', angle:g.angle||0, stops:st}; }
+function _gradStopStr(g){ return normalizeGradient(g).stops.map(function(s){ return s.c+' '+Math.round(s.p)+'%'; }).join(','); }
+function _gradCss(g){ var n=normalizeGradient(g); return (n.type==='radial' ? 'radial-gradient(circle,' : 'linear-gradient('+(n.angle||135)+'deg,')+_gradStopStr(g)+')'; }
 function _bgGradFill(ctx, g, x, y, w, h) {
   var cx = x + w/2, cy = y + h/2, fill;
   if (g.type === 'radial') {
@@ -4867,10 +4872,7 @@ function _bgGradFill(ctx, g, x, y, w, h) {
     var rr = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * h) / 2;
     fill = ctx.createLinearGradient(cx - Math.cos(ang) * rr, cy - Math.sin(ang) * rr, cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
   }
-  var st = (g.stops && g.stops.length >= 2) ? g.stops.slice()
-         : [{c:(g.c1||'#ffffff'), p:(g.p1!=null?g.p1:0)}, {c:(g.c2||'#000000'), p:(g.p2!=null?g.p2:100)}];
-  st.sort(function(a, b){ return a.p - b.p; });
-  st.forEach(function(s){ fill.addColorStop(Math.max(0, Math.min(1, (s.p||0)/100)), s.c || '#ffffff'); });
+  normalizeGradient(g).stops.forEach(function(s){ fill.addColorStop(Math.max(0, Math.min(1, s.p/100)), s.c); });
   return fill;
 }
 function _drawBgFill(ctx, L, ms, mode) {
@@ -6408,9 +6410,7 @@ function layerAutoName(L) {
 function layerThumbHTML(L) {
   if (L.kind === 'logo' || L.kind === 'sticker') {
     if (L.isBackground && L.fillType) {
-      var _fp = (L.fillType === 'gradient' && L.gradient)
-        ? (L.gradient.type === 'radial' ? ('radial-gradient(circle,' + L.gradient.c1 + ',' + L.gradient.c2 + ')') : ('linear-gradient(' + (L.gradient.angle||135) + 'deg,' + L.gradient.c1 + ',' + L.gradient.c2 + ')'))
-        : (L.fillColor || '#ffffff');
+      var _fp = (L.fillType === 'gradient' && L.gradient) ? _gradCss(L.gradient) : (L.fillColor || '#ffffff');
       return '<span style="display:block;width:100%;height:100%;border-radius:5px;background:' + _fp + ';"></span>';
     }
     if (L.img && L.img.src) return '<img src="' + L.img.src + '" alt="">';
@@ -7945,15 +7945,19 @@ function _bgSwCell(color,label,handler,isCustom){
     +'<span class="bg-sw-lbl">'+label+'</span></div>';
 }
 function _bgSolidShadesHTML(){ return _bgShades(_bgPick.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join(''); }
+/* Shared swatch-row builders used by both the popup and the embedded picker. onclickFor
+   returns the inline handler string for each cell, so the two surfaces only differ by it. */
+function _bgNeutralsRow(onclickFor){ return BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,onclickFor(s.c)); }).join(''); }
+function _bgGradPresetsRow(onclickFor){ return BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="'+onclickFor(i)+'"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join(''); }
 function _bgSolidHTML(){
-  var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join('');
+  var nu=_bgNeutralsRow(function(c){ return "_bgApplySolid('"+c+"')"; });
   return '<input type="range" class="bg-hue" aria-label="Hue" min="0" max="360" value="'+_bgPick.hue+'" oninput="_bgHue(this.value)">'
     +'<div class="bg-sw-row" id="as-bg-shades">'+_bgSolidShadesHTML()+'</div>'
     +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
     +'<div class="bg-sw-row">'+nu+'</div>';
 }
 function _bgGradientHTML(){
-  var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgApplyGradientPreset('+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
+  var presets=_bgGradPresetsRow(function(i){ return '_bgApplyGradientPreset('+i+')'; });
   return '<div class="bg-sw-row">'+presets+'</div>';
 }
 function _renderBgPicker(){
@@ -7971,7 +7975,7 @@ function _renderBgPicker(){
 }
 function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; var box=document.getElementById('as-bg-shades'); if(box){ box.innerHTML=_bgSolidShadesHTML(); if(typeof applyTranslations==='function') applyTranslations(); } }function _bgApplySolid(color){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
 function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; if(typeof _bgUI!=='undefined') _bgUI.g={ stops:[{c:g.c1,p:0},{c:g.c2,p:100}], type:'linear', angle:135 }; _bgApplyGradient(); }
-function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; var st=[{c:_bgPick.g.c1,p:0},{c:_bgPick.g.c2,p:100}]; L.fillType='gradient'; L.gradient={stops:st,c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle,p1:0,p2:100}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
+function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='gradient'; L.gradient={ type:_bgPick.g.type, angle:_bgPick.g.angle, stops:[{c:_bgPick.g.c1, p:0},{c:_bgPick.g.c2, p:100}] }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
 function _bgFinishApply(L){ _closeAddSourceOverlay(); _addSrc.id=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof renderLayersList==='function') renderLayersList(); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof _autoEdit2dAfterUpload==='function') _autoEdit2dAfterUpload(); }
 function onBgFillColor(id, color){ var L=getLayer(id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); }
 /* ── Embedded background panel — stacked sections (Areas · Finish · Opacity · Color · Gradient ·
@@ -7980,11 +7984,9 @@ var _bgUI = { hue:8, g:{ stops:[{c:'#FF7E5F',p:0},{c:'#FEB47B',p:100}], type:'li
 function _bgiSolidRow(id){ return _bgSwCell('','Custom','_bgiCustom('+id+')',true) + _bgShades(_bgUI.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join(''); }
 /* ── N-stop gradient helpers ─────────────────────────────────────────────── */
 function _bgiStops(gp){ if(!gp.stops || gp.stops.length<2){ gp.stops=[{c:(gp.c1||'#FF7E5F'),p:(gp.p1!=null?gp.p1:0)},{c:(gp.c2||'#FEB47B'),p:(gp.p2!=null?gp.p2:100)}]; } return gp.stops; }
-function _bgiSortedStops(gp){ return _bgiStops(gp).slice().sort(function(a,b){return a.p-b.p;}); }
-function _bgiStopStr(gp){ return _bgiSortedStops(gp).map(function(s){return s.c+' '+Math.round(s.p)+'%';}).join(','); }
-function _bgiBarCss(gp){ return 'linear-gradient(90deg,'+_bgiStopStr(gp)+')'; }
-function _bgiTypeIconCss(gp,type){ return (type==='radial'?'radial-gradient(circle at 50% 50%,':'linear-gradient(135deg,')+_bgiStopStr(gp)+')'; }
-function _bgiColorAt(gp,p){ var s=_bgiSortedStops(gp); if(p<=s[0].p) return s[0].c; if(p>=s[s.length-1].p) return s[s.length-1].c; for(var i=0;i<s.length-1;i++){ if(p>=s[i].p && p<=s[i+1].p){ var span=(s[i+1].p-s[i].p)||1; return _lerpHexStr(s[i].c,s[i+1].c,(p-s[i].p)/span); } } return s[0].c; }
+function _bgiBarCss(gp){ return 'linear-gradient(90deg,'+_gradStopStr(gp)+')'; }
+function _bgiTypeIconCss(gp,type){ return (type==='radial'?'radial-gradient(circle at 50% 50%,':'linear-gradient(135deg,')+_gradStopStr(gp)+')'; }
+function _bgiColorAt(gp,p){ var s=normalizeGradient(gp).stops; if(p<=s[0].p) return s[0].c; if(p>=s[s.length-1].p) return s[s.length-1].c; for(var i=0;i<s.length-1;i++){ if(p>=s[i].p && p<=s[i+1].p){ var span=(s[i+1].p-s[i].p)||1; return _lerpHexStr(s[i].c,s[i+1].c,(p-s[i].p)/span); } } return s[0].c; }
 function _bgiEnsureCSS(){
   if(document.getElementById('bgi-style')) return;
   var st=document.createElement('style'); st.id='bgi-style';
@@ -8039,7 +8041,7 @@ function _bgAreasVisual(id){
   return '<div class="bgi-areas">'+btn('both','Both','كلاهما',true,true)+btn('front','Front','الأمام',true,false)+btn('back','Back','الخلف',false,true)+'</div>';
 }
 function _bgiColorBlock(id){
-  var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join('');
+  var nu=_bgNeutralsRow(function(c){ return "_bgiApplySolid("+id+",'"+c+"')"; });
   return '<input type="range" class="bg-hue" aria-label="Hue" min="0" max="360" value="'+_bgUI.hue+'" oninput="_bgiHueShades('+id+',this.value)">'
     +'<div class="bg-sw-row" id="bgi-shades-'+id+'">'+_bgiSolidRow(id)+'</div>'
     +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
@@ -8059,7 +8061,7 @@ function _bgiGradientBlock(id){
   var rad='<button class="bgi-type'+(gp.type==='radial'?' on':'')+'" onclick="_bgiSetType('+id+',\'radial\')"><span class="bgi-type-ic" style="background:'+_bgiTypeIconCss(gp,'radial')+';"></span><span class="bgi-type-lbl" data-en="Radial" data-ar="شعاعي">Radial</span></button>';
   var typeRow='<div class="bgi-type-row">'+lin+rad+'</div>';
   var angRow='<div class="bgi-angle-row'+(gp.type==='radial'?' bgi-angle-dis':'')+'" id="bgi-angwrap-'+id+'"><div class="bgi-dial" id="bgi-dial-'+id+'" title="Drag to set the gradient angle"><div class="bgi-dial-ptr" id="bgi-dialptr-'+id+'" style="transform:rotate('+gp.angle+'deg);"></div><div class="bgi-dial-hub"></div></div><div><div class="bgi-angle-cap" data-en="Angle" data-ar="الزاوية">Angle</div><div class="bgi-angle-val" id="bgi-ang-'+id+'">'+gp.angle+'°</div></div></div>';
-  var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgiGradPreset('+id+','+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
+  var presets=_bgGradPresetsRow(function(i){ return '_bgiGradPreset('+id+','+i+')'; });
   return editor+typeRow+angRow+'<div class="bgi-sub" data-en="Gradient presets" data-ar="تدرّجات جاهزة">Gradient presets</div><div class="bg-sw-row">'+presets+'</div>';
 }
 function _bgiPresetFocus(id){ if(typeof _addSrc!=='undefined'&&_addSrc){ _addSrc.id=id; _addSrc.kind='pattern'; } }
@@ -8106,7 +8108,7 @@ function _bgiSyncTypeIcons(id){
 }
 function _bgiGradPreset(id, i){ var g=BG_GRADIENTS[i]; if(!g)return; _bgUI.g.stops=[{c:g.c1,p:0},{c:g.c2,p:100}]; _bgiApplyGradient(id); _bgiRefreshStops(id); _bgiSyncGradientUI(id); }
 function _bgiSetType(id, t){ _bgUI.g.type=t; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }
-function _bgiApplyGradient(id){ var L=getLayer(id); if(!L)return; var gp=_bgUI.g; var stops=_bgiStops(gp).map(function(s){return {c:s.c,p:Math.round(s.p)};}); var sorted=stops.slice().sort(function(a,b){return a.p-b.p;}); L.fillType='gradient'; L.gradient={ stops:stops, type:gp.type, angle:gp.angle, c1:sorted[0].c, p1:sorted[0].p, c2:sorted[sorted.length-1].c, p2:sorted[sorted.length-1].p }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
+function _bgiApplyGradient(id){ var L=getLayer(id); if(!L)return; var gp=_bgUI.g; L.fillType='gradient'; L.gradient={ type:gp.type, angle:gp.angle, stops:_bgiStops(gp).map(function(s){return {c:s.c, p:Math.round(s.p)};}) }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
 function _bgiSyncGradientUI(id){
   var gp=_bgUI.g, root=document.getElementById('bg-pick-'+id); if(!root) return;
   var bar=document.getElementById('bgi-prev-'+id); if(bar) bar.style.background=_bgiBarCss(gp);
