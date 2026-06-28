@@ -7918,6 +7918,8 @@ function _bgiEnsureCSS(){
   var st=document.createElement('style'); st.id='bgi-style';
   st.textContent=
      '.bg-inline{margin:6px 0 2px;}'
+    /* reset native button chrome: a <button> with appearance:auto clamps border-radius:50% into a squircle — kill it so the colour/gradient swatches render as true circles (both the embedded panel and the Add-background popup) */
+    +'.bg-inline button,#as-bg button{-webkit-appearance:none;appearance:none;}'
     +'.bgi-sec-hd{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-2,#777);margin:18px 2px 9px;}'
     +'.bgi-sec-hd:first-child{margin-top:4px;}'
     +'.bgi-sub{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:10px 2px 4px;}'
