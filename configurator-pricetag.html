@@ -29,6 +29,11 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Register --sheet-y as a real typed property so changing it actually repaints (and can smoothly
+       transition) the sheet's transform. As a plain/unregistered custom property some engines don't
+       invalidate the transform when it changes, which left the bottom sheet frozen in place. */
+    @property --sheet-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+
     :root {
       /* Light mode tokens */
       --imp-bg:         #FBFAF7;
@@ -308,9 +313,9 @@
     html[dir="rtl"] .canvas-stage.mode-2d #three-canvas { right: auto; left: 16px; }
     /* ── Photoreal "Preview" mockup ── */
     #tag-mockup { position:absolute; left:50%; bottom:4%; transform:translateX(-50%); transform-origin:50% 100%; max-width:92%; max-height:92%; display:none; z-index:5; pointer-events:none; border-radius:6px; box-shadow:0 18px 50px rgba(0,0,0,0.18); }   /* anchored bottom-centre → scales from the bottom */
-    .canvas-stage.mode-preview { overflow:hidden; }   /* clip the zoomed/panned mockup to the stage */
+    .canvas-stage.mode-preview { overflow:hidden; touch-action:none; }   /* clip the zoomed/panned mockup; touch-action:none lets horizontal swipes drive the carousel instead of the browser hijacking them */
     .canvas-stage.mode-preview #tag-mockup { display:block; will-change:transform; }
-    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:124%; max-width:none; height:auto; max-height:none; left:50%; top:auto; bottom:12vh; transform:translateX(-50%); transform-origin:50% 100%; border-radius:0; } .mk-dots { bottom:14vh; } }   /* portrait: enlarge the mockup so it fills up to the header (scene side-margins crop), tags stay anchored above the sheet — no empty band */
+    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { max-width:94%; max-height:60vh; left:50%; top:auto; bottom:13vh; transform:translateX(-50%); transform-origin:50% 100%; border-radius:0; } .mk-dots { bottom:14vh; } }   /* portrait fallback: CONTAIN the whole tag (no crop); JS _fitPreviewMockup refines the exact fit on phones */
     #mockup-carousel { position:absolute; inset:0; z-index:7; pointer-events:none; }
     .canvas-stage:not(.mode-preview) #mockup-carousel { display:none !important; }
     .mk-arrow { pointer-events:auto; position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.82); color:#111; font-size:24px; line-height:38px; text-align:center; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.18); transition:background .15s; padding:0; }
@@ -1650,7 +1655,7 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
-      .canvas-stage.mode-preview #tag-mockup { width:124%; max-width:none; height:auto; max-height:none; left:50%; top:auto; bottom:12vh; transform:translateX(-50%); transform-origin:50% 100%; border-radius:0; }   /* mobile: enlarge the mockup so it fills up to the header (scene side-margins crop), tags stay anchored above the sheet — no empty band */
+      .canvas-stage.mode-preview #tag-mockup { max-width:94%; max-height:58vh; left:50%; top:auto; bottom:13vh; transform:translateX(-50%); transform-origin:50% 100%; border-radius:0; }   /* mobile fallback: CONTAIN the whole tag (no crop); JS _fitPreviewMockup sets the precise fit between header and sheet */
       .mk-dots { bottom: 14vh; }   /* mobile: lift the dots above the collapsed sheet */
       .mode-toggle { top: 12px; right: 12px; }
       html[dir="rtl"] .mode-toggle { right: auto; left: 12px; }
@@ -1659,7 +1664,11 @@
 
       .controls-panel {
         position: fixed; left: 0; right: 0; bottom: 0;
-        height: 90vh; max-height: 90vh;
+        /* --app-vh is set from JS to window.innerHeight*0.01 so the sheet height matches the JS
+           snap math exactly. CSS 90vh on iOS measures the LARGE viewport (behind the URL bar) while
+           the snap offsets use innerHeight — that mismatch left the next section peeking at the
+           minimized snap on real phones. Pinning both to innerHeight fixes it. */
+        height: calc(var(--app-vh, 1vh) * 90); max-height: calc(var(--app-vh, 1vh) * 90);
         z-index: 50;
         background: var(--imp-surface);
         border-radius: 20px 20px 0 0;
@@ -1820,7 +1829,7 @@
         <button class="on" data-mode="2d" aria-pressed="true" onclick="setViewMode('2d')" data-en="Edit" data-ar="تحرير">Edit</button>
         <button data-mode="preview" aria-pressed="false" onclick="setViewMode('preview')" data-en="Preview" data-ar="معاينة">Preview</button>
       </div>
-      <button class="vp-expand" id="vp-expand" onclick="openPreviewFullscreen()" aria-label="View fullscreen" title="View fullscreen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M16 21h3a2 2 0 0 0 2-2v-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg></button>
+      <!-- fullscreen is triggered by tapping the mockup itself (see the pointerup handler) — no separate button -->
       <div id="mockup-carousel" style="display:none;">
         <button class="mk-arrow mk-arrow-l" onclick="_gotoMockupSlide(_mockupSlide-1)" aria-label="Previous mockup">&#8249;</button>
         <button class="mk-arrow mk-arrow-r" onclick="_gotoMockupSlide(_mockupSlide+1)" aria-label="Next mockup">&#8250;</button>
@@ -8204,26 +8213,13 @@ function _fetchFontList(cb) {
    Each type folder ships an index.json: [{name:"Essentials", files:[...]}, …].
    The picker shows 3 designs per collection, then "Show more" reveals 6 at a time.
    Thumbnails load left-to-right (row order) with a skeleton placeholder. */
-var _presets = { type:null, cols:[], shown:[] };
-var _presetGen = 0, _revealing = false;
-var _presetSeen = {};   /* urls already loaded once → show instantly (no spinner/stagger) next time */
-/* Thumbnails all download in parallel (in the background) the moment they're built; they
-   are then REVEALED one at a time in document (Z-grid) order with a 0.5s gap, each waiting
-   for its own load. A rotating spinner shows on each tile until it's revealed. */
-function _ensurePresetReveal(){ if(_revealing) return; _revealing=true; _revealNextPreset(_presetGen); }
-function _revealNextPreset(gen){
-  if(gen!==_presetGen){ _revealing=false; return; }
-  var box=document.getElementById('add-source-library');
-  var el=box && box.querySelector('.preset-pending');
-  if(!el){ _revealing=false; return; }
-  el.classList.remove('preset-pending');
-  var show=function(){
-    if(gen!==_presetGen){ _revealing=false; return; }
-    el.classList.add('preset-shown');                 /* CSS fades the content in + hides the spinner */
-    setTimeout(function(){ _revealNextPreset(gen); }, 500);   /* 0.5s gap to the next thumbnail */
-  };
-  (el._whenReady || function(cb){ cb(); })(show);
-}
+var _presetSeen = {};   /* urls already loaded once → show instantly next time */
+/* Each tile downloads in parallel and reveals ITSELF the moment its own asset is ready — fully
+   independent per tile. That lets the main overlay, the background popup and the embedded panel all
+   load their grids at the same time without fighting over a single shared reveal cursor (the old loop
+   tracked one container, so a second grid rendering left the first one's tiles stuck on the skeleton).
+   A small per-row CSS transition-delay (set at tile creation) keeps a premium cascade even when cached. */
+function _revealPresetTile(el){ if(!el) return; el.classList.remove('preset-pending'); el.classList.add('preset-shown'); }
 function _presetTypeFolder(){ var k=_addSrc&&_addSrc.kind; return k==='font'?'text':k==='pattern'?'background':'graphic'; }
 function _collDisplayName(folder){ return String(folder||'').replace(/_/g,' '); }
 function _presetUrl(type,col,file){ return type+'/'+encodeURIComponent(col)+'/'+encodeURIComponent(file); }
@@ -8235,33 +8231,37 @@ function _fetchCollections(type, cb){
   });
 }
 function renderPresets(targetId){
-  var box=document.getElementById(targetId||'add-source-library'); if(!box) return;
-  var type=_presetTypeFolder(); _presets.type=type;
-  _presetGen++; _revealing=false;   /* invalidate any in-flight reveal from a previous render */
+  var boxId=targetId||'add-source-library';
+  var box=document.getElementById(boxId); if(!box) return;
+  var pfx=boxId.replace(/[^a-z0-9]/gi,'_');   /* unique element-id prefix per container */
+  var type=_presetTypeFolder();
   box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-2,#777);margin-bottom:8px;">Loading presets…</div>';
   _fetchCollections(type, function(cols){
     cols = cols || [];
     /* Text picker: append a synthetic "Social Media" collection after the artist collections. */
     if (type === 'graphic') cols.splice(Math.min(1,cols.length), 0, { name:'Social_Media', social:true, files:Object.keys(SOCIAL_ICONS) });   /* Social Media = 2nd graphic category (after Essentials), icon-only */
-    _presets.cols=cols;
-    if(!_presets.cols.length){ box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No presets in <b>/'+type+'</b> yet — add files under a collection folder (e.g. <b>'+type+'/Essentials/</b>) and regenerate the manifest.</div>'; return; }
-    _presets.shown=_presets.cols.map(function(){ return 3; });
+    if(!cols.length){ box.innerHTML='<div style="font-size:11px;color:var(--imp-fg-3,#999);padding:8px 2px;line-height:1.55;">No presets in <b>/'+type+'</b> yet — add files under a collection folder (e.g. <b>'+type+'/Essentials/</b>) and regenerate the manifest.</div>'; return; }
+    /* Per-CONTAINER state (stored on the box element) + per-container element ids. The popup, the
+       embedded panel and the main overlay can all be live at once for the same layer, so a single
+       global state + fixed pg-/pm- ids would let one grid clobber another (and break Show more). */
+    var ps={ type:type, cols:cols, shown:cols.map(function(){ return 3; }), pfx:pfx, boxId:boxId };
+    box._ps=ps;
     var _shapeHdr = (type === 'graphic' && typeof _shapeToolsHTML === 'function') ? _shapeToolsHTML() : '';
-    box.innerHTML=_shapeHdr + _presets.cols.map(function(c,i){
+    box.innerHTML=_shapeHdr + cols.map(function(c,i){
       return '<div class="preset-col">'+
         '<div style="font-size:11px;font-weight:700;color:var(--imp-fg,#111);margin:'+(i?16:2)+'px 0 7px;letter-spacing:0.02em;">'+escapeHTML(_collDisplayName(c.name))+'</div>'+
-        '<div class="preset-grid'+(type==='text'?' preset-grid-col':'')+'" id="pg-'+i+'"></div>'+
-        '<div id="pm-'+i+'" style="margin-top:8px;"></div>'+
+        '<div class="preset-grid'+(type==='text'?' preset-grid-col':'')+'" id="pg-'+pfx+'-'+i+'"></div>'+
+        '<div id="pm-'+pfx+'-'+i+'" style="margin-top:8px;"></div>'+
       '</div>';
     }).join('');
-    _presets.cols.forEach(function(c,i){ _renderPresetGrid(i); });
+    cols.forEach(function(c,i){ _renderPresetGrid(ps, i); });
   });
 }
-function _presetShowMore(i){ _presets.shown[i]=(_presets.shown[i]||3)+6; _renderPresetGrid(i); }
-function _renderPresetGrid(i){
-  var c=_presets.cols[i]; if(!c) return;
-  var grid=document.getElementById('pg-'+i); if(!grid) return;
-  var type=_presets.type, n=Math.min(_presets.shown[i]||3, c.files.length);
+function _presetShowMore(boxId, i){ var box=document.getElementById(boxId); var ps=box&&box._ps; if(!ps) return; ps.shown[i]=(ps.shown[i]||3)+6; _renderPresetGrid(ps, i); }
+function _renderPresetGrid(ps, i){
+  var c=ps.cols[i]; if(!c) return;
+  var grid=document.getElementById('pg-'+ps.pfx+'-'+i); if(!grid) return;
+  var type=ps.type, n=Math.min(ps.shown[i]||3, c.files.length);
   if(c.social){
     if(grid.querySelectorAll('.preset-social').length) { } else {
       grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;';
@@ -8278,31 +8278,31 @@ function _renderPresetGrid(i){
         grid.appendChild(btn);
       });
     }
-    var more0=document.getElementById('pm-'+i); if(more0) more0.innerHTML='';
+    var more0=document.getElementById('pm-'+ps.pfx+'-'+i); if(more0) more0.innerHTML='';
     return;
   }
   if(type==='text'){
     var have=grid.querySelectorAll('.preset-font').length;
-    for(var k=have;k<n;k++){ (function(f){
+    for(var k=have;k<n;k++){ (function(f, gi){
       var url=_presetUrl('text',c.name,f), seen=!!_presetSeen[url];
       var card=document.createElement('button'); card.className='preset-font '+(seen?'preset-shown':'preset-pending');
       card.style.cssText='position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--imp-border,#e5e5e5);border-radius:10px;background:var(--imp-surface,#fff);cursor:default;text-align:left;min-height:46px;box-sizing:border-box;';
       card.innerHTML='<span class="preset-spin"></span><span class="pf-content" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;"></span>';
       grid.appendChild(card);
-      card._whenReady=function(cb){ if(card._ready) cb(); else card._readyCb=cb; };
       var content=card.querySelector('.pf-content'), name=f.replace(/\.[^.]+$/,'').replace(/_/g,' ');
+      if(!seen) content.style.transitionDelay=Math.min(gi,8)*0.04+'s';   /* subtle top-to-bottom cascade */
       _loadFontFromUrl(url, name, function(key){          /* downloads start immediately, in parallel */
-        if(!key){ card.style.display='none'; }
-        else { _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"',"+(c.arabic?'true':'false')+")");
-          content.innerHTML = c.arabic
-            ? '<span style="'+_fontPreviewStyle(key)+'font-size:24px;line-height:1.15;color:var(--imp-fg,#111);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(_arabicFontName(name))+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;direction:rtl;">أ ب ج</span>'
-            : '<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>'; }
-        card._ready=true; if(card._readyCb) card._readyCb();
+        if(!key){ card.style.display='none'; return; }
+        _presetSeen[url]=true; card.title=name; card.style.cursor='pointer'; card.setAttribute('onclick',"chooseLibraryFont('"+key+"',"+(c.arabic?'true':'false')+")");
+        content.innerHTML = c.arabic
+          ? '<span style="'+_fontPreviewStyle(key)+'font-size:24px;line-height:1.15;color:var(--imp-fg,#111);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(_arabicFontName(name))+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;direction:rtl;">أ ب ج</span>'
+          : '<span style="'+_fontPreviewStyle(key)+'font-size:23px;line-height:1;color:var(--imp-fg,#111);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(name)+'</span><span style="'+_fontPreviewStyle(key)+'font-size:13px;color:var(--imp-fg-3,#aaa);flex-shrink:0;">Aa 123</span>';
+        _revealPresetTile(card);
       });
-    })(c.files[k]); }
+    })(c.files[k], k); }
   } else {
     var have2=grid.querySelectorAll('.preset-thumb').length;
-    for(var k2=have2;k2<n;k2++){ (function(f){
+    for(var k2=have2;k2<n;k2++){ (function(f, gi){
       var url=_presetUrl(type,c.name,f), safe=(''+f).replace(/'/g,"\\'"), cn=(''+c.name).replace(/'/g,"\\'"), seen=!!_presetSeen[url];
       var btn=document.createElement('button'); btn.className='preset-thumb '+(seen?'preset-shown':'preset-pending'); btn.title=f;
       var _bgThumb=(type==='background');   /* backgrounds: square-crop (cover) so rectangular patterns don't look rectangular */
@@ -8310,15 +8310,17 @@ function _renderPresetGrid(i){
       btn.setAttribute('onclick',"choosePreset('"+cn+"','"+safe+"')");
       btn.innerHTML='<span class="preset-spin"></span><img decoding="async" alt="" style="'+(_bgThumb?'width:100%;height:100%;object-fit:cover;':'max-width:100%;max-height:100%;object-fit:contain;')+'pointer-events:none;position:relative;display:block;">';
       var img=btn.querySelector('img');
-      img.addEventListener('load', function(){ _presetSeen[url]=true; });   /* remember it for instant show next visit */
-      img.src=url;   /* start the download NOW, in parallel/background (cached → instant) */
-      btn._whenReady=function(cb){ if(img.complete) cb(); else img.onload=img.onerror=cb; };
+      if(!seen) img.style.transitionDelay=Math.min(gi,8)*0.04+'s';   /* subtle top-to-bottom cascade */
+      var reveal=function(){ _presetSeen[url]=true; _revealPresetTile(btn); };   /* reveal the instant THIS image is ready */
+      img.addEventListener('load', reveal);
+      img.addEventListener('error', function(){ btn.style.display='none'; });   /* a missing file just drops out */
+      img.src=url;   /* start the download NOW, in parallel/background */
+      if(img.complete && img.naturalWidth>0) reveal();   /* already cached → show immediately (the load event may not refire) */
       grid.appendChild(btn);
-    })(c.files[k2]); }
+    })(c.files[k2], k2); }
   }
-  var more=document.getElementById('pm-'+i);
-  if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore('+i+')">Show more</button>' : ''; }
-  _ensurePresetReveal();   /* reveal new tiles one-by-one in Z order, 0.5s apart */
+  var more=document.getElementById('pm-'+ps.pfx+'-'+i);
+  if(more){ var rem=c.files.length-n; more.innerHTML = rem>0 ? '<button class="preset-more-btn" onclick="_presetShowMore(\''+ps.boxId+'\','+i+')">Show more</button>' : ''; }
 }
 function choosePreset(col, file){
   var L=getLayer(_addSrc.id); if(!L){ _closeAddSourceOverlay(); return; }
@@ -10682,6 +10684,7 @@ function updateMobileCameraOffset() {
   if (typeof _mobFrameSig !== 'undefined') _mobFrameSig = '';
   if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
   if (typeof viewMode !== 'undefined' && viewMode === '2d' && typeof atlas2dFit === 'function') atlas2dFit();   /* re-fit the 2D editor into the visible band as the sheet is dragged */
+  if (typeof viewMode !== 'undefined' && viewMode === 'preview' && typeof _fitPreviewMockup === 'function') _fitPreviewMockup();   /* …and re-fit the photoreal mockup the same way */
 }
 
 var NO_3D_VIEW = true;   /* Price tag: 3D view removed — only the 2D "Edit" editor + photoreal "Preview" remain. Gating the WebGL render below stops the per-frame 3D render + post-FX (the big FPS cost). Set to false to restore 3D. */
@@ -10997,13 +11000,27 @@ function setupOrbit() {
     }
     function snaps() { return [34 * vhpx(), 20 * vhpx(), 0, minY()]; } /* peek (raised so Shape shows on load), half, full, minimized */
     var idx = 0; /* start at peek */
+    var _sheetTween = 0;
     function setY(px) { sheet.style.setProperty('--sheet-y', px + 'px'); if (typeof updateMobileCameraOffset === 'function') updateMobileCameraOffset(); }
+    /* Animate the sheet with a per-frame JS tween (transition:none) rather than a CSS transform
+       transition. A CSS `transition: transform` on a translate driven by a custom property is
+       unreliable across engines — it can freeze the sheet mid-move — whereas a rAF tween is smooth
+       everywhere AND re-fits the preview mockup on every frame for free (keeps them perfectly in sync). */
+    function _stopSheetTween(){ if(_sheetTween){ cancelAnimationFrame(_sheetTween); _sheetTween=0; } }
+    function _tweenSheetTo(target){
+      _stopSheetTween(); sheet.style.transition='none';
+      var from=parseFloat(sheet.style.getPropertyValue('--sheet-y')); if(isNaN(from)) from=snaps()[0];
+      if(Math.abs(target-from)<0.5){ setY(target); return; }
+      var dur=320, t0=0, ease=function(t){ return 1-Math.pow(1-t,3); };   /* easeOutCubic ≈ the old cubic-bezier(.22,.8,.22,1) */
+      function step(ts){ if(!t0) t0=ts; var t=Math.min(1,(ts-t0)/dur); setY(from+(target-from)*ease(t)); _sheetTween = (t<1) ? requestAnimationFrame(step) : 0; }
+      _sheetTween=requestAnimationFrame(step);
+    }
     function applySnap(i, animate) {
       idx = Math.max(0, Math.min(snaps().length - 1, i));
       sheet.classList.toggle('sheet-min', idx === 3);   /* minimized → hide the step pills, show only the pager */
       sheet.classList.toggle('sheet-peek', idx === 0);   /* peek → show the 'pull up to customize' cue */
-      sheet.style.transition = (animate === false) ? 'none' : '';
-      setY(snaps()[idx]);
+      if (animate === false) { _stopSheetTween(); sheet.style.transition = 'none'; setY(snaps()[idx]); }
+      else { _tweenSheetTo(snaps()[idx]); }
     }
     function sync() { if (isMobile()) applySnap(idx, false); else { sheet.style.removeProperty('--sheet-y'); sheet.classList.remove('sheet-min'); } }
     sync();
@@ -11017,6 +11034,7 @@ function setupOrbit() {
       if (!isMobile()) return;
       if (e.target && e.target.closest && e.target.closest('button, a, input, select')) return;   /* let the step arrows tap, don't hijack them into a drag */
       dragging = true; moved = false; startY = e.clientY;
+      _stopSheetTween();   /* grabbing the sheet cancels any in-flight snap animation */
       startPx = parseFloat(sheet.style.getPropertyValue('--sheet-y')) || snaps()[idx];
       sheet.style.transition = 'none';
       try { dragTarget.setPointerCapture(e.pointerId); } catch (_) {}
@@ -12150,6 +12168,7 @@ function _autoEdit2dAfterUpload(){
 function setViewMode(mode){
   viewMode = (mode === '2d') ? '2d' : (mode === 'preview') ? 'preview' : '3d';
   if (typeof _hideFaceBar==='function') _hideFaceBar();
+  if (viewMode !== 'preview'){ var _unav0=document.getElementById('mockup-unavail'); if(_unav0) _unav0.style.display='none'; }   /* clear the "no mockup" overlay when leaving Preview — only renderTagMockup() (preview-only) toggles it, so otherwise it hangs over the editor */
   document.querySelectorAll('#mode-toggle button').forEach(function(b){ var on=b.getAttribute('data-mode') === viewMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on?'true':'false'); });
   var stage = document.querySelector('.canvas-stage');
   if (stage){ stage.classList.toggle('mode-2d', viewMode === '2d'); stage.classList.toggle('mode-preview', viewMode === 'preview'); }  /* shrinks live 3D into bottom-right preview */
@@ -12530,6 +12549,7 @@ function renderTagMockup(){
       ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
     });
     ctx.drawImage(A.string, 0, 0, A.W, A.H);                                  /* 4. string/handles in front */
+    if (typeof _fitPreviewMockup==='function') _fitPreviewMockup();           /* size/centre the mockup once its bitmap dimensions are known */
   });
 }
 function _invertedShadow(A){
@@ -12560,6 +12580,43 @@ function _updateMockupCarousel(show){
     MOCKUP_SLIDES.forEach(function(s,i){ var b=document.createElement('button'); b.className='mk-dot'; b.title=s.label||('Mockup '+(i+1)); b.onclick=(function(idx){ return function(){ _gotoMockupSlide(idx); }; })(i); dots.appendChild(b); });
   }
   for (var i=0;i<dots.children.length;i++) dots.children[i].classList.toggle('on', i===_mockupSlide);
+}
+/* Mobile: fit the WHOLE mockup (no crop) into the band between the header and the current top of
+   the bottom sheet, and re-fit live as the sheet is dragged/snapped. On desktop/tablet we drop the
+   inline sizing so the stylesheet's contain rule governs. */
+function _fitPreviewMockup(){
+  var cvs=document.getElementById('tag-mockup'); if(!cvs) return;
+  var stage=document.querySelector('.canvas-stage'); if(!stage) return;
+  var la=document.querySelector('.mk-arrow-l'), ra=document.querySelector('.mk-arrow-r'), dots=document.getElementById('mk-dots');
+  var mobile=(typeof _isMobileView==='function') ? _isMobileView() : (window.innerWidth<=760);
+  var live=(typeof viewMode!=='undefined' && viewMode==='preview' && cvs.style.display!=='none' && cvs.width>2 && cvs.height>2);
+  if(!(mobile && live)){
+    ['width','height','top','bottom','max-width','max-height','transition'].forEach(function(p){ cvs.style.removeProperty(p); });
+    [la,ra].forEach(function(a){ if(a){ a.style.removeProperty('top'); a.style.removeProperty('transition'); } });
+    if(dots){ dots.style.removeProperty('top'); dots.style.removeProperty('transition'); }
+    return;
+  }
+  var sRect=stage.getBoundingClientRect();
+  var sheet=document.querySelector('.controls-panel');
+  var sheetY=sheet ? (parseFloat(sheet.style.getPropertyValue('--sheet-y'))||0) : 0;
+  var sheetTop=sheet ? (window.innerHeight - sheet.offsetHeight + sheetY) : window.innerHeight;   /* target top — correct even mid-animation */
+  var padX=16, padTop=12, padBot=12;
+  var bandTop=sRect.top + padTop;
+  var bandBot=Math.min(sRect.bottom, sheetTop) - padBot;
+  var availW=Math.max(40, sRect.width - padX*2);
+  var availH=Math.max(40, bandBot - bandTop);
+  var ar=cvs.width/cvs.height;
+  var fitW=availW, fitH=fitW/ar;
+  if(fitH>availH){ fitH=availH; fitW=fitH*ar; }
+  var topInStage=(bandTop - sRect.top) + (availH - fitH)/2;
+  var trans='none';   /* the sheet's rAF tween re-fits us every frame, so each fit is instant — and CSS transitions on these props freeze in some engines anyway */
+  cvs.style.transition=trans; cvs.style.maxWidth='none'; cvs.style.maxHeight='none';
+  cvs.style.width=Math.round(fitW)+'px'; cvs.style.height=Math.round(fitH)+'px';
+  cvs.style.top=Math.round(topInStage)+'px'; cvs.style.bottom='auto';
+  var midInStage=topInStage + fitH/2;
+  if(la){ la.style.transition=trans; la.style.top=Math.round(midInStage)+'px'; }
+  if(ra){ ra.style.transition=trans; ra.style.top=Math.round(midInStage)+'px'; }
+  if(dots){ dots.style.transition=trans; dots.style.bottom='auto'; dots.style.top=Math.round(topInStage+fitH+10)+'px'; }
 }
 function onPreviewToggle(on){ A2D.previewOn=!!on; var stage=document.querySelector('.canvas-stage'); if(stage) stage.classList.toggle('no-preview', viewMode==='2d' && !A2D.previewOn); }
 /* ── Preview (mockup) navigation — wheel = zoom toward cursor, drag = pan, double-click = reset ── */
@@ -13740,8 +13797,14 @@ function openPreviewFullscreen(){
 }
 function closePreviewFullscreen(){ var fs=document.getElementById('preview-fs'); if(fs) fs.style.display='none'; }
 window.addEventListener('keydown', function(e){ if(e.key==='Escape') closePreviewFullscreen(); });
-window.addEventListener('resize', function(){ _mobFrameSig = ''; });
-if (window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ _mobFrameSig=''; }); window.visualViewport.addEventListener('scroll', function(){ _mobFrameSig=''; }); }
+/* Pin a real-pixel viewport-height unit so the mobile sheet height tracks the device's actual
+   visible height (innerHeight), not CSS vh. Keeps the snap math and the layout in agreement. */
+function _setAppVh(){ try{ document.documentElement.style.setProperty('--app-vh', (window.innerHeight*0.01)+'px'); }catch(e){} }
+_setAppVh();
+function _onViewportChange(){ _mobFrameSig=''; _setAppVh(); if(typeof _fitPreviewMockup==='function') _fitPreviewMockup(); }
+window.addEventListener('resize', _onViewportChange);
+window.addEventListener('orientationchange', _onViewportChange);
+if (window.visualViewport){ window.visualViewport.addEventListener('resize', _onViewportChange); window.visualViewport.addEventListener('scroll', function(){ _mobFrameSig=''; }); }
 </script>
 
 <!-- ─── MOBILE PREVIEW FULLSCREEN ─── -->
