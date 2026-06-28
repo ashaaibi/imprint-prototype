@@ -3647,6 +3647,8 @@ window.IMPRINT_CATALOG = {
     "youtube": "https://www.youtube.com/@imprintco_official",
     "whatsapp": "https://wa.me/96899425623"
    },
+   "logo": "imprint-logo.svg",
+   "favicon": "imprint-favicon.svg",
    "products": [
     "honeyloom-gift-bag",
     "coffee-cup",

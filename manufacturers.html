@@ -37,7 +37,7 @@
   };
   function socialRow(m){
     if(!m||!m.social) return '';
-    return ['instagram','tiktok','youtube','whatsapp'].filter(function(k){return m.social[k];}).map(function(k){
+    return ['whatsapp','instagram','youtube','tiktok'].filter(function(k){return m.social[k];}).map(function(k){
       var s=SOCIAL[k];
       return '<a class="m-social" href="'+m.social[k]+'" target="_blank" rel="noopener" aria-label="'+s.label+'" title="'+s.label+'" style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--imp-border);background:var(--imp-surface);color:'+s.color+';flex:0 0 auto;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;" onmouseover="this.style.transform=&#39;translateY(-2px)&#39;;this.style.borderColor=&#39;'+s.color+'&#39;;this.style.boxShadow=&#39;0 4px 12px rgba(0,0,0,.12)&#39;" onmouseout="this.style.transform=&#39;&#39;;this.style.borderColor=&#39;var(--imp-border)&#39;;this.style.boxShadow=&#39;&#39;"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">'+s.svg+'</svg></a>';
     }).join('');
@@ -45,9 +45,60 @@
   /* ── Favicon: the maker's mark (first letter on its brand colour) on a profile; Yallā elsewhere ── */
   function _setFav(href){ var l=document.querySelector('link[rel="icon"][type="image/svg+xml"]'); if(!l){ l=document.createElement('link'); l.rel='icon'; l.type='image/svg+xml'; (document.head||document.documentElement).appendChild(l); } l.href=href; }
   function setMakerFavicon(m){
+    if (m && m.favicon){ _setFav(m.favicon); return; }   /* a maker can ship its own favicon (e.g. Imprint's logo on black) */
     var letter=((m&&m.name)||'Y').trim().charAt(0).toUpperCase(), bg=(m&&m.color)||'#BE9B55';
     var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="'+bg+'"/><text x="24" y="34.5" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="30" fill="#ffffff">'+letter+'</text></svg>';
     _setFav('data:image/svg+xml,'+encodeURIComponent(svg));
+  }
+
+  /* ── Reviews (the same maker reviews shown on the checkout "choose a manufacturer" step) ── */
+  var MAKER_REVIEWS = {
+    'imprint-atelier': [
+      {n:'Layla Hassan', r:5, t:'What I designed in 3D is exactly what arrived — the foil matches the preview perfectly.', o:'#c79a63', c:'#c4975f'},
+      {n:'Omar Said', r:5, t:'In-house QC is unreal — zero colour drift across 2,000 bags.', o:'#1f1d1b', c:'#232120'},
+      {n:'Mariam Al-Farsi', r:5, t:'Soft-touch emboss came out flawless, and the reorder was identical to the first run.', o:'#b9985f', c:'#bda06a'}
+    ],
+    'gulf-print': [
+      {n:'Khalid Mansoori', r:5, t:'Best price we found for 5,000 units and the quality held up beautifully.', o:'#2a3a5a', c:'#2d3d5d'},
+      {n:'Noura Q.', r:4, t:'Slight sheen difference vs the mockup but well within spec.', o:'#b87333', c:'#b06d30'}
+    ],
+    'najm-packaging': [
+      {n:'Sara Al-Balushi', r:5, t:'Soft-touch feels premium and the foil logo came out crisp.', o:'#caa96f', c:'#c2935f'},
+      {n:'Hessa Ahmed', r:5, t:'6 days door-to-door. Colours pop exactly as approved.', o:'#7a5c33', c:'#7e6038'}
+    ],
+    'levant-press': [
+      {n:'Yara M.', r:4, t:'Good matte boxes, fair price. One arrived a day late.', o:'#b9996a', c:'#b59365'},
+      {n:'Tarek S.', r:4, t:'Colour was close to ordered; finishing was clean throughout.', o:'#cf7a92', c:'#c8748b'}
+    ],
+    'crescent-press': [
+      {n:'Daniel R.', r:5, t:'Half the cost of local for a 10k run — a minor lead-time trade-off.', o:'#7a2738', c:'#732536'},
+      {n:'Mei L.', r:4, t:'Matte came a touch lighter than ordered but acceptable.', o:'#1f7a5a', c:'#1d7257'}
+    ],
+    'marina-pack': [
+      {n:'Faisal N.', r:5, t:'Rigid boxes arrived perfectly square with sharp emboss. Will reorder.', o:'#355e6b', c:'#386470'},
+      {n:'Aisha R.', r:4, t:'Lovely finish and friendly team; packaging was well protected in transit.', o:'#a06a45', c:'#9c6743'}
+    ]
+  };
+  function stars(r){ var s=''; for(var i=0;i<5;i++) s+= (i<r?'★':'☆'); return s; }
+  function reviewsSection(m){
+    var list = m.reviewList || MAKER_REVIEWS[m.id] || [];
+    if(!list.length) return '';
+    var cards = list.map(function(rv){
+      return '<div style="border:1px solid var(--imp-border);border-radius:var(--imp-r-md);padding:16px;background:var(--imp-surface)">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">' +
+          '<strong style="font-size:13.5px">'+IMP.esc(rv.n)+'</strong>' +
+          '<span style="color:#E8B007;font-size:13px;letter-spacing:1px" aria-label="'+rv.r+' out of 5">'+stars(rv.r)+'</span>' +
+        '</div>' +
+        '<p style="font-size:13px;color:var(--imp-fg-2);line-height:1.6;margin:0 0 12px">'+IMP.esc(rv.t)+'</p>' +
+        '<div style="display:flex;gap:14px">' +
+          '<div style="text-align:center"><div style="width:46px;height:46px;border-radius:8px;border:1px solid var(--imp-border);background:'+rv.o+'"></div><div style="font-size:10px;color:var(--imp-fg-3);margin-top:4px">Ordered</div></div>' +
+          '<div style="text-align:center"><div style="width:46px;height:46px;border-radius:8px;border:1px solid var(--imp-border);background:'+rv.c+'"></div><div style="font-size:10px;color:var(--imp-fg-3);margin-top:4px">Received</div></div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">Reviews</h2>' +
+      '<p class="sec-sub">★ '+m.rating+' · '+m.reviews+' verified reviews</p></div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">'+cards+'</div></div>';
   }
 
   function renderList(){
@@ -73,7 +124,9 @@
     root.innerHTML =
       '<div class="pdp-bc"><a href="index.html">Home</a><span class="sep">/</span><a href="manufacturers.html">Manufacturers</a><span class="sep">/</span>'+IMP.esc(m.name)+'</div>' +
       '<div class="artist-hero">' +
-        '<div class="m-logo" style="width:108px;height:108px;border-radius:var(--imp-r-lg);font-size:30px;background:'+m.color+'">'+IMP.initials(m.name)+'</div>' +
+        (m.logo
+          ? '<div class="m-logo" style="width:108px;height:108px;border-radius:var(--imp-r-lg);background:#000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;flex:0 0 auto"><img src="'+m.logo+'" alt="'+IMP.esc(m.name)+'" style="width:100%;height:auto;max-height:100%;object-fit:contain"></div>'
+          : '<div class="m-logo" style="width:108px;height:108px;border-radius:var(--imp-r-lg);font-size:30px;background:'+m.color+'">'+IMP.initials(m.name)+'</div>') +
         '<div style="flex:1;min-width:260px">' +
           '<div class="ah-name imp-display">'+IMP.esc(m.name)+'</div>' +
           '<div class="ah-style">'+(m.flag||'')+' '+IMP.esc(m.country)+' · established '+m.since+'</div>' +
@@ -96,6 +149,7 @@
         '<div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--imp-fg-3);margin:0 0 10px">Finishes</h4><div class="chips-sm">'+chips(m.finishes)+'</div></div>' +
         '<div><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--imp-fg-3);margin:0 0 10px">Certifications</h4><div class="chips-sm">'+chips(m.certs)+'</div></div>' +
       '</div></div>' +
+      reviewsSection(m) +
       (prods.length ? '<div class="sec"><div class="sec-head"><div><h2 class="sec-title">Produced by '+IMP.esc(m.name)+'</h2><p class="sec-sub">'+prods.length+' templates can be produced here.</p></div></div><div class="pgrid">'+prods.slice(0,12).map(IMP.productCard).join('')+'</div></div>' : '') +
       '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">Other manufacturers</h2></div><a class="sec-link" href="manufacturers.html">All makers →</a></div><div class="mgrid">' +
         C.makers.filter(function(x){return x.id!==m.id;}).slice(0,3).map(IMP.makerCard).join('') + '</div></div>';
