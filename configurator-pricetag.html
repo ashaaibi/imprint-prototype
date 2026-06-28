@@ -7964,7 +7964,7 @@ function _bgiTagSVG(ff,fb){
 function _bgAreasVisual(id){
   var L=getLayer(id)||{}, a=L._bgArea||'both';
   function btn(k,en,ar,ff,fb){ return '<button class="bgi-area'+(a===k?' on':'')+'" onclick="_bgSetArea('+id+',\''+k+'\')">'+_bgiTagSVG(ff,fb)+'<span class="bgi-area-lbl" data-en="'+en+'" data-ar="'+ar+'">'+en+'</span></button>'; }
-  return '<div class="bgi-areas">'+btn('front','Front','الأمام',true,false)+btn('back','Back','الخلف',false,true)+btn('both','Both','كلاهما',true,true)+'</div>';
+  return '<div class="bgi-areas">'+btn('both','Both','كلاهما',true,true)+btn('front','Front','الأمام',true,false)+btn('back','Back','الخلف',false,true)+'</div>';
 }
 function _bgiColorBlock(id){
   var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join('');
@@ -8090,7 +8090,7 @@ function _bgSetArea(id, area){
   if(typeof drawBagTexture==='function') drawBagTexture();
   if(typeof scheduleHistory==='function') scheduleHistory();
   var wrap=document.querySelector('#bg-pick-'+id+' .bgi-areas') || document.querySelector('#as-bg .bgi-areas');
-  if(wrap){ var order=['front','back','both']; Array.prototype.forEach.call(wrap.querySelectorAll('.bgi-area'),function(b,i){ b.classList.toggle('on', order[i]===area); }); }
+  if(wrap){ var order=['both','front','back']; Array.prototype.forEach.call(wrap.querySelectorAll('.bgi-area'),function(b,i){ b.classList.toggle('on', order[i]===area); }); }
 }
 function _bgiShowPresets(id){ var box=document.getElementById('bgi-presets-'+id); if(!box) return; if(box.getAttribute('data-loaded')==='1') return; box.setAttribute('data-loaded','1'); if(typeof _addSrc!=='undefined'&&_addSrc){ _addSrc.id=id; _addSrc.kind='pattern'; } if(typeof renderPresets==='function') renderPresets('bgi-presets-'+id); }
 function _bgiLive(L){ if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof checkCart==='function') checkCart(); if(typeof scheduleHistory==='function') scheduleHistory(); }
