@@ -4786,8 +4786,10 @@ function _bgGradFill(ctx, g, x, y, w, h) {
     var rr = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * h) / 2;
     fill = ctx.createLinearGradient(cx - Math.cos(ang) * rr, cy - Math.sin(ang) * rr, cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
   }
-  fill.addColorStop(0, g.c1 || '#ffffff');
-  fill.addColorStop(1, g.c2 || '#000000');
+  var _p1 = Math.max(0, Math.min(1, (g.p1 != null ? g.p1 : 0) / 100));
+  var _p2 = Math.max(0, Math.min(1, (g.p2 != null ? g.p2 : 100) / 100));
+  fill.addColorStop(Math.min(_p1, _p2), (_p1 <= _p2 ? g.c1 : g.c2) || '#ffffff');
+  fill.addColorStop(Math.max(_p1, _p2), (_p1 <= _p2 ? g.c2 : g.c1) || '#000000');
   return fill;
 }
 function _drawBgFill(ctx, L, ms, mode) {
@@ -7152,12 +7154,9 @@ function buildLayerBodyHTML(L) {
   }
 
   if (L.isBackground) {
-    /* Background: Density (+ Feather) → Opacity → Areas → Recolor → Finish. (No Gap, no Move/Emboss/Layout.) */
-    if (!L.fillType) h += _bgTiledControlsHTML(id, L);   /* solid/gradient fills skip the tiling controls */
-    h += sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
-    if (!L.fillType) h += sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, ((Math.round(L.rotation||0)%360)+360)%360, '°');   /* image backgrounds get a rotation slider (5° increments); fills don't need it */
-    if (!L.fillType) h += _colorSec;                      /* fills set their colour in the picker / inline swatch */
-    h += _layerMoreOptions(id, _finishHTML);
+    /* The full background panel (Areas · Finish · Opacity · Color · Gradient · Presets) is the
+       embedded bg-pick panel above. Pattern/image fills also get tiling + rotation controls here. */
+    if (!L.fillType) { h += _bgTiledControlsHTML(id, L); h += sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, ((Math.round(L.rotation||0)%360)+360)%360, '°'); }
   } else if (L.kind === 'text') {
     /* Text: Scale → Rotation → Opacity → Text Color → Move → Areas → Finish → Emboss/Layout. */
     h += (_lkd('controls.move') ? '' : _transformHTML(id, L, true));   /* transform follows the move/resize lock */
@@ -7686,7 +7685,7 @@ function addLayer(kind) {
   if (kind === 'logo') pickLayerLogoFile(id);
   else if (kind === 'sticker') openAddSourcePrompt(id, kind);
   else if (kind === 'text') openAddSourcePrompt(id, 'font');
-  /* 'pattern' (Background): no modal — the Solid/Gradient/Presets picker is embedded in the layer body (live). */
+  else if (kind === 'pattern') openAddSourcePrompt(id, 'pattern');   /* Background: prompt the Add-background chooser; the full editor is also embedded in the layer body below */
   drawBagTexture();
   if (typeof setBagView === 'function') setBagView('front');
 }
@@ -7800,7 +7799,7 @@ function openAddSourcePrompt(id, kind) {
     if (_libBtn) _libBtn.style.display = 'none';
     if (_bgEl) _bgEl.style.display = 'block';
     document.getElementById('add-source-library').style.display = 'none';
-    _renderBgPicker('solid');
+    _renderBgPicker();
   } else {
     if (_sub) _sub.style.display = '';
     if (_upBtn) _upBtn.style.display = 'flex';
@@ -7842,141 +7841,181 @@ function _bgSwCell(color,label,handler,isCustom){
     +'<button class="bg-sw" style="background:'+(isCustom?'transparent':color)+';" onclick="'+handler+'">'+inner+'</button>'
     +'<span class="bg-sw-lbl">'+label+'</span></div>';
 }
+function _bgSolidShadesHTML(){ return _bgShades(_bgPick.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join(''); }
 function _bgSolidHTML(){
-  var shades=_bgShades(_bgPick.hue);
-  var sw=_bgSwCell('','Custom','_bgCustomColor()',true) + shades.map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join('');
   var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join('');
   return '<input type="range" class="bg-hue" min="0" max="360" value="'+_bgPick.hue+'" oninput="_bgHue(this.value)">'
-    +'<div class="bg-sw-row">'+sw+'</div>'
-    +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:4px 2px 2px;" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
-    +'<div class="bg-sw-row">'+nu+'</div>'
-    +'<div style="font-size:11px;color:var(--imp-fg-3,#999);margin-top:4px;" data-en="Tap a colour to apply it." data-ar="انقر على لون لتطبيقه.">Tap a colour to apply it.</div>';
+    +'<div class="bg-sw-row" id="as-bg-shades">'+_bgSolidShadesHTML()+'</div>'
+    +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
+    +'<div class="bg-sw-row">'+nu+'</div>';
 }
 function _bgGradientHTML(){
-  var gp=_bgPick.g;
-  var prev=gp.type==='radial' ? ('radial-gradient(circle,'+gp.c1+','+gp.c2+')') : ('linear-gradient('+gp.angle+'deg,'+gp.c1+','+gp.c2+')');
   var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgApplyGradientPreset('+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
-  return '<div class="bg-grad-prev" style="background:'+prev+';"></div>'
-    +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:0 2px 6px;" data-en="Presets" data-ar="قوالب">Presets</div>'
-    +'<div class="bg-sw-row">'+presets+'</div>'
-    +'<div style="display:flex;gap:16px;align-items:center;margin:12px 0 10px;">'
-      +'<label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--imp-fg-2,#666);"><span data-en="Start" data-ar="من">Start</span><input type="color" value="'+gp.c1+'" oninput="_bgGrad(\'c1\',this.value)" style="width:36px;height:28px;border:1px solid var(--imp-border,#ddd);border-radius:6px;padding:0;background:none;cursor:pointer;"></label>'
-      +'<label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--imp-fg-2,#666);"><span data-en="End" data-ar="إلى">End</span><input type="color" value="'+gp.c2+'" oninput="_bgGrad(\'c2\',this.value)" style="width:36px;height:28px;border:1px solid var(--imp-border,#ddd);border-radius:6px;padding:0;background:none;cursor:pointer;"></label>'
-    +'</div>'
-    +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;">'
-      +'<button class="as-tab'+(gp.type==='linear'?' on':'')+'" style="flex:0 0 auto;padding:7px 14px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgGrad(\'type\',\'linear\')" data-en="Linear" data-ar="خطي">Linear</button>'
-      +'<button class="as-tab'+(gp.type==='radial'?' on':'')+'" style="flex:0 0 auto;padding:7px 14px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgGrad(\'type\',\'radial\')" data-en="Radial" data-ar="شعاعي">Radial</button>'
-      +'<div style="flex:1;'+(gp.type==='radial'?'opacity:.35;pointer-events:none;':'')+'"><div style="font-size:10px;color:var(--imp-fg-3,#999);margin-bottom:2px;"><span data-en="Angle" data-ar="الزاوية">Angle</span> '+gp.angle+'&deg;</div><input type="range" min="0" max="360" step="5" value="'+gp.angle+'" oninput="_bgGrad(\'angle\',this.value)" style="width:100%;"></div>'
-    +'</div>'
-    +'<button class="_as-btn" style="justify-content:center;background:var(--imp-fg,#111);color:var(--imp-surface,#fff);border-color:var(--imp-fg,#111);" onclick="_bgApplyGradient()" data-en="Apply gradient" data-ar="تطبيق التدرّج">Apply gradient</button>';
+  return '<div class="bg-sw-row">'+presets+'</div>';
 }
-function _renderBgPicker(tab){
+function _renderBgPicker(){
+  if(typeof _bgiEnsureCSS==='function') _bgiEnsureCSS();
   var box=document.getElementById('as-bg'); if(!box) return;
-  tab=tab||'solid';
-  var lib=document.getElementById('add-source-library');
-  var tabs='<div style="display:flex;gap:6px;margin-bottom:14px;background:var(--imp-surface-2,#f3f3f3);padding:4px;border-radius:10px;">'
-    +'<button class="as-tab'+(tab==='solid'?' on':'')+'" onclick="_renderBgPicker(\'solid\')" data-en="Solid color" data-ar="لون سادة">Solid color</button>'
-    +'<button class="as-tab'+(tab==='gradient'?' on':'')+'" onclick="_renderBgPicker(\'gradient\')" data-en="Gradient" data-ar="تدرّج">Gradient</button>'
-    +'<button class="as-tab'+(tab==='presets'?' on':'')+'" onclick="_renderBgPicker(\'presets\')" data-en="Presets" data-ar="قوالب">Presets</button>'
-    +'</div>';
-  if(tab==='presets'){
-    box.innerHTML=tabs;
-    if(lib) lib.style.display='block';
-    if(typeof renderPresets==='function') renderPresets();
-  } else {
-    if(lib) lib.style.display='none';
-    box.innerHTML=tabs + (tab==='solid' ? _bgSolidHTML() : _bgGradientHTML())
-      + '<button onclick="addSourceChoose(\'upload\')" style="width:100%;margin-top:12px;background:none;border:none;color:var(--imp-fg-3,#999);font-size:11px;cursor:pointer;padding:6px;font-family:inherit;" data-en="Or upload an image…" data-ar="أو ارفع صورة…">Or upload an image…</button>';
-  }
+  var lib=document.getElementById('add-source-library'); if(lib) lib.style.display='none';
+  box.innerHTML =
+      '<div class="bgi-sec-hd" style="margin-top:2px;" data-en="Color" data-ar="اللون">Color</div>' + _bgSolidHTML()
+    + '<div class="bgi-sec-hd" data-en="Gradient" data-ar="تدرّج">Gradient</div>' + _bgGradientHTML()
+    + '<div class="bgi-sec-hd" data-en="Patterns" data-ar="أنماط">Patterns</div>'
+    + '<div id="as-bg-presets" style="min-height:40px;"></div>'
+    + '<button class="bgi-upload" onclick="addSourceChoose(\'upload\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v12"/></svg><span data-en="Upload your own" data-ar="ارفع صورتك">Upload your own</span></button>';
+  if(typeof renderPresets==='function') renderPresets('as-bg-presets');
   if(typeof applyTranslations==='function') applyTranslations();
 }
-function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; _renderBgPicker('solid'); }
-function _bgGrad(k,v){ if(k==='angle') v=parseFloat(v)||0; _bgPick.g[k]=v; _renderBgPicker('gradient'); }
-function _bgCustomColor(){ var inp=document.createElement('input'); inp.type='color'; inp.value='#3366cc'; inp.addEventListener('input', function(){ _bgApplySolid(this.value); }); inp.click(); }
+function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; var box=document.getElementById('as-bg-shades'); if(box){ box.innerHTML=_bgSolidShadesHTML(); if(typeof applyTranslations==='function') applyTranslations(); } }
+function _bgCustomColor(){ if(typeof openCPicker!=='function') return; var r=(typeof event!=='undefined'&&event&&event.currentTarget)?event.currentTarget.getBoundingClientRect():{left:(window.innerWidth/2-130),top:140,bottom:160,right:0}; openCPicker(function(hex){ _bgApplySolid(hex); }, r, '#3366cc'); }
 function _bgApplySolid(color){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
-function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; _bgApplyGradient(); }
-function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='gradient'; L.gradient={c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
+function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; if(typeof _bgUI!=='undefined') _bgUI.g={c1:g.c1,c2:g.c2,type:'linear',angle:135,p1:0,p2:100}; _bgApplyGradient(); }
+function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='gradient'; L.gradient={c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle,p1:0,p2:100}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
 function _bgFinishApply(L){ _closeAddSourceOverlay(); _addSrc.id=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof renderLayersList==='function') renderLayersList(); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof _autoEdit2dAfterUpload==='function') _autoEdit2dAfterUpload(); }
 function onBgFillColor(id, color){ var L=getLayer(id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); }
-/* ── Embedded background picker (Solid / Gradient) — lives IN the layer body, applies live ──── */
-var _bgUI = { tab:'solid', hue:8, g:{ c1:'#FF7E5F', c2:'#FEB47B', type:'linear', angle:135 } };
+/* ── Embedded background panel — stacked sections (Areas · Finish · Opacity · Color · Gradient ·
+   Presets), lives IN the layer body and applies live. No tabs: everything is visible at once. ─── */
+var _bgUI = { hue:8, g:{ c1:'#FF7E5F', c2:'#FEB47B', type:'linear', angle:135, p1:0, p2:100 } };
 function _bgiSolidRow(id){ return _bgSwCell('','Custom','_bgiCustom('+id+')',true) + _bgShades(_bgUI.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join(''); }
+function _bgiBarCss(gp){ return 'linear-gradient(90deg,'+gp.c1+' '+(gp.p1||0)+'%,'+gp.c2+' '+(gp.p2!=null?gp.p2:100)+'%)'; }
 function _bgiEnsureCSS(){
   if(document.getElementById('bgi-style')) return;
   var st=document.createElement('style'); st.id='bgi-style';
-  st.textContent='.as-tab{flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--imp-fg-2,#666);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}.as-tab.on{background:var(--imp-surface,#fff);color:var(--imp-fg,#111);box-shadow:0 1px 3px rgba(0,0,0,0.10);}'
-    +'.bg-sw-row{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0;}.bg-sw{width:44px;height:44px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;position:relative;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);}.bg-sw:hover{border-color:var(--imp-accent,#c8a96e);}.bg-sw-lbl{font-size:9.5px;color:var(--imp-fg-2,#666);text-align:center;margin-top:4px;line-height:1.15;width:44px;}'
-    +'.bg-hue{width:100%;height:14px;-webkit-appearance:none;appearance:none;border-radius:7px;background:linear-gradient(90deg,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000);outline:none;cursor:pointer;margin:2px 0 4px;}.bg-hue::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}'
-    +'.bgi-grad-editor{margin:2px 0 16px;}.bgi-grad-bar{height:38px;border-radius:8px;border:1px solid var(--imp-border,#ccc);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.45),0 1px 2px rgba(0,0,0,0.06);}'
-    +'.bgi-grad-stops{position:relative;height:26px;margin-top:10px;}.bgi-stop{position:absolute;top:0;transform:translateX(-50%);width:26px;height:26px;border-radius:6px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.4),0 2px 5px rgba(0,0,0,0.3);cursor:pointer;padding:0;transition:transform .12s;}.bgi-stop:hover{transform:translateX(-50%) scale(1.08);}.bgi-stop::before{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #fff;}';
+  st.textContent=
+     '.bg-inline{margin:6px 0 2px;}'
+    +'.bgi-sec-hd{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-2,#777);margin:18px 2px 9px;}'
+    +'.bgi-sec-hd:first-child{margin-top:4px;}'
+    +'.bgi-sub{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:10px 2px 4px;}'
+    +'.bgi-divider{height:1px;background:var(--imp-border,#eee);margin:18px 0 2px;}'
+    +'.bg-sw-row{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0;}.bg-sw{width:42px;height:42px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;position:relative;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);}.bg-sw:hover{border-color:var(--imp-accent,#c8a96e);}.bg-sw.on{border-color:var(--imp-fg,#111);}.bg-sw-lbl{font-size:9.5px;color:var(--imp-fg-2,#666);text-align:center;margin-top:4px;line-height:1.15;width:42px;}'
+    +'.bg-hue{width:100%;height:14px;-webkit-appearance:none;appearance:none;border-radius:7px;background:linear-gradient(90deg,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000);outline:none;cursor:pointer;margin:2px 0 4px;}.bg-hue::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}.bg-hue::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}'
+    +'.bgi-grad-editor{padding:0 15px;margin:4px 0 6px;}'
+    +'.bgi-grad-bar{height:40px;border-radius:9px;border:1px solid var(--imp-border,#ccc);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.45),0 1px 2px rgba(0,0,0,0.06);}'
+    +'.bgi-grad-stops{position:relative;height:30px;margin-top:8px;}'
+    +'.bgi-stop{position:absolute;top:0;transform:translateX(-50%);width:26px;height:26px;border-radius:7px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 2px 6px rgba(0,0,0,0.3);cursor:grab;padding:0;touch-action:none;}.bgi-stop:active{cursor:grabbing;}.bgi-stop.on{outline:2px solid var(--imp-accent,#c8a96e);outline-offset:1px;}.bgi-stop::before{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #fff;}'
+    +'.bgi-type-row{display:flex;gap:10px;margin:4px 0 2px;}'
+    +'.bgi-type{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:9px 6px;border:1.5px solid var(--imp-border,#ddd);border-radius:11px;background:var(--imp-surface,#fff);cursor:pointer;font-family:inherit;}'
+    +'.bgi-type-ic{width:30px;height:30px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08);}'
+    +'.bgi-type-lbl{font-size:11px;font-weight:600;color:var(--imp-fg-2,#666);}'
+    +'.bgi-type.on{border-color:var(--imp-fg,#111);background:var(--imp-surface-2,#f7f7f7);}.bgi-type.on .bgi-type-lbl{color:var(--imp-fg,#111);}'
+    +'.bgi-angle-row{display:flex;align-items:center;gap:14px;margin:14px 2px 2px;}'
+    +'.bgi-dial{position:relative;width:52px;height:52px;border-radius:50%;border:1.5px solid var(--imp-border,#ddd);background:var(--imp-surface-2,#f5f5f5);cursor:grab;flex:0 0 auto;touch-action:none;}.bgi-dial:active{cursor:grabbing;}'
+    +'.bgi-dial-ptr{position:absolute;top:50%;left:50%;width:46%;height:2.5px;background:var(--imp-fg,#111);border-radius:2px;transform-origin:0 50%;}'
+    +'.bgi-dial-hub{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:var(--imp-fg,#111);transform:translate(-50%,-50%);}'
+    +'.bgi-angle-val{font-size:14px;font-weight:700;color:var(--imp-fg,#111);font-variant-numeric:tabular-nums;}'
+    +'.bgi-angle-cap{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);}'
+    +'.bgi-angle-dis{opacity:.32;pointer-events:none;}'
+    +'.bgi-areas{display:flex;gap:10px;margin:2px 0;}'
+    +'.bgi-area{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 6px 9px;border:1.5px solid var(--imp-border,#ddd);border-radius:12px;background:var(--imp-surface,#fff);cursor:pointer;font-family:inherit;}'
+    +'.bgi-area.on{border-color:var(--imp-fg,#111);background:var(--imp-surface-2,#f7f7f7);}'
+    +'.bgi-area-lbl{font-size:11px;font-weight:600;color:var(--imp-fg-2,#666);}.bgi-area.on .bgi-area-lbl{color:var(--imp-fg,#111);}'
+    +'.bgi-presets .preset-grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));}'
+    +'.bgi-upload{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:12px 0 2px;padding:11px;border:1px dashed var(--imp-border,#ccc);border-radius:10px;background:var(--imp-surface-2,#f7f7f7);color:var(--imp-fg-2,#666);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}.bgi-upload:hover{border-color:var(--imp-accent,#c8a96e);color:var(--imp-fg,#111);}';
   document.head.appendChild(st);
 }
-function _bgAreasHTML(id){
-  var L=getLayer(id)||{}, a=L._bgArea||'both';
-  function btn(k,en,ar){ return '<button class="as-tab'+(a===k?' on':'')+'" style="flex:1;padding:7px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgSetArea('+id+',\''+k+'\')" data-en="'+en+'" data-ar="'+ar+'">'+en+'</button>'; }
-  return '<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:14px 2px 6px;" data-en="Areas" data-ar="المناطق">Areas</div>'
-    +'<div style="display:flex;gap:6px;">'+btn('front','Front','الأمام')+btn('back','Back','الخلف')+btn('both','Both','كلاهما')+'</div>';
+function _bgiTagSVG(ff,fb){
+  function tag(x,on){ var fill=on?'var(--imp-fg,#111)':'var(--imp-surface,#fff)'; var stroke='var(--imp-fg-3,#999)'; return '<g transform="translate('+x+',0)"><path d="M3 5.5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.4"/><circle cx="9" cy="6.4" r="1.5" fill="var(--imp-surface,#fff)" stroke="'+stroke+'" stroke-width="1"/></g>'; }
+  return '<svg width="42" height="28" viewBox="0 0 39 26" fill="none">'+tag(2,ff)+tag(21,fb)+'</svg>';
 }
+function _bgAreasVisual(id){
+  var L=getLayer(id)||{}, a=L._bgArea||'both';
+  function btn(k,en,ar,ff,fb){ return '<button class="bgi-area'+(a===k?' on':'')+'" onclick="_bgSetArea('+id+',\''+k+'\')">'+_bgiTagSVG(ff,fb)+'<span class="bgi-area-lbl" data-en="'+en+'" data-ar="'+ar+'">'+en+'</span></button>'; }
+  return '<div class="bgi-areas">'+btn('front','Front','الأمام',true,false)+btn('back','Back','الخلف',false,true)+btn('both','Both','كلاهما',true,true)+'</div>';
+}
+function _bgiColorBlock(id){
+  var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join('');
+  return '<input type="range" class="bg-hue" min="0" max="360" value="'+_bgUI.hue+'" oninput="_bgiHueShades('+id+',this.value)">'
+    +'<div class="bg-sw-row" id="bgi-shades-'+id+'">'+_bgiSolidRow(id)+'</div>'
+    +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
+    +'<div class="bg-sw-row">'+nu+'</div>';
+}
+function _bgiGradientBlock(id){
+  var gp=_bgUI.g;
+  var editor='<div class="bgi-grad-editor"><div class="bgi-grad-bar" id="bgi-prev-'+id+'" style="background:'+_bgiBarCss(gp)+';"></div>'
+    +'<div class="bgi-grad-stops" id="bgi-stops-'+id+'">'
+      +'<button class="bgi-stop" data-stop="c1" style="left:'+gp.p1+'%;background:'+gp.c1+';" title="Start colour — drag to move, tap to recolour"></button>'
+      +'<button class="bgi-stop" data-stop="c2" style="left:'+gp.p2+'%;background:'+gp.c2+';" title="End colour — drag to move, tap to recolour"></button>'
+    +'</div></div>';
+  var lin='<button class="bgi-type'+(gp.type==='linear'?' on':'')+'" onclick="_bgiSetType('+id+',\'linear\')"><span class="bgi-type-ic" style="background:linear-gradient(90deg,'+gp.c1+','+gp.c2+');"></span><span class="bgi-type-lbl" data-en="Linear" data-ar="خطي">Linear</span></button>';
+  var rad='<button class="bgi-type'+(gp.type==='radial'?' on':'')+'" onclick="_bgiSetType('+id+',\'radial\')"><span class="bgi-type-ic" style="background:radial-gradient(circle at 50% 50%,'+gp.c1+','+gp.c2+');"></span><span class="bgi-type-lbl" data-en="Radial" data-ar="شعاعي">Radial</span></button>';
+  var typeRow='<div class="bgi-type-row">'+lin+rad+'</div>';
+  var angRow='<div class="bgi-angle-row'+(gp.type==='radial'?' bgi-angle-dis':'')+'" id="bgi-angwrap-'+id+'"><div class="bgi-dial" id="bgi-dial-'+id+'" title="Drag to set the gradient angle"><div class="bgi-dial-ptr" id="bgi-dialptr-'+id+'" style="transform:rotate('+gp.angle+'deg);"></div><div class="bgi-dial-hub"></div></div><div><div class="bgi-angle-cap" data-en="Angle" data-ar="الزاوية">Angle</div><div class="bgi-angle-val" id="bgi-ang-'+id+'">'+gp.angle+'°</div></div></div>';
+  var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgiGradPreset('+id+','+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
+  return editor+typeRow+angRow+'<div class="bgi-sub" data-en="Gradient presets" data-ar="تدرّجات جاهزة">Gradient presets</div><div class="bg-sw-row">'+presets+'</div>';
+}
+function _bgiPresetFocus(id){ if(typeof _addSrc!=='undefined'&&_addSrc){ _addSrc.id=id; _addSrc.kind='pattern'; } }
 function _bgiContent(id){
   _bgiEnsureCSS();
-  var tab=_bgUI.tab; if(tab!=='gradient' && tab!=='presets') tab='solid';
-  var t=function(k,en,ar){ return '<button class="as-tab'+(tab===k?' on':'')+'" onclick="_bgiTab('+id+',\''+k+'\')" data-en="'+en+'" data-ar="'+ar+'">'+en+'</button>'; };
-  var tabs='<div style="display:flex;gap:6px;margin:8px 0 12px;background:var(--imp-surface-2,#f3f3f3);padding:4px;border-radius:10px;">'
-    +t('solid','Color','لون')+t('gradient','Gradient','تدرّج')+t('presets','Presets','أنماط')+'</div>';
-  var body;
-  if(tab==='solid'){
-    var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join('');
-    body='<input type="range" class="bg-hue" min="0" max="360" value="'+_bgUI.hue+'" oninput="_bgiHueShades('+id+',this.value)">'
-      +'<div class="bg-sw-row" id="bgi-shades-'+id+'">'+_bgiSolidRow(id)+'</div>'
-      +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:4px 2px 2px;" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
-      +'<div class="bg-sw-row">'+nu+'</div>';
-  } else if(tab==='gradient'){
-    var gp=_bgUI.g;
-    var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:radial-gradient(circle at 38% 32%, '+g.c1+', '+g.c2+');" onclick="_bgiGradPreset('+id+','+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
-    body='<div class="bgi-grad-editor"><div class="bgi-grad-bar" id="bgi-prev-'+id+'" style="background:linear-gradient(90deg,'+gp.c1+','+gp.c2+');"></div>'
-        +'<div class="bgi-grad-stops"><button class="bgi-stop" style="left:0%;background:'+gp.c1+';" title="Start colour" onclick="_bgiStopPick('+id+',\'c1\')"></button><button class="bgi-stop" style="left:100%;background:'+gp.c2+';" title="End colour" onclick="_bgiStopPick('+id+',\'c2\')"></button></div></div>'
-      +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;">'
-        +'<button class="as-tab'+(gp.type==='linear'?' on':'')+'" style="flex:0 0 auto;padding:6px 12px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgiGradType('+id+',\'linear\')" data-en="Linear" data-ar="خطي">Linear</button>'
-        +'<button class="as-tab'+(gp.type==='radial'?' on':'')+'" style="flex:0 0 auto;padding:6px 12px;border:1px solid var(--imp-border,#ddd);border-radius:7px;" onclick="_bgiGradType('+id+',\'radial\')" data-en="Radial" data-ar="شعاعي">Radial</button>'
-        +'<div style="flex:1;'+(gp.type==='radial'?'opacity:.35;pointer-events:none;':'')+'"><div style="font-size:10px;color:var(--imp-fg-3,#999);" id="bgi-ang-'+id+'">Angle '+gp.angle+'&deg;</div><input type="range" min="0" max="360" step="5" value="'+gp.angle+'" oninput="_bgiGradLive('+id+',\'angle\',this.value)"></div>'
-      +'</div>'
-      +'<div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--imp-fg-3,#999);margin:4px 2px 6px;" data-en="Presets" data-ar="قوالب">Presets</div>'
-      +'<div class="bg-sw-row">'+presets+'</div>';
-  } else {
-    body='<div id="bgi-presets-'+id+'" style="min-height:60px;"></div>'
-      +'<button class="_as-btn" style="margin:10px 0 0;justify-content:center;width:100%;" onclick="pickLayerLogoFile('+id+')"><span>&#8679;</span> <span data-en="Upload your own" data-ar="ارفع صورتك">Upload your own</span></button>';
-  }
-  var html=tabs+body+_bgAreasHTML(id);
-  if(tab==='presets') setTimeout(function(){ if(_bgUI.tab==='presets') _bgiShowPresets(id); }, 0);
-  return html;
+  var L=getLayer(id)||{}, gp=_bgUI.g; if(gp.p1==null)gp.p1=0; if(gp.p2==null)gp.p2=100;
+  function head(en,ar){ return '<div class="bgi-sec-hd" data-en="'+en+'" data-ar="'+ar+'">'+en+'</div>'; }
+  var top = head('Areas','المناطق') + _bgAreasVisual(id)
+          + head('Background Finish','تشطيب الخلفية') + (typeof layerFinishGridHTML==='function' ? layerFinishGridHTML(L) : '')
+          + (typeof sliderRow==='function' ? sliderRow(id,'opacity','Opacity',0,100,1,(L.opacity!=null?L.opacity:100),'%') : '');
+  var fills = '<div class="bgi-divider"></div>'
+          + head('Color','اللون') + _bgiColorBlock(id)
+          + head('Gradient','تدرّج') + _bgiGradientBlock(id)
+          + head('Presets','أنماط')
+          + '<div id="bgi-presets-'+id+'" class="bgi-presets" style="min-height:50px;" onpointerdown="_bgiPresetFocus('+id+')"></div>'
+          + '<button class="bgi-upload" onclick="pickLayerLogoFile('+id+')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v12"/></svg><span data-en="Upload your own" data-ar="ارفع صورتك">Upload your own</span></button>';
+  setTimeout(function(){ _bgiShowPresets(id); _bgiAttachStopDrag(id); _bgiAttachAngleDial(id); }, 0);
+  return top + fills;
 }
 function _bgiRender(id){ var box=document.getElementById('bg-pick-'+id); if(box){ box.innerHTML=_bgiContent(id); if(typeof applyTranslations==='function') applyTranslations(); } }
-function _bgiTab(id, tab){ _bgUI.tab=tab; _bgiRender(id); }
-function _bgiHueShades(id, v){ _bgUI.hue=parseFloat(v)||0; var row=document.getElementById('bgi-shades-'+id); if(row) row.innerHTML=_bgiSolidRow(id); }
-function _bgiCustom(id){ var inp=document.createElement('input'); inp.type='color'; inp.value=(getLayer(id)||{}).fillColor||'#3366cc'; inp.addEventListener('input',function(){ _bgiApplySolid(id,this.value); }); inp.click(); }
-function _bgiApplySolid(id, color){ var L=getLayer(id); if(!L)return; _bgUI.tab='solid'; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L, false); }
-function _bgiGradPreset(id, i){ var g=BG_GRADIENTS[i]; if(!g)return; _bgUI.g={ c1:g.c1, c2:g.c2, type:'linear', angle:135 }; _bgUI.tab='gradient'; _bgiApplyGradient(id, false); }
-function _bgiGradType(id, t){ _bgUI.g.type=t; _bgiApplyGradient(id, false); }
-function _bgiApplyGradient(id, noRender){ var L=getLayer(id); if(!L)return; L.fillType='gradient'; L.gradient={ c1:_bgUI.g.c1, c2:_bgUI.g.c2, type:_bgUI.g.type, angle:_bgUI.g.angle }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L, noRender); }
-function _bgiGradLive(id, k, v){
-  _bgUI.g[k]=(k==='angle'?(parseFloat(v)||0):v);
-  var prev=document.getElementById('bgi-prev-'+id); if(prev) prev.style.background='linear-gradient(90deg,'+_bgUI.g.c1+','+_bgUI.g.c2+')';   /* editor bar shows the colour ramp; the angle/radial applies on the tag */
-  var al=document.getElementById('bgi-ang-'+id); if(al) al.textContent='Angle '+_bgUI.g.angle+'°';
-  _bgiUpdateStops(id);
-  _bgiApplyGradient(id, true);
+function _bgiHueShades(id, v){ _bgUI.hue=parseFloat(v)||0; var row=document.getElementById('bgi-shades-'+id); if(row){ row.innerHTML=_bgiSolidRow(id); if(typeof applyTranslations==='function') applyTranslations(); } }
+function _bgiCustom(id){ var L=getLayer(id)||{}, cur=(L.fillType==='solid'&&L.fillColor)?L.fillColor:'#3366cc'; var r=(typeof event!=='undefined'&&event&&event.currentTarget)?event.currentTarget.getBoundingClientRect():{left:(window.innerWidth/2-130),top:140,bottom:160,right:0}; if(typeof openCPicker==='function') openCPicker(function(hex){ _bgiApplySolid(id,hex); }, r, cur); }
+function _bgiApplySolid(id, color){ var L=getLayer(id); if(!L)return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
+function _bgiGradPreset(id, i){ var g=BG_GRADIENTS[i]; if(!g)return; _bgUI.g.c1=g.c1; _bgUI.g.c2=g.c2; _bgUI.g.p1=0; _bgUI.g.p2=100; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }
+function _bgiSetType(id, t){ _bgUI.g.type=t; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }
+function _bgiApplyGradient(id){ var L=getLayer(id); if(!L)return; var gp=_bgUI.g; L.fillType='gradient'; L.gradient={ c1:gp.c1, c2:gp.c2, type:gp.type, angle:gp.angle, p1:gp.p1, p2:gp.p2 }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
+function _bgiSyncGradientUI(id){
+  var gp=_bgUI.g, root=document.getElementById('bg-pick-'+id); if(!root) return;
+  var bar=document.getElementById('bgi-prev-'+id); if(bar) bar.style.background=_bgiBarCss(gp);
+  var s1=root.querySelector('[data-stop="c1"]'); if(s1){ s1.style.left=gp.p1+'%'; s1.style.background=gp.c1; }
+  var s2=root.querySelector('[data-stop="c2"]'); if(s2){ s2.style.left=gp.p2+'%'; s2.style.background=gp.c2; }
+  var ptr=document.getElementById('bgi-dialptr-'+id); if(ptr) ptr.style.transform='rotate('+gp.angle+'deg)';
+  var av=document.getElementById('bgi-ang-'+id); if(av) av.textContent=Math.round(gp.angle)+'°';
+  var aw=document.getElementById('bgi-angwrap-'+id); if(aw) aw.classList.toggle('bgi-angle-dis', gp.type==='radial');
+  var tr=root.querySelector('.bgi-type-row');
+  if(tr){ var bs=tr.querySelectorAll('.bgi-type');
+    if(bs[0]){ bs[0].classList.toggle('on',gp.type==='linear'); var i0=bs[0].querySelector('.bgi-type-ic'); if(i0) i0.style.background='linear-gradient(90deg,'+gp.c1+','+gp.c2+')'; }
+    if(bs[1]){ bs[1].classList.toggle('on',gp.type==='radial'); var i1=bs[1].querySelector('.bgi-type-ic'); if(i1) i1.style.background='radial-gradient(circle at 50% 50%,'+gp.c1+','+gp.c2+')'; } }
 }
-function _bgiUpdateStops(id){ var s=document.querySelectorAll('#bg-pick-'+id+' .bgi-stop'); if(s[0]) s[0].style.background=_bgUI.g.c1; if(s[1]) s[1].style.background=_bgUI.g.c2; }
-function _bgiStopPick(id, which){ var inp=document.createElement('input'); inp.type='color'; inp.value=_bgUI.g[which]||'#000000'; inp.addEventListener('input', function(){ _bgUI.tab='gradient'; _bgiGradLive(id, which, this.value); }); inp.click(); }
+function _bgiAttachStopDrag(id){
+  var track=document.getElementById('bgi-stops-'+id); if(!track) return;
+  Array.prototype.forEach.call(track.querySelectorAll('.bgi-stop'), function(st){
+    var which=st.getAttribute('data-stop'), pkey=(which==='c1'?'p1':'p2');
+    function down(e){
+      e.preventDefault(); var moved=false, sx=(e.touches?e.touches[0]:e).clientX;
+      Array.prototype.forEach.call(track.querySelectorAll('.bgi-stop'),function(o){o.classList.remove('on');}); st.classList.add('on');
+      function mv(ev){ var pt=ev.touches?ev.touches[0]:ev; if(Math.abs(pt.clientX-sx)>3) moved=true; var r=track.getBoundingClientRect(); var p=Math.max(0,Math.min(100,(pt.clientX-r.left)/r.width*100)); _bgUI.g[pkey]=Math.round(p); _bgiApplyGradient(id); _bgiSyncGradientUI(id); if(ev.cancelable) ev.preventDefault(); }
+      function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up);
+        if(!moved && typeof openCPicker==='function'){ var rc=st.getBoundingClientRect(); openCPicker(function(hex){ _bgUI.g[which]=hex; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }, rc, _bgUI.g[which]); } }
+      document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up); document.addEventListener('touchmove',mv,{passive:false}); document.addEventListener('touchend',up);
+    }
+    st.addEventListener('mousedown',down); st.addEventListener('touchstart',down,{passive:false});
+  });
+}
+function _bgiAttachAngleDial(id){
+  var dial=document.getElementById('bgi-dial-'+id); if(!dial) return;
+  function down(e){
+    if(_bgUI.g.type==='radial') return; e.preventDefault();
+    function mv(ev){ var pt=ev.touches?ev.touches[0]:ev; var r=dial.getBoundingClientRect(); var cx=r.left+r.width/2, cy=r.top+r.height/2; var ang=Math.atan2(pt.clientY-cy, pt.clientX-cx)*180/Math.PI; ang=Math.round(((ang%360)+360)%360); _bgUI.g.angle=ang; _bgiApplyGradient(id); _bgiSyncGradientUI(id); if(ev.cancelable) ev.preventDefault(); }
+    function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up); }
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up); document.addEventListener('touchmove',mv,{passive:false}); document.addEventListener('touchend',up); mv(e);
+  }
+  dial.addEventListener('mousedown',down); dial.addEventListener('touchstart',down,{passive:false});
+}
 function _bgSetArea(id, area){
   var L=getLayer(id); if(!L) return;
-  L._bgArea=area;   /* _drawBgFill reads this to fill only the chosen face(s) — colour + finish mask both follow */
+  L._bgArea=area;
   if(typeof updateLayerThumb==='function') updateLayerThumb(L);
   if(typeof drawBagTexture==='function') drawBagTexture();
   if(typeof scheduleHistory==='function') scheduleHistory();
-  _bgiRender(id);
+  var wrap=document.querySelector('#bg-pick-'+id+' .bgi-areas') || document.querySelector('#as-bg .bgi-areas');
+  if(wrap){ var order=['front','back','both']; Array.prototype.forEach.call(wrap.querySelectorAll('.bgi-area'),function(b,i){ b.classList.toggle('on', order[i]===area); }); }
 }
-function _bgiShowPresets(id){ _addSrc.id=id; _addSrc.kind='pattern'; if(typeof renderPresets==='function') renderPresets('bgi-presets-'+id); }
-function _bgiLive(L, noRender){ if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof checkCart==='function') checkCart(); if(typeof scheduleHistory==='function') scheduleHistory(); if(!noRender) _bgiRender(L.id); }
+function _bgiShowPresets(id){ var box=document.getElementById('bgi-presets-'+id); if(!box) return; if(box.getAttribute('data-loaded')==='1') return; box.setAttribute('data-loaded','1'); if(typeof _addSrc!=='undefined'&&_addSrc){ _addSrc.id=id; _addSrc.kind='pattern'; } if(typeof renderPresets==='function') renderPresets('bgi-presets-'+id); }
+function _bgiLive(L){ if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof checkCart==='function') checkCart(); if(typeof scheduleHistory==='function') scheduleHistory(); }
 /* ── Font upload + artist font library (fonts/ folder) ─────────────────────── */
 var _pendingFontLayerId = null;
 function pickLayerFontFile(id) {
