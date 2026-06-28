@@ -1744,6 +1744,25 @@
     /* Smooth step-in — each wizard step's content fades and rises gently into place. */
     .config-step.active { animation: impStepIn var(--imp-dur-slow) var(--imp-ease-out) both; }
     @keyframes impStepIn { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
+    /* Touch a11y — extend small icon-button tap areas to ~40px without changing their look. */
+    .layer-icon-btn { position: relative; }
+    .layer-icon-btn::before { content:""; position:absolute; inset:-4px; border-radius:inherit; }
+    .mode-toggle button, .view-toggle button { padding-top:8px; padding-bottom:8px; }
+    /* Premium loading skeleton — a soft shimmer sweep over preset tiles while they load. */
+    .preset-thumb.preset-pending { position:relative; overflow:hidden; }
+    .preset-thumb.preset-pending::after { content:""; position:absolute; inset:0; background:linear-gradient(100deg, transparent 18%, var(--imp-surface-2) 40%, var(--imp-surface-3) 50%, var(--imp-surface-2) 60%, transparent 82%); background-size:220% 100%; animation:impShimmer 1.25s ease-in-out infinite; pointer-events:none; }
+    .preset-thumb.preset-pending .preset-spin { display:none; }
+    .preset-thumb.preset-shown::after { display:none; }
+    @keyframes impShimmer { from { background-position:120% 0; } to { background-position:-120% 0; } }
+    /* Refined selected state — a soft lift on the chosen option card. */
+    .finish-card.on, .font-card.on, .bag-sopt.on, .qopt.on, .bgi-area.on, .bgi-type.on { box-shadow: var(--imp-shadow-sm); }
+    /* Guided empty state for the Design step. */
+    .layers-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:7px; padding:30px 22px 26px; }
+    .layers-empty svg { color:var(--imp-border-hover); margin-bottom:2px; }
+    .layers-empty .le-title { font-size:14px; font-weight:600; color:var(--imp-fg-2); }
+    .layers-empty .le-sub { font-size:12px; line-height:1.5; color:var(--imp-fg-3); max-width:240px; }
+    /* Add-to-Cart success flash. */
+    .btn-cart.added { background:var(--imp-success) !important; border-color:var(--imp-success) !important; color:#fff !important; }
   </style>
 </head>
 
@@ -6446,6 +6465,13 @@ function layerAccent(L) {
 function renderLayersList() {
   var list = document.getElementById('layers-list');
   if (!list) return;
+  if (!BAG.artwork.layers || !BAG.artwork.layers.length) {
+    list.innerHTML = '<div class="layers-empty"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>'
+      + '<div class="le-title" data-en="Your tag is blank" data-ar="بطاقتك فارغة">Your tag is blank</div>'
+      + '<div class="le-sub" data-en="Add text, a logo, a sticker, or a background above to start designing." data-ar="أضف نصاً أو شعاراً أو ملصقاً أو خلفية من الأعلى لبدء التصميم.">Add text, a logo, a sticker, or a background above to start designing.</div></div>';
+    if (typeof applyTranslations === 'function') applyTranslations();
+    return;
+  }
   var expandedId = list.getAttribute('data-expanded');
   var html = '';
   BAG.artwork.layers.forEach(function(L) {
@@ -10372,8 +10398,15 @@ function addCart() {
     try { localStorage.setItem('imprint_cart', JSON.stringify(cartData)); } catch(e) {}
   }
 
-  /* Navigate to checkout */
-  window.location.href = 'checkout.html';
+  /* Success feedback on the button, then a brief confirmation beat before navigating to checkout */
+  var _atc = document.getElementById('atcbtn');
+  if (_atc) {
+    _atc.classList.add('added');
+    _atc.disabled = true;
+    var _arc = (typeof S !== 'undefined' && S.lang === 'ar');
+    _atc.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-inline-end:7px;"><path d="M20 6 9 17l-5-5"/></svg>' + (_arc ? 'تمت الإضافة' : 'Added to cart');
+  }
+  setTimeout(function(){ window.location.href = 'checkout.html'; }, 750);
 }
 
 /* ─── LANGUAGE TOGGLE ───────────────── */
