@@ -1763,7 +1763,7 @@
   <section class="preview-panel" aria-label="Live preview">
 
     <div class="preview-header">
-      <span class="tpl-name" id="tpl-name" data-en="Price tag" data-ar="بطاقة سعر">Price tag</span>
+      <span class="tpl-name" id="tpl-name" role="heading" aria-level="1" data-en="Price tag" data-ar="بطاقة سعر">Price tag</span>
       <div class="tpl-meta" data-en="Live pricing updates as you change spec." data-ar="يتحدث السعر فورياً عند تغيير المواصفات.">Live pricing updates as you change spec.</div>
     </div>
 
@@ -1833,7 +1833,7 @@
         </button>
         <div class="cstep-center">
           <div class="cstep-title-row">
-            <span class="cstep-title" id="cstep-title" data-en="Shape &amp; Size" data-ar="الشكل والحجم">Shape &amp; Size</span>
+            <span class="cstep-title" id="cstep-title" role="heading" aria-level="2" data-en="Shape &amp; Size" data-ar="الشكل والحجم">Shape &amp; Size</span>
             <span class="cstep-counter" id="cstep-counter">1/3</span>
           </div>
           <span class="cstep-sub" id="cstep-sub" data-en="Choose your tag shape" data-ar="اختر شكل البطاقة">Choose your tag shape</span>
@@ -6507,7 +6507,7 @@ function sliderRow(id, prop, label, min, max, step, value, suffix, disabled) {
   var inSty = disabled ? ' style="pointer-events:none;cursor:not-allowed;"' : '';
   return '<div class="ctrl-slider-row"' + rowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr(label) + '>' + label + '</span>' +
     '<span class="ctrl-slider-val" id="lyr-' + id + '-' + key + '-val">' + disp + '</span></div>' +
-    '<input type="range" class="test-slider" id="lyr-' + id + '-' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"' + inSty + ' oninput="onLayerProp(' + id + ',\'' + prop + '\',this.value)"' + (disabled ? ' disabled' : '') + '></div>';
+    '<input type="range" class="test-slider" id="lyr-' + id + '-' + key + '" aria-label="' + (label || prop) + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"' + inSty + ' oninput="onLayerProp(' + id + ',\'' + prop + '\',this.value)"' + (disabled ? ' disabled' : '') + '></div>';
 }
 function sliderRowPBR(id, prop, label, value) {
   var key = prop === 'roughness' ? 'rough' : prop === 'metalness' ? 'metal' : 'trans';
@@ -7263,7 +7263,7 @@ function _transformHTML(id, L, rotFirst) {
   var sRowSty = lock ? ' style="opacity:0.5;cursor:not-allowed;"' : '';
   var sInSty = lock ? ' style="pointer-events:none;cursor:not-allowed;"' : '';
   var scaleRow = '<div class="ctrl-slider-row"' + sRowSty + '><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Scale') + '>Scale</span><span class="ctrl-slider-val" id="lyr-' + id + '-scaleui-val">' + sVal + sSuf + '</span></div>' +
-    '<input type="range" class="test-slider" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '"' + sInSty + ' oninput="onLayerScale(' + id + ',this.value)"' + (lock ? ' disabled' : '') + '></div>';
+    '<input type="range" class="test-slider" aria-label="Size" min="' + sMin + '" max="' + sMax + '" step="1" value="' + sVal + '"' + sInSty + ' oninput="onLayerScale(' + id + ',this.value)"' + (lock ? ' disabled' : '') + '></div>';
   var opRow = sliderRow(id, 'opacity', 'Opacity', 0, 100, 1, (L.opacity != null ? L.opacity : 100), '%');
   var rotRow = sliderRow(id, 'rotation', 'Rotation', 0, 360, 5, rVal, '°', lock);   /* slide by 5° increments */
   return scaleRow + (rotFirst ? (rotRow + opRow) : (opRow + rotRow));
@@ -7583,7 +7583,7 @@ function _tiledControlsHTML(id, L) {
     /* Opacity here mirrors the transform-section Opacity (kept in sync by onLayerProp). */
     '<div class="ctrl-slider-row"><div class="ctrl-slider-top"><span class="ctrl-slider-name"' + _arAttr('Opacity') + '>Opacity</span>' +
       '<span class="ctrl-slider-val" id="lyr-' + id + '-opacity2-val">' + Math.round(_op) + '%</span></div>' +
-      '<input type="range" class="test-slider" id="lyr-' + id + '-opacity2" min="0" max="100" step="1" value="' + _op + '" oninput="onLayerProp(' + id + ',\'opacity\',this.value)"></div>' +
+      '<input type="range" class="test-slider" id="lyr-' + id + '-opacity2" aria-label="Opacity" min="0" max="100" step="1" value="' + _op + '" oninput="onLayerProp(' + id + ',\'opacity\',this.value)"></div>' +
     '<div style="font-size:10px;color:var(--secondary);margin-top:8px;line-height:1.4;">Resize / crop the tiled box in the 2D editor.</div>';
 }
 /* Background tile controls — Density + Feather only (Gap removed; backgrounds pack tight). */
@@ -7920,13 +7920,13 @@ function _bgShades(h){ return [ {c:_bgHslHex(h,60,86),n:'Pale'}, {c:_bgHslHex(h,
 function _bgSwCell(color,label,handler,isCustom){
   var inner = isCustom ? '<span style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(red,#ff0,#0f0,#0ff,#00f,#f0f,red);"></span><span style="position:absolute;inset:5px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;">+</span>' : '';
   return '<div style="display:flex;flex-direction:column;align-items:center;">'
-    +'<button class="bg-sw" style="background:'+(isCustom?'transparent':color)+';" onclick="'+handler+'">'+inner+'</button>'
+    +'<button class="bg-sw" aria-label="'+label+'" style="background:'+(isCustom?'transparent':color)+';" onclick="'+handler+'">'+inner+'</button>'
     +'<span class="bg-sw-lbl">'+label+'</span></div>';
 }
 function _bgSolidShadesHTML(){ return _bgShades(_bgPick.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join(''); }
 function _bgSolidHTML(){
   var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgApplySolid('"+s.c+"')"); }).join('');
-  return '<input type="range" class="bg-hue" min="0" max="360" value="'+_bgPick.hue+'" oninput="_bgHue(this.value)">'
+  return '<input type="range" class="bg-hue" aria-label="Hue" min="0" max="360" value="'+_bgPick.hue+'" oninput="_bgHue(this.value)">'
     +'<div class="bg-sw-row" id="as-bg-shades">'+_bgSolidShadesHTML()+'</div>'
     +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
     +'<div class="bg-sw-row">'+nu+'</div>';
@@ -8022,7 +8022,7 @@ function _bgAreasVisual(id){
 }
 function _bgiColorBlock(id){
   var nu=BG_NEUTRALS.map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join('');
-  return '<input type="range" class="bg-hue" min="0" max="360" value="'+_bgUI.hue+'" oninput="_bgiHueShades('+id+',this.value)">'
+  return '<input type="range" class="bg-hue" aria-label="Hue" min="0" max="360" value="'+_bgUI.hue+'" oninput="_bgiHueShades('+id+',this.value)">'
     +'<div class="bg-sw-row" id="bgi-shades-'+id+'">'+_bgiSolidRow(id)+'</div>'
     +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
     +'<div class="bg-sw-row">'+nu+'</div>';
@@ -8288,7 +8288,7 @@ function _renderPresetGrid(i){
       var _bgThumb=(type==='background');   /* backgrounds: square-crop (cover) so rectangular patterns don't look rectangular */
       btn.style.cssText='aspect-ratio:1;border:1px solid var(--imp-border,#e5e5e5);border-radius:9px;background:var(--imp-surface,#fff);cursor:pointer;padding:'+(_bgThumb?'0':'6px')+';overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;';
       btn.setAttribute('onclick',"choosePreset('"+cn+"','"+safe+"')");
-      btn.innerHTML='<span class="preset-spin"></span><img decoding="async" style="'+(_bgThumb?'width:100%;height:100%;object-fit:cover;':'max-width:100%;max-height:100%;object-fit:contain;')+'pointer-events:none;position:relative;display:block;">';
+      btn.innerHTML='<span class="preset-spin"></span><img decoding="async" alt="" style="'+(_bgThumb?'width:100%;height:100%;object-fit:cover;':'max-width:100%;max-height:100%;object-fit:contain;')+'pointer-events:none;position:relative;display:block;">';
       var img=btn.querySelector('img');
       img.addEventListener('load', function(){ _presetSeen[url]=true; });   /* remember it for instant show next visit */
       img.src=url;   /* start the download NOW, in parallel/background (cached → instant) */
