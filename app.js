@@ -15,7 +15,7 @@
   IMP.maker      = function (id) { return find('makers', id); };
   IMP.collection = function (id) { return find('collections', id); };
   IMP.category   = function (id) { return find('categories', id); };
-  IMP.artistName = function (id) { var a = IMP.artist(id); return a ? a.name : 'Imprint'; };
+  IMP.artistName = function (id) { var a = IMP.artist(id); return a ? a.name : 'Yallā'; };
   IMP.productsBy = function (key, val) { return (IMP.cat().products || []).filter(function (p) { return Array.isArray(p[key]) ? p[key].indexOf(val) >= 0 : p[key] === val; }); };
   IMP.related = function (p, n) {
     n = n || 4;
@@ -255,12 +255,12 @@
     if (!mount) return;
     mount.innerHTML =
       '<footer class="app-footer"><div class="af-inner">' +
-        '<div class="af-brand"><div class="l">IMPRINT<span style="color:var(--imp-gold)">®</span></div>' +
+        '<div class="af-brand"><div class="l">Yallā<span style="color:var(--imp-gold)">®</span></div>' +
           '<p>The marketplace that connects independent artists, brands, and vetted manufacturers — design, customise, and produce premium packaging in one seamless, automated flow.</p></div>' +
         '<div class="af-col"><h5>Shop</h5><a href="products.html">Products</a><a href="collections.html">Collections</a><a href="search.html">Search</a><a href="favourites.html">Favourites</a></div>' +
         '<div class="af-col"><h5>Network</h5><a href="artists.html">Artists</a><a href="manufacturers.html">Manufacturers</a><a href="for-partners.html">How it works</a><a href="pricing.html">Factory plans</a><a href="designer/index.html">For designers</a></div>' +
         '<div class="af-col"><h5>Account</h5><a href="account.html">My account</a><a href="orders.html">Orders</a><a href="checkout.html">Cart</a><a href="#">Help centre</a></div>' +
-      '</div><div class="af-bottom">© 2026 IMPRINT®. A three-sided packaging marketplace · artists · brands · manufacturers. All rights reserved.</div></footer>';
+      '</div><div class="af-bottom">© 2026 Yallā®. A three-sided packaging marketplace · artists · brands · manufacturers. All rights reserved.</div></footer>';
   };
 
   function updateBadges() {

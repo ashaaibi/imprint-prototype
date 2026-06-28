@@ -130,7 +130,7 @@ window.IMPRINT_CATALOG = {
    ],
    "rating": 5.0,
    "reviews": 63,
-   "blurb": "A foil honeycomb bottle bag with editable wordmark — the flagship Imprint template. Fully customisable in 3D.",
+   "blurb": "A foil honeycomb bottle bag with editable wordmark — the flagship Yallā template. Fully customisable in 3D.",
    "featured": true,
    "template": "honey-gift-bag",
    "href": "honeyloom-gift-bag/",
@@ -198,7 +198,7 @@ window.IMPRINT_CATALOG = {
    ],
    "rating": 4.9,
    "reviews": 21,
-   "blurb": "A double-wall paper coffee cup you can brand across the body, sleeve and base in real-time 3D — the lid stays clean. A ready Imprint template with its own cup studio.",
+   "blurb": "A double-wall paper coffee cup you can brand across the body, sleeve and base in real-time 3D — the lid stays clean. A ready Yallā template with its own cup studio.",
    "featured": true,
    "template": "coffee-cup",
    "configurator": "configurator-cup.html",
@@ -3611,7 +3611,7 @@ window.IMPRINT_CATALOG = {
  "makers": [
   {
    "id": "imprint-atelier",
-   "name": "Imprint Atelier",
+   "name": "Imprint",
    "country": "AE",
    "flag": "🇦🇪",
    "color": "#1a1a1a",
@@ -3640,7 +3640,7 @@ window.IMPRINT_CATALOG = {
     "ISO 9001",
     "G7 Master"
    ],
-   "bio": "Imprint's flagship atelier in Dubai — the house standard for foil, emboss and rigid-box finishing, and the default for featured templates.",
+   "bio": "A flagship atelier in Dubai — the house standard for foil, emboss and rigid-box finishing, and the default maker for featured templates.",
    "products": [
     "honeyloom-gift-bag",
     "coffee-cup",

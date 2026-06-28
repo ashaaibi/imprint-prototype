@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orders — IMPRINT®</title>
+  <title>Orders — Yallā</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared.css"><link rel="stylesheet" href="catalog.css">
@@ -51,12 +51,12 @@
   var orders=[];
   // live cart order if present
   var live = (typeof getOrder==='function') ? getOrder() : null;
-  if(live){ orders.push({ id:live.orderId||'IMP-LIVE', name:live.product||'Custom order', img:'templates/renders/honey-gift-bag-1.jpg', qty:live.qty||500, total:live.total||0, maker:live.manufacturer||'Imprint Atelier', stage:1, status:'production', date:'Today' }); }
+  if(live){ orders.push({ id:live.orderId||'IMP-LIVE', name:live.product||'Custom order', img:'templates/renders/honey-gift-bag-1.jpg', qty:live.qty||500, total:live.total||0, maker:live.manufacturer||'Imprint', stage:1, status:'production', date:'Today' }); }
 
   // demo history (investor view)
   var honey=IMP.product('honeyloom-gift-bag');
   var p2=C.products[3], p3=C.products[8];
-  orders.push({ id:'IMP-8842', name:honey.name, img:honey.image, qty:500, total:honey.price*500*1.05, maker:'Imprint Atelier', stage:5, status:'delivered', date:'2 Jun 2026' });
+  orders.push({ id:'IMP-8842', name:honey.name, img:honey.image, qty:500, total:honey.price*500*1.05, maker:'Imprint', stage:5, status:'delivered', date:'2 Jun 2026' });
   orders.push({ id:'IMP-8713', name:p2.name, img:p2.image, qty:1000, total:p2.price*1000*1.05, maker:'Gulf Print Works', stage:4, status:'shipped', date:'9 Jun 2026' });
   orders.push({ id:'IMP-8690', name:p3.name, img:p3.image, qty:250, total:p3.price*250*1.05, maker:'Najm Packaging', stage:2, status:'production', date:'11 Jun 2026' });
 

@@ -32,7 +32,7 @@
   function swatch(c, x, y, hex, sz) { sz = sz || 34; c.save(); roundRect(c, x, y, sz, sz, 6); c.fillStyle = hex || '#fff'; c.fill(); c.strokeStyle = 'rgba(0,0,0,0.18)'; c.lineWidth = 2; c.stroke(); c.restore(); }
 
   function header(c, title) {
-    TX(c, 'IMPRINT', M, 132, { size: 48, weight: 800, color: INK, rtl: false });
+    TX(c, 'Yallā', M, 132, { size: 48, weight: 800, color: INK, rtl: false });
     c.save(); c.fillStyle = GOLD; c.beginPath(); c.arc(M + 272, 104, 6, 0, 6.3); c.fill(); c.restore();
     TX(c, L('CUSTOM PAPER-BAG SPEC SHEET — FACTORY', 'ورقة مواصفات الكيس — للمصنع', '定制纸袋规格表 — 工厂'), PW - M, 126, { size: 21, weight: 600, color: SUB, align: 'right' });
     rule(c, M, 160, PW - M, GOLD, 3);
@@ -40,7 +40,7 @@
   }
   function footer(c, ref, pageNo, pageTot) {
     rule(c, M, PH - 108, PW - M, LINE, 2);
-    TX(c, 'IMPRINT® · ' + ref, M, PH - 64, { size: 21, color: SUB, rtl: false });
+    TX(c, 'Yallā® · ' + ref, M, PH - 64, { size: 21, color: SUB, rtl: false });
     TX(c, L('Page ', 'صفحة ', '第 ') + pageNo + ' / ' + pageTot + (_lang === 'zh' ? ' 页' : ''), PW - M, PH - 64, { size: 21, color: SUB, align: 'right' });
   }
   function section(c, y, label, x) { x = x || M; c.save(); c.fillStyle = GOLD; c.fillRect(x, y - 22, 6, 28); c.restore(); TX(c, label, x + 20, y, { size: 28, weight: 700, color: INK }); return y + 28; }

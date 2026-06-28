@@ -8,19 +8,19 @@
   <meta name="theme-color" content="#111111">
   <meta name="description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="IMPRINT®">
-  <meta property="og:title" content="IMPRINT® — Price tag configurator">
+  <meta property="og:site_name" content="Yallā">
+  <meta property="og:title" content="Yallā — Price tag configurator">
   <meta property="og:description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
   <meta property="og:url" content="https://ashaaibi.github.io/imprint-prototype/configurator.html">
   <meta property="og:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="IMPRINT® — Price tag configurator">
+  <meta name="twitter:title" content="Yallā — Price tag configurator">
   <meta name="twitter:description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
   <meta name="twitter:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMPRINT® — Price tag configurator</title>
+  <title>Yallā — Price tag configurator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Cairo:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
@@ -37,6 +37,7 @@
     :root {
       /* Light mode tokens */
       --imp-bg:         #FBFAF7;
+      --imp-grid-line:  rgba(20,20,35,0.06);   /* page-background graph-paper grid (replaces the cream padding) */
       --imp-surface:    #FFFFFF;
       --imp-surface-2:  #F6F4EF;
       --imp-surface-3:  #EDEAE2;
@@ -91,6 +92,7 @@
     }
     html[data-theme="dark"] {
       --imp-bg:         #0F0D0B;
+      --imp-grid-line:  rgba(255,255,255,0.05);
       --imp-surface:    #17140F;
       --imp-surface-2:  #221E18;
       --imp-surface-3:  #2C2820;
@@ -120,7 +122,9 @@
     html, body {
       font-family: var(--imp-font);
       color: var(--imp-fg);
-      background: var(--imp-bg);
+      background-color: var(--imp-bg);
+      background-image: linear-gradient(var(--imp-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--imp-grid-line) 1px, transparent 1px);
+      background-size: 30px 30px;
       font-size: 14px;
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
@@ -133,7 +137,7 @@
       display: grid;
       grid-template-columns: 1fr 460px;
       min-height: calc(100vh - var(--imp-header-h));
-      background: var(--imp-bg);
+      background: transparent;   /* let the body's grid show through the gaps instead of flat cream */
     }
 
     /* ─── PREVIEW PANEL ───────────────────── */
@@ -147,11 +151,7 @@
     }
     html[dir="rtl"] .preview-panel { border-right: none; border-left: 1px solid var(--imp-border); }
     .preview-header {
-      padding: 20px 28px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      z-index: 2;
+      display: none;   /* removed — the "Price tag / Live pricing updates…" block isn't needed; reclaim the space for the editor */
     }
     .tpl-name {
       font-family: var(--imp-font);
@@ -5951,7 +5951,7 @@ function _buildOnboarding(){
   var lang=sel.lang, theme=sel.theme, cc=sel.cc, ar=(lang==='ar');
   var ccBtns=Object.keys(GCC).map(function(code){ var c=GCC[code]; return '<button class="ob-opt'+(code===cc?' on':'')+'" data-cc="'+code+'" onclick="_obPick(this,\'cc\')"><span class="flag">'+c.flag+'</span><span>'+(ar?c.nameAr:c.name)+'</span><span class="cur">'+(ar?c.currencyAr:c.currency)+'</span></button>'; }).join('');
   var html='<div class="ob-card" style="direction:'+(ar?'rtl':'ltr')+';">'+
-    '<div class="ob-h">'+(ar?'مرحباً بك في IMPRINT':'Welcome to IMPRINT')+'</div>'+
+    '<div class="ob-h">'+(ar?'مرحباً بك في يلا':'Welcome to Yallā')+'</div>'+
     '<div class="ob-sub">'+(ar?'اختر تفضيلاتك للبدء، أو تخطَّ للإعدادات الافتراضية.':'Set your preferences to begin — or skip for the defaults.')+'</div>'+
     '<div class="ob-lbl">'+(ar?'اللغة':'Language')+'</div><div class="ob-row"><button class="ob-opt'+(lang==='en'?' on':'')+'" data-lang="en" onclick="_obPick(this,\'lang\')">English</button><button class="ob-opt'+(ar?' on':'')+'" data-lang="ar" onclick="_obPick(this,\'lang\')">العربية</button></div>'+
     '<div class="ob-lbl">'+(ar?'الدولة / العملة':'Country / Currency')+'</div><div class="ob-cc ob-row">'+ccBtns+'</div>'+
@@ -12124,7 +12124,7 @@ function _markTouched(region){ stopHueGuide(false); if (!_suppressTouch && regio
 var viewMode = '2d';   /* price tag opens in the 2D editor (flat front/back) */
 /* 2D-editor appearance settings (all live-tunable from the Testing panel). */
 var A2D = {
-  gridOn:true, gridSize:30, gridColor:'rgba(20,20,30,0.06)', bgColor:'#fbfbfd',
+  gridOn:true, gridSize:30, gridColor:'rgba(20,20,35,0.14)', bgColor:'#fbfbfd',
   labelSize:16, labelColor:'#000000',
   labelWeight:1000, subLabelWeight:1000,         /* font-weight for labels / sub-labels */
   showUnselectedBox:false,                     /* draw the faint bounding box on ALL unselected layers (else only the hovered one) */
@@ -13311,14 +13311,7 @@ function atlas2dRender(){
   var _dark = (document.documentElement.getAttribute('data-theme')==='dark');
   /* 1. background (theme-aware) */
   ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle = _dark ? '#15151a' : A2D.bgColor; ctx.fillRect(0,0,c.width,c.height);
-  /* 2. grid pattern (screen-space graph paper) */
-  if (A2D.gridOn){
-    var gs=A2D.gridSize*D; ctx.strokeStyle = _dark ? 'rgba(255,255,255,0.07)' : A2D.gridColor; ctx.lineWidth=1;
-    ctx.beginPath();
-    for(var gx=(a2d.panX%gs+gs)%gs; gx<c.width; gx+=gs){ ctx.moveTo(gx,0); ctx.lineTo(gx,c.height); }
-    for(var gy=(a2d.panY%gs+gs)%gs; gy<c.height; gy+=gs){ ctx.moveTo(0,gy); ctx.lineTo(c.width,gy); }
-    ctx.stroke();
-  }
+  /* 2. (grid moved to an on-top overlay below, so the graph-paper shows through the tag cuts too) */
   var uv=typeof BAG_UV!=='undefined'?BAG_UV:{};
   /* UV space is drawn vertically flipped so the editor reads the same way up as the
      real bag. Labels are drawn afterwards in normal space so they stay upright. */
@@ -13426,6 +13419,14 @@ function atlas2dRender(){
     ctx.restore();
   }
   ctx.restore();
+  /* 7b. grid OVERLAY (screen-space graph paper) — drawn ON TOP so it reads through/behind the tag
+     cuts too, not just the surround. Faint, so artwork stays clearly legible; toggle via gridOn. */
+  if (A2D.gridOn){
+    var gs=A2D.gridSize*D; ctx.save(); ctx.strokeStyle = _dark ? 'rgba(255,255,255,0.06)' : A2D.gridColor; ctx.lineWidth=1; ctx.beginPath();
+    for(var gx=(a2d.panX%gs+gs)%gs; gx<c.width; gx+=gs){ ctx.moveTo(gx+0.5,0); ctx.lineTo(gx+0.5,c.height); }
+    for(var gy=(a2d.panY%gs+gs)%gs; gy<c.height; gy+=gs){ ctx.moveTo(0,gy+0.5); ctx.lineTo(c.width,gy+0.5); }
+    ctx.stroke(); ctx.restore();
+  }
   /* 8. upright labels (normal screen space). Arabic when the site language is Arabic.
      A stroke (outline) is drawn under the fill for contrast (testing-tunable). */
   var _arL = (typeof getLang==='function' && getLang()==='ar');
@@ -13961,7 +13962,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', _on
     var name = prompt('Template name', 'My template'); if (!name) return;
     var cat = prompt('Category (e.g. Café, Boutique, Eid, Ramadan)', 'General') || 'General';
     var id = (name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)) || ('tpl-'+Date.now());
-    var tpl = serializeTemplate({ id:id, name:name, category:cat, designer:'Imprint', created:new Date().toISOString().slice(0,10) });
+    var tpl = serializeTemplate({ id:id, name:name, category:cat, designer:'Yallā', created:new Date().toISOString().slice(0,10) });
     dl(id+'.template.json', new Blob([JSON.stringify(tpl)], {type:'application/json'}));
     alert('Exported '+id+'.template.json\n\nNext: commit it to /templates/, capture a render (📷) and commit that too, then add an entry to /templates/index.json to publish it to the gallery.');
   };
@@ -14025,7 +14026,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', _on
     var modelKey = (typeof currentBagModel!=='undefined' && currentBagModel) ? currentBagModel : 'custom';
     var id = 'price-tag-' + modelKey + '-' + date, enc = new TextEncoder(), files = [];
     return Promise.resolve().then(function(){
-      var tpl = serializeTemplate({ id:id, name:'Price tag', category:'Price tag', designer:'Imprint', created:date });
+      var tpl = serializeTemplate({ id:id, name:'Price tag', category:'Price tag', designer:'Yallā', created:date });
       files.push({ name:'template.json', data: enc.encode(JSON.stringify(tpl, null, 2)) });
       /* layer images: uploads (data URL) + library graphics/logos/backgrounds (fetched) */
       var layers = (tpl.snapshot && tpl.snapshot.layers) || [], counters = {}, chain = Promise.resolve();
@@ -14058,11 +14059,11 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', _on
       return chain;
     }).then(function(){
       var readme = [
-        'IMPRINT — Price tag full package',
+        'Yallā — Price tag full package',
         'Generated: ' + new Date().toString(),
         '',
         'Contents',
-        '  template.json   the editable Imprint template (re-import it in the designer portal to keep editing).',
+        '  template.json   the editable Yallā template (re-import it in the designer portal to keep editing).',
         '  spec-sheet.pdf  print specification sheet to hand to your manufacturer.',
         '  assets/         every uploaded image / library graphic, plus any embedded custom fonts (assets/fonts/).',
         '',
@@ -14294,7 +14295,7 @@ if (window.visualViewport){ window.visualViewport.addEventListener('resize', _on
     var inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
     inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(!f) return; var r=new FileReader();
       r.onload=function(){ var tpl; try{ tpl=JSON.parse(r.result); }catch(e){ alert('That file is not valid JSON.'); return; }
-        if(!tpl||!tpl.snapshot){ alert('Not an Imprint template (no "snapshot").'); return; }
+        if(!tpl||!tpl.snapshot){ alert('Not a Yallā template (no "snapshot").'); return; }
         window._tplPending=true; setTimeout(function(){ if(window._tplPending){ window._tplPending=false; if(typeof finishConfigLoading==='function') finishConfigLoading(); } },9000);
         if(typeof _loadTplDesigner==='function') _loadTplDesigner(tpl); };
       r.readAsText(f); };

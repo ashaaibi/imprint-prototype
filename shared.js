@@ -106,7 +106,7 @@ var IMPRINT_T = {
   'home.how.3.title':      { en: 'Receive your order',  ar: 'استلم طلبك' },
   'home.how.3.desc':       { en: 'Production files are generated automatically. Track your order through every stage — from production to delivery.', ar: 'يتم إنشاء ملفات الإنتاج تلقائياً. تابع طلبك في كل مرحلة — من الإنتاج إلى التسليم.' },
   'home.why.title':        { en: 'The operating system for packaging.', ar: 'نظام التشغيل الموحد للتغليف.' },
-  'home.why.desc':         { en: 'Ordering branded packaging traditionally means emails, spreadsheets, and weeks of waiting. Imprint automates the entire process — from design to print-ready file to factory floor.', ar: 'كان طلب التغليف يعني مراسلات وجداول وأسابيع من الانتظار. تُؤتمت إمبرنت العملية بالكامل — من التصميم إلى ملف الطباعة إلى أرض المصنع.' },
+  'home.why.desc':         { en: 'Ordering branded packaging traditionally means emails, spreadsheets, and weeks of waiting. Yallā automates the entire process — from design to print-ready file to factory floor.', ar: 'كان طلب التغليف يعني مراسلات وجداول وأسابيع من الانتظار. تُؤتمت يلا العملية بالكامل — من التصميم إلى ملف الطباعة إلى أرض المصنع.' },
   'home.why.1':            { en: 'Instant, accurate pricing. No quotes. No waiting.', ar: 'تسعير فوري ودقيق. بدون عروض أسعار. بدون انتظار.' },
   'home.why.2':            { en: 'Production files generated automatically — no designer required.', ar: 'ملفات إنتاج تلقائية — بدون الحاجة لمصمم.' },
   'home.why.3':            { en: 'Multiple vetted factories. You choose the trade-off.', ar: 'شبكة مصانع موثوقة. القرار لك.' },
@@ -297,7 +297,7 @@ var IMPRINT_T = {
   /* Common */
   'common.add_to_cart':    { en: 'Add to cart',          ar: 'أضف إلى السلة' },
   'common.proceed':        { en: 'Proceed to checkout',  ar: 'إتمام الطلب' },
-  'common.copyright':      { en: '© 2026 IMPRINT. All rights reserved.', ar: '© ٢٠٢٦ إمبرنت. جميع الحقوق محفوظة.' },
+  'common.copyright':      { en: '© 2026 Yallā. All rights reserved.', ar: '© ٢٠٢٦ يلا. جميع الحقوق محفوظة.' },
   'common.terms':          { en: 'Terms',                ar: 'الشروط' },
   'common.privacy':        { en: 'Privacy',              ar: 'الخصوصية' },
   'common.contact':        { en: 'Contact',              ar: 'تواصل' },
@@ -379,6 +379,19 @@ function initSiteHeader(opts) {
   var rootPath = (window.location.pathname.indexOf('/designer/') >= 0 ||
                   window.location.pathname.indexOf('/factory/') >= 0) ? '../' : '';
 
+  /* Yallā brand: SVG favicon + a gold macron accent on the wordmark (injected once, all pages) */
+  try {
+    if (!document.querySelector('link[rel="icon"][type="image/svg+xml"]')) {
+      var _fav = document.createElement('link'); _fav.rel = 'icon'; _fav.type = 'image/svg+xml'; _fav.href = rootPath + 'favicon.svg';
+      (document.head || document.documentElement).appendChild(_fav);
+    }
+    if (!document.getElementById('yalla-brand-style')) {
+      var _bs = document.createElement('style'); _bs.id = 'yalla-brand-style';
+      _bs.textContent = '.site-logo .ymac{color:var(--imp-gold,#BE9B55);}';
+      (document.head || document.documentElement).appendChild(_bs);
+    }
+  } catch (e) {}
+
   /* Center content */
   var centerHtml = '';
   if (breadcrumb) {
@@ -403,7 +416,7 @@ function initSiteHeader(opts) {
 
   mount.innerHTML =
     '<header class="site-header">' +
-      '<a class="site-logo" href="' + rootPath + 'index.html">IMPRINT<span class="reg">®</span></a>' +
+      '<a class="site-logo" href="' + rootPath + 'index.html">Yall<span class="ymac">ā</span></a>' +
       centerHtml +
       '<div class="header-actions">' +
         '<div class="country-selector" id="country-selector">' +

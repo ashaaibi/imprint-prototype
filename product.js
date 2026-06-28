@@ -62,7 +62,7 @@
     if (typeof IMP.initAppHeader === 'function') IMP.initAppHeader({ activePage: 'products' });
     p = IMP.product(root.getAttribute('data-product'));
     if (!p) { root.innerHTML = '<div class="imp-wrap"><div class="empty-state"><h2>Product not found</h2><p>This design may have moved. <a href="products.html">Browse all products →</a></p></div></div>'; return; }
-    document.title = p.name + ' — IMPRINT®';
+    document.title = p.name + ' — Yallā®';
     makers = (p.makers || []).map(IMP.maker).filter(Boolean);
     if (!makers.length) { var im = IMP.maker('imprint-atelier'); makers = im ? [im] : (IMP.cat().makers || []).slice(0, 1); }
     var a = IMP.artist(p.artist), cat = IMP.category(p.category);
@@ -103,7 +103,7 @@
       '</div>' +
       '<div class="pdp-details"><div><h2 class="pdp-sec-title">Specifications</h2><table class="pdp-specs-tbl">' +
         '<tr><td>Category</td><td>' + (cat ? IMP.esc(cat.name) : '—') + '</td></tr>' +
-        '<tr><td>Designer</td><td>' + (a ? IMP.esc(a.name) + ' · ' + IMP.esc(a.studio) : 'Imprint') + '</td></tr>' +
+        '<tr><td>Designer</td><td>' + (a ? IMP.esc(a.name) + ' · ' + IMP.esc(a.studio) : 'Yallā') + '</td></tr>' +
         '<tr><td>Customisation</td><td>Locked designer template · text &amp; colours editable</td></tr>' +
         '<tr><td>Production</td><td>Choose your maker, finishes &amp; lead time at checkout</td></tr>' +
       '</table></div>' +
