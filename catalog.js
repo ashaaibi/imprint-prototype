@@ -3641,6 +3641,12 @@ window.IMPRINT_CATALOG = {
     "G7 Master"
    ],
    "bio": "A flagship atelier in Dubai — the house standard for foil, emboss and rigid-box finishing, and the default maker for featured templates.",
+   "social": {
+    "instagram": "https://www.instagram.com/imprintco_official/",
+    "tiktok": "https://www.tiktok.com/@_imprintco_official",
+    "youtube": "https://www.youtube.com/@imprintco_official",
+    "whatsapp": "https://wa.me/96899425623"
+   },
    "products": [
     "honeyloom-gift-bag",
     "coffee-cup",

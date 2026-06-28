@@ -27,9 +27,31 @@
   var C = IMP.cat();
   var root = document.getElementById('makers-root');
   var mid = null; try { mid = new URLSearchParams(location.search).get('m'); } catch(e){}
-  if (mid) renderProfile(mid); else renderList();
+
+  /* ── Social links (brand-coloured glyphs; only the platforms a maker actually has) ── */
+  var SOCIAL = {
+    instagram:{label:'Instagram',color:'#E4405F',svg:'<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.4" fill="currentColor"/>'},
+    tiktok:{label:'TikTok',color:'#111111',svg:'<path fill="currentColor" d="M16.5 2h-3v13.5a2.5 2.5 0 1 1-2.5-2.5c.25 0 .5.04.7.1V10a5.5 5.5 0 1 0 4.8 5.5V8.6a7.6 7.6 0 0 0 4 1.1V6.7a4.7 4.7 0 0 1-4-4.7z"/>'},
+    youtube:{label:'YouTube',color:'#FF0000',svg:'<path fill="currentColor" d="M23 8.2a3 3 0 0 0-2.1-2.1C19 5.6 12 5.6 12 5.6s-7 0-8.9.5A3 3 0 0 0 1 8.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 15.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-3.8 31 31 0 0 0-.5-3.8zM9.8 15.3V8.7l5.7 3.3z"/>'},
+    whatsapp:{label:'WhatsApp',color:'#25D366',svg:'<path fill="currentColor" d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.4A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.7.9c-.1.1-.2.2-.4.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.3.1-.5.2-.6l.4-.5.1-.4-.05-.4-.8-1.9c-.2-.5-.4-.4-.55-.4h-.5a1.1 1.1 0 0 0-.8.4 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.5 11.5 0 0 0 4.4 3.9c2 .8 2 .5 2.4.5a2.4 2.4 0 0 0 1.6-1.1 2 2 0 0 0 .1-1.1c-.1-.1-.3-.2-.55-.3z"/>'}
+  };
+  function socialRow(m){
+    if(!m||!m.social) return '';
+    return ['instagram','tiktok','youtube','whatsapp'].filter(function(k){return m.social[k];}).map(function(k){
+      var s=SOCIAL[k];
+      return '<a class="m-social" href="'+m.social[k]+'" target="_blank" rel="noopener" aria-label="'+s.label+'" title="'+s.label+'" style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--imp-border);background:var(--imp-surface);color:'+s.color+';flex:0 0 auto;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;" onmouseover="this.style.transform=&#39;translateY(-2px)&#39;;this.style.borderColor=&#39;'+s.color+'&#39;;this.style.boxShadow=&#39;0 4px 12px rgba(0,0,0,.12)&#39;" onmouseout="this.style.transform=&#39;&#39;;this.style.borderColor=&#39;var(--imp-border)&#39;;this.style.boxShadow=&#39;&#39;"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">'+s.svg+'</svg></a>';
+    }).join('');
+  }
+  /* ── Favicon: the maker's mark (first letter on its brand colour) on a profile; Yallā elsewhere ── */
+  function _setFav(href){ var l=document.querySelector('link[rel="icon"][type="image/svg+xml"]'); if(!l){ l=document.createElement('link'); l.rel='icon'; l.type='image/svg+xml'; (document.head||document.documentElement).appendChild(l); } l.href=href; }
+  function setMakerFavicon(m){
+    var letter=((m&&m.name)||'Y').trim().charAt(0).toUpperCase(), bg=(m&&m.color)||'#BE9B55';
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="'+bg+'"/><text x="24" y="34.5" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="30" fill="#ffffff">'+letter+'</text></svg>';
+    _setFav('data:image/svg+xml,'+encodeURIComponent(svg));
+  }
 
   function renderList(){
+    _setFav('favicon.svg');
     document.title = 'Manufacturers — Yallā';
     var makers = C.makers.slice().sort(function(a,b){return b.rating-a.rating;});
     root.innerHTML =
@@ -45,6 +67,7 @@
     var m = IMP.maker(id);
     if (!m){ renderList(); return; }
     document.title = m.name + ' — Yallā';
+    setMakerFavicon(m);
     var prods = (m.products||[]).map(IMP.product).filter(Boolean);
     function chips(arr){ return (arr||[]).map(function(x){return '<span class="chip-sm">'+IMP.esc(x)+'</span>';}).join(''); }
     root.innerHTML =
@@ -62,8 +85,8 @@
             '<div><div class="sv">'+Math.round((m.priceMul-1)*100)+'%</div><div class="sl">Price vs base</div></div>' +
             '<div><div class="sv">'+m.reviews+'</div><div class="sl">Reviews</div></div>' +
           '</div>' +
-          '<div style="display:flex;gap:10px;margin-top:18px">' +
-            '<a class="btn btn-primary" href="products.html" style="flex:0 0 auto">Browse products they make</a>' +
+          '<div style="display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:wrap">' +
+            socialRow(m) +
             '<button class="btn btn-icon" data-share="manufacturers.html?m='+m.id+'" data-share-title="'+IMP.esc(m.name)+' on Yallā" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>' +
           '</div>' +
         '</div>' +
@@ -77,6 +100,8 @@
       '<div class="sec tight"><div class="sec-head"><div><h2 class="sec-title">Other manufacturers</h2></div><a class="sec-link" href="manufacturers.html">All makers →</a></div><div class="mgrid">' +
         C.makers.filter(function(x){return x.id!==m.id;}).slice(0,3).map(IMP.makerCard).join('') + '</div></div>';
   }
+
+  if (mid) renderProfile(mid); else renderList();
 })();
 </script>
 </body>

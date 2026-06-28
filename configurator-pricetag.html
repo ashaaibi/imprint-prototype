@@ -11,14 +11,14 @@
   <meta property="og:site_name" content="Yallā">
   <meta property="og:title" content="Yallā — Price tag configurator">
   <meta property="og:description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
-  <meta property="og:url" content="https://ashaaibi.github.io/imprint-prototype/configurator.html">
-  <meta property="og:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
+  <meta property="og:url" content="https://ashaaibi.github.io/yalla/configurator.html">
+  <meta property="og:image" content="https://ashaaibi.github.io/yalla/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Yallā — Price tag configurator">
   <meta name="twitter:description" content="Design your custom paper bag in 3D — colours, finishes, handles, rivets & artwork, with live pricing.">
-  <meta name="twitter:image" content="https://ashaaibi.github.io/imprint-prototype/og-image.png">
+  <meta name="twitter:image" content="https://ashaaibi.github.io/yalla/og-image.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Yallā — Price tag configurator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,6 +38,7 @@
       /* Light mode tokens */
       --imp-bg:         #FBFAF7;
       --imp-grid-line:  rgba(20,20,35,0.06);   /* page-background graph-paper grid (replaces the cream padding) */
+      --imp-slider:     #2563EB;   /* unified blue for all value sliders */
       --imp-surface:    #FFFFFF;
       --imp-surface-2:  #F6F4EF;
       --imp-surface-3:  #EDEAE2;
@@ -93,6 +94,7 @@
     html[data-theme="dark"] {
       --imp-bg:         #0F0D0B;
       --imp-grid-line:  rgba(255,255,255,0.05);
+      --imp-slider:     #4F8CFF;
       --imp-surface:    #17140F;
       --imp-surface-2:  #221E18;
       --imp-surface-3:  #2C2820;
@@ -966,31 +968,13 @@
     .ctrl-slider-name { font-size: 12px; font-weight: 500; color: var(--imp-fg-2); }
     .ctrl-slider-val { font-family: var(--imp-font-mono); font-size: 11px; color: var(--imp-fg-3); }
 
-    .test-slider {
-      width: 100%;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 4px;
-      border-radius: var(--imp-r-pill);
-      background: var(--imp-surface-2);
-      outline: none;
+    /* Unified blue slider UI — native range + accent-color for every value slider, so they all match.
+       The colour-picker sliders (hue / sat / cpicker / bg-hue) keep their custom gradient tracks. */
+    input[type="range"]:not(.hue-slider):not(.sat-slider):not(#cpicker-hue):not(.bg-hue) {
+      accent-color: var(--imp-slider, #2563EB);
       cursor: pointer;
     }
-    .test-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--imp-fg);
-      cursor: pointer;
-      box-shadow: var(--imp-shadow-sm);
-    }
-    .test-slider::-moz-range-thumb {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--imp-fg);
-      cursor: pointer;
-      border: none;
-    }
+    .test-slider { width: 100%; cursor: pointer; accent-color: var(--imp-slider, #2563EB); }
 
     /* ─── LAYERS PANEL ────────────────────── */
     .layers-wrap { margin-top: 16px; }
@@ -2218,7 +2202,7 @@
 
     <!-- Add to Cart — Review step only ──── -->
     <div class="cta-area config-step" data-cstep="5">
-      <button class="btn-cart" id="atcbtn" disabled onclick="addCart()"
+      <button class="btn-cart" id="atcbtn" onclick="addCart()"
               data-en="Add to Cart" data-ar="أضف إلى السلة">Add to Cart</button>
       <div class="cta-hint" id="cta-hint"></div>
       <button id="download-spec-btn" onclick="IMPRINT_downloadFullPackage(this)" style="width:100%;margin-top:10px;padding:11px;border:1px solid var(--imp-border);border-radius:10px;background:transparent;color:var(--imp-fg-2);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -10322,11 +10306,8 @@ function _hasArtwork(){
 function checkCart() {
   var btn  = document.getElementById('atcbtn');
   var hint = document.getElementById('cta-hint');
-  var has  = _hasArtwork();
-  if (btn) btn.disabled = !has;
-  if (hint) hint.textContent = has ? '' : (S.lang === 'ar'
-    ? 'أضف نصاً أو صورة إلى البطاقة للمتابعة'
-    : 'Add text or an image to your tag to continue');
+  if (btn) btn.disabled = false;     /* a blank tag is allowed — never block checkout */
+  if (hint) hint.textContent = '';
   if (typeof _syncMobileBar === 'function') _syncMobileBar();
 }
 /* Sticky mobile bar: 'Review' on the design steps, 'Add to Cart' on the final step. */
@@ -10334,7 +10315,7 @@ function _syncMobileBar(){
   var b=document.getElementById('mb-btn'); if(!b) return;
   var last=(typeof CONFIG_STEP_COUNT!=='undefined')?CONFIG_STEP_COUNT:3;
   var atReview=(typeof currentConfigStep!=='undefined' && currentConfigStep>=last);
-  if(atReview){ b.textContent=(S.lang==='ar'?'أضف إلى السلة':'Add to Cart'); b.disabled=!_hasArtwork(); }
+  if(atReview){ b.textContent=(S.lang==='ar'?'أضف إلى السلة':'Add to Cart'); b.disabled=false; }
   else { b.textContent=(S.lang==='ar'?'مراجعة':'Review'); b.disabled=false; }
 }
 function _mobileBarAction(){
@@ -13419,10 +13400,24 @@ function atlas2dRender(){
     ctx.restore();
   }
   ctx.restore();
-  /* 7b. grid OVERLAY (screen-space graph paper) — drawn ON TOP so it reads through/behind the tag
-     cuts too, not just the surround. Faint, so artwork stays clearly legible; toggle via gridOn. */
+  /* 7b. grid OVERLAY in the SURROUND ONLY — clipped to OUTSIDE the tag cuts (evenodd: the whole
+     canvas minus the tag silhouettes), so the tag faces stay solid (white) while the graph-paper
+     shows around them. */
   if (A2D.gridOn){
-    var gs=A2D.gridSize*D; ctx.save(); ctx.strokeStyle = _dark ? 'rgba(255,255,255,0.06)' : A2D.gridColor; ctx.lineWidth=1; ctx.beginPath();
+    ctx.save();
+    var _exC=(typeof bagExtClip!=='undefined')?bagExtClip:null, _inC=(typeof bagIntClip!=='undefined')?bagIntClip:null;
+    var _tw=(typeof bagTexCanvas!=='undefined'&&bagTexCanvas)?bagTexCanvas.width:0;
+    if (_tw && ((_exC&&_exC.path)||(_inC&&_inC.path))){
+      var _q0=_a2s(0,0), _q1=_a2s(_tw,_tw), _sc=(_q1.x-_q0.x)/_tw;   /* texture→screen scale (+ the editor's vertical flip below) */
+      var _M=new DOMMatrix([_sc,0,0,-_sc,_q0.x, c.height-_q0.y]);
+      var _clip=new Path2D(); _clip.rect(0,0,c.width,c.height);
+      if(_exC&&_exC.path) _clip.addPath(_exC.path,_M);
+      if(_inC&&_inC.path) _clip.addPath(_inC.path,_M);
+      if(A2D.showHandles2D && typeof bagHandleClip!=='undefined' && bagHandleClip&&bagHandleClip.path) _clip.addPath(bagHandleClip.path,_M);
+      if(A2D.showRivets2D && typeof bagRivetClip!=='undefined' && bagRivetClip&&bagRivetClip.path) _clip.addPath(bagRivetClip.path,_M);
+      ctx.clip(_clip,'evenodd');
+    }
+    var gs=A2D.gridSize*D; ctx.strokeStyle = _dark ? 'rgba(255,255,255,0.06)' : A2D.gridColor; ctx.lineWidth=1; ctx.beginPath();
     for(var gx=(a2d.panX%gs+gs)%gs; gx<c.width; gx+=gs){ ctx.moveTo(gx+0.5,0); ctx.lineTo(gx+0.5,c.height); }
     for(var gy=(a2d.panY%gs+gs)%gs; gy<c.height; gy+=gs){ ctx.moveTo(0,gy+0.5); ctx.lineTo(c.width,gy+0.5); }
     ctx.stroke(); ctx.restore();

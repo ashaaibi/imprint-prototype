@@ -227,6 +227,7 @@
   }
   IMP.initAppHeader = function (opts) {
     opts = opts || {};
+    try { if (!document.querySelector('link[rel="icon"][type="image/svg+xml"]')) { var _f = document.createElement('link'); _f.rel = 'icon'; _f.type = 'image/svg+xml'; _f.href = 'favicon.svg'; (document.head || document.documentElement).appendChild(_f); } } catch (e) {}
     if (typeof initSiteHeader === 'function') initSiteHeader({ activePage: opts.activePage, showCart: opts.showCart !== false });
     var mount = document.getElementById('site-nav');
     if (!mount) return;
