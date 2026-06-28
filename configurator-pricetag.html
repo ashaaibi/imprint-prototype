@@ -4799,10 +4799,10 @@ function _bgGradFill(ctx, g, x, y, w, h) {
     var rr = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * h) / 2;
     fill = ctx.createLinearGradient(cx - Math.cos(ang) * rr, cy - Math.sin(ang) * rr, cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
   }
-  var _p1 = Math.max(0, Math.min(1, (g.p1 != null ? g.p1 : 0) / 100));
-  var _p2 = Math.max(0, Math.min(1, (g.p2 != null ? g.p2 : 100) / 100));
-  fill.addColorStop(Math.min(_p1, _p2), (_p1 <= _p2 ? g.c1 : g.c2) || '#ffffff');
-  fill.addColorStop(Math.max(_p1, _p2), (_p1 <= _p2 ? g.c2 : g.c1) || '#000000');
+  var st = (g.stops && g.stops.length >= 2) ? g.stops.slice()
+         : [{c:(g.c1||'#ffffff'), p:(g.p1!=null?g.p1:0)}, {c:(g.c2||'#000000'), p:(g.p2!=null?g.p2:100)}];
+  st.sort(function(a, b){ return a.p - b.p; });
+  st.forEach(function(s){ fill.addColorStop(Math.max(0, Math.min(1, (s.p||0)/100)), s.c || '#ffffff'); });
   return fill;
 }
 function _drawBgFill(ctx, L, ms, mode) {
@@ -7897,15 +7897,22 @@ function _renderBgPicker(){
 function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; var box=document.getElementById('as-bg-shades'); if(box){ box.innerHTML=_bgSolidShadesHTML(); if(typeof applyTranslations==='function') applyTranslations(); } }
 function _bgCustomColor(){ if(typeof openCPicker!=='function') return; var r=(typeof event!=='undefined'&&event&&event.currentTarget)?event.currentTarget.getBoundingClientRect():{left:(window.innerWidth/2-130),top:140,bottom:160,right:0}; openCPicker(function(hex){ _bgApplySolid(hex); }, r, '#3366cc'); }
 function _bgApplySolid(color){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
-function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; if(typeof _bgUI!=='undefined') _bgUI.g={c1:g.c1,c2:g.c2,type:'linear',angle:135,p1:0,p2:100}; _bgApplyGradient(); }
-function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='gradient'; L.gradient={c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle,p1:0,p2:100}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
+function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; if(typeof _bgUI!=='undefined') _bgUI.g={ stops:[{c:g.c1,p:0},{c:g.c2,p:100}], type:'linear', angle:135 }; _bgApplyGradient(); }
+function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; var st=[{c:_bgPick.g.c1,p:0},{c:_bgPick.g.c2,p:100}]; L.fillType='gradient'; L.gradient={stops:st,c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle,p1:0,p2:100}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
 function _bgFinishApply(L){ _closeAddSourceOverlay(); _addSrc.id=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof renderLayersList==='function') renderLayersList(); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof _autoEdit2dAfterUpload==='function') _autoEdit2dAfterUpload(); }
 function onBgFillColor(id, color){ var L=getLayer(id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof drawBagTexture==='function') drawBagTexture(); }
 /* ── Embedded background panel — stacked sections (Areas · Finish · Opacity · Color · Gradient ·
    Presets), lives IN the layer body and applies live. No tabs: everything is visible at once. ─── */
-var _bgUI = { hue:8, g:{ c1:'#FF7E5F', c2:'#FEB47B', type:'linear', angle:135, p1:0, p2:100 } };
+var _bgUI = { hue:8, g:{ stops:[{c:'#FF7E5F',p:0},{c:'#FEB47B',p:100}], type:'linear', angle:135 } };
 function _bgiSolidRow(id){ return _bgSwCell('','Custom','_bgiCustom('+id+')',true) + _bgShades(_bgUI.hue).map(function(s){ return _bgSwCell(s.c,s.n,"_bgiApplySolid("+id+",'"+s.c+"')"); }).join(''); }
-function _bgiBarCss(gp){ return 'linear-gradient(90deg,'+gp.c1+' '+(gp.p1||0)+'%,'+gp.c2+' '+(gp.p2!=null?gp.p2:100)+'%)'; }
+/* ── N-stop gradient helpers ─────────────────────────────────────────────── */
+function _bgiStops(gp){ if(!gp.stops || gp.stops.length<2){ gp.stops=[{c:(gp.c1||'#FF7E5F'),p:(gp.p1!=null?gp.p1:0)},{c:(gp.c2||'#FEB47B'),p:(gp.p2!=null?gp.p2:100)}]; } return gp.stops; }
+function _bgiSortedStops(gp){ return _bgiStops(gp).slice().sort(function(a,b){return a.p-b.p;}); }
+function _bgiStopStr(gp){ return _bgiSortedStops(gp).map(function(s){return s.c+' '+Math.round(s.p)+'%';}).join(','); }
+function _bgiBarCss(gp){ return 'linear-gradient(90deg,'+_bgiStopStr(gp)+')'; }
+function _bgiTypeIconCss(gp,type){ return (type==='radial'?'radial-gradient(circle at 50% 50%,':'linear-gradient(135deg,')+_bgiStopStr(gp)+')'; }
+function _bgiLerpHex(a,b,t){ if(typeof hexToRgb!=='function'||typeof rgbToHex!=='function') return a; var ca=hexToRgb(a),cb=hexToRgb(b); return rgbToHex(Math.round(ca[0]+(cb[0]-ca[0])*t),Math.round(ca[1]+(cb[1]-ca[1])*t),Math.round(ca[2]+(cb[2]-ca[2])*t)); }
+function _bgiColorAt(gp,p){ var s=_bgiSortedStops(gp); if(p<=s[0].p) return s[0].c; if(p>=s[s.length-1].p) return s[s.length-1].c; for(var i=0;i<s.length-1;i++){ if(p>=s[i].p && p<=s[i+1].p){ var span=(s[i+1].p-s[i].p)||1; return _bgiLerpHex(s[i].c,s[i+1].c,(p-s[i].p)/span); } } return s[0].c; }
 function _bgiEnsureCSS(){
   if(document.getElementById('bgi-style')) return;
   var st=document.createElement('style'); st.id='bgi-style';
@@ -7918,9 +7925,16 @@ function _bgiEnsureCSS(){
     +'.bg-sw-row{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0;}.bg-sw{width:42px;height:42px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;position:relative;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);}.bg-sw:hover{border-color:var(--imp-accent,#c8a96e);}.bg-sw.on{border-color:var(--imp-fg,#111);}.bg-sw-lbl{font-size:9.5px;color:var(--imp-fg-2,#666);text-align:center;margin-top:4px;line-height:1.15;width:42px;}'
     +'.bg-hue{width:100%;height:14px;-webkit-appearance:none;appearance:none;border-radius:7px;background:linear-gradient(90deg,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000);outline:none;cursor:pointer;margin:2px 0 4px;}.bg-hue::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}.bg-hue::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #333;cursor:pointer;}'
     +'.bgi-grad-editor{padding:0 15px;margin:4px 0 6px;}'
-    +'.bgi-grad-bar{height:40px;border-radius:9px;border:1px solid var(--imp-border,#ccc);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.45),0 1px 2px rgba(0,0,0,0.06);}'
+    +'.bgi-grad-bar{height:40px;border-radius:9px;border:1px solid var(--imp-border,#ccc);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.45),0 1px 2px rgba(0,0,0,0.06);cursor:copy;}'
     +'.bgi-grad-stops{position:relative;height:30px;margin-top:8px;}'
-    +'.bgi-stop{position:absolute;top:0;transform:translateX(-50%);width:26px;height:26px;border-radius:7px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 2px 6px rgba(0,0,0,0.3);cursor:grab;padding:0;touch-action:none;}.bgi-stop:active{cursor:grabbing;}.bgi-stop.on{outline:2px solid var(--imp-accent,#c8a96e);outline-offset:1px;}.bgi-stop::before{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #fff;}'
+    +'.bgi-stop{position:absolute;top:0;transform:translateX(-50%);width:26px;height:26px;border-radius:7px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.42),0 2px 6px rgba(0,0,0,0.3);cursor:grab;padding:0;touch-action:none;transition:opacity .12s,transform .12s;}'
+    +'.bgi-stop:active{cursor:grabbing;}'
+    +'.bgi-stop.on{outline:2px solid var(--imp-accent,#c8a96e);outline-offset:1px;z-index:2;}'
+    /* two-layer pointer: a dark outline triangle (visible on LIGHT bg) behind a white triangle (visible on DARK bg) */
+    +'.bgi-stop::before{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:9px solid rgba(0,0,0,0.42);}'
+    +'.bgi-stop::after{content:"";position:absolute;top:-8px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #fff;}'
+    +'.bgi-stop.bgi-stop-del{opacity:.4;transform:translateX(-50%) translateY(12px) scale(.78);box-shadow:0 0 0 2px var(--imp-danger,#e0574a),0 2px 6px rgba(0,0,0,0.3);}'
+    +'.bgi-grad-hint{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--imp-fg-3,#999);margin:9px 2px 2px;line-height:1.3;}'
     +'.bgi-type-row{display:flex;gap:10px;margin:4px 0 2px;}'
     +'.bgi-type{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:9px 6px;border:1.5px solid var(--imp-border,#ddd);border-radius:11px;background:var(--imp-surface,#fff);cursor:pointer;font-family:inherit;}'
     +'.bgi-type-ic{width:30px;height:30px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08);}'
@@ -7957,15 +7971,18 @@ function _bgiColorBlock(id){
     +'<div class="bgi-sub" data-en="Neutrals" data-ar="ألوان محايدة">Neutrals</div>'
     +'<div class="bg-sw-row">'+nu+'</div>';
 }
+function _bgiGradStopsHTML(id){ return _bgUI.g.stops.map(function(s,i){ return '<button class="bgi-stop" data-i="'+i+'" style="left:'+Math.round(s.p)+'%;background:'+s.c+';" title="Drag to move · tap to recolour · drag down to remove"></button>'; }).join(''); }
+function _bgiGradEditorHTML(id){
+  var gp=_bgUI.g; _bgiStops(gp);
+  return '<div class="bgi-grad-bar" id="bgi-prev-'+id+'" style="background:'+_bgiBarCss(gp)+';" title="Click to add a colour stop" onclick="_bgiBarAdd(event,'+id+')"></div>'
+    +'<div class="bgi-grad-stops" id="bgi-stops-'+id+'">'+_bgiGradStopsHTML(id)+'</div>'
+    +'<div class="bgi-grad-hint"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span data-en="Tap the bar to add a stop · drag a stop down to remove" data-ar="انقر الشريط لإضافة لون · اسحب نقطة للأسفل لحذفها">Tap the bar to add a stop · drag a stop down to remove</span></div>';
+}
 function _bgiGradientBlock(id){
-  var gp=_bgUI.g;
-  var editor='<div class="bgi-grad-editor"><div class="bgi-grad-bar" id="bgi-prev-'+id+'" style="background:'+_bgiBarCss(gp)+';"></div>'
-    +'<div class="bgi-grad-stops" id="bgi-stops-'+id+'">'
-      +'<button class="bgi-stop" data-stop="c1" style="left:'+gp.p1+'%;background:'+gp.c1+';" title="Start colour — drag to move, tap to recolour"></button>'
-      +'<button class="bgi-stop" data-stop="c2" style="left:'+gp.p2+'%;background:'+gp.c2+';" title="End colour — drag to move, tap to recolour"></button>'
-    +'</div></div>';
-  var lin='<button class="bgi-type'+(gp.type==='linear'?' on':'')+'" onclick="_bgiSetType('+id+',\'linear\')"><span class="bgi-type-ic" style="background:linear-gradient(90deg,'+gp.c1+','+gp.c2+');"></span><span class="bgi-type-lbl" data-en="Linear" data-ar="خطي">Linear</span></button>';
-  var rad='<button class="bgi-type'+(gp.type==='radial'?' on':'')+'" onclick="_bgiSetType('+id+',\'radial\')"><span class="bgi-type-ic" style="background:radial-gradient(circle at 50% 50%,'+gp.c1+','+gp.c2+');"></span><span class="bgi-type-lbl" data-en="Radial" data-ar="شعاعي">Radial</span></button>';
+  var gp=_bgUI.g; _bgiStops(gp);
+  var editor='<div class="bgi-grad-editor">'+_bgiGradEditorHTML(id)+'</div>';
+  var lin='<button class="bgi-type'+(gp.type==='linear'?' on':'')+'" onclick="_bgiSetType('+id+',\'linear\')"><span class="bgi-type-ic" style="background:'+_bgiTypeIconCss(gp,'linear')+';"></span><span class="bgi-type-lbl" data-en="Linear" data-ar="خطي">Linear</span></button>';
+  var rad='<button class="bgi-type'+(gp.type==='radial'?' on':'')+'" onclick="_bgiSetType('+id+',\'radial\')"><span class="bgi-type-ic" style="background:'+_bgiTypeIconCss(gp,'radial')+';"></span><span class="bgi-type-lbl" data-en="Radial" data-ar="شعاعي">Radial</span></button>';
   var typeRow='<div class="bgi-type-row">'+lin+rad+'</div>';
   var angRow='<div class="bgi-angle-row'+(gp.type==='radial'?' bgi-angle-dis':'')+'" id="bgi-angwrap-'+id+'"><div class="bgi-dial" id="bgi-dial-'+id+'" title="Drag to set the gradient angle"><div class="bgi-dial-ptr" id="bgi-dialptr-'+id+'" style="transform:rotate('+gp.angle+'deg);"></div><div class="bgi-dial-hub"></div></div><div><div class="bgi-angle-cap" data-en="Angle" data-ar="الزاوية">Angle</div><div class="bgi-angle-val" id="bgi-ang-'+id+'">'+gp.angle+'°</div></div></div>';
   var presets=BG_GRADIENTS.map(function(g,i){ return '<div style="display:flex;flex-direction:column;align-items:center;"><button class="bg-sw" title="'+g.n+'" style="background:linear-gradient(135deg,'+g.c1+','+g.c2+');" onclick="_bgiGradPreset('+id+','+i+')"></button><span class="bg-sw-lbl">'+g.n+'</span></div>'; }).join('');
@@ -7974,7 +7991,7 @@ function _bgiGradientBlock(id){
 function _bgiPresetFocus(id){ if(typeof _addSrc!=='undefined'&&_addSrc){ _addSrc.id=id; _addSrc.kind='pattern'; } }
 function _bgiContent(id){
   _bgiEnsureCSS();
-  var L=getLayer(id)||{}, gp=_bgUI.g; if(gp.p1==null)gp.p1=0; if(gp.p2==null)gp.p2=100;
+  var L=getLayer(id)||{}, gp=_bgUI.g; _bgiStops(gp);
   function head(en,ar){ return '<div class="bgi-sec-hd" data-en="'+en+'" data-ar="'+ar+'">'+en+'</div>'; }
   var top = head('Areas','المناطق') + _bgAreasVisual(id)
           + head('Background Finish','تشطيب الخلفية') + (typeof layerFinishGridHTML==='function' ? layerFinishGridHTML(L) : '')
@@ -7992,32 +8009,63 @@ function _bgiRender(id){ var box=document.getElementById('bg-pick-'+id); if(box)
 function _bgiHueShades(id, v){ _bgUI.hue=parseFloat(v)||0; var row=document.getElementById('bgi-shades-'+id); if(row){ row.innerHTML=_bgiSolidRow(id); if(typeof applyTranslations==='function') applyTranslations(); } }
 function _bgiCustom(id){ var L=getLayer(id)||{}, cur=(L.fillType==='solid'&&L.fillColor)?L.fillColor:'#3366cc'; var r=(typeof event!=='undefined'&&event&&event.currentTarget)?event.currentTarget.getBoundingClientRect():{left:(window.innerWidth/2-130),top:140,bottom:160,right:0}; if(typeof openCPicker==='function') openCPicker(function(hex){ _bgiApplySolid(id,hex); }, r, cur); }
 function _bgiApplySolid(id, color){ var L=getLayer(id); if(!L)return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
-function _bgiGradPreset(id, i){ var g=BG_GRADIENTS[i]; if(!g)return; _bgUI.g.c1=g.c1; _bgUI.g.c2=g.c2; _bgUI.g.p1=0; _bgUI.g.p2=100; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }
+function _bgiBarAdd(e, id){
+  if(e&&e.stopPropagation) e.stopPropagation();
+  var bar=document.getElementById('bgi-prev-'+id); if(!bar) return;
+  var r=bar.getBoundingClientRect(), cx=(e.touches?e.touches[0].clientX:e.clientX);
+  var p=Math.max(0,Math.min(100,((cx-r.left)/r.width)*100));
+  var gp=_bgUI.g; _bgiStops(gp);
+  gp.stops.push({c:_bgiColorAt(gp,p), p:Math.round(p)});
+  _bgiApplyGradient(id); _bgiRefreshStops(id);
+}
+function _bgiRefreshStops(id){
+  var gp=_bgUI.g;
+  var bar=document.getElementById('bgi-prev-'+id); if(bar) bar.style.background=_bgiBarCss(gp);
+  var track=document.getElementById('bgi-stops-'+id); if(track){ track.innerHTML=_bgiGradStopsHTML(id); _bgiAttachStopDrag(id); }
+  _bgiSyncTypeIcons(id);
+}
+function _bgiSyncTypeIcons(id){
+  var gp=_bgUI.g, tr=document.querySelector('#bg-pick-'+id+' .bgi-type-row'); if(!tr) return;
+  var bs=tr.querySelectorAll('.bgi-type');
+  if(bs[0]){ var i0=bs[0].querySelector('.bgi-type-ic'); if(i0) i0.style.background=_bgiTypeIconCss(gp,'linear'); }
+  if(bs[1]){ var i1=bs[1].querySelector('.bgi-type-ic'); if(i1) i1.style.background=_bgiTypeIconCss(gp,'radial'); }
+}
+function _bgiGradPreset(id, i){ var g=BG_GRADIENTS[i]; if(!g)return; _bgUI.g.stops=[{c:g.c1,p:0},{c:g.c2,p:100}]; _bgiApplyGradient(id); _bgiRefreshStops(id); _bgiSyncGradientUI(id); }
 function _bgiSetType(id, t){ _bgUI.g.type=t; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }
-function _bgiApplyGradient(id){ var L=getLayer(id); if(!L)return; var gp=_bgUI.g; L.fillType='gradient'; L.gradient={ c1:gp.c1, c2:gp.c2, type:gp.type, angle:gp.angle, p1:gp.p1, p2:gp.p2 }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
+function _bgiApplyGradient(id){ var L=getLayer(id); if(!L)return; var gp=_bgUI.g; var stops=_bgiStops(gp).map(function(s){return {c:s.c,p:Math.round(s.p)};}); var sorted=stops.slice().sort(function(a,b){return a.p-b.p;}); L.fillType='gradient'; L.gradient={ stops:stops, type:gp.type, angle:gp.angle, c1:sorted[0].c, p1:sorted[0].p, c2:sorted[sorted.length-1].c, p2:sorted[sorted.length-1].p }; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgiLive(L); }
 function _bgiSyncGradientUI(id){
   var gp=_bgUI.g, root=document.getElementById('bg-pick-'+id); if(!root) return;
   var bar=document.getElementById('bgi-prev-'+id); if(bar) bar.style.background=_bgiBarCss(gp);
-  var s1=root.querySelector('[data-stop="c1"]'); if(s1){ s1.style.left=gp.p1+'%'; s1.style.background=gp.c1; }
-  var s2=root.querySelector('[data-stop="c2"]'); if(s2){ s2.style.left=gp.p2+'%'; s2.style.background=gp.c2; }
   var ptr=document.getElementById('bgi-dialptr-'+id); if(ptr) ptr.style.transform='rotate('+gp.angle+'deg)';
   var av=document.getElementById('bgi-ang-'+id); if(av) av.textContent=Math.round(gp.angle)+'°';
   var aw=document.getElementById('bgi-angwrap-'+id); if(aw) aw.classList.toggle('bgi-angle-dis', gp.type==='radial');
   var tr=root.querySelector('.bgi-type-row');
-  if(tr){ var bs=tr.querySelectorAll('.bgi-type');
-    if(bs[0]){ bs[0].classList.toggle('on',gp.type==='linear'); var i0=bs[0].querySelector('.bgi-type-ic'); if(i0) i0.style.background='linear-gradient(90deg,'+gp.c1+','+gp.c2+')'; }
-    if(bs[1]){ bs[1].classList.toggle('on',gp.type==='radial'); var i1=bs[1].querySelector('.bgi-type-ic'); if(i1) i1.style.background='radial-gradient(circle at 50% 50%,'+gp.c1+','+gp.c2+')'; } }
+  if(tr){ var bs=tr.querySelectorAll('.bgi-type'); if(bs[0]) bs[0].classList.toggle('on',gp.type==='linear'); if(bs[1]) bs[1].classList.toggle('on',gp.type==='radial'); }
+  _bgiSyncTypeIcons(id);
 }
 function _bgiAttachStopDrag(id){
   var track=document.getElementById('bgi-stops-'+id); if(!track) return;
   Array.prototype.forEach.call(track.querySelectorAll('.bgi-stop'), function(st){
-    var which=st.getAttribute('data-stop'), pkey=(which==='c1'?'p1':'p2');
+    var idx=parseInt(st.getAttribute('data-i'),10);
     function down(e){
-      e.preventDefault(); var moved=false, sx=(e.touches?e.touches[0]:e).clientX;
+      e.preventDefault(); if(e.stopPropagation) e.stopPropagation();
+      var moved=false, delMode=false, sx=(e.touches?e.touches[0]:e).clientX, sy=(e.touches?e.touches[0]:e).clientY;
       Array.prototype.forEach.call(track.querySelectorAll('.bgi-stop'),function(o){o.classList.remove('on');}); st.classList.add('on');
-      function mv(ev){ var pt=ev.touches?ev.touches[0]:ev; if(Math.abs(pt.clientX-sx)>3) moved=true; var r=track.getBoundingClientRect(); var p=Math.max(0,Math.min(100,(pt.clientX-r.left)/r.width*100)); _bgUI.g[pkey]=Math.round(p); _bgiApplyGradient(id); _bgiSyncGradientUI(id); if(ev.cancelable) ev.preventDefault(); }
-      function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up);
-        if(!moved && typeof openCPicker==='function'){ var rc=st.getBoundingClientRect(); openCPicker(function(hex){ _bgUI.g[which]=hex; _bgiApplyGradient(id); _bgiSyncGradientUI(id); }, rc, _bgUI.g[which]); } }
+      function mv(ev){
+        var pt=ev.touches?ev.touches[0]:ev, dx=pt.clientX-sx, dy=pt.clientY-sy;
+        if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
+        var canDelete=_bgUI.g.stops.length>2;
+        if(canDelete && dy>34){ if(!delMode){ delMode=true; st.classList.add('bgi-stop-del'); } }
+        else if(delMode){ delMode=false; st.classList.remove('bgi-stop-del'); }
+        if(!delMode && _bgUI.g.stops[idx]){ var r=track.getBoundingClientRect(); var p=Math.max(0,Math.min(100,(pt.clientX-r.left)/r.width*100)); _bgUI.g.stops[idx].p=Math.round(p); st.style.left=_bgUI.g.stops[idx].p+'%'; var bar=document.getElementById('bgi-prev-'+id); if(bar) bar.style.background=_bgiBarCss(_bgUI.g); _bgiApplyGradient(id); _bgiSyncTypeIcons(id); }
+        if(ev.cancelable) ev.preventDefault();
+      }
+      function up(){
+        document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up);
+        if(delMode && _bgUI.g.stops.length>2){ _bgUI.g.stops.splice(idx,1); _bgiApplyGradient(id); _bgiRefreshStops(id); return; }
+        st.classList.remove('bgi-stop-del');
+        if(!moved && typeof openCPicker==='function' && _bgUI.g.stops[idx]){ var rc=st.getBoundingClientRect(); openCPicker(function(hex){ if(_bgUI.g.stops[idx]){ _bgUI.g.stops[idx].c=hex; st.style.background=hex; var bar=document.getElementById('bgi-prev-'+id); if(bar) bar.style.background=_bgiBarCss(_bgUI.g); _bgiApplyGradient(id); _bgiSyncTypeIcons(id); } }, rc, _bgUI.g.stops[idx].c); }
+      }
       document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up); document.addEventListener('touchmove',mv,{passive:false}); document.addEventListener('touchend',up);
     }
     st.addEventListener('mousedown',down); st.addEventListener('touchstart',down,{passive:false});
