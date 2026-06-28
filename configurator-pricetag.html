@@ -305,7 +305,7 @@
     #tag-mockup { position:absolute; left:50%; bottom:4%; transform:translateX(-50%); transform-origin:50% 100%; max-width:92%; max-height:92%; display:none; z-index:5; pointer-events:none; border-radius:6px; box-shadow:0 18px 50px rgba(0,0,0,0.18); }   /* anchored bottom-centre → scales from the bottom */
     .canvas-stage.mode-preview { overflow:hidden; }   /* clip the zoomed/panned mockup to the stage */
     .canvas-stage.mode-preview #tag-mockup { display:block; will-change:transform; }
-    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:100%; max-width:100%; height:auto; max-height:none; bottom:12vh; border-radius:0; } .mk-dots { bottom:14vh; } }   /* portrait: mockup fills width, anchored above the sheet; dots above the sheet */
+    @media (orientation: portrait) and (max-width: 1024px){ .canvas-stage.mode-preview #tag-mockup { width:124%; max-width:none; height:auto; max-height:none; left:50%; top:auto; bottom:12vh; transform:translateX(-50%); transform-origin:50% 100%; border-radius:0; } .mk-dots { bottom:14vh; } }   /* portrait: enlarge the mockup so it fills up to the header (scene side-margins crop), tags stay anchored above the sheet — no empty band */
     #mockup-carousel { position:absolute; inset:0; z-index:7; pointer-events:none; }
     .canvas-stage:not(.mode-preview) #mockup-carousel { display:none !important; }
     .mk-arrow { pointer-events:auto; position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.82); color:#111; font-size:24px; line-height:38px; text-align:center; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.18); transition:background .15s; padding:0; }
@@ -1643,7 +1643,7 @@
         z-index: 1; border: none; overflow: hidden;
       }
       .canvas-stage { min-height: 0; height: 100%; }
-      .canvas-stage.mode-preview #tag-mockup { width: 100%; max-width: 100%; height: auto; max-height: none; bottom: 12vh; border-radius: 0; }   /* mobile: full width, anchored above the sheet */
+      .canvas-stage.mode-preview #tag-mockup { width:124%; max-width:none; height:auto; max-height:none; left:50%; top:auto; bottom:12vh; transform:translateX(-50%); transform-origin:50% 100%; border-radius:0; }   /* mobile: enlarge the mockup so it fills up to the header (scene side-margins crop), tags stay anchored above the sheet — no empty band */
       .mk-dots { bottom: 14vh; }   /* mobile: lift the dots above the collapsed sheet */
       .mode-toggle { top: 12px; right: 12px; }
       html[dir="rtl"] .mode-toggle { right: auto; left: 12px; }
@@ -1681,6 +1681,18 @@
       /* minimized snap: only the handle + pager (Back · 1/3 · Next) stays visible */
       .controls-panel.sheet-min .cstep-nav { display: none; }
     }
+
+    /* ─── Mobile preview: fullscreen viewer + expand button; hide the bottom CTA bar ─── */
+    #preview-fs { display:none; position:fixed; inset:0; z-index:10050; background:rgba(8,8,8,0.92); align-items:center; justify-content:center; padding:18px; }
+    #preview-fs img { max-width:100%; max-height:100%; object-fit:contain; border-radius:10px; box-shadow:0 24px 70px rgba(0,0,0,0.5); }
+    #preview-fs-x { position:absolute; top:14px; right:14px; width:44px; height:44px; border-radius:50%; border:none; background:rgba(255,255,255,0.16); color:#fff; font-size:27px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; }
+    #preview-fs-x:hover { background:rgba(255,255,255,0.26); }
+    .vp-expand { display:none; }
+    @media (max-width: 760px) {
+      .vp-expand { display:flex; align-items:center; justify-content:center; position:absolute; top:58px; right:12px; width:38px; height:38px; border-radius:50%; border:1px solid var(--imp-border); background:var(--imp-surface); color:var(--imp-fg); cursor:pointer; box-shadow:var(--imp-shadow-xs); z-index:8; padding:0; }
+      html[dir="rtl"] .vp-expand { right:auto; left:12px; }
+      .mobile-bar { display:none !important; }   /* drop the bottom Review/Cart bar — navigation is the pager, cart lives in the Review step */
+    }
   </style>
 </head>
 
@@ -1707,7 +1719,7 @@
     <div class="canvas-stage gradient-bg">
       <div id="corner-price" aria-live="polite"><span id="hdr-pu">AED 0.90 / unit</span><span id="hdr-total">AED 900 total</span></div>
       <canvas id="three-canvas"></canvas>
-      <canvas id="tag-mockup" aria-hidden="true"></canvas>
+      <canvas id="tag-mockup" aria-hidden="true" onclick="if(typeof _isMobileView==='function'&&_isMobileView())openPreviewFullscreen()"></canvas>
       <div class="atlas2d" id="atlas2d" aria-hidden="true">
         <canvas id="atlas2d-canvas"></canvas>
         <div class="atlas2d-hint"></div>
@@ -1745,6 +1757,7 @@
         <button class="on" data-mode="2d" aria-pressed="true" onclick="setViewMode('2d')" data-en="Edit" data-ar="تحرير">Edit</button>
         <button data-mode="preview" aria-pressed="false" onclick="setViewMode('preview')" data-en="Preview" data-ar="معاينة">Preview</button>
       </div>
+      <button class="vp-expand" id="vp-expand" onclick="openPreviewFullscreen()" aria-label="View fullscreen" title="View fullscreen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M16 21h3a2 2 0 0 0 2-2v-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg></button>
       <div id="mockup-carousel" style="display:none;">
         <button class="mk-arrow mk-arrow-l" onclick="_gotoMockupSlide(_mockupSlide-1)" aria-label="Previous mockup">&#8249;</button>
         <button class="mk-arrow mk-arrow-r" onclick="_gotoMockupSlide(_mockupSlide+1)" aria-label="Next mockup">&#8250;</button>
@@ -10522,6 +10535,7 @@ function initThree() {
 function updateMobileCameraOffset() {
   if (typeof _mobFrameSig !== 'undefined') _mobFrameSig = '';
   if (typeof _updateMobileFraming === 'function') _updateMobileFraming();
+  if (typeof viewMode !== 'undefined' && viewMode === '2d' && typeof atlas2dFit === 'function') atlas2dFit();   /* re-fit the 2D editor into the visible band as the sheet is dragged */
 }
 
 var NO_3D_VIEW = true;   /* Price tag: 3D view removed — only the 2D "Edit" editor + photoreal "Preview" remain. Gating the WebGL render below stops the per-frame 3D render + post-FX (the big FPS cost). Set to false to restore 3D. */
@@ -12446,6 +12460,7 @@ function _pvReset(){ _pvNav={zoom:1,x:0,y:0}; _pvDrag=null; _pvApply(); }
       if (_pvDrag.swipe && _pvNav.zoom<=1.01 && e){             /* not zoomed → a horizontal flick swaps mockup slides */
         var dx=e.clientX-_pvDrag.x, dy=e.clientY-_pvDrag.y;
         if (Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.3 && typeof _gotoMockupSlide==='function') _gotoMockupSlide(_mockupSlide + (dx<0?1:-1));
+        else if (typeof viewMode!=='undefined' && viewMode==='preview' && Math.abs(dx)<8 && Math.abs(dy)<8 && typeof _isMobileView==='function' && _isMobileView() && typeof openPreviewFullscreen==='function') openPreviewFullscreen();   /* a clean tap on the mockup → fullscreen */
       }
       _pvDrag=null; _pvApply();
     }
@@ -12508,7 +12523,21 @@ function atlas2dInit(){
 function atlas2dResize(){ var c=a2d.canvas; if(!c) return; var r=c.getBoundingClientRect(); a2d.dpr=(window.devicePixelRatio||1)*((typeof A2D!=='undefined'&&A2D.editorRes)?A2D.editorRes:1); c.width=Math.max(1,Math.round(r.width*a2d.dpr)); c.height=Math.max(1,Math.round(r.height*a2d.dpr)); }
 function _exuv(){ return (typeof BAG_UV!=='undefined'&&BAG_UV.exterior)?BAG_UV.exterior:{x:0,y:0,w:2048,h:2048}; }
 function _allUVBounds(){ var uv=typeof BAG_UV!=='undefined'?BAG_UV:{}; var regions=[uv.exterior,uv.interior].filter(Boolean); if(!regions.length) return _exuv(); var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; regions.forEach(function(r){ x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w); y1=Math.max(y1,r.y+r.h); }); return {x:x0,y:y0,w:x1-x0,h:y1-y0}; }
-function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.22;   /* breathing room around the tag (was 0.10 — too tight) */ a2d.zoom=Math.min(c.width*(1-pad)/b.w, c.height*(1-pad)/b.h); a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom; a2d.panY=(c.height-b.h*a2d.zoom)/2 - b.y*a2d.zoom; }
+function _mobileCoveredDev(){   /* device-px of the 2D canvas hidden by the bottom sheet (0 on desktop) */
+  if (typeof _isMobileView !== 'function' || !_isMobileView()) return 0;
+  var stage=document.querySelector('.canvas-stage'), sheet=document.querySelector('.controls-panel');
+  if(!stage||!sheet) return 0;
+  var sr=stage.getBoundingClientRect(), pr=sheet.getBoundingClientRect();
+  var coveredCss=Math.max(0, sr.bottom - pr.top);
+  if (coveredCss > sr.height - 60) coveredCss = Math.max(0, sr.height - 60);   /* always keep a minimum visible band */
+  return coveredCss * (a2d.dpr || 1);
+}
+function atlas2dFit(){ var c=a2d.canvas; if(!c) return; var b=_allUVBounds(); var pad=0.16;   /* tighter so the tag fills the visible band (no empty space) */
+  var cov=_mobileCoveredDev(), visH=Math.max(60*(a2d.dpr||1), c.height - cov);
+  a2d.zoom=Math.min(c.width*(1-pad)/b.w, visH*(1-pad)/b.h);
+  a2d.panX=(c.width-b.w*a2d.zoom)/2 - b.x*a2d.zoom;
+  a2d.panY=(c.height + cov)/2 - (b.y + b.h/2)*a2d.zoom;   /* centre in the VISIBLE band (above the sheet), not the full canvas */
+}
 function _a2s(ax,ay){ return { x:ax*a2d.zoom+a2d.panX, y:ay*a2d.zoom+a2d.panY }; }
 function _s2a(sx,sy){ return { x:(sx-a2d.panX)/a2d.zoom, y:(sy-a2d.panY)/a2d.zoom }; }
 function _evPos(e){ var r=a2d._rect||a2d.canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*a2d.dpr, y:a2d.canvas.height - (e.clientY-r.top)*a2d.dpr }; }  /* y flipped to match the vertically-flipped render; rect cached during a drag */
@@ -13531,9 +13560,46 @@ function _updateMobileFraming(){
   if (!active || covered <= 2 || !sr || sr.width < 2 || sr.height < 2){ if (cam.view && cam.view.enabled) cam.clearViewOffset(); return; }
   cam.setViewOffset(sr.width, sr.height + covered, 0, covered, sr.width, sr.height);  /* lift subject into the visible band */
 }
+/* Mobile: tap the preview (mockup or expand button) to view it fullscreen with an X to close. */
+function openPreviewFullscreen(){
+  var fs=document.getElementById('preview-fs'), img=document.getElementById('preview-fs-img'); if(!fs||!img) return;
+  var dataUrl=null, mk=document.getElementById('tag-mockup');
+  /* 1) Photoreal mockup, if it's the live view and rendered → the cleanest preview */
+  if (typeof viewMode!=='undefined' && viewMode==='preview' && mk && mk.width>2){ try{ dataUrl=mk.toDataURL('image/png'); }catch(e){} }
+  /* 2) Otherwise compose the baked front + back faces side by side (clean, no editor chrome) */
+  if(!dataUrl){
+    try{
+      var fr=(typeof _frontDesignCanvas==='function')?_frontDesignCanvas():null;
+      var bk=(typeof _backDesignCanvas==='function')?_backDesignCanvas():null;
+      if(fr && fr.width){
+        var pad=Math.round(fr.width*0.10), gap=Math.round(fr.width*0.14);
+        var bw=(bk&&bk.width)?bk.width:0, bh=(bk&&bk.height)?bk.height:0;
+        var W=pad*2+fr.width+(bw?gap+bw:0), H=pad*2+Math.max(fr.height,bh);
+        var cc=document.createElement('canvas'); cc.width=W; cc.height=H; var x=cc.getContext('2d');
+        var surf=(getComputedStyle(document.body).getPropertyValue('--imp-surface')||'#ffffff').trim()||'#ffffff';
+        x.fillStyle=surf; x.fillRect(0,0,W,H);
+        x.drawImage(fr, pad, pad+(H-pad*2-fr.height)/2);
+        if(bw) x.drawImage(bk, pad+fr.width+gap, pad+(H-pad*2-bh)/2);
+        dataUrl=cc.toDataURL('image/png');
+      }
+    }catch(e){}
+  }
+  /* 3) Last resort: snapshot whatever canvas is visible */
+  if(!dataUrl){ var src=(typeof viewMode!=='undefined'&&viewMode==='preview')?mk:document.getElementById('atlas2d-canvas'); if(src&&src.width){ try{ dataUrl=src.toDataURL('image/png'); }catch(e){} } }
+  if(!dataUrl) return;
+  img.src=dataUrl; fs.style.display='flex';
+}
+function closePreviewFullscreen(){ var fs=document.getElementById('preview-fs'); if(fs) fs.style.display='none'; }
+window.addEventListener('keydown', function(e){ if(e.key==='Escape') closePreviewFullscreen(); });
 window.addEventListener('resize', function(){ _mobFrameSig = ''; });
 if (window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ _mobFrameSig=''; }); window.visualViewport.addEventListener('scroll', function(){ _mobFrameSig=''; }); }
 </script>
+
+<!-- ─── MOBILE PREVIEW FULLSCREEN ─── -->
+<div id="preview-fs" onclick="if(event.target===this)closePreviewFullscreen()">
+  <button id="preview-fs-x" onclick="closePreviewFullscreen()" aria-label="Close fullscreen">&times;</button>
+  <img id="preview-fs-img" alt="Tag preview">
+</div>
 
 <!-- ─── CUSTOM COLOR PICKER POPUP ─── -->
 <div id="cpicker-overlay" onclick="closeCPicker()"></div>
