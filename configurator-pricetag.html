@@ -52,7 +52,6 @@
       --imp-error-bg:   #FEE2E2;
       --imp-font: 'Inter', system-ui, -apple-system, sans-serif;
       --imp-font-display: 'Barlow Condensed', 'Inter', system-ui, sans-serif;
-      --imp-font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
       --imp-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
       --imp-shadow-xs:  0 1px 2px rgba(60,45,25,0.05);
       --imp-shadow-sm:  0 1px 3px rgba(60,45,25,0.07), 0 1px 2px rgba(60,45,25,0.05);
@@ -497,7 +496,7 @@
     button:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible,
     .mono-swatch-wrap:focus-visible, .finish-card:focus-visible, .cstep-pill:focus-visible,
     .tag-shape-opt:focus-visible, .bag-sopt:focus-visible, [role="button"]:focus-visible,
-    [tabindex]:focus-visible { outline: none; box-shadow: var(--imp-focus-ring); border-radius: 7px; }
+    [tabindex]:focus-visible { outline: 2px solid var(--imp-gold); outline-offset: 2px; }
     .ctrl-color-label {
       font-size: 13px;
       font-weight: 500;
@@ -1706,12 +1705,6 @@
     /* Respect users who prefer less motion — near-instant transitions, no looping spin. */
     @media (prefers-reduced-motion: reduce){
       *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
-    }
-    /* One consistent, accessible keyboard-focus ring — keyboard nav only. :where() keeps
-       specificity at 0 so any component's own focus style still wins. */
-    :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
-      outline: 2px solid var(--imp-gold);
-      outline-offset: 2px;
     }
     /* Unified, smooth transitions + a subtle tactile press on the primary tappable controls. */
     .cstep-next, .cstep-back, .cstep-arrow, .cstep-pill, .btn-cart, .add-layer-btn, ._as-btn, ._al-card,
@@ -4863,6 +4856,8 @@ function _drawSocialIcon(ctx, platform, size, color, cx) {
 }
 /* Solid / gradient background fill — fills the atlas (the bake's clip/face-hide restricts it to
    the tag faces). Gradient spans the front (exterior) UV region so it reads full-range on the tag. */
+/* A solid/gradient background is a self-placing colour fill, not an image layer. */
+function isFillBackground(L) { return !!(L && L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')); }
 function _bgGradFill(ctx, g, x, y, w, h) {
   var cx = x + w/2, cy = y + h/2, fill;
   if (g.type === 'radial') {
@@ -4898,7 +4893,7 @@ function drawLayerContent(ctx, L, ms, corr, mode) {
   var ue = layerBBox(L);
   var sref = (typeof _layerScaleRef === 'function') ? _layerScaleRef() : ue.w;  /* scale base: exterior width */
   if (L.kind === 'logo' || L.kind === 'sticker') {
-    if (L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient') && !L.img) { _drawBgFill(ctx, L, ms, mode); return; }
+    if (isFillBackground(L) && !L.img) { _drawBgFill(ctx, L, ms, mode); return; }
     if (!L.img || !L.img.naturalWidth) return;
     if (L.tiled) {
       /* TILED (any layout): tile the (recolored) image inside the layer's box. */
@@ -5049,7 +5044,7 @@ function drawArtworkOnBag() {
   for (var li = BAG.artwork.layers.length - 1; li >= 0; li--) {
     var L = BAG.artwork.layers[li];
     if (!L || !L.visible) continue;
-    if ((L.kind === 'logo' || L.kind === 'sticker') && !(L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
+    if ((L.kind === 'logo' || L.kind === 'sticker') && !isFillBackground(L) && (!L.img || !L.img.complete || !L.img.naturalWidth)) continue;
     if (L.kind === 'text' && !L.content) continue;
     if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') continue; /* 'ai' renders nothing */
     /* per-face / handle hide: if this layer is hidden on one or more faces (or on the
@@ -5157,7 +5152,7 @@ function initBagBumpMap() {
 function buildArtworkMaskCanvas(L) {
   if (!L) return null;
   if (L.kind !== 'logo' && L.kind !== 'sticker' && L.kind !== 'text') return null;
-  if ((L.kind === 'logo' || L.kind === 'sticker') && !(L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) && (!L.img || !L.img.naturalWidth)) return null;
+  if ((L.kind === 'logo' || L.kind === 'sticker') && !isFillBackground(L) && (!L.img || !L.img.naturalWidth)) return null;
   if (L.kind === 'text' && !L.content) return null;
 
   var ms = PBR_SIZE / 2048;
@@ -5174,7 +5169,7 @@ function buildArtworkMaskCanvas(L) {
      background, which has no L.surface) — that wrongly dropped the back-face mask, so the
      finish never reached the back. Skip the area clip for fill backgrounds. */
   mCtx.save();
-  if (L.isBackground && (L.fillType === 'solid' || L.fillType === 'gradient')) {
+  if (isFillBackground(L)) {
     drawLayerContent(mCtx, L, ms, corr, 'mask');
   } else if (clipToLayerAreas(mCtx, L, ms) > 0) {
     drawLayerContent(mCtx, L, ms, corr, 'mask');
@@ -7974,9 +7969,7 @@ function _renderBgPicker(){
   if(typeof renderPresets==='function') renderPresets('as-bg-presets');
   if(typeof applyTranslations==='function') applyTranslations();
 }
-function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; var box=document.getElementById('as-bg-shades'); if(box){ box.innerHTML=_bgSolidShadesHTML(); if(typeof applyTranslations==='function') applyTranslations(); } }
-function _bgCustomColor(){ if(typeof openCPicker!=='function') return; var r=(typeof event!=='undefined'&&event&&event.currentTarget)?event.currentTarget.getBoundingClientRect():{left:(window.innerWidth/2-130),top:140,bottom:160,right:0}; openCPicker(function(hex){ _bgApplySolid(hex); }, r, '#3366cc'); }
-function _bgApplySolid(color){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
+function _bgHue(v){ _bgPick.hue=parseFloat(v)||0; var box=document.getElementById('as-bg-shades'); if(box){ box.innerHTML=_bgSolidShadesHTML(); if(typeof applyTranslations==='function') applyTranslations(); } }function _bgApplySolid(color){ var L=getLayer(_addSrc.id); if(!L) return; L.fillType='solid'; L.fillColor=color; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
 function _bgApplyGradientPreset(i){ var g=BG_GRADIENTS[i]; if(!g) return; _bgPick.g={c1:g.c1,c2:g.c2,type:'linear',angle:135}; if(typeof _bgUI!=='undefined') _bgUI.g={ stops:[{c:g.c1,p:0},{c:g.c2,p:100}], type:'linear', angle:135 }; _bgApplyGradient(); }
 function _bgApplyGradient(){ var L=getLayer(_addSrc.id); if(!L) return; var st=[{c:_bgPick.g.c1,p:0},{c:_bgPick.g.c2,p:100}]; L.fillType='gradient'; L.gradient={stops:st,c1:_bgPick.g.c1,c2:_bgPick.g.c2,type:_bgPick.g.type,angle:_bgPick.g.angle,p1:0,p2:100}; L.img=null; L.srcImg=null; L.fromLibrary=false; _bgFinishApply(L); }
 function _bgFinishApply(L){ _closeAddSourceOverlay(); _addSrc.id=null; if(typeof updateLayerThumb==='function') updateLayerThumb(L); if(typeof renderLayersList==='function') renderLayersList(); if(typeof drawBagTexture==='function') drawBagTexture(); if(typeof updatePricing==='function') updatePricing(); if(typeof _autoEdit2dAfterUpload==='function') _autoEdit2dAfterUpload(); }
@@ -7991,8 +7984,7 @@ function _bgiSortedStops(gp){ return _bgiStops(gp).slice().sort(function(a,b){re
 function _bgiStopStr(gp){ return _bgiSortedStops(gp).map(function(s){return s.c+' '+Math.round(s.p)+'%';}).join(','); }
 function _bgiBarCss(gp){ return 'linear-gradient(90deg,'+_bgiStopStr(gp)+')'; }
 function _bgiTypeIconCss(gp,type){ return (type==='radial'?'radial-gradient(circle at 50% 50%,':'linear-gradient(135deg,')+_bgiStopStr(gp)+')'; }
-function _bgiLerpHex(a,b,t){ if(typeof hexToRgb!=='function'||typeof rgbToHex!=='function') return a; var ca=hexToRgb(a),cb=hexToRgb(b); return rgbToHex(Math.round(ca[0]+(cb[0]-ca[0])*t),Math.round(ca[1]+(cb[1]-ca[1])*t),Math.round(ca[2]+(cb[2]-ca[2])*t)); }
-function _bgiColorAt(gp,p){ var s=_bgiSortedStops(gp); if(p<=s[0].p) return s[0].c; if(p>=s[s.length-1].p) return s[s.length-1].c; for(var i=0;i<s.length-1;i++){ if(p>=s[i].p && p<=s[i+1].p){ var span=(s[i+1].p-s[i].p)||1; return _bgiLerpHex(s[i].c,s[i+1].c,(p-s[i].p)/span); } } return s[0].c; }
+function _bgiColorAt(gp,p){ var s=_bgiSortedStops(gp); if(p<=s[0].p) return s[0].c; if(p>=s[s.length-1].p) return s[s.length-1].c; for(var i=0;i<s.length-1;i++){ if(p>=s[i].p && p<=s[i+1].p){ var span=(s[i+1].p-s[i].p)||1; return _lerpHexStr(s[i].c,s[i+1].c,(p-s[i].p)/span); } } return s[0].c; }
 function _bgiEnsureCSS(){
   if(document.getElementById('bgi-style')) return;
   var st=document.createElement('style'); st.id='bgi-style';
